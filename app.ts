@@ -9,8 +9,6 @@ import { addAttendieToEvent, getEventAttendies, getEventForUser, removeFromEvent
 
 import { getCurrentInvoke } from '@vendia/serverless-express';
 
-import jwt from 'jsonwebtoken';
-
 dotenv.config();
 const app = express();
 const router = express.Router();
@@ -24,7 +22,8 @@ const addUserIdToRequest = (req, res, next) => {
   const {event} = getCurrentInvoke()
 
   const token = event.headers.Authorization.split(' ')[1];
-  const claims = jwt.decode(token);
+
+  const claims = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
 
   req.userId = claims!.sub;
 
