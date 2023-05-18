@@ -1,5 +1,7 @@
-import fetch from "node-fetch";
+// Todo: Add types
+// @ts-nocheck
 import { connect } from "@planetscale/database";
+import fetch from "node-fetch";
 
 const config = {
   fetch,
