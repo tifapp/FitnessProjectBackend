@@ -30,7 +30,7 @@ jobs:
       - name: Zip the project
         run: |
           shopt -s extglob
-          cp -R !(tests|.github|dist) dist/
+          cp -R !(test|.github|dist|*.ts) dist/
           cd dist
           zip -r ../dist.zip .
 
