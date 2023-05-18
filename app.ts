@@ -21,11 +21,13 @@ app.use(express.urlencoded({ extended: true }));
 const addUserIdToRequest = (req, res, next) => {
   const {event} = getCurrentInvoke()
 
-  const token = event.headers.Authorization.split(' ')[1];
+  if (event?.headers?.Authorization != null) {
+    const token = event.headers.Authorization.split(' ')[1];
 
-  const claims = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
+    const claims = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
 
-  req.userId = claims!.sub;
+    req.userId = claims!.sub;
+  }
 
   next();
 };
