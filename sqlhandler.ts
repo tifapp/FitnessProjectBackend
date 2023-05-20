@@ -314,3 +314,61 @@ export const removeFromEvent = async (req) => {
     body: JSON.stringify(results.rows),
   };
 };
+
+//friend
+
+export const addFriend = async (req) => {
+  let friend_check =
+    "SELECT * FROM pendingFriends WHERE (user = ? AND pending = ?) OR (user = ? AND pending = ?)";
+  let sqlparams = [];
+  sqlparams.push(req.userId);
+  sqlparams.push(req.params.userId);
+  sqlparams.push(req.params.userId);
+  sqlparams.push(req.userId);
+  const check_result = await conn.execute(friend_check, sqlparams);
+  console.log(JSON.stringify(check_result));
+
+  /*
+  let INSERT = "INSERT INTO Event (";
+  let VALUES = "VALUES (";
+  let sqlparams = [];
+  let parse = JSON.parse(req.body);
+  let length = Object.keys(parse).length;
+  console.log("length :" + length);
+  for (var key in parse) {
+    if (length > 1) {
+      INSERT += key + ", ";
+      sqlparams.push(parse[key]);
+      VALUES += "?, ";
+    } else {
+      INSERT += key;
+      sqlparams.push(parse[key]);
+      VALUES += "?";
+    }
+    length = length - 1;
+  }
+  INSERT += ") " + VALUES + ") ";
+  console.log(INSERT);
+  console.log(sqlparams);
+  const results = await conn.execute(INSERT, sqlparams);
+  console.log(results);
+
+  let EVENT_ID = "SELECT * FROM Event WHERE name = ? AND ownerId = ?";
+  let parse2 = JSON.parse(req.body);
+  let sqlparams2 = [parse2["name"], parse2["ownerId"]];
+  const results2 = await conn.execute(EVENT_ID, sqlparams2, { as: "object" });
+  const affectedRows = JSON.stringify(results2["rowsAffected"]);
+  console.log(JSON.stringify(results2));
+  console.log("rows affected: " + affectedRows);
+  console.log(JSON.stringify(results2["rows"][0].eventId));
+
+  conn.refresh();
+  return {
+    statusCode: 200,
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(results.rows),
+  };
+  */
+};

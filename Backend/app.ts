@@ -16,6 +16,8 @@ import { addSelfToEvent } from "./sqlhandler.ts";
 import { removeFromEvent } from "./sqlhandler.ts";
 import { leaveEvent } from "./sqlhandler.ts";
 
+import { addFriend } from "./sqlhandler.ts";
+
 import { getCurrentInvoke } from "@vendia/serverless-express";
 
 dotenv.config();
@@ -188,6 +190,11 @@ router.get("/event/:eventId/attendee/self/status", async (req, res) => {
 ██║     ██║  ██║██║███████╗██║ ╚████║██████╔╝
 ╚═╝     ╚═╝  ╚═╝╚═╝╚══════╝╚═╝  ╚═══╝╚═════╝ 
 */
-
+//- POST = Add the user as a friend
+router.post("/user/friend/:userId", async (req, res) => {
+  const result = await addFriend(req);
+  console.log(req.body);
+  res.json(result);
+});
 app.use("/", router);
 export default app;
