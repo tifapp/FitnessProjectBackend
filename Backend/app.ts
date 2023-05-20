@@ -1,24 +1,21 @@
 import express from "express";
 import dotenv from "dotenv";
-
-import { getAllUsers } from "./sqlhandler.ts";
-import { getUserById } from "./sqlhandler.ts";
-import { createUser } from "./sqlhandler.ts";
-import { updateUser } from "./sqlhandler.ts";
-
-import { getEvents } from "./sqlhandler.ts";
-import { getEventById } from "./sqlhandler.ts";
-import { updateEvent } from "./sqlhandler.ts";
-import { createEvent } from "./sqlhandler.ts";
-
-import { getEventAttendies } from "./sqlhandler.ts";
-import { addSelfToEvent } from "./sqlhandler.ts";
-import { removeFromEvent } from "./sqlhandler.ts";
-import { leaveEvent } from "./sqlhandler.ts";
-
-import { addFriend } from "./sqlhandler.ts";
-
 import { getCurrentInvoke } from "@vendia/serverless-express";
+import {
+  addFriend,
+  addSelfToEvent,
+  createEvent,
+  createUser,
+  getAllUsers,
+  getEventAttendies,
+  getEventById,
+  getEvents,
+  getUserById,
+  leaveEvent,
+  removeFromEvent,
+  updateEvent,
+  updateUser,
+} from "../sqlhandler";
 
 dotenv.config();
 const app = express();
@@ -66,6 +63,12 @@ router.get("/", (req, res) => {
 ╚██████╔╝███████║███████╗██║  ██║
  ╚═════╝ ╚══════╝╚══════╝╚═╝  ╚═╝
 */
+
+type UserInfo = {
+  userId: string;
+  userArray: string[];
+};
+
 // - GET = Gets the profile info for a list of ids passed in the query parameter
 router.get("user", async (req, res) => {
   const result = await getAllUsers(req);
@@ -88,13 +91,13 @@ router.get("/user/:userId", async (req, res) => {
 router.get("/user/self", async (req, res) => {
   //const result = await updateUser(req);
   console.log(req.body);
-  res.json(result);
+  //res.json(result);
 });
 // - DELETE = Delete your account
 router.delete("/user/self", async (req, res) => {
   //const result = await updateUser(req);
   console.log(req.body);
-  res.json(result);
+  //res.json(result);
 });
 //- PATCH = Update your account settings
 router.patch("/user/self", async (req, res) => {
@@ -139,7 +142,7 @@ router.patch("/event/:eventId", async (req, res) => {
 router.delete("/event/:eventId", async (req, res) => {
   //const result = await createEvent(req);
   console.log(req.body);
-  res.json(result);
+  //res.json(result);
 });
 
 /** 
@@ -179,7 +182,7 @@ router.delete("/event/:eventId/attendee/:userId", async (req, res) => {
 router.get("/event/:eventId/attendee/self/status", async (req, res) => {
   //
   console.log(req.body);
-  res.json(result);
+  //res.json(result);
 });
 
 /** 
