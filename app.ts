@@ -68,7 +68,7 @@ router.get("/", (req, res) => {
 */
 
 // - GET = Gets the profile info for a list of ids passed in the query parameter
-router.get("user", async (req, res) => {
+router.get("/user", async (req, res) => {
   const Listofusers: UserList = {
     userIdList: [],
   };

@@ -1,4 +1,4 @@
-import app from "./app.js";
+import app from "./app";
 
 import awsServerlessExpress from "@vendia/serverless-express";
 
