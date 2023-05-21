@@ -7,6 +7,7 @@ import {
   createEvent,
   createUser,
   getAllUsers,
+  getChatTokenForEvent,
   getEventAttendies,
   getEventById,
   getEvents,
@@ -186,6 +187,12 @@ router.get("/event/:eventId/attendee/self/status", async (req, res) => {
   //
   console.log(req.body);
   //res.json(result);
+});
+
+router.get("/chat/:eventId", async (req, res) => {
+  const result = await getChatTokenForEvent(req);
+  console.log(req.body);
+  res.json(result);
 });
 
 /** 

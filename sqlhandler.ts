@@ -362,3 +362,63 @@ export const addFriend = async (req: any) => {
 
 //friend
 export const removeFriend = async (req: any) => {};
+
+import Ably from "ably";
+
+const rest = new Ably.Rest({ key: process.env.ABLY_KEY });
+
+const createTokenRequest = async (capabilities, clientId) => {
+  return new Promise((resolve, reject) => {
+    rest.auth.createTokenRequest({ clientId, capability: JSON.stringify(capabilities) }, null, (err, tokenRequest) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(tokenRequest);
+      }
+    });
+  });
+}
+
+export const getChatTokenForEvent = async (req: any) => {
+  const eventId = req.pathParameters.eventID;
+
+  //Todo: combine all into one sql statement
+  const groupDetails = await conn.execute('SELECT * FROM Event WHERE eventId = ?', [eventId]);
+  if (groupDetails.rows.length === 0) {
+    return {
+        statusCode: 404,
+        body: JSON.stringify({ error: 'Event not found' }),
+    };
+  }
+
+  const attendanceResult = await conn.execute('SELECT * FROM eventAttendance WHERE eventId = ? AND userId = ?', [eventId, userId]);
+  if (attendanceResult.rows.length === 0) {
+    return {
+        statusCode: 403,
+        body: JSON.stringify({ error: 'User not a member of event' }),
+    };
+  }
+
+  const standardChannel = `tifapp:${eventId}`;
+  const pinnedChannel = `tifapp:${eventId}-pinned`;
+
+  const capabilities = { [standardChannel]: ['history'], [pinnedChannel]: ['history'] };
+  const currentTime = Math.floor(Date.now() / 1000);
+
+  if (currentTime <= groupDetails.rows[0].endDate) {
+    capabilities[standardChannel].push(...['publish', 'subscribe']);
+    capabilities[pinnedChannel].push(...['subscribe']);
+  }
+
+  if (groupDetails.rows[0].ownerId === userId) {
+    capabilities[pinnedChannel].push('publish');
+  }
+
+  const tokenRequestData = await createTokenRequest(capabilities, userId);
+
+  conn.refresh();
+  return {
+    statusCode: 200,
+    body: JSON.stringify(tokenRequestData),
+  };
+};
