@@ -16,9 +16,9 @@ import {
   removeFromEvent,
   updateEvent,
   updateUser,
-} from "./sqlhandler";
+} from "./sqlhandler.js";
 
-import { User, UserList } from "./sqlhandler";
+import { User, UserList } from "./sqlhandler.js";
 
 dotenv.config();
 const app = express();
