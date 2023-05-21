@@ -52,7 +52,6 @@ export const getUserById = async (req: User) => {
 
 export const updateUser = async (req: any) => {
   let body = JSON.parse(req.body);
-  body.userId = req.userId;
   let UPDATE = "UPDATE User ";
   let keys = Object.keys(body);
   
@@ -65,7 +64,8 @@ export const updateUser = async (req: any) => {
   })
 
   UPDATE += ` ${SET} WHERE userId = :userId`;
-  
+
+  body.userId = req.userId;
   const results = await conn.execute(UPDATE, body);
   
   conn.refresh();
@@ -81,7 +81,7 @@ export const updateUser = async (req: any) => {
 export const createUser = async (req: any) => {
   let body = JSON.parse(req.body);
   body.userId = req.userId;
-  let INSERT = "INSERT INTO User (userId, ";
+  let INSERT = "INSERT INTO User (";
   let VALUES = "VALUES (";
   let keys = Object.keys(body);
 
