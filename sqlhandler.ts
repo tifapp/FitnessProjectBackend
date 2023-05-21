@@ -216,13 +216,18 @@ export const createEvent = async (req: any) => {
   let EVENT_ID = "SELECT * FROM Event WHERE name = ? AND ownerId = ?";
   let parse2 = JSON.parse(req.body);
   let sqlparams2 = [parse2["name"], parse2["ownerId"]];
-  const results2 = await conn.execute(EVENT_ID, sqlparams2, { as: "object" });
+  let results2 = await conn.execute(EVENT_ID, sqlparams2, { as: "object" });
+  let eventId = JSON.stringify((results2["rows"][0] as { eventId: number }).eventId);
   const affectedRows = JSON.stringify(results2["rowsAffected"]);
   console.log(JSON.stringify(results2));
   console.log("rows affected: " + affectedRows);
   console.log(
     JSON.stringify((results2["rows"][0] as { eventId: number }).eventId)
   );
+
+  let INSERT_OWNER = "INSERT INTO eventAttendance (userId, eventId) VALUES (?, ?)";
+  let sqlparams3 = [parse2["ownerId"], eventId];
+  const results = await conn.execute(INSERT_OWNER, sqlparams3);
 
   conn.refresh();
   return {
