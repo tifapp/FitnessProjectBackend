@@ -10,11 +10,11 @@ const config = {
 
 const conn = connect(config);
 
-type User = {
+export type User = {
   userId: string;
 };
 
-type UserList = {
+export type UserList = {
   userIdList: string[];
 };
 

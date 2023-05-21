@@ -18,6 +18,8 @@ import {
   updateUser,
 } from "../sqlhandler";
 
+import { User, UserList } from "../sqlhandler";
+
 dotenv.config();
 const app = express();
 const router = express.Router();
@@ -64,14 +66,6 @@ router.get("/", (req, res) => {
 ╚██████╔╝███████║███████╗██║  ██║
  ╚═════╝ ╚══════╝╚══════╝╚═╝  ╚═╝
 */
-
-type User = {
-  userId: string;
-};
-
-type UserList = {
-  userIdList: string[];
-};
 
 // - GET = Gets the profile info for a list of ids passed in the query parameter
 router.get("user", async (req, res) => {
