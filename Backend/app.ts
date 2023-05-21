@@ -12,6 +12,7 @@ import {
   getEvents,
   getUserById,
   leaveEvent,
+  removeFriend,
   removeFromEvent,
   updateEvent,
   updateUser,
@@ -64,14 +65,20 @@ router.get("/", (req, res) => {
  ╚═════╝ ╚══════╝╚══════╝╚═╝  ╚═╝
 */
 
-type UserInfo = {
+type User = {
   userId: string;
-  userArray: string[];
+};
+
+type UserList = {
+  userIdList: string[];
 };
 
 // - GET = Gets the profile info for a list of ids passed in the query parameter
 router.get("user", async (req, res) => {
-  const result = await getAllUsers(req);
+  const Listofusers: UserList = {
+    userIdList: [],
+  };
+  const result = await getAllUsers(Listofusers);
   console.log(req.body);
   res.json(result);
 });
@@ -83,8 +90,10 @@ router.post("/user", async (req, res) => {
 });
 // - GET = Get a single user
 router.get("/user/:userId", async (req, res) => {
-  console.log(req.params);
-  const result = await getUserById(req);
+  const Id: User = {
+    userId: req.params.userId,
+  };
+  const result = await getUserById(Id);
   res.json(result);
 });
 //- GET = Get your account info
@@ -199,5 +208,12 @@ router.post("/user/friend/:userId", async (req, res) => {
   console.log(req.body);
   res.json(result);
 });
+
+router.delete("/user/friend/:userId", async (req, res) => {
+  const result = await removeFriend(req);
+  console.log(req.body);
+  res.json(result);
+});
+
 app.use("/", router);
 export default app;

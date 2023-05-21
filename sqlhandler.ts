@@ -10,8 +10,16 @@ const config = {
 
 const conn = connect(config);
 
+type User = {
+  userId: string;
+};
+
+type UserList = {
+  userIdList: string[];
+};
+
 // will need to change (currently waiting for responce from mathew for specifics on what he expects)
-export const getAllUsers = async (req) => {
+export const getAllUsers = async (req: UserList) => {
   let SQL = "SELECT * FROM User";
   //const results = await conn.execute(event.sql);
   const results = await conn.execute(SQL);
@@ -27,11 +35,11 @@ export const getAllUsers = async (req) => {
   };
 };
 
-export const getUserById = async (req) => {
+export const getUserById = async (req: User) => {
   let SQL = "SELECT * FROM User WHERE userId = ?";
   const sqlparams = [];
-  console.log(req.params.userId);
-  sqlparams.push(req.params.userId);
+  console.log(req.userId);
+  sqlparams.push(req.userId);
   console.log(sqlparams);
   const results = await conn.execute(SQL, sqlparams);
   console.log(results);
@@ -45,7 +53,7 @@ export const getUserById = async (req) => {
   };
 };
 
-export const updateUser = async (req) => {
+export const updateUser = async (req: any) => {
   let UPDATE = "UPDATE User ";
   let SET = "SET ";
   let sqlparams = [];
@@ -81,7 +89,7 @@ export const updateUser = async (req) => {
   };
 };
 
-export const createUser = async (req) => {
+export const createUser = async (req: any) => {
   let INSERT = "INSERT INTO User (userId, ";
   let VALUES = "VALUES (";
   let sqlparams = [];
@@ -122,7 +130,7 @@ export const createUser = async (req) => {
 // there was somthing we needed to add here
 // 1) add check for if user blocked owner / owner blocked user
 // 2) ???
-export const getEvents = async (req) => {
+export const getEvents = async (req: any) => {
   let sqlparams = [];
   sqlparams.push(req.userId);
   sqlparams.push(req.body.lon);
@@ -153,7 +161,7 @@ export const getEvents = async (req) => {
   };
 };
 
-export const getEventById = async (req) => {
+export const getEventById = async (req: any) => {
   let SQL = "SELECT * FROM Event WHERE eventId = ?";
   const sqlparams = [];
   console.log(req.params.eventId);
@@ -171,7 +179,7 @@ export const getEventById = async (req) => {
   };
 };
 
-export const updateEvent = async (req) => {
+export const updateEvent = async (req: any) => {
   let UPDATE = "UPDATE Event ";
   let SET = "SET ";
   let sqlparams = [];
@@ -202,7 +210,7 @@ export const updateEvent = async (req) => {
   };
 };
 
-export const createEvent = async (req) => {
+export const createEvent = async (req: any) => {
   let INSERT = "INSERT INTO Event (";
   let VALUES = "VALUES (";
   let sqlparams = [];
@@ -234,7 +242,9 @@ export const createEvent = async (req) => {
   const affectedRows = JSON.stringify(results2["rowsAffected"]);
   console.log(JSON.stringify(results2));
   console.log("rows affected: " + affectedRows);
-  console.log(JSON.stringify(results2["rows"][0].eventId));
+  console.log(
+    JSON.stringify((results2["rows"][0] as { eventId: number }).eventId)
+  );
 
   conn.refresh();
   return {
@@ -248,7 +258,7 @@ export const createEvent = async (req) => {
 
 // eventAttendance
 // needs  changes , they will send an array in the qury params and we need to return  the details of each userId in the array
-export const getEventAttendies = async (req) => {
+export const getEventAttendies = async (req: any) => {
   let SQL = "SELECT * FROM eventAttendance";
   //const results = await conn.execute(event.sql);
   const results = await conn.execute(SQL);
@@ -264,7 +274,7 @@ export const getEventAttendies = async (req) => {
   };
 };
 
-export const addSelfToEvent = async (req) => {
+export const addSelfToEvent = async (req: any) => {
   let SQL = "INSERT INTO eventAttendance (userId, eventId) VALUES (?,?)";
   let sqlparams = [];
   sqlparams.push(req.userId);
@@ -281,7 +291,7 @@ export const addSelfToEvent = async (req) => {
   };
 };
 
-export const leaveEvent = async (req) => {
+export const leaveEvent = async (req: any) => {
   let SQL = "DELETE FROM eventAttendance WHERE userId = ? AND eventId = ?";
   let sqlparams = [];
   sqlparams.push(req.userId);
@@ -298,7 +308,7 @@ export const leaveEvent = async (req) => {
   };
 };
 
-export const removeFromEvent = async (req) => {
+export const removeFromEvent = async (req: any) => {
   let SQL = "DELETE FROM eventAttendance WHERE userId = ? AND eventId = ?";
   let sqlparams = [];
   sqlparams.push(req.params.userId);
@@ -316,8 +326,7 @@ export const removeFromEvent = async (req) => {
 };
 
 //friend
-
-export const addFriend = async (req) => {
+export const addFriend = async (req: any) => {
   let friend_check =
     "SELECT * FROM pendingFriends WHERE (user = ? AND pending = ?) OR (user = ? AND pending = ?)";
   let sqlparams = [];
@@ -372,3 +381,6 @@ export const addFriend = async (req) => {
   };
   */
 };
+
+//friend
+export const removeFriend = async (req: any) => {};
