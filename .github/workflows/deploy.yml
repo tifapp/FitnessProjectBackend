@@ -1,0 +1,47 @@
+name: Build and Deploy to AWS Lambda
+
+on:
+  push:
+    branches:
+      - main # change this to your default branch if it's not 'main'
+      - development 
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v2
+        with:
+          node-version: '16' # adjust this to your project's Node.js version
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build the project
+        run: npm run build # adjust this if your build command is different
+
+      - name: Remove dev dependencies
+        run: npm prune --production
+
+      - name: Zip the project
+        run: |
+          shopt -s extglob
+          cp -R !(test|.github|dist|*.ts) dist/
+          cd dist
+          zip -r ../dist.zip .
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Deploy to AWS Lambda
+        run: |
+          aws lambda update-function-code --function-name lambdaSQLRoute --zip-file fileb://dist.zip
