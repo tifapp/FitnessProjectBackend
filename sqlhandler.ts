@@ -31,7 +31,7 @@ export type UserList = {
 
 // will need to change (currently waiting for responce from mathew for specifics on what he expects)
 
-export const getAllUsers = async (req: UserList) => {
+export const getUsers = async (req: UserList) => {
   let SQL = "SELECT * FROM User";
   //const results = await conn.execute(event.sql);
   const results = await conn.execute(SQL);
@@ -270,7 +270,7 @@ export const updateEvent = async (req: any) => {
 };
 
 // Create event
-export const createEvent = async (req: any) => {
+export const createEvent = (req) => __awaiter(void 0, void 0, void 0, function* () {
   let INSERT = "INSERT INTO Event (";
   let VALUES = "VALUES (";
   let sqlparams = [];
@@ -278,49 +278,36 @@ export const createEvent = async (req: any) => {
   let length = Object.keys(parse).length;
   console.log("length :" + length);
   for (var key in parse) {
-    if (length > 1) {
-      INSERT += key + ", ";
-      sqlparams.push(parse[key]);
-      VALUES += "?, ";
-    } else {
-      INSERT += key;
-      sqlparams.push(parse[key]);
-      VALUES += "?";
-    }
-    length = length - 1;
+      if (length > 1) {
+          INSERT += key + ", ";
+          sqlparams.push(parse[key]);
+          VALUES += "?, ";
+      }
+      else {
+          INSERT += key;
+          sqlparams.push(parse[key]);
+          VALUES += "?";
+      }
+      length = length - 1;
   }
   INSERT += ") " + VALUES + ") ";
   console.log(INSERT);
   console.log(sqlparams);
-  const results = await conn.execute(INSERT, sqlparams);
-  console.log(results);
-
-  let EVENT_ID = "SELECT * FROM Event WHERE name = ? AND ownerId = ?";
-  let parse2 = JSON.parse(req.body);
-  let sqlparams2 = [parse2["name"], parse2["ownerId"]];
-  let results2 = await conn.execute(EVENT_ID, sqlparams2, { as: "object" });
-  let eventId = JSON.stringify((results2["rows"][0] as { eventId: number }).eventId);
-  const affectedRows = JSON.stringify(results2["rowsAffected"]);
-  console.log(JSON.stringify(results2));
-  console.log("rows affected: " + affectedRows);
-  console.log(
-    JSON.stringify((results2["rows"][0] as { eventId: number }).eventId)
-  );
-
-  let INSERT_OWNER = "INSERT INTO eventAttendance (userId, eventId) VALUES (?, ?)";
-  let sqlparams3 = [parse2["ownerId"], eventId];
-  const results3 = await conn.execute(INSERT_OWNER, sqlparams3);
-
+  const results = yield conn.transaction(async (tx) => {
+      const newEvent = await tx.execute(INSERT, sqlparams);
+      const addOwnertoEvent = await tx.execute(`INSERT INTO eventAttendance
+      (userId, eventId) VALUES (?, LAST_INSERT_ID())`, [parse['ownerId']])
+  });
+  console.log(results)
   conn.refresh();
   return {
-    statusCode: 200,
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(results.rows),
+      statusCode: 200,
+      headers: {
+          "Content-Type": "application/json",
+      },
+      body: JSON.stringify(results),
   };
-};
-
+});
 
 // Delete single event
 export const deleteEvent = async (req: any) => {

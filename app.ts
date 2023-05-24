@@ -8,7 +8,7 @@ import {
   createEvent,
   createUser,
   deleteEvent,
-  getAllUsers,
+  getUsers,
   getBlockedUsers,
   getEventAttendies,
   getEventById,
@@ -97,7 +97,7 @@ router.get("/user", async (req, res) => {
   const Listofusers: UserList = {
     userIdList: [],
   };
-  const result = await getAllUsers(Listofusers);
+  const result = await getUsers(Listofusers);
   console.log(req.body);
   res.json(result);
 });
