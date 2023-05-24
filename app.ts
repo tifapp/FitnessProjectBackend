@@ -4,9 +4,12 @@ import express from "express";
 import {
   addFriend,
   addSelfToEvent,
+  blockUser,
   createEvent,
   createUser,
+  deleteEvent,
   getAllUsers,
+  getBlockedUsers,
   getEventAttendies,
   getEventById,
   getEvents,
@@ -14,6 +17,7 @@ import {
   leaveEvent,
   removeFriend,
   removeFromEvent,
+  unblockUser,
   updateEvent,
   updateUser,
 } from "./sqlhandler.js";
@@ -66,6 +70,27 @@ router.get("/", (req, res) => {
 ╚██████╔╝███████║███████╗██║  ██║
  ╚═════╝ ╚══════╝╚══════╝╚═╝  ╚═╝
 */
+
+// - GET = Get a paginated list of blocked users
+router.get("/user/blocked", async (req, res) => {
+  const result = await getBlockedUsers(req);
+  console.log(req.body);
+  res.json(result);
+})
+
+// - POST = Block the given user
+router.post("/user/blocked/:userId", async(req, res) => {
+  const result = await blockUser(req);
+  console.log(req.body);
+  res.json(result);
+})
+
+// - DELETE = Unblock the given user
+router.delete("/user/blocked/:userId", async(req, res) => {
+  const result = await blockUser(req);
+  console.log(req.body);
+  res.json(result);
+})
 
 // - GET = Gets the profile info for a list of ids passed in the query parameter
 router.get("/user", async (req, res) => {
@@ -143,7 +168,7 @@ router.patch("/event/:eventId", async (req, res) => {
 });
 //- DELETE = Delete single event
 router.delete("/event/:eventId", async (req, res) => {
-  //const result = await createEvent(req);
+  const result = await deleteEvent(req);
   console.log(req.body);
   //res.json(result);
 });

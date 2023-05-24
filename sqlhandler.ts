@@ -20,7 +20,17 @@ export type UserList = {
   userIdList: string[];
 };
 
+/** 
+██╗   ██╗███████╗███████╗██████╗ 
+██║   ██║██╔════╝██╔════╝██╔══██╗
+██║   ██║███████╗█████╗  ██████╔╝
+██║   ██║╚════██║██╔══╝  ██╔══██╗
+╚██████╔╝███████║███████╗██║  ██║
+ ╚═════╝ ╚══════╝╚══════╝╚═╝  ╚═╝
+*/
+
 // will need to change (currently waiting for responce from mathew for specifics on what he expects)
+
 export const getAllUsers = async (req: UserList) => {
   let SQL = "SELECT * FROM User";
   //const results = await conn.execute(event.sql);
@@ -37,6 +47,62 @@ export const getAllUsers = async (req: UserList) => {
   };
 };
 
+
+// Get a paginated list of blocked users
+export const getBlockedUsers = async (req: any) => {
+  let cursor = req.cursor;
+  let SQL = "SELECT * FROM Blocked WHERE blockedDate > cursor ORDER BY id LIMIT 10";
+  const results = await conn.execute(SQL);
+  console.log(results);
+  conn.refresh();
+  return {
+    statusCode: 200,
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(results.rows),
+  };
+};
+
+// Block the given user
+export const blockUser = async (req: any) => {
+  let body = JSON.parse(req.body);
+  let SQL = "INSERT INTO Blocked (user, blocked) VALUES (?, ?)";
+  body.user = req.userId // actual current user
+  body.blocked = req.userId // path params
+  const results = await conn.execute(SQL, body);
+  console.log(results);
+  conn.refresh();
+  return {
+    statusCode: 200,
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(results.rows),
+  };
+};
+
+
+// Unblock the given user
+export const unblockUser = async (req: any) => {
+  let body = JSON.parse(req.body);
+  let SQL = "DELETE FROM Blocked WHERE user=? AND blocked=?";
+  body.user = req.userId // actual current user
+  body.blocked = req.userId // path params
+  const results = await conn.execute(SQL, body);
+  console.log(results);
+  conn.refresh();
+  return {
+    statusCode: 200,
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(results.rows),
+  };
+};
+
+
+// Get a single user
 export const getUserById = async (req: User) => {
   let SQL = "SELECT * FROM User WHERE userId = :userId";
   const results = await conn.execute(SQL, req);
@@ -50,6 +116,7 @@ export const getUserById = async (req: User) => {
   };
 };
 
+// Update your account settings
 export const updateUser = async (req: any) => {
   let body = JSON.parse(req.body);
   let UPDATE = "UPDATE User ";
@@ -108,6 +175,16 @@ export const createUser = async (req: any) => {
   };
 };
 
+
+/** 
+███████╗██╗   ██╗███████╗███╗   ██╗████████╗
+██╔════╝██║   ██║██╔════╝████╗  ██║╚══██╔══╝
+█████╗  ██║   ██║█████╗  ██╔██╗ ██║   ██║   
+██╔══╝  ╚██╗ ██╔╝██╔══╝  ██║╚██╗██║   ██║   
+███████╗ ╚████╔╝ ███████╗██║ ╚████║   ██║   
+╚══════╝  ╚═══╝  ╚══════╝╚═╝  ╚═══╝   ╚═╝   
+*/
+
 // Events
 // there was somthing we needed to add here
 // 1) add check for if user blocked owner / owner blocked user
@@ -139,6 +216,8 @@ export const getEvents = async (req: any) => {
   };
 };
 
+
+// Get single event
 export const getEventById = async (req: any) => {
   let SQL = "SELECT * FROM Event WHERE eventId = ?";
   const sqlparams = [];
@@ -157,6 +236,8 @@ export const getEventById = async (req: any) => {
   };
 };
 
+
+// Update single Event
 export const updateEvent = async (req: any) => {
   let UPDATE = "UPDATE Event ";
   let SET = "SET ";
@@ -188,6 +269,7 @@ export const updateEvent = async (req: any) => {
   };
 };
 
+// Create event
 export const createEvent = async (req: any) => {
   let INSERT = "INSERT INTO Event (";
   let VALUES = "VALUES (";
@@ -227,7 +309,7 @@ export const createEvent = async (req: any) => {
 
   let INSERT_OWNER = "INSERT INTO eventAttendance (userId, eventId) VALUES (?, ?)";
   let sqlparams3 = [parse2["ownerId"], eventId];
-  const results = await conn.execute(INSERT_OWNER, sqlparams3);
+  const results3 = await conn.execute(INSERT_OWNER, sqlparams3);
 
   conn.refresh();
   return {
@@ -239,13 +321,46 @@ export const createEvent = async (req: any) => {
   };
 };
 
-// eventAttendance
+
+// Delete single event
+export const deleteEvent = async (req: any) => {
+  let DELETE1 = "DELETE FROM Event WHERE eventId=?";
+  let body = JSON.parse(req.body);
+  body.userId = req.eventId; // from path params
+  let DELETE2 = "DELETE FROM eventAttendance WHERE eventId=?"
+  
+  const results1 = await conn.execute(DELETE1, body);
+  const results2 = await conn.execute(DELETE2, body);
+  console.log(results);
+  conn.refresh();
+  return {
+    statusCode: 200,
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(results2.rows),
+  };
+};
+
+/** 
+███████╗██╗   ██╗███████╗███╗   ██╗████████╗ █████╗ ████████╗████████╗███████╗███╗   ██╗██████╗  █████╗ ███╗   ██╗ ██████╗███████╗
+██╔════╝██║   ██║██╔════╝████╗  ██║╚══██╔══╝██╔══██╗╚══██╔══╝╚══██╔══╝██╔════╝████╗  ██║██╔══██╗██╔══██╗████╗  ██║██╔════╝██╔════╝
+█████╗  ██║   ██║█████╗  ██╔██╗ ██║   ██║   ███████║   ██║      ██║   █████╗  ██╔██╗ ██║██║  ██║███████║██╔██╗ ██║██║     █████╗  
+██╔══╝  ╚██╗ ██╔╝██╔══╝  ██║╚██╗██║   ██║   ██╔══██║   ██║      ██║   ██╔══╝  ██║╚██╗██║██║  ██║██╔══██║██║╚██╗██║██║     ██╔══╝  
+███████╗ ╚████╔╝ ███████╗██║ ╚████║   ██║   ██║  ██║   ██║      ██║   ███████╗██║ ╚████║██████╔╝██║  ██║██║ ╚████║╚██████╗███████╗
+╚══════╝  ╚═══╝  ╚══════╝╚═╝  ╚═══╝   ╚═╝   ╚═╝  ╚═╝   ╚═╝      ╚═╝   ╚══════╝╚═╝  ╚═══╝╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═══╝ ╚═════╝╚══════╝
+                                                                                                                                  
+*/
+
 // needs  changes , they will send an array in the qury params and we need to return  the details of each userId in the array
+
+// Get paginated list of all event attendees
 export const getEventAttendies = async (req: any) => {
-  let SQL = "SELECT * FROM eventAttendance";
-  //const results = await conn.execute(event.sql);
-  const results = await conn.execute(SQL);
-  //console.log(JSON.stringify(results,null,4));
+  let cursor = req.cursor;
+  let body = JSON.parse(req);
+  body.eventId = req.eventId // from path params
+  let SQL = "SELECT * FROM eventAttendance WHERE eventId=? AND joinDate > cursor ORDER BY joinDate LIMIT 10";
+  const results = await conn.execute(SQL, body);
   console.log(results);
   conn.refresh();
   return {
@@ -257,6 +372,7 @@ export const getEventAttendies = async (req: any) => {
   };
 };
 
+// Join an event
 export const addSelfToEvent = async (req: any) => {
   let SQL = "INSERT INTO eventAttendance (userId, eventId) VALUES (?,?)";
   let sqlparams = [];
@@ -274,6 +390,8 @@ export const addSelfToEvent = async (req: any) => {
   };
 };
 
+
+// Leave an event
 export const leaveEvent = async (req: any) => {
   let SQL = "DELETE FROM eventAttendance WHERE userId = ? AND eventId = ?";
   let sqlparams = [];
@@ -291,6 +409,8 @@ export const leaveEvent = async (req: any) => {
   };
 };
 
+
+// Kick a user from an event
 export const removeFromEvent = async (req: any) => {
   let SQL = "DELETE FROM eventAttendance WHERE userId = ? AND eventId = ?";
   let sqlparams = [];
@@ -308,7 +428,17 @@ export const removeFromEvent = async (req: any) => {
   };
 };
 
-//friend
+//
+
+/** 
+███████╗██████╗ ██╗███████╗███╗   ██╗██████╗ 
+██╔════╝██╔══██╗██║██╔════╝████╗  ██║██╔══██╗
+█████╗  ██████╔╝██║█████╗  ██╔██╗ ██║██║  ██║
+██╔══╝  ██╔══██╗██║██╔══╝  ██║╚██╗██║██║  ██║
+██║     ██║  ██║██║███████╗██║ ╚████║██████╔╝
+╚═╝     ╚═╝  ╚═╝╚═╝╚══════╝╚═╝  ╚═══╝╚═════╝ 
+*/
+
 export const addFriend = async (req: any) => {
   let friend_check =
     "SELECT * FROM pendingFriends WHERE (user = ? AND pending = ?) OR (user = ? AND pending = ?)";
