@@ -1,6 +1,9 @@
 import { conn } from "../dbconnection";
 import { createEvent } from "../events";
-import { resetDatabaseBeforeEach } from "./database";
+import {
+  expectFailsCheckConstraint,
+  resetDatabaseBeforeEach,
+} from "./database";
 import { mockLocationCoordinate2D } from "./mockData";
 
 describe("Events tests", () => {
@@ -8,8 +11,8 @@ describe("Events tests", () => {
 
   describe("CheckConstraint tests", () => {
     it("does not allow the end date to be before the start date", async () => {
-      expect(async () => {
-        return await createEvent(conn, {
+      await expectFailsCheckConstraint(async () => {
+        await createEvent(conn, {
           title: "no",
           description: "yay",
           startDate: new Date(1),
@@ -19,7 +22,7 @@ describe("Events tests", () => {
           isChatEnabled: true,
           ...mockLocationCoordinate2D(),
         });
-      }).rejects.toEqual(expect.anything());
+      });
     });
   });
 });
