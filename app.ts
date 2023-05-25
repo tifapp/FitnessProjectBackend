@@ -19,13 +19,9 @@ import {
   updateEvent,
   updateUser,
 } from "./database";
+import { LocationCoordinates2DSchema } from "./location";
 
 // A zod schema for {@link LocationCoordinate2D}.
-
-export const LocationCoordinates2DSchema = z.object({
-  latitude: z.number().min(-90).max(90),
-  longitude: z.number().min(-180).max(180),
-});
 
 const GetEventsSchema = z.object({
   coordinates: LocationCoordinates2DSchema,
