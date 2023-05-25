@@ -211,17 +211,18 @@ export const getUserExploredEvents = async (
 ) => {
   console.log("userId: " + userId);
   //let body = JSON.parse(req.body);
-
-  let SELECT =
-    "SELECT E.name AS event_name, E.description, E.eventId, E.ownerId, E.startDate, E.endDate, COUNT(A.userId) AS attendee_count, CASE WHEN F.user IS NOT NULL THEN 1 ELSE 0 END AS is_friend ";
-  let FROM =
-    "FROM Event E JOIN Location L ON E.eventId = L.eventId LEFT JOIN eventAttendance A ON E.eventId = A.eventId LEFT JOIN Friends F ON E.ownerId = F.friend AND F.user = :userId ";
-  let WHERE =
-    "WHERE ST_Distance_Sphere(POINT(:longitude, :latitude), POINT(lon, lat)) < :radiusMeters AND E.endDate > NOW() ";
-  let REST =
-    "AND :userId NOT IN (SELECT blocked FROM blockedUsers WHERE (user = E.ownerId AND blocked = :userId) OR (user = :userId AND blocked = E.ownerId) )) GROUP BY E.eventId";
-
-  let SQL = SELECT + FROM + WHERE + REST;
+  
+  let SQL = `SELECT E.name AS event_name, E.description, E.eventId, E.ownerId, E.startDate, E.endDate, COUNT(A.userId) AS attendee_count, 
+  CASE WHEN F.user IS NOT NULL THEN 1 ELSE 0 END AS is_friend 
+  FROM Event E JOIN Location L ON E.eventId = L.eventId 
+  LEFT JOIN eventAttendance A ON E.eventId = A.eventId 
+  LEFT JOIN Friends F ON E.ownerId = F.friend AND F.user = :userId 
+  WHERE ST_Distance_Sphere(POINT(:longitude, :latitude), POINT(lon, lat)) < :radiusMeters 
+  AND E.endDate > NOW() 
+  AND :userId NOT IN (SELECT blocked 
+  FROM blockedUsers 
+  WHERE user = E.ownerId AND blocked = :userId) 
+  GROUP BY E.eventId`;
 
   const results = await conn.execute(SQL, {
     userId,
@@ -238,10 +239,12 @@ export const getUserExploredEvents = async (
     body: JSON.stringify(results.rows),
   };
 };
-
+// returns event details as well as event list of userId's
 // Get single event
 export const getEventById = async (req: any) => {
-  let SQL = "SELECT * FROM Event WHERE eventId = ?";
+  let SQL = `SELECT Event.*, eventAttendance.userId 
+  FROM Event INNER JOIN eventAttendance ON Event.eventId = eventAttendance.eventId 
+  WHERE Event.eventId = ?`;
   const sqlparams = [];
   console.log(req.params.eventId);
   sqlparams.push(req.params.eventId);
@@ -291,8 +294,7 @@ export const updateEvent = async (req: any) => {
 };
 
 // Create event
-export const createEvent = (req) =>
-  __awaiter(void 0, void 0, void 0, function* () {
+export const createEvent = async (req: any)=> {
     let INSERT = "INSERT INTO Event (";
     let VALUES = "VALUES (";
     let sqlparams = [];
