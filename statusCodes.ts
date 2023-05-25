@@ -1,5 +1,1 @@
-
-
-export const codeHandler = async () => {
-    
-}
+export const codeHandler = async () => {};

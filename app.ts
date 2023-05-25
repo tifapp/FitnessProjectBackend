@@ -158,6 +158,7 @@ router.post("/event", async (req, res) => {
   console.log(req.body);
   res.json(result);
 });
+
 //- GET = Get single event
 router.get("/event/:eventId", async (req, res) => {
   const result = await getEventById(req);
