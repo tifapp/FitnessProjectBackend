@@ -18,7 +18,7 @@ import {
   removeFromEvent,
   updateEvent,
   updateUser,
-} from "./sqlhandler.js";
+} from "./database.js";
 
 // A zod schema for {@link LocationCoordinate2D}.
 
@@ -32,7 +32,7 @@ const GetEventsSchema = z.object({
   radiusMeters: z.number().nonnegative(),
 });
 
-import { User, UserList } from "./sqlhandler.js";
+import { User, UserList } from "./database.js";
 
 dotenv.config();
 const app = express();
