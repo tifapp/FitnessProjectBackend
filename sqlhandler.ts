@@ -47,11 +47,11 @@ export const getUsers = async (req: UserList) => {
   };
 };
 
-
 // Get a paginated list of blocked users
 export const getBlockedUsers = async (req: any) => {
   let cursor = req.cursor;
-  let SQL = "SELECT * FROM Blocked WHERE blockedDate > cursor ORDER BY id LIMIT 10";
+  let SQL =
+    "SELECT * FROM Blocked WHERE blockedDate > cursor ORDER BY id LIMIT 10";
   const results = await conn.execute(SQL);
   console.log(results);
   conn.refresh();
@@ -68,8 +68,8 @@ export const getBlockedUsers = async (req: any) => {
 export const blockUser = async (req: any) => {
   let body = JSON.parse(req.body);
   let SQL = "INSERT INTO Blocked (user, blocked) VALUES (?, ?)";
-  body.user = req.userId // actual current user
-  body.blocked = req.userId // path params
+  body.user = req.userId; // actual current user
+  body.blocked = req.userId; // path params
   const results = await conn.execute(SQL, body);
   console.log(results);
   conn.refresh();
@@ -81,14 +81,13 @@ export const blockUser = async (req: any) => {
     body: JSON.stringify(results.rows),
   };
 };
-
 
 // Unblock the given user
 export const unblockUser = async (req: any) => {
   let body = JSON.parse(req.body);
   let SQL = "DELETE FROM Blocked WHERE user=? AND blocked=?";
-  body.user = req.userId // actual current user
-  body.blocked = req.userId // path params
+  body.user = req.userId; // actual current user
+  body.blocked = req.userId; // path params
   const results = await conn.execute(SQL, body);
   console.log(results);
   conn.refresh();
@@ -100,7 +99,6 @@ export const unblockUser = async (req: any) => {
     body: JSON.stringify(results.rows),
   };
 };
-
 
 // Get a single user
 export const getUserById = async (req: User) => {
@@ -121,20 +119,20 @@ export const updateUser = async (req: any) => {
   let body = JSON.parse(req.body);
   let UPDATE = "UPDATE User ";
   let keys = Object.keys(body);
-  
+
   let SET = "SET ";
   keys.forEach((key, index) => {
     SET += ` ${key} = :${key}`;
     if (index < keys.length - 1) {
       SET += ", ";
     }
-  })
+  });
 
   UPDATE += ` ${SET} WHERE userId = :userId`;
 
   body.userId = req.userId;
   const results = await conn.execute(UPDATE, body);
-  
+
   conn.refresh();
   return {
     statusCode: 200,
@@ -159,12 +157,12 @@ export const createUser = async (req: any) => {
       INSERT += ", ";
       VALUES += ", ";
     }
-  })
-  
+  });
+
   INSERT += ") " + VALUES + ") ";
-  
+
   const results = await conn.execute(INSERT, body);
-  
+
   conn.refresh();
   return {
     statusCode: 200,
@@ -174,7 +172,6 @@ export const createUser = async (req: any) => {
     body: JSON.stringify(results.rows),
   };
 };
-
 
 /** 
 ███████╗██╗   ██╗███████╗███╗   ██╗████████╗
@@ -184,28 +181,53 @@ export const createUser = async (req: any) => {
 ███████╗ ╚████╔╝ ███████╗██║ ╚████║   ██║   
 ╚══════╝  ╚═══╝  ╚══════╝╚═╝  ╚═══╝   ╚═╝   
 */
-
+// all event querys need relationship to host as well as event attendance list
 // Events
 // there was somthing we needed to add here
 // 1) add check for if user blocked owner / owner blocked user
 // 2) ???
-export const getEvents = async (req: any) => {
-  let body = JSON.parse(req.body);
-  body.userId = req.userId;
+export type Event = {
+  host: EventAttendee;
+  id: string;
+  title: string;
+  description: string;
+  dateRange: FixedDateRange;
+  color: EventColors;
+  coordinates: LocationCoordinate2D;
+  placemark?: Placemark;
+  shouldHideAfterStartDate: boolean;
+  attendeeCount: number;
+};
+
+export type LocationCoordinate2D = Readonly<{
+  latitude: number;
+  longitude: number;
+}>;
+
+export const getUserExploredEvents = async (
+  userId: string,
+  coordinates: LocationCoordinate2D,
+  radiusMeters: number
+) => {
+  //let body = JSON.parse(req.body);
 
   let SELECT =
     "SELECT E.name AS event_name, E.description, E.eventId, E.ownerId, E.startDate, E.endDate, COUNT(A.userId) AS attendee_count, CASE WHEN F.user IS NOT NULL THEN 1 ELSE 0 END AS is_friend ";
   let FROM =
     "FROM Event E JOIN Location L ON E.eventId = L.eventId LEFT JOIN eventAttendance A ON E.eventId = A.eventId LEFT JOIN Friends F ON E.ownerId = F.friend AND F.user = :userId ";
   let WHERE =
-    "WHERE ST_Distance_Sphere(POINT(:lon, :lat), POINT(lon, lat)) < 3100 AND E.endDate > NOW() ";
+    "WHERE ST_Distance_Sphere(POINT(:longitude, :latitude), POINT(lon, lat)) < :radiusMeters AND E.endDate > NOW() ";
   let REST =
-    "AND :userId NOT IN (SELECT blocked FROM blockedUsers WHERE user = E.ownerId AND blocked = :userId) GROUP BYE.eventId;";
+    "AND :userId NOT IN (SELECT blocked FROM blockedUsers WHERE (user = E.ownerId AND blocked = :userId) OR (user = :userId AND blocked = E.ownerId) )) GROUP BYE.eventId;";
 
   let SQL = SELECT + FROM + WHERE + REST;
 
-  const results = await conn.execute(SQL, body);
-  
+  const results = await conn.execute(SQL, {
+    userId,
+    ...coordinates,
+    radiusMeters,
+  });
+
   conn.refresh();
   return {
     statusCode: 200,
@@ -215,7 +237,6 @@ export const getEvents = async (req: any) => {
     body: JSON.stringify(results.rows),
   };
 };
-
 
 // Get single event
 export const getEventById = async (req: any) => {
@@ -235,7 +256,6 @@ export const getEventById = async (req: any) => {
     body: JSON.stringify(results.rows),
   };
 };
-
 
 // Update single Event
 export const updateEvent = async (req: any) => {
@@ -270,52 +290,55 @@ export const updateEvent = async (req: any) => {
 };
 
 // Create event
-export const createEvent = (req) => __awaiter(void 0, void 0, void 0, function* () {
-  let INSERT = "INSERT INTO Event (";
-  let VALUES = "VALUES (";
-  let sqlparams = [];
-  let parse = JSON.parse(req.body);
-  let length = Object.keys(parse).length;
-  console.log("length :" + length);
-  for (var key in parse) {
+export const createEvent = (req) =>
+  __awaiter(void 0, void 0, void 0, function* () {
+    let INSERT = "INSERT INTO Event (";
+    let VALUES = "VALUES (";
+    let sqlparams = [];
+    let parse = JSON.parse(req.body);
+    let length = Object.keys(parse).length;
+    console.log("length :" + length);
+    for (var key in parse) {
       if (length > 1) {
-          INSERT += key + ", ";
-          sqlparams.push(parse[key]);
-          VALUES += "?, ";
-      }
-      else {
-          INSERT += key;
-          sqlparams.push(parse[key]);
-          VALUES += "?";
+        INSERT += key + ", ";
+        sqlparams.push(parse[key]);
+        VALUES += "?, ";
+      } else {
+        INSERT += key;
+        sqlparams.push(parse[key]);
+        VALUES += "?";
       }
       length = length - 1;
-  }
-  INSERT += ") " + VALUES + ") ";
-  console.log(INSERT);
-  console.log(sqlparams);
-  const results = yield conn.transaction(async (tx) => {
+    }
+    INSERT += ") " + VALUES + ") ";
+    console.log(INSERT);
+    console.log(sqlparams);
+    const results = yield conn.transaction(async (tx) => {
       const newEvent = await tx.execute(INSERT, sqlparams);
-      const addOwnertoEvent = await tx.execute(`INSERT INTO eventAttendance
-      (userId, eventId) VALUES (?, LAST_INSERT_ID())`, [parse['ownerId']])
-  });
-  console.log(results)
-  conn.refresh();
-  return {
+      const addOwnertoEvent = await tx.execute(
+        `INSERT INTO eventAttendance
+      (userId, eventId) VALUES (?, LAST_INSERT_ID())`,
+        [parse["ownerId"]]
+      );
+    });
+    console.log(results);
+    conn.refresh();
+    return {
       statusCode: 200,
       headers: {
-          "Content-Type": "application/json",
+        "Content-Type": "application/json",
       },
       body: JSON.stringify(results),
-  };
-});
+    };
+  });
 
 // Delete single event
 export const deleteEvent = async (req: any) => {
   let DELETE1 = "DELETE FROM Event WHERE eventId=?";
   let body = JSON.parse(req.body);
   body.userId = req.eventId; // from path params
-  let DELETE2 = "DELETE FROM eventAttendance WHERE eventId=?"
-  
+  let DELETE2 = "DELETE FROM eventAttendance WHERE eventId=?";
+
   const results1 = await conn.execute(DELETE1, body);
   const results2 = await conn.execute(DELETE2, body);
   console.log(results);
@@ -345,8 +368,9 @@ export const deleteEvent = async (req: any) => {
 export const getEventAttendies = async (req: any) => {
   let cursor = req.cursor;
   let body = JSON.parse(req);
-  body.eventId = req.eventId // from path params
-  let SQL = "SELECT * FROM eventAttendance WHERE eventId=? AND joinDate > cursor ORDER BY joinDate LIMIT 10";
+  body.eventId = req.eventId; // from path params
+  let SQL =
+    "SELECT * FROM eventAttendance WHERE eventId=? AND joinDate > cursor ORDER BY joinDate LIMIT 10";
   const results = await conn.execute(SQL, body);
   console.log(results);
   conn.refresh();
@@ -377,7 +401,6 @@ export const addSelfToEvent = async (req: any) => {
   };
 };
 
-
 // Leave an event
 export const leaveEvent = async (req: any) => {
   let SQL = "DELETE FROM eventAttendance WHERE userId = ? AND eventId = ?";
@@ -395,7 +418,6 @@ export const leaveEvent = async (req: any) => {
     body: JSON.stringify(results.rows),
   };
 };
-
 
 // Kick a user from an event
 export const removeFromEvent = async (req: any) => {

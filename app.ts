@@ -1,26 +1,36 @@
 import { getCurrentInvoke } from "@vendia/serverless-express";
 import dotenv from "dotenv";
 import express from "express";
+import { z } from "zod";
+
 import {
   addFriend,
   addSelfToEvent,
-  blockUser,
   createEvent,
   createUser,
-  deleteEvent,
-  getUsers,
-  getBlockedUsers,
+  //getAllUsers,
   getEventAttendies,
   getEventById,
-  getEvents,
+  getUserExploredEvents,
   getUserById,
   leaveEvent,
   removeFriend,
   removeFromEvent,
-  unblockUser,
   updateEvent,
   updateUser,
 } from "./sqlhandler.js";
+
+// A zod schema for {@link LocationCoordinate2D}.
+
+export const LocationCoordinates2DSchema = z.object({
+  latitude: z.number().min(-90).max(90),
+  longitude: z.number().min(-180).max(180),
+});
+
+const GetEventsSchema = z.object({
+  coordinates: LocationCoordinates2DSchema,
+  radiusMeters: z.number().nonnegative(),
+});
 
 import { User, UserList } from "./sqlhandler.js";
 
@@ -71,35 +81,14 @@ router.get("/", (req, res) => {
  ╚═════╝ ╚══════╝╚══════╝╚═╝  ╚═╝
 */
 
-// - GET = Get a paginated list of blocked users
-router.get("/user/blocked", async (req, res) => {
-  const result = await getBlockedUsers(req);
-  console.log(req.body);
-  res.json(result);
-})
-
-// - POST = Block the given user
-router.post("/user/blocked/:userId", async(req, res) => {
-  const result = await blockUser(req);
-  console.log(req.body);
-  res.json(result);
-})
-
-// - DELETE = Unblock the given user
-router.delete("/user/blocked/:userId", async(req, res) => {
-  const result = await blockUser(req);
-  console.log(req.body);
-  res.json(result);
-})
-
 // - GET = Gets the profile info for a list of ids passed in the query parameter
 router.get("/user", async (req, res) => {
   const Listofusers: UserList = {
     userIdList: [],
   };
-  const result = await getUsers(Listofusers);
+  //const result = await getAllUsers(Listofusers);
   console.log(req.body);
-  res.json(result);
+  //res.json(result);
 });
 // - POST = Create an account
 router.post("/user", async (req, res) => {
@@ -116,11 +105,7 @@ router.get("/user/:userId", async (req, res) => {
   res.json(result);
 });
 //- GET = Get your account info
-router.get("/user/self", async (req, res) => {
-  //const result = await updateUser(req);
-  console.log(req.body);
-  //res.json(result);
-});
+router.get("/user/self", async (req, res) => {});
 // - DELETE = Delete your account
 router.delete("/user/self", async (req, res) => {
   //const result = await updateUser(req);
@@ -142,11 +127,30 @@ router.patch("/user/self", async (req, res) => {
 ███████╗ ╚████╔╝ ███████╗██║ ╚████║   ██║   
 ╚══════╝  ╚═══╝  ╚══════╝╚═╝  ╚═══╝   ╚═╝   
 */
+
+//need to return relationship to host on all event attendance list
 // - GET = Events by region
 router.get("/event", async (req, res) => {
-  const result = await getEvents(req);
+  const params = GetEventsSchema.safeParse({
+    coordinates: {
+      latitude: parseFloat(req.query.latitude as string),
+      longitude: parseFloat(req.query.longitude as string),
+    },
+    radiusMeters: parseFloat(req.query.radiusMeters as string),
+  });
+
+  if (!params.success) {
+    res.status(400).write("Invalid");
+    return;
+  }
+
+  const events = await getUserExploredEvents(
+    (req as any).userId as string,
+    params.data.coordinates,
+    params.data.radiusMeters
+  );
   console.log(req.body);
-  res.json(result);
+  res.json(events);
 });
 // - POST = Create event
 router.post("/event", async (req, res) => {
@@ -168,7 +172,7 @@ router.patch("/event/:eventId", async (req, res) => {
 });
 //- DELETE = Delete single event
 router.delete("/event/:eventId", async (req, res) => {
-  const result = await deleteEvent(req);
+  //const result = await createEvent(req);
   console.log(req.body);
   //res.json(result);
 });
