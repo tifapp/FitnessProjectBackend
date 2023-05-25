@@ -1,5 +1,5 @@
 import express from "express";
-import { app } from "./app";
+import { createApp } from "./app";
 import {
   UserList,
   createUser,
@@ -27,11 +27,7 @@ const GetEventsSchema = z.object({
 
 const router = express.Router();
 
-// if (process.env.DEV) {
-//   app.listen(8080, () => {
-//     console.log(`Example app listening on port ${8080}`);
-//   });
-// }
+const app = createApp();
 
 router.get("/", (req, res) => {
   res.send("Hello, world!");
