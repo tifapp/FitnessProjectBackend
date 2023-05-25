@@ -1,3 +1,4 @@
+import { Connection } from "@planetscale/database";
 import dotenv from "dotenv";
 import { z } from "zod";
 
@@ -15,3 +16,10 @@ const EnvVarsSchema = z
  * A type-safe representation of the current env vars.
  */
 export const envVars = EnvVarsSchema.parse(process.env);
+
+/**
+ * A type that holds all external dependencies of this server.
+ */
+export type ServerEnvironment = {
+  conn: Connection;
+};

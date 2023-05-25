@@ -1,6 +1,5 @@
-import { z } from "zod";
+import { SQLExecutable } from "./dbconnection";
 import { LocationCoordinate2D } from "./location";
-import { conn } from "./dbconnection";
 
 export type EventColor =
   | "#EF6351"
@@ -26,7 +25,10 @@ export type CreateEventRequest = {
  *
  * @param request see {@link CreateEventRequest}
  */
-export const createEvent = async (request: CreateEventRequest) => {
+export const createEvent = async (
+  conn: SQLExecutable,
+  request: CreateEventRequest
+) => {
   await conn.execute(
     `
     INSERT INTO event (
