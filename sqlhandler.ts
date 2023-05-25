@@ -219,7 +219,7 @@ export const getUserExploredEvents = async (
   let WHERE =
     "WHERE ST_Distance_Sphere(POINT(:longitude, :latitude), POINT(lon, lat)) < :radiusMeters AND E.endDate > NOW() ";
   let REST =
-    "AND :userId NOT IN (SELECT blocked FROM blockedUsers WHERE (user = E.ownerId AND blocked = :userId) OR (user = :userId AND blocked = E.ownerId) )) GROUP BY E.eventId;";
+    "AND :userId NOT IN (SELECT blocked FROM blockedUsers WHERE (user = E.ownerId AND blocked = :userId) OR (user = :userId AND blocked = E.ownerId) )) GROUP BY E.eventId";
 
   let SQL = SELECT + FROM + WHERE + REST;
 
