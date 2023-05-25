@@ -18,7 +18,7 @@ import {
   removeFromEvent,
   updateEvent,
   updateUser,
-} from "./database.js";
+} from "./database";
 
 // A zod schema for {@link LocationCoordinate2D}.
 
@@ -32,10 +32,10 @@ const GetEventsSchema = z.object({
   radiusMeters: z.number().nonnegative(),
 });
 
-import { User, UserList } from "./database.js";
+// import { User, UserList } from "./database.js";
 
 dotenv.config();
-const app = express();
+export const app = express();
 const router = express.Router();
 
 app.use(express.json());
@@ -62,11 +62,11 @@ const addUserIdToRequest = (req, res, next) => {
 // Usage
 app.use(addUserIdToRequest);
 
-if (process.env.DEV) {
-  app.listen(8080, () => {
-    console.log(`Example app listening on port ${8080}`);
-  });
-}
+// if (process.env.DEV) {
+//   app.listen(8080, () => {
+//     console.log(`Example app listening on port ${8080}`);
+//   });
+// }
 
 router.get("/", (req, res) => {
   res.send("Hello, world!");
@@ -81,7 +81,7 @@ router.get("/", (req, res) => {
  ╚═════╝ ╚══════╝╚══════╝╚═╝  ╚═╝
 */
 
-// - GET = Gets the profile info for a list of ids passed in the query parameter
+- GET = Gets the profile info for a list of ids passed in the query parameter
 router.get("/user", async (req, res) => {
   const Listofusers: UserList = {
     userIdList: [],
@@ -119,13 +119,13 @@ router.patch("/user/self", async (req, res) => {
   res.json(result);
 });
 
-/** 
+/**
 ███████╗██╗   ██╗███████╗███╗   ██╗████████╗
 ██╔════╝██║   ██║██╔════╝████╗  ██║╚══██╔══╝
-█████╗  ██║   ██║█████╗  ██╔██╗ ██║   ██║   
-██╔══╝  ╚██╗ ██╔╝██╔══╝  ██║╚██╗██║   ██║   
-███████╗ ╚████╔╝ ███████╗██║ ╚████║   ██║   
-╚══════╝  ╚═══╝  ╚══════╝╚═╝  ╚═══╝   ╚═╝   
+█████╗  ██║   ██║█████╗  ██╔██╗ ██║   ██║
+██╔══╝  ╚██╗ ██╔╝██╔══╝  ██║╚██╗██║   ██║
+███████╗ ╚████╔╝ ███████╗██║ ╚████║   ██║
+╚══════╝  ╚═══╝  ╚══════╝╚═╝  ╚═══╝   ╚═╝
 */
 
 //need to return relationship to host on all event attendance list
@@ -177,14 +177,14 @@ router.delete("/event/:eventId", async (req, res) => {
   //res.json(result);
 });
 
-/** 
+/**
 ███████╗██╗   ██╗███████╗███╗   ██╗████████╗ █████╗ ████████╗████████╗███████╗███╗   ██╗██████╗  █████╗ ███╗   ██╗ ██████╗███████╗
 ██╔════╝██║   ██║██╔════╝████╗  ██║╚══██╔══╝██╔══██╗╚══██╔══╝╚══██╔══╝██╔════╝████╗  ██║██╔══██╗██╔══██╗████╗  ██║██╔════╝██╔════╝
-█████╗  ██║   ██║█████╗  ██╔██╗ ██║   ██║   ███████║   ██║      ██║   █████╗  ██╔██╗ ██║██║  ██║███████║██╔██╗ ██║██║     █████╗  
-██╔══╝  ╚██╗ ██╔╝██╔══╝  ██║╚██╗██║   ██║   ██╔══██║   ██║      ██║   ██╔══╝  ██║╚██╗██║██║  ██║██╔══██║██║╚██╗██║██║     ██╔══╝  
+█████╗  ██║   ██║█████╗  ██╔██╗ ██║   ██║   ███████║   ██║      ██║   █████╗  ██╔██╗ ██║██║  ██║███████║██╔██╗ ██║██║     █████╗
+██╔══╝  ╚██╗ ██╔╝██╔══╝  ██║╚██╗██║   ██║   ██╔══██║   ██║      ██║   ██╔══╝  ██║╚██╗██║██║  ██║██╔══██║██║╚██╗██║██║     ██╔══╝
 ███████╗ ╚████╔╝ ███████╗██║ ╚████║   ██║   ██║  ██║   ██║      ██║   ███████╗██║ ╚████║██████╔╝██║  ██║██║ ╚████║╚██████╗███████╗
 ╚══════╝  ╚═══╝  ╚══════╝╚═╝  ╚═══╝   ╚═╝   ╚═╝  ╚═╝   ╚═╝      ╚═╝   ╚══════╝╚═╝  ╚═══╝╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═══╝ ╚═════╝╚══════╝
-                                                                                                                                  
+
 */
 //- GET = Get paginated list of all event attendees
 router.get("/event/:eventId/attendee", async (req, res) => {
@@ -217,13 +217,13 @@ router.get("/event/:eventId/attendee/self/status", async (req, res) => {
   //res.json(result);
 });
 
-/** 
-███████╗██████╗ ██╗███████╗███╗   ██╗██████╗ 
+/**
+███████╗██████╗ ██╗███████╗███╗   ██╗██████╗
 ██╔════╝██╔══██╗██║██╔════╝████╗  ██║██╔══██╗
 █████╗  ██████╔╝██║█████╗  ██╔██╗ ██║██║  ██║
 ██╔══╝  ██╔══██╗██║██╔══╝  ██║╚██╗██║██║  ██║
 ██║     ██║  ██║██║███████╗██║ ╚████║██████╔╝
-╚═╝     ╚═╝  ╚═╝╚═╝╚══════╝╚═╝  ╚═══╝╚═════╝ 
+╚═╝     ╚═╝  ╚═╝╚═╝╚══════╝╚═╝  ╚═══╝╚═════╝
 */
 //- POST = Add the user as a friend
 router.post("/user/friend/:userId", async (req, res) => {
