@@ -1,6 +1,7 @@
 import { connect } from "@planetscale/database";
 import fetch from "node-fetch";
 import dotenv from "dotenv";
+import app from "../app";
 
 dotenv.config();
 

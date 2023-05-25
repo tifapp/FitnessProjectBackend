@@ -41,27 +41,6 @@ const router = express.Router();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Todo: Add types
-// @ts-ignore
-const addUserIdToRequest = (req, res, next) => {
-  const { event } = getCurrentInvoke();
-
-  if (event?.headers?.Authorization != null) {
-    const token = event.headers.Authorization.split(" ")[1];
-
-    const claims = JSON.parse(
-      Buffer.from(token.split(".")[1], "base64").toString()
-    );
-
-    req.userId = claims!.sub;
-  }
-
-  next();
-};
-
-// Usage
-app.use(addUserIdToRequest);
-
 // if (process.env.DEV) {
 //   app.listen(8080, () => {
 //     console.log(`Example app listening on port ${8080}`);
@@ -81,7 +60,7 @@ router.get("/", (req, res) => {
  ╚═════╝ ╚══════╝╚══════╝╚═╝  ╚═╝
 */
 
-- GET = Gets the profile info for a list of ids passed in the query parameter
+// - GET = Gets the profile info for a list of ids passed in the query parameter
 router.get("/user", async (req, res) => {
   const Listofusers: UserList = {
     userIdList: [],
