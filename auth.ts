@@ -7,16 +7,18 @@ import { Application } from "express";
 export const addCognitoTokenVerification = (app: Application) => {
   app.use((req, res, next) => {
     const { event } = getCurrentInvoke();
-
-    if (event?.headers?.Authorization != null) {
-      const token = event.headers.Authorization.split(" ")[1];
-
-      const claims = JSON.parse(
-        Buffer.from(token.split(".")[1], "base64").toString()
-      );
-
-      req.userId = claims!.sub;
+    if (!event?.headers?.Authorization) {
+      res.status(401).write("Unauthorized");
+      return;
     }
+
+    const token = event.headers.Authorization.split(" ")[1];
+
+    const claims = JSON.parse(
+      Buffer.from(token.split(".")[1], "base64").toString()
+    );
+
+    req.params.selfId = claims!.sub;
 
     next();
   });
