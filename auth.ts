@@ -1,14 +1,19 @@
 import { getCurrentInvoke } from "@vendia/serverless-express";
 import { Application } from "express";
 
+export const UNAUTHORIZED_RESPONSE = {
+  message: "Unauthorized",
+};
+
 /**
  * Adds AWS cognito token verification to an app.
  */
 export const addCognitoTokenVerification = (app: Application) => {
-  app.use((req, res, next) => {
+  // TODO: - Verify JWT properly
+  app.use((_, res, next) => {
     const { event } = getCurrentInvoke();
     if (!event?.headers?.Authorization) {
-      res.status(401).write("Unauthorized");
+      res.status(401).json(UNAUTHORIZED_RESPONSE);
       return;
     }
 
@@ -18,7 +23,7 @@ export const addCognitoTokenVerification = (app: Application) => {
       Buffer.from(token.split(".")[1], "base64").toString()
     );
 
-    req.params.selfId = claims!.sub;
+    res.locals.selfId = claims!.sub;
 
     next();
   });
