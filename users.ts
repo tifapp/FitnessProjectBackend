@@ -2,7 +2,6 @@ import express from "express";
 import { SQLExecutable, hasResults } from "./dbconnection";
 import { ServerEnvironment } from "./env";
 import { Connection } from "@planetscale/database";
-import { Result } from "./utils";
 
 /**
  * Creates routes related to user operations.
@@ -14,43 +13,40 @@ export const createUserRouter = (environment: ServerEnvironment) => {
   const router = express.Router();
 
   router.post("/", async (req, res) => {
-    const result = await registerUser(environment.conn, {
-      id: res.locals.selfId,
-      ...req.body,
-    });
+    await environment.conn.transaction(async (tx) => {
+      if (await userWithIdExists(tx, res.locals.selfId)) {
+        return res.status(400).json({ error: "user-already-exists" });
+      }
 
-    if (result.status === "error") {
-      return res.status(400).json({ error: result.data });
-    }
-    return res.status(201).json({ id: res.locals.selfId });
+      if (await userWithHandleExists(tx, req.body.handle)) {
+        return res.status(400).json({ error: "duplicate-handle" });
+      }
+
+      await insertUser(tx, {
+        id: res.locals.selfId,
+        ...req.body,
+      });
+      return res.status(201).json({ id: res.locals.selfId });
+    });
   });
 
   return router;
+};
+
+const userWithHandleExists = async (conn: SQLExecutable, handle: string) => {
+  return await hasResults(conn, "SELECT * FROM user WHERE handle = :handle", {
+    handle,
+  });
+};
+
+const userWithIdExists = async (conn: SQLExecutable, id: string) => {
+  return await hasResults(conn, "SELECT * FROM user WHERE id = :id", { id });
 };
 
 export type InsertUserRequest = {
   id: string;
   name: string;
   handle: string;
-};
-
-export type RegisterUserError = "user-already-exists" | "non-unique-handle";
-
-const registerUser = async (
-  conn: Connection,
-  request: InsertUserRequest
-): Promise<Result<undefined, RegisterUserError>> => {
-  return await conn.transaction(async (tx) => {
-    if (await userWithIdExists(tx, request.id)) {
-      return { status: "error", data: "user-already-exists" };
-    }
-    await insertUser(tx, request);
-    return { status: "success" };
-  });
-};
-
-const userWithIdExists = async (conn: SQLExecutable, id: string) => {
-  return await hasResults(conn, "SELECT * FROM user WHERE id = :id", { id });
 };
 
 /**

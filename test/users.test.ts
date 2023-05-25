@@ -72,5 +72,26 @@ describe("Users tests", () => {
         .expect(400);
       expect(resp.body).toMatchObject({ error: "user-already-exists" });
     });
+
+    it("should not be able to create a user with a duplicate handle", async () => {
+      await request(app)
+        .post("/user")
+        .set("Authorization", randomUUID())
+        .send({
+          name: "Big Chungus",
+          handle: "big_chungus",
+        })
+        .expect(201);
+
+      const resp = await request(app)
+        .post("/user")
+        .set("Authorization", randomUUID())
+        .send({
+          name: "Elon Musk",
+          handle: "big_chungus",
+        })
+        .expect(400);
+      expect(resp.body).toMatchObject({ error: "duplicate-handle" });
+    });
   });
 });
