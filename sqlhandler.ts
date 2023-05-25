@@ -211,7 +211,7 @@ export const getUserExploredEvents = async (
 ) => {
   console.log("userId: " + userId);
   //let body = JSON.parse(req.body);
-  
+
   let SQL = `SELECT E.name AS event_name, E.description, E.eventId, E.ownerId, E.startDate, E.endDate, COUNT(A.userId) AS attendee_count, 
   CASE WHEN F.user IS NOT NULL THEN 1 ELSE 0 END AS is_friend 
   FROM Event E JOIN Location L ON E.eventId = L.eventId 
@@ -294,46 +294,46 @@ export const updateEvent = async (req: any) => {
 };
 
 // Create event
-export const createEvent = async (req: any)=> {
-    let INSERT = "INSERT INTO Event (";
-    let VALUES = "VALUES (";
-    let sqlparams = [];
-    let parse = JSON.parse(req.body);
-    let length = Object.keys(parse).length;
-    console.log("length :" + length);
-    for (var key in parse) {
-      if (length > 1) {
-        INSERT += key + ", ";
-        sqlparams.push(parse[key]);
-        VALUES += "?, ";
-      } else {
-        INSERT += key;
-        sqlparams.push(parse[key]);
-        VALUES += "?";
-      }
-      length = length - 1;
+export const createEvent = async (req: any) => {
+  let INSERT = "INSERT INTO Event (";
+  let VALUES = "VALUES (";
+  let sqlparams = [];
+  let parse = JSON.parse(req.body);
+  let length = Object.keys(parse).length;
+  console.log("length :" + length);
+  for (var key in parse) {
+    if (length > 1) {
+      INSERT += key + ", ";
+      sqlparams.push(parse[key]);
+      VALUES += "?, ";
+    } else {
+      INSERT += key;
+      sqlparams.push(parse[key]);
+      VALUES += "?";
     }
-    INSERT += ") " + VALUES + ") ";
-    console.log(INSERT);
-    console.log(sqlparams);
-    const results = yield conn.transaction(async (tx) => {
-      const newEvent = await tx.execute(INSERT, sqlparams);
-      const addOwnertoEvent = await tx.execute(
-        `INSERT INTO eventAttendance
+    length = length - 1;
+  }
+  INSERT += ") " + VALUES + ") ";
+  console.log(INSERT);
+  console.log(sqlparams);
+  const results = yield conn.transaction(async (tx) => {
+    const newEvent = await tx.execute(INSERT, sqlparams);
+    const addOwnertoEvent = await tx.execute(
+      `INSERT INTO eventAttendance
       (userId, eventId) VALUES (?, LAST_INSERT_ID())`,
-        [parse["ownerId"]]
-      );
-    });
-    console.log(results);
-    conn.refresh();
-    return {
-      statusCode: 200,
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(results),
-    };
+      [parse["ownerId"]]
+    );
   });
+  console.log(results);
+  conn.refresh();
+  return {
+    statusCode: 200,
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(results),
+  };
+};
 
 // Delete single event
 export const deleteEvent = async (req: any) => {
