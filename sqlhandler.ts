@@ -209,6 +209,7 @@ export const getUserExploredEvents = async (
   coordinates: LocationCoordinate2D,
   radiusMeters: number
 ) => {
+  console.log("userId: " + userId);
   //let body = JSON.parse(req.body);
 
   let SELECT =
