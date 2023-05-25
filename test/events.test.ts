@@ -9,7 +9,7 @@ describe("Events tests", () => {
   describe("CheckConstraint tests", () => {
     it("does not allow the end date to be before the start date", async () => {
       expect(async () => {
-        return await createEvent({
+        return await createEvent(conn, {
           title: "no",
           description: "yay",
           startDate: new Date(1),
