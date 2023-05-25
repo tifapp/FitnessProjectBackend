@@ -23,3 +23,14 @@ export const conn = connect({
 export interface SQLExecutable {
   execute(query: string, args?: object | any[] | null): Promise<ExecutedQuery>;
 }
+
+/**
+ * A helper function that returns if a given sql query has any results.
+ */
+export const hasResults = async (
+  conn: SQLExecutable,
+  query: string,
+  args: object | any[] | null = null
+) => {
+  return await conn.execute(query, args).then((res) => res.rows.length > 0);
+};
