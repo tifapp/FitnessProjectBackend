@@ -143,7 +143,7 @@ router.get("/event", async (req, res) => {
     res.status(400).write("Invalid");
     return;
   }
-
+  console.log(("userId: " + (req as any).userId) as string);
   const events = await getUserExploredEvents(
     (req as any).userId as string,
     params.data.coordinates,
