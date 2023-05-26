@@ -5,6 +5,7 @@ const resetDB = async () => {
   await conn.transaction(async (tx) => {
     await tx.execute("DELETE FROM user");
     await tx.execute("DELETE FROM Event");
+    await tx.execute("DELETE FROM pendingFriends");
   });
 };
 

@@ -34,15 +34,37 @@ export const createUserRouter = (environment: ServerEnvironment) => {
   });
 
   router.post("/friend/:userId", async (req, res) => {
-    await addPendingFriendRequest(
-      environment.conn,
-      res.locals.selfId,
-      req.params.userId
-    );
-    return res.status(201).json({ status: "friend-request-pending" });
+    await environment.conn.transaction(async (tx) => {
+      const hasIncomingRequest = await hasIncomingFriendRequest(
+        tx,
+        req.params.userId,
+        res.locals.selfId
+      );
+      if (hasIncomingRequest) {
+        return res.status(201).json({ status: "friends" });
+      }
+      await addPendingFriendRequest(
+        environment.conn,
+        res.locals.selfId,
+        req.params.userId
+      );
+      return res.status(201).json({ status: "friend-request-pending" });
+    });
   });
 
   return router;
+};
+
+const hasIncomingFriendRequest = async (
+  conn: SQLExecutable,
+  senderId: string,
+  receiverId: string
+) => {
+  return await hasResults(
+    conn,
+    "SELECT * FROM pendingFriends WHERE senderId = :senderId AND receiverId = :receiverId",
+    { senderId, receiverId }
+  );
 };
 
 const addPendingFriendRequest = async (
