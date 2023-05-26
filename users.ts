@@ -58,6 +58,10 @@ export const createUserRouter = (environment: ServerEnvironment) => {
     });
   });
 
+  router.get("/self", async (_, res) => {
+    return res.status(404).json({ error: "user-not-found" });
+  });
+
   return router;
 };
 

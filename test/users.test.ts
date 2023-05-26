@@ -131,6 +131,17 @@ describe("Users tests", () => {
     });
   });
 
+  describe("GetSelf tests", () => {
+    it("404s when you have no account", async () => {
+      const resp = await request(app)
+        .get("/user/self")
+        .set("Authorization", randomUUID())
+        .send();
+      expect(resp.status).toEqual(404);
+      expect(resp.body).toMatchObject({ error: "user-not-found" });
+    });
+  });
+
   const friendUser = async (user1Id: string, user2Id: string) => {
     return await request(app)
       .post(`/user/friend/${user2Id}`)
