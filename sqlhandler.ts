@@ -292,10 +292,10 @@ export const updateEvent = async (req: any) => {
     body: JSON.stringify(results.rows),
   };
 };
-
+// will also need to reverse geocode lon and lat to add to location table
 // Create event
 export const createEvent = async (req: any) => {
-  let INSERT = "INSERT INTO event (";
+  let INSERT = "INSERT INTO Event (";
   let VALUES = "VALUES (";
   let sqlparams = [];
   let parse = JSON.parse(req.body);
