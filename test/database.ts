@@ -4,7 +4,7 @@ import { conn } from "../dbconnection";
 const resetDB = async () => {
   await conn.transaction(async (tx) => {
     await tx.execute("DELETE FROM user");
-    await tx.execute("DELETE FROM event");
+    await tx.execute("DELETE FROM Event");
   });
 };
 

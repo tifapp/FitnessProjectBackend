@@ -31,7 +31,7 @@ export const createEvent = async (
 ) => {
   await conn.execute(
     `
-    INSERT INTO event (
+    INSERT INTO Event (
         title, 
         description, 
         startDate, 

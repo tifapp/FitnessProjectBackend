@@ -33,7 +33,27 @@ export const createUserRouter = (environment: ServerEnvironment) => {
     });
   });
 
+  router.post("/friend/:userId", async (req, res) => {
+    await addPendingFriendRequest(
+      environment.conn,
+      res.locals.selfId,
+      req.params.userId
+    );
+    return res.status(201).json({ status: "friend-request-pending" });
+  });
+
   return router;
+};
+
+const addPendingFriendRequest = async (
+  conn: SQLExecutable,
+  senderId: string,
+  receiverId: string
+) => {
+  await conn.execute(
+    "INSERT INTO pendingFriends (senderId, receiverId) VALUES (:senderId, :receiverId)",
+    { senderId, receiverId }
+  );
 };
 
 const CreateUserSchema = z.object({

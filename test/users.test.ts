@@ -92,6 +92,26 @@ describe("Users tests", () => {
     });
   });
 
+  describe("FriendRequest tests", () => {
+    it("should have a pending status when no prior relation between uses", async () => {
+      const otherId = randomUUID();
+      const youId = randomUUID();
+      await registerUser({ id: youId, name: "Elon Musk", handle: "elon_musk" });
+      await registerUser({ id: otherId, name: "A", handle: "a" });
+
+      const resp = await friendUser(youId, otherId);
+      expect(resp.status).toEqual(201);
+      expect(resp.body).toMatchObject({ status: "friend-request-pending" });
+    });
+  });
+
+  const friendUser = async (user1Id: string, user2Id: string) => {
+    return await request(app)
+      .post(`/user/friend/${user2Id}`)
+      .set("Authorization", user1Id)
+      .send();
+  };
+
   const registerUser = async (req: InsertUserRequest) => {
     return await request(app).post("/user").set("Authorization", req.id).send({
       name: req.name,
