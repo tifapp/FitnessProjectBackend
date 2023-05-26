@@ -1,7 +1,8 @@
 import express from "express";
 import { SQLExecutable, hasResults } from "./dbconnection";
 import { ServerEnvironment } from "./env";
-import { Connection } from "@planetscale/database";
+import { withValidatedRequest } from "./validation";
+import { z } from "zod";
 
 /**
  * Creates routes related to user operations.
@@ -13,25 +14,34 @@ export const createUserRouter = (environment: ServerEnvironment) => {
   const router = express.Router();
 
   router.post("/", async (req, res) => {
-    await environment.conn.transaction(async (tx) => {
-      if (await userWithIdExists(tx, res.locals.selfId)) {
-        return res.status(400).json({ error: "user-already-exists" });
-      }
+    await withValidatedRequest(req, res, CreateUserSchema, async (data) => {
+      await environment.conn.transaction(async (tx) => {
+        if (await userWithIdExists(tx, res.locals.selfId)) {
+          return res.status(400).json({ error: "user-already-exists" });
+        }
 
-      if (await userWithHandleExists(tx, req.body.handle)) {
-        return res.status(400).json({ error: "duplicate-handle" });
-      }
+        if (await userWithHandleExists(tx, req.body.handle)) {
+          return res.status(400).json({ error: "duplicate-handle" });
+        }
 
-      await insertUser(tx, {
-        id: res.locals.selfId,
-        ...req.body,
+        await insertUser(tx, {
+          id: res.locals.selfId,
+          ...data.body,
+        });
+        return res.status(201).json({ id: res.locals.selfId });
       });
-      return res.status(201).json({ id: res.locals.selfId });
     });
   });
 
   return router;
 };
+
+const CreateUserSchema = z.object({
+  body: z.object({
+    name: z.string().max(50),
+    handle: z.string().regex(/^[a-z_0-9]{1,15}$/),
+  }),
+});
 
 const userWithHandleExists = async (conn: SQLExecutable, handle: string) => {
   return await hasResults(conn, "SELECT * FROM user WHERE handle = :handle", {
