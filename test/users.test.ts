@@ -133,14 +133,15 @@ describe("Users tests", () => {
 
   describe("GetSelf tests", () => {
     it("404s when you have no account", async () => {
-      const resp = await request(app)
-        .get("/user/self")
-        .set("Authorization", randomUUID())
-        .send();
+      const resp = await fetchSelf(randomUUID());
       expect(resp.status).toEqual(404);
       expect(resp.body).toMatchObject({ error: "user-not-found" });
     });
   });
+
+  const fetchSelf = async (id: string) => {
+    return await request(app).get("/user/self").set("Authorization", id).send();
+  };
 
   const friendUser = async (user1Id: string, user2Id: string) => {
     return await request(app)
