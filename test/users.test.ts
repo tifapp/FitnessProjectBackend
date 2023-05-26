@@ -93,15 +93,25 @@ describe("Users tests", () => {
   });
 
   describe("FriendRequest tests", () => {
-    it("should have a pending status when no prior relation between uses", async () => {
-      const otherId = randomUUID();
-      const youId = randomUUID();
+    const otherId = randomUUID();
+    const youId = randomUUID();
+
+    beforeEach(async () => {
       await registerUser({ id: youId, name: "Elon Musk", handle: "elon_musk" });
       await registerUser({ id: otherId, name: "A", handle: "a" });
+    });
 
+    it("should have a pending status when no prior relation between uses", async () => {
       const resp = await friendUser(youId, otherId);
       expect(resp.status).toEqual(201);
       expect(resp.body).toMatchObject({ status: "friend-request-pending" });
+    });
+
+    it("should have a friend status when the receiver sends a friend request to someone who sent them a pending friend request", async () => {
+      await friendUser(youId, otherId);
+      const resp = await friendUser(otherId, youId);
+      expect(resp.status).toEqual(201);
+      expect(resp.body).toMatchObject({ status: "friends" });
     });
   });
 
