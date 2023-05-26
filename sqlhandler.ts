@@ -321,7 +321,7 @@ export const createEvent = async (req: any) => {
     const addOwnertoEvent = await tx.execute(
       `INSERT INTO eventAttendance
       (userId, eventId) VALUES (?, LAST_INSERT_ID())`,
-      [parse["ownerId"]]
+      [parse["hostId"]]
     );
   });
   console.log(results);
