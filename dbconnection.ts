@@ -36,11 +36,15 @@ export const hasResults = async (
 };
 
 /**
- * Queries
- * @param conn
- * @param query
- * @param args
- * @returns
+ * Loads a list of results from the database given a sql query and casts the result to `Value`.
+ *
+ * @example
+ * ```ts
+ * type User = { id: string, ... }
+ *
+ * const results = await queryResults<User>(conn, "SELECT * FROM user");
+ * console.log(results.id) // ✅ Typesafe
+ * ```
  */
 export const queryResults = async <Value>(
   conn: SQLExecutable,
