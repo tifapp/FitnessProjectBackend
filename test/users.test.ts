@@ -36,6 +36,17 @@ describe("Users tests", () => {
   describe("CreateUser tests", () => {
     const app = createTestApp({ conn });
 
+    it("should 400 on invalid request body", async () => {
+      request(app)
+        .post("/user")
+        .set("Authorization", randomUUID())
+        .send({
+          name: 1,
+          handle: "iusdbdkjbsjbdjsbdsdsudbusybduysdusdudbsuyb",
+        })
+        .expect(400);
+    });
+
     it("should be able to create a new user posting to /user when user does not exist", async () => {
       const userId = randomUUID();
       const body = {
