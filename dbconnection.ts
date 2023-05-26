@@ -34,3 +34,18 @@ export const hasResults = async (
 ) => {
   return await conn.execute(query, args).then((res) => res.rows.length > 0);
 };
+
+/**
+ * Queries
+ * @param conn
+ * @param query
+ * @param args
+ * @returns
+ */
+export const queryResults = async <Value>(
+  conn: SQLExecutable,
+  query: string,
+  args: object | any[] | null = null
+) => {
+  return await conn.execute(query, args).then((res) => res.rows as Value[]);
+};

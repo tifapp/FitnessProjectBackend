@@ -107,6 +107,22 @@ describe("Users tests", () => {
       expect(resp.body).toMatchObject({ status: "friend-request-pending" });
     });
 
+    it("should return the same status when already existing pending friend request", async () => {
+      await friendUser(youId, otherId);
+      const resp = await friendUser(youId, otherId);
+      expect(resp.status).toEqual(200);
+      expect(resp.body).toMatchObject({ status: "friend-request-pending" });
+    });
+
+    it("should return the same status when already friends", async () => {
+      await friendUser(youId, otherId);
+      await friendUser(otherId, youId);
+
+      const resp = await friendUser(youId, otherId);
+      expect(resp.status).toEqual(200);
+      expect(resp.body).toMatchObject({ status: "friends" });
+    });
+
     it("should have a friend status when the receiver sends a friend request to someone who sent them a pending friend request", async () => {
       await friendUser(youId, otherId);
       const resp = await friendUser(otherId, youId);

@@ -1,5 +1,5 @@
 import express from "express";
-import { SQLExecutable, hasResults } from "./dbconnection";
+import { SQLExecutable, queryResults, hasResults } from "./dbconnection";
 import { ServerEnvironment } from "./env";
 import { withValidatedRequest } from "./validation";
 import { z } from "zod";
@@ -35,19 +35,25 @@ export const createUserRouter = (environment: ServerEnvironment) => {
 
   router.post("/friend/:userId", async (req, res) => {
     await environment.conn.transaction(async (tx) => {
-      const hasIncomingRequest = await hasIncomingFriendRequest(
+      const { youToThemStatus, themToYouStatus } = await twoWayUserRelation(
         tx,
-        req.params.userId,
-        res.locals.selfId
-      );
-      if (hasIncomingRequest) {
-        return res.status(201).json({ status: "friends" });
-      }
-      await addPendingFriendRequest(
-        environment.conn,
         res.locals.selfId,
         req.params.userId
       );
+
+      if (
+        youToThemStatus === "friends" ||
+        youToThemStatus === "friend-request-pending"
+      ) {
+        return res.status(200).json({ status: youToThemStatus });
+      }
+
+      if (themToYouStatus === "friend-request-pending") {
+        await makeFriends(tx, res.locals.selfId, req.params.userId);
+        return res.status(201).json({ status: "friends" });
+      }
+
+      await addPendingFriendRequest(tx, res.locals.selfId, req.params.userId);
       return res.status(201).json({ status: "friend-request-pending" });
     });
   });
@@ -55,15 +61,53 @@ export const createUserRouter = (environment: ServerEnvironment) => {
   return router;
 };
 
-const hasIncomingFriendRequest = async (
+/**
+ * A type representing the relationship status between 2 users.
+ */
+export type UserToProfileRelationStatus =
+  | "not-friends"
+  | "friend-request-pending"
+  | "friends"
+  | "blocked";
+
+const twoWayUserRelation = async (
   conn: SQLExecutable,
-  senderId: string,
-  receiverId: string
+  youId: string,
+  themId: string
 ) => {
-  return await hasResults(
+  const results = await queryResults<{
+    id1: string;
+    id2: string;
+    status: UserToProfileRelationStatus;
+  }>(
     conn,
-    "SELECT * FROM pendingFriends WHERE senderId = :senderId AND receiverId = :receiverId",
-    { senderId, receiverId }
+    `
+    SELECT * FROM userRelations ur 
+    WHERE 
+      (ur.id1 = :youId AND ur.id2 = :themId) 
+      OR 
+      (ur.id1 = :themId AND ur.id2 = :youId) 
+    `,
+    { youId, themId }
+  );
+  return {
+    youToThemStatus: results.find(
+      (res) => res.id1 === youId && res.id2 === themId
+    )?.status,
+    themToYouStatus: results.find(
+      (res) => res.id1 === themId && res.id2 === youId
+    )?.status,
+  };
+};
+
+const makeFriends = async (conn: SQLExecutable, id1: string, id2: string) => {
+  await conn.execute(
+    `
+    UPDATE userRelations 
+    SET status = 'friends' 
+    WHERE (id1 = :id1 AND id2 = :id2) OR (id1 = :id2 AND id2 = :id1)
+  `,
+    { id1, id2 }
   );
 };
 
@@ -73,7 +117,7 @@ const addPendingFriendRequest = async (
   receiverId: string
 ) => {
   await conn.execute(
-    "INSERT INTO pendingFriends (senderId, receiverId) VALUES (:senderId, :receiverId)",
+    "INSERT INTO userRelations (id1, id2, status) VALUES (:senderId, :receiverId, 'friend-request-pending')",
     { senderId, receiverId }
   );
 };
