@@ -295,7 +295,7 @@ export const updateEvent = async (req: any) => {
 
 // Create event
 export const createEvent = async (req: any) => {
-  let INSERT = "INSERT INTO Event (";
+  let INSERT = "INSERT INTO event (";
   let VALUES = "VALUES (";
   let sqlparams = [];
   let parse = JSON.parse(req.body);
