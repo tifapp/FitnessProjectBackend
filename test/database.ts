@@ -5,7 +5,7 @@ const resetDB = async () => {
   await conn.transaction(async (tx) => {
     await tx.execute("DELETE FROM user");
     await tx.execute("DELETE FROM Event");
-    await tx.execute("DELETE FROM pendingFriends");
+    await tx.execute("DELETE FROM userRelations");
   });
 };
 
@@ -24,6 +24,6 @@ export const expectFailsCheckConstraint = async (fn: () => Promise<void>) => {
     await fn();
     fail("This function should throw a check constraint error.");
   } catch (err: any) {
-    expect(err.body.message.includes("(errrno 3819)"));
+    expect(err.body.message.includes("(errno 3819)"));
   }
 };
