@@ -28,8 +28,9 @@ export const createUserRouter = (environment: ServerEnvironment) => {
           id: res.locals.selfId,
           ...data,
         });
-        return res.status(201).json({ id: res.locals.selfId });
       });
+      
+      return res.status(201).json({ id: res.locals.selfId });
     });
   });
 
@@ -54,8 +55,9 @@ export const createUserRouter = (environment: ServerEnvironment) => {
       }
 
       await addPendingFriendRequest(tx, res.locals.selfId, req.params.userId);
-      return res.status(201).json({ status: "friend-request-pending" });
     });
+    
+    return res.status(201).json({ status: "friend-request-pending" });
   });
 
   return router;
@@ -153,8 +155,6 @@ export const insertUser = async (
   conn: SQLExecutable,
   request: InsertUserRequest
 ) => {
-  console.log("request is")
-  console.log(request)
 
   await conn.execute(
     `INSERT INTO user (id, name, handle) VALUES (:id, :name, :handle)`,

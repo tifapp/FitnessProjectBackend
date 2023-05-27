@@ -27,7 +27,8 @@ export const withValidatedRequest = async <Schema extends AnyZodObject>(
   req: Request,
   res: Response,
   schema: Schema,
-  fn: (data: z.infer<Schema>) => Promise<void>
+  //Todo: change promise type
+  fn: (data: z.infer<Schema>) => Promise<any>
 ) => {
   console.log("req body is");
   console.log(req.body);
