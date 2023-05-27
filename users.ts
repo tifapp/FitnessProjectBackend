@@ -153,8 +153,10 @@ export const insertUser = async (
   conn: SQLExecutable,
   request: InsertUserRequest
 ) => {
+  console.log("request is ");
+  console.log(request)
   await conn.execute(
     `INSERT INTO user (id, name, handle) VALUES (:id, :name, :handle)`,
-    request
+    {id: "5", name: "Sean", handle: "seanimo"}
   );
 };
