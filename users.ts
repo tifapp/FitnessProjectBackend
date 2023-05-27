@@ -1,8 +1,8 @@
 import express from "express";
-import { SQLExecutable, queryResults, hasResults } from "./dbconnection";
-import { ServerEnvironment } from "./env";
-import { withValidatedRequest } from "./validation";
 import { z } from "zod";
+import { SQLExecutable, hasResults, queryResults } from "./dbconnection.js";
+import { ServerEnvironment } from "./env.js";
+import { withValidatedRequest } from "./validation.js";
 
 /**
  * Creates routes related to user operations.
@@ -26,7 +26,7 @@ export const createUserRouter = (environment: ServerEnvironment) => {
 
         await insertUser(tx, {
           id: res.locals.selfId,
-          ...data.body,
+          ...data,
         });
         return res.status(201).json({ id: res.locals.selfId });
       });
@@ -123,10 +123,8 @@ const addPendingFriendRequest = async (
 };
 
 const CreateUserSchema = z.object({
-  body: z.object({
-    name: z.string().max(50),
-    handle: z.string().regex(/^[a-z_0-9]{1,15}$/),
-  }),
+  name: z.string().max(50),
+  handle: z.string().regex(/^[a-z_0-9]{1,15}$/),
 });
 
 const userWithHandleExists = async (conn: SQLExecutable, handle: string) => {

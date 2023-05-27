@@ -1,24 +1,25 @@
+// @ts-nocheck
 import express from "express";
+import { z } from "zod";
 import { createApp } from "./app";
 import {
-  UserList,
-  createUser,
   User,
-  getUserById,
-  updateUser,
-  getUserExploredEvents,
-  createEvent,
-  getEventById,
-  updateEvent,
-  getEventAttendies,
-  addSelfToEvent,
-  leaveEvent,
-  removeFromEvent,
+  UserList,
   addFriend,
+  addSelfToEvent,
+  createEvent,
+  createUser,
+  getEventAttendies,
+  getEventById,
+  getUserById,
+  getUserExploredEvents,
+  leaveEvent,
   removeFriend,
+  removeFromEvent,
+  updateEvent,
+  updateUser,
 } from "./legacydatabase";
 import { LocationCoordinates2DSchema } from "./location";
-import { z } from "zod";
 
 const GetEventsSchema = z.object({
   coordinates: LocationCoordinates2DSchema,

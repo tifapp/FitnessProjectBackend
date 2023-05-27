@@ -1,6 +1,6 @@
 import { ExecutedQuery, connect } from "@planetscale/database";
 import fetch from "node-fetch";
-import { envVars } from "./env";
+import { envVars } from "./env.js";
 /**
  * The main planet scale connection to use.
  */
