@@ -1,8 +1,15 @@
 import express from "express";
-import { SQLExecutable, queryResults, hasResults } from "./dbconnection";
+import {
+  SQLExecutable,
+  queryResults,
+  hasResults,
+  queryFirst,
+} from "./dbconnection";
 import { ServerEnvironment } from "./env";
 import { withValidatedRequest } from "./validation";
 import { z } from "zod";
+import { Result } from "./utils";
+import { Connection } from "@planetscale/database";
 
 /**
  * Creates routes related to user operations.
@@ -15,21 +22,15 @@ export const createUserRouter = (environment: ServerEnvironment) => {
 
   router.post("/", async (req, res) => {
     await withValidatedRequest(req, res, CreateUserSchema, async (data) => {
-      await environment.conn.transaction(async (tx) => {
-        if (await userWithIdExists(tx, res.locals.selfId)) {
-          return res.status(400).json({ error: "user-already-exists" });
-        }
+      const result = await registerNewUser(
+        environment.conn,
+        Object.assign(data.body, { id: res.locals.selfId })
+      );
 
-        if (await userWithHandleExists(tx, req.body.handle)) {
-          return res.status(400).json({ error: "duplicate-handle" });
-        }
-
-        await insertUser(tx, {
-          id: res.locals.selfId,
-          ...data.body,
-        });
-        return res.status(201).json({ id: res.locals.selfId });
-      });
+      if (result.status === "error") {
+        return res.status(400).json({ error: result.value });
+      }
+      return res.status(201).json(result.value);
     });
   });
 
@@ -59,10 +60,33 @@ export const createUserRouter = (environment: ServerEnvironment) => {
   });
 
   router.get("/self", async (_, res) => {
-    return res.status(404).json({ error: "user-not-found" });
+    const user = await loadUserWithSettings(
+      environment.conn,
+      res.locals.selfId
+    );
+    if (!user) {
+      return res.status(404).json({ error: "user-not-found" });
+    }
+    return res.status(200).json(user);
   });
 
   return router;
+};
+
+export type User = {
+  id: string;
+  name: string;
+  handle: string;
+  bio?: string;
+  profileImageURL?: string;
+  creationDate: Date;
+  updatedAt?: Date;
+};
+
+const loadUserWithSettings = async (conn: SQLExecutable, userId: string) => {
+  return await queryFirst<User>(conn, "SELECT * FROM user WHERE id = :userId", {
+    userId,
+  });
 };
 
 /**
@@ -133,6 +157,26 @@ const CreateUserSchema = z.object({
   }),
 });
 
+const registerNewUser = async (
+  conn: Connection,
+  request: RegisterUserRequest
+): Promise<
+  Result<{ id: string }, "user-already-exists" | "duplicate-handle">
+> => {
+  return await conn.transaction(async (tx) => {
+    if (await userWithIdExists(tx, request.id)) {
+      return { status: "error", value: "user-already-exists" };
+    }
+
+    if (await userWithHandleExists(tx, request.handle)) {
+      return { status: "error", value: "duplicate-handle" };
+    }
+
+    await insertUser(tx, request);
+    return { status: "success", value: { id: request.id } };
+  });
+};
+
 const userWithHandleExists = async (conn: SQLExecutable, handle: string) => {
   return await hasResults(conn, "SELECT * FROM user WHERE handle = :handle", {
     handle,
@@ -143,7 +187,7 @@ const userWithIdExists = async (conn: SQLExecutable, id: string) => {
   return await hasResults(conn, "SELECT * FROM user WHERE id = :id", { id });
 };
 
-export type InsertUserRequest = {
+export type RegisterUserRequest = {
   id: string;
   name: string;
   handle: string;
@@ -153,11 +197,11 @@ export type InsertUserRequest = {
  * Creates a new user in the database.
  *
  * @param conn see {@link SQLExecutable}
- * @param request see {@link InsertUserRequest}
+ * @param request see {@link RegisterUserRequest}
  */
 export const insertUser = async (
   conn: SQLExecutable,
-  request: InsertUserRequest
+  request: RegisterUserRequest
 ) => {
   await conn.execute(
     `INSERT INTO user (id, name, handle) VALUES (:id, :name, :handle)`,

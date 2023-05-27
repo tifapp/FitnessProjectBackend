@@ -1,6 +1,7 @@
 import { ExecutedQuery, connect } from "@planetscale/database";
 import fetch from "node-fetch";
 import { envVars } from "./env";
+
 /**
  * The main planet scale connection to use.
  */
@@ -43,7 +44,7 @@ export const hasResults = async (
  * type User = { id: string, ... }
  *
  * const results = await queryResults<User>(conn, "SELECT * FROM user");
- * console.log(results.id) // ✅ Typesafe
+ * console.log(results[0].id) // ✅ Typesafe
  * ```
  */
 export const queryResults = async <Value>(
@@ -52,4 +53,26 @@ export const queryResults = async <Value>(
   args: object | any[] | null = null
 ) => {
   return await conn.execute(query, args).then((res) => res.rows as Value[]);
+};
+
+/**
+ * Returns the first result of a query in a typesafe manner.
+ *
+ * @example
+ * ```ts
+ * type User = { id: string, ... }
+ *
+ * const result? = await queryFirst<User>(conn, "SELECT * FROM user");
+ * console.log(result?.id) // ✅ Typesafe
+ * ```
+ */
+export const queryFirst = async <Value>(
+  conn: SQLExecutable,
+  query: string,
+  args: object | any[] | null = null
+) => {
+  return await conn.execute(query, args).then((res) => {
+    // NB: We'll cast this to undefined because that's what js likes to do without telling us...
+    return res.rows[0] as Value | undefined;
+  });
 };

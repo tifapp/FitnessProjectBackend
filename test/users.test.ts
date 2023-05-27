@@ -4,7 +4,7 @@ import {
   resetDatabaseBeforeEach,
 } from "./database";
 import { conn } from "../dbconnection";
-import { InsertUserRequest, insertUser } from "../users";
+import { RegisterUserRequest, insertUser } from "../users";
 import request from "supertest";
 import { createTestApp } from "./testApp";
 
@@ -137,6 +137,28 @@ describe("Users tests", () => {
       expect(resp.status).toEqual(404);
       expect(resp.body).toMatchObject({ error: "user-not-found" });
     });
+
+    it("should be able to fetch your private account info", async () => {
+      const id = randomUUID();
+      const accountInfo = {
+        id,
+        name: "Matthew Hayes",
+        handle: "little_chungus",
+      };
+      await registerUser(accountInfo);
+      const resp = await fetchSelf(id);
+
+      expect(resp.status).toEqual(200);
+      expect(resp.body).toMatchObject(
+        expect.objectContaining({
+          ...accountInfo,
+          bio: null,
+          updatedAt: null,
+          profileImageURL: null,
+        })
+      );
+      expect(Date.parse(resp.body.creationDate)).not.toBeNaN();
+    });
   });
 
   const fetchSelf = async (id: string) => {
@@ -150,7 +172,7 @@ describe("Users tests", () => {
       .send();
   };
 
-  const registerUser = async (req: InsertUserRequest) => {
+  const registerUser = async (req: RegisterUserRequest) => {
     return await request(app).post("/user").set("Authorization", req.id).send({
       name: req.name,
       handle: req.handle,
