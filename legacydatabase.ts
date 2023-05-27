@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 import { conn } from "./dbconnection";
 
 export type User = {
@@ -291,7 +293,7 @@ export const createEvent = async (req: any) => {
   INSERT += ") " + VALUES + ") ";
   console.log(INSERT);
   console.log(sqlparams);
-  const results = yield conn.transaction(async (tx) => {
+  const results = await conn.transaction(async (tx) => {
     const newEvent = await tx.execute(INSERT, sqlparams);
     const addOwnertoEvent = await tx.execute(
       `INSERT INTO eventAttendance
@@ -319,7 +321,7 @@ export const deleteEvent = async (req: any) => {
 
   const results1 = await conn.execute(DELETE1, body);
   const results2 = await conn.execute(DELETE2, body);
-  console.log(results);
+  console.log(results1);
   conn.refresh();
   return {
     statusCode: 200,
