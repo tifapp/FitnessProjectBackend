@@ -1,8 +1,7 @@
-import { connect } from "@planetscale/database";
 import express from "express";
 import { z } from "zod";
 import { SQLExecutable, hasResults, queryResults } from "./dbconnection.js";
-import { ServerEnvironment, envVars } from "./env.js";
+import { ServerEnvironment } from "./env.js";
 import { withValidatedRequest } from "./validation.js";
 
 /**
@@ -16,8 +15,6 @@ export const createUserRouter = (environment: ServerEnvironment) => {
 
   router.post("/", async (req, res) => {
     await withValidatedRequest(req, res, CreateUserSchema, async (data) => {
-      console.log("connection is")
-      console.log(environment.conn)
       await environment.conn.transaction(async (tx) => {
         if (await userWithIdExists(tx, res.locals.selfId)) {
           return res.status(400).json({ error: "user-already-exists" });
@@ -156,24 +153,11 @@ export const insertUser = async (
   conn: SQLExecutable,
   request: InsertUserRequest
 ) => {
-  const testconn = connect({
-    fetch,
-    host: envVars.DATABASE_HOST,
-    username: envVars.DATABASE_USERNAME,
-    password: envVars.DATABASE_PASSWORD,
-  });
-
-  console.log("test conn is");
-  console.log(testconn);
-
-  
-  console.log("test env vars is");
-  console.log(envVars);
-
-  
-  console.log("request is ");
+  console.log("request is")
   console.log(request)
+
   await conn.execute(
-    `INSERT INTO user (id, name, handle) VALUES (10, "seanimoo", "seanimotesto")`,
+    `INSERT INTO user (id, name, handle) VALUES (:id, :name, :handle)`,
+    request
   );
 };
