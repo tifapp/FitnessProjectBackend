@@ -1,13 +1,14 @@
 import { ExecutedQuery, connect } from "@planetscale/database";
 import fetch from "node-fetch";
+import { envVars } from "./env.js";
 /**
  * The main planet scale connection to use.
  */
 export const conn = connect({
   fetch,
-  host: process.env.DATABASE_HOST,
-  username: process.env.DATABASE_USERNAME,
-  password: process.env.DATABASE_PASSWORD,
+  host: envVars.DATABASE_HOST,
+  username: envVars.DATABASE_USERNAME,
+  password: envVars.DATABASE_PASSWORD,
 });
 
 /**
