@@ -125,6 +125,7 @@ describe("Users tests", () => {
 
     it("should have a friend status when the receiver sends a friend request to someone who sent them a pending friend request", async () => {
       await friendUser(youId, otherId);
+
       const resp = await friendUser(otherId, youId);
       expect(resp.status).toEqual(201);
       expect(resp.body).toMatchObject({ status: "friends" });

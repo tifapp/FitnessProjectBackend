@@ -35,32 +35,18 @@ export const createUserRouter = (environment: ServerEnvironment) => {
   });
 
   router.post("/friend/:userId", async (req, res) => {
-    await environment.conn.transaction(async (tx) => {
-      const { youToThemStatus, themToYouStatus } = await twoWayUserRelation(
-        tx,
-        res.locals.selfId,
-        req.params.userId
-      );
-
-      if (
-        youToThemStatus === "friends" ||
-        youToThemStatus === "friend-request-pending"
-      ) {
-        return res.status(200).json({ status: youToThemStatus });
-      }
-
-      if (themToYouStatus === "friend-request-pending") {
-        await makeFriends(tx, res.locals.selfId, req.params.userId);
-        return res.status(201).json({ status: "friends" });
-      }
-
-      await addPendingFriendRequest(tx, res.locals.selfId, req.params.userId);
-      return res.status(201).json({ status: "friend-request-pending" });
-    });
+    const result = await sendFriendRequest(
+      environment.conn,
+      res.locals.selfId,
+      req.params.userId
+    );
+    return res
+      .status(result.statusChanged ? 201 : 200)
+      .json({ status: result.status });
   });
 
   router.get("/self", async (_, res) => {
-    const user = await loadUserWithSettings(
+    const user = await loadUserWithoutRelationship(
       environment.conn,
       res.locals.selfId
     );
@@ -73,6 +59,9 @@ export const createUserRouter = (environment: ServerEnvironment) => {
   return router;
 };
 
+/**
+ * A type representing the main user fields.
+ */
 export type User = {
   id: string;
   name: string;
@@ -83,7 +72,10 @@ export type User = {
   updatedAt?: Date;
 };
 
-const loadUserWithSettings = async (conn: SQLExecutable, userId: string) => {
+const loadUserWithoutRelationship = async (
+  conn: SQLExecutable,
+  userId: string
+) => {
   return await queryFirst<User>(conn, "SELECT * FROM user WHERE id = :userId", {
     userId,
   });
@@ -97,6 +89,35 @@ export type UserToProfileRelationStatus =
   | "friend-request-pending"
   | "friends"
   | "blocked";
+
+const sendFriendRequest = async (
+  conn: Connection,
+  senderId: string,
+  receiverId: string
+) => {
+  return await conn.transaction(async (tx) => {
+    const { youToThemStatus, themToYouStatus } = await twoWayUserRelation(
+      tx,
+      senderId,
+      receiverId
+    );
+
+    if (
+      youToThemStatus === "friends" ||
+      youToThemStatus === "friend-request-pending"
+    ) {
+      return { statusChanged: false, status: youToThemStatus };
+    }
+
+    if (themToYouStatus === "friend-request-pending") {
+      await makeFriends(tx, senderId, receiverId);
+      return { statusChanged: true, status: "friends" };
+    }
+
+    await addPendingFriendRequest(tx, senderId, receiverId);
+    return { statusChanged: true, status: "friend-request-pending" };
+  });
+};
 
 const twoWayUserRelation = async (
   conn: SQLExecutable,
