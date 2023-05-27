@@ -1,4 +1,4 @@
-import express from "express";
+import express, { Response } from "express";
 import {
   SQLExecutable,
   queryResults,
@@ -10,6 +10,10 @@ import { withValidatedRequest } from "./validation";
 import { z } from "zod";
 import { Result } from "./utils";
 import { Connection } from "@planetscale/database";
+
+const userNotFoundResponse = (res: Response) => {
+  res.status(404).json({ error: "user-not-found" });
+};
 
 /**
  * Creates routes related to user operations.
@@ -46,14 +50,15 @@ export const createUserRouter = (environment: ServerEnvironment) => {
   });
 
   router.get("/self", async (_, res) => {
-    const user = await loadUserWithoutRelationship(
-      environment.conn,
-      res.locals.selfId
-    );
+    const user = await userWithId(environment.conn, res.locals.selfId);
     if (!user) {
-      return res.status(404).json({ error: "user-not-found" });
+      return userNotFoundResponse(res);
     }
     return res.status(200).json(user);
+  });
+
+  router.get("/self/settings", async (_, res) => {
+    return userNotFoundResponse(res);
   });
 
   return router;
@@ -72,10 +77,7 @@ export type User = {
   updatedAt?: Date;
 };
 
-const loadUserWithoutRelationship = async (
-  conn: SQLExecutable,
-  userId: string
-) => {
+const userWithId = async (conn: SQLExecutable, userId: string) => {
   return await queryFirst<User>(conn, "SELECT * FROM user WHERE id = :userId", {
     userId,
   });

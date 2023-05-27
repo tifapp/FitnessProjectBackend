@@ -162,6 +162,21 @@ describe("Users tests", () => {
     });
   });
 
+  describe("Settings tests", () => {
+    it("should 404 when gettings settings when user does not exist", async () => {
+      const resp = await fetchSettings(randomUUID());
+      expect(resp.status).toEqual(404);
+      expect(resp.body).toEqual({ error: "user-not-found" });
+    });
+  });
+
+  const fetchSettings = async (id: string) => {
+    return await request(app)
+      .get("/user/self/settings")
+      .set("Authorization", id)
+      .send();
+  };
+
   const fetchSelf = async (id: string) => {
     return await request(app).get("/user/self").set("Authorization", id).send();
   };
