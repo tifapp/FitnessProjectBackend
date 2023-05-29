@@ -6,9 +6,9 @@ import {
 import { conn } from "../dbconnection";
 import {
   RegisterUserRequest,
-  USER_NOT_FOUND_BODY,
   UserSettings,
   insertUser,
+  userNotFoundBody,
 } from "../users";
 import request from "supertest";
 import { createTestApp } from "./testApp";
@@ -139,9 +139,10 @@ describe("Users tests", () => {
 
   describe("GetSelf tests", () => {
     it("404s when you have no account", async () => {
-      const resp = await fetchSelf(randomUUID());
+      const id = randomUUID();
+      const resp = await fetchSelf(id);
       expect(resp.status).toEqual(404);
-      expect(resp.body).toMatchObject({ error: "user-not-found" });
+      expect(resp.body).toMatchObject(userNotFoundBody(id));
     });
 
     it("should be able to fetch your private account info", async () => {
@@ -169,9 +170,10 @@ describe("Users tests", () => {
 
   describe("Settings tests", () => {
     it("should 404 when gettings settings when user does not exist", async () => {
-      const resp = await fetchSettings(randomUUID());
+      const id = randomUUID();
+      const resp = await fetchSettings(id);
       expect(resp.status).toEqual(404);
-      expect(resp.body).toEqual(USER_NOT_FOUND_BODY);
+      expect(resp.body).toEqual(userNotFoundBody(id));
     });
 
     it("should return the default settings when settings not edited", async () => {
@@ -190,11 +192,10 @@ describe("Users tests", () => {
     });
 
     it("should 404 when attempting edit settings for non-existent user", async () => {
-      const resp = await editSettings(randomUUID(), {
-        isAnalyticsEnabled: false,
-      });
+      const id = randomUUID();
+      const resp = await editSettings(id, { isAnalyticsEnabled: false });
       expect(resp.status).toEqual(404);
-      expect(resp.body).toMatchObject(USER_NOT_FOUND_BODY);
+      expect(resp.body).toMatchObject(userNotFoundBody(id));
     });
 
     const registerTestUser = async () => {

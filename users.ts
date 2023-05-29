@@ -11,10 +11,13 @@ import { z } from "zod";
 import { Result } from "./utils";
 import { Connection } from "@planetscale/database";
 
-export const USER_NOT_FOUND_BODY = { error: "user-not-found" };
+export const userNotFoundBody = (userId: string) => ({
+  userId,
+  error: "user-not-found",
+});
 
-const userNotFoundResponse = (res: Response) => {
-  res.status(404).json(USER_NOT_FOUND_BODY);
+export const userNotFoundResponse = (res: Response, userId: string) => {
+  res.status(404).json(userNotFoundBody(userId));
 };
 
 /**
@@ -54,7 +57,7 @@ export const createUserRouter = (environment: ServerEnvironment) => {
   router.get("/self", async (_, res) => {
     const user = await userWithId(environment.conn, res.locals.selfId);
     if (!user) {
-      return userNotFoundResponse(res);
+      return userNotFoundResponse(res, res.locals.selfId);
     }
     return res.status(200).json(user);
   });
@@ -65,13 +68,13 @@ export const createUserRouter = (environment: ServerEnvironment) => {
       res.locals.selfId
     );
     if (!settings) {
-      return userNotFoundResponse(res);
+      return userNotFoundResponse(res, res.locals.selfId);
     }
     return res.status(200).json(settings);
   });
 
   router.patch("/self/settings", async (_, res) => {
-    return userNotFoundResponse(res);
+    return userNotFoundResponse(res, res.locals.selfId);
   });
 
   return router;
