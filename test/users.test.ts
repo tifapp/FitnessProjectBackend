@@ -168,6 +168,22 @@ describe("Users tests", () => {
       expect(resp.status).toEqual(404);
       expect(resp.body).toEqual({ error: "user-not-found" });
     });
+
+    it("should return the default settings when settings not edited", async () => {
+      const id = randomUUID();
+      await registerUser({ id, name: "test", handle: "test" });
+
+      const resp = await fetchSettings(id);
+      expect(resp.status).toEqual(200);
+      expect(resp.body).toEqual({
+        isAnalyticsEnabled: true,
+        isCrashReportingEnabled: true,
+        isEventNotificationsEnabled: true,
+        isMentionsNotificationsEnabled: true,
+        isChatNotificationsEnabled: true,
+        isFriendRequestNotificationsEnabled: true,
+      });
+    });
   });
 
   const fetchSettings = async (id: string) => {

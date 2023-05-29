@@ -58,10 +58,50 @@ export const createUserRouter = (environment: ServerEnvironment) => {
   });
 
   router.get("/self/settings", async (_, res) => {
-    return userNotFoundResponse(res);
+    const settings = await userSettingsWithId(
+      environment.conn,
+      res.locals.selfId
+    );
+    if (!settings) {
+      return userNotFoundResponse(res);
+    }
+    return res.status(200).json(settings);
   });
 
   return router;
+};
+
+/**
+ * A type representing a user's settings.
+ */
+export type UserSettings = {
+  isAnalyticsEnabled: boolean;
+  isCrashReportingEnabled: boolean;
+  isEventNotificationsEnabled: boolean;
+  isMentionsNotificationsEnabled: boolean;
+  isChatNotificationsEnabled: boolean;
+  isFriendRequestNotificationsEnabled: boolean;
+};
+
+/**
+ * The default user settings, which enables all fields.
+ */
+export const DEFAULT_USER_SETTINGS = {
+  isAnalyticsEnabled: true,
+  isCrashReportingEnabled: true,
+  isEventNotificationsEnabled: true,
+  isMentionsNotificationsEnabled: true,
+  isChatNotificationsEnabled: true,
+  isFriendRequestNotificationsEnabled: true,
+} as const;
+
+const userSettingsWithId = async (conn: Connection, id: string) => {
+  return await conn.transaction(async (tx) => {
+    if (!(await userWithIdExists(tx, id))) {
+      return undefined;
+    }
+    return DEFAULT_USER_SETTINGS;
+  });
 };
 
 /**
@@ -201,13 +241,17 @@ const registerNewUser = async (
 };
 
 const userWithHandleExists = async (conn: SQLExecutable, handle: string) => {
-  return await hasResults(conn, "SELECT * FROM user WHERE handle = :handle", {
-    handle,
-  });
+  return await hasResults(
+    conn,
+    "SELECT TRUE FROM user WHERE handle = :handle",
+    {
+      handle,
+    }
+  );
 };
 
 const userWithIdExists = async (conn: SQLExecutable, id: string) => {
-  return await hasResults(conn, "SELECT * FROM user WHERE id = :id", { id });
+  return await hasResults(conn, "SELECT TRUE FROM user WHERE id = :id", { id });
 };
 
 export type RegisterUserRequest = {
