@@ -11,8 +11,10 @@ import { z } from "zod";
 import { Result } from "./utils";
 import { Connection } from "@planetscale/database";
 
+export const USER_NOT_FOUND_BODY = { error: "user-not-found" };
+
 const userNotFoundResponse = (res: Response) => {
-  res.status(404).json({ error: "user-not-found" });
+  res.status(404).json(USER_NOT_FOUND_BODY);
 };
 
 /**
@@ -66,6 +68,10 @@ export const createUserRouter = (environment: ServerEnvironment) => {
       return userNotFoundResponse(res);
     }
     return res.status(200).json(settings);
+  });
+
+  router.patch("/self/settings", async (_, res) => {
+    return userNotFoundResponse(res);
   });
 
   return router;
@@ -244,9 +250,7 @@ const userWithHandleExists = async (conn: SQLExecutable, handle: string) => {
   return await hasResults(
     conn,
     "SELECT TRUE FROM user WHERE handle = :handle",
-    {
-      handle,
-    }
+    { handle }
   );
 };
 

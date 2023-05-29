@@ -4,7 +4,12 @@ import {
   resetDatabaseBeforeEach,
 } from "./database";
 import { conn } from "../dbconnection";
-import { RegisterUserRequest, insertUser } from "../users";
+import {
+  RegisterUserRequest,
+  USER_NOT_FOUND_BODY,
+  UserSettings,
+  insertUser,
+} from "../users";
 import request from "supertest";
 import { createTestApp } from "./testApp";
 
@@ -166,12 +171,11 @@ describe("Users tests", () => {
     it("should 404 when gettings settings when user does not exist", async () => {
       const resp = await fetchSettings(randomUUID());
       expect(resp.status).toEqual(404);
-      expect(resp.body).toEqual({ error: "user-not-found" });
+      expect(resp.body).toEqual(USER_NOT_FOUND_BODY);
     });
 
     it("should return the default settings when settings not edited", async () => {
-      const id = randomUUID();
-      await registerUser({ id, name: "test", handle: "test" });
+      const id = await registerTestUser();
 
       const resp = await fetchSettings(id);
       expect(resp.status).toEqual(200);
@@ -184,7 +188,28 @@ describe("Users tests", () => {
         isFriendRequestNotificationsEnabled: true,
       });
     });
+
+    it("should 404 when attempting edit settings for non-existent user", async () => {
+      const resp = await editSettings(randomUUID(), {
+        isAnalyticsEnabled: false,
+      });
+      expect(resp.status).toEqual(404);
+      expect(resp.body).toMatchObject(USER_NOT_FOUND_BODY);
+    });
+
+    const registerTestUser = async () => {
+      const id = randomUUID();
+      await registerUser({ id, name: "test", handle: "test" });
+      return id;
+    };
   });
+
+  const editSettings = async (id: string, settings: Partial<UserSettings>) => {
+    return await request(app)
+      .patch("/user/self/settings")
+      .set("Authorization", id)
+      .send(settings);
+  };
 
   const fetchSettings = async (id: string) => {
     return await request(app)
