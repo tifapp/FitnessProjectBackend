@@ -6,6 +6,7 @@ const resetDB = async () => {
     await tx.execute("DELETE FROM user");
     await tx.execute("DELETE FROM Event");
     await tx.execute("DELETE FROM userRelations");
+    await tx.execute("DELETE FROM userSettings");
   });
 };
 

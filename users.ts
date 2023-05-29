@@ -73,29 +73,41 @@ export const createUserRouter = (environment: ServerEnvironment) => {
   });
 
   router.patch("/self/settings", async (req, res) => {
-    const result = await environment.conn.transaction(async (tx) => {
-      return await writeUserSettings(tx, res.locals.selfId, req.body);
-    });
-    if (result.status === "error") {
-      return userNotFoundResponse(res, res.locals.selfId);
-    }
-    return res.status(204).send();
+    await withValidatedRequest(
+      req,
+      res,
+      WriteUserSettingsRequestSchema,
+      async (data) => {
+        const result = await environment.conn.transaction(async (tx) => {
+          return await writeUserSettings(tx, res.locals.selfId, data.body);
+        });
+        if (result.status === "error") {
+          return userNotFoundResponse(res, res.locals.selfId);
+        }
+        return res.status(204).send();
+      }
+    );
   });
 
   return router;
 };
 
 /**
+ * A zod schema for {@link UserSettingsSchema}.
+ */
+export const UserSettingsSchema = z.object({
+  isAnalyticsEnabled: z.boolean(),
+  isCrashReportingEnabled: z.boolean(),
+  isEventNotificationsEnabled: z.boolean(),
+  isMentionsNotificationsEnabled: z.boolean(),
+  isChatNotificationsEnabled: z.boolean(),
+  isFriendRequestNotificationsEnabled: z.boolean(),
+});
+
+/**
  * A type representing a user's settings.
  */
-export type UserSettings = {
-  isAnalyticsEnabled: boolean;
-  isCrashReportingEnabled: boolean;
-  isEventNotificationsEnabled: boolean;
-  isMentionsNotificationsEnabled: boolean;
-  isChatNotificationsEnabled: boolean;
-  isFriendRequestNotificationsEnabled: boolean;
-};
+export type UserSettings = z.infer<typeof UserSettingsSchema>;
 
 /**
  * The default user settings, which enables all fields.
@@ -108,6 +120,10 @@ export const DEFAULT_USER_SETTINGS = {
   isChatNotificationsEnabled: true,
   isFriendRequestNotificationsEnabled: true,
 } as const;
+
+const WriteUserSettingsRequestSchema = z.object({
+  body: UserSettingsSchema.partial(),
+});
 
 const writeUserSettings = async (
   conn: SQLExecutable,

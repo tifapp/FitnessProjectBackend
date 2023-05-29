@@ -215,6 +215,15 @@ describe("Users tests", () => {
       });
     });
 
+    it("should 400 invalid settings body when updating settings", async () => {
+      const id = await registerTestUser();
+      const resp = await request(app)
+        .patch("/user/self/settings")
+        .set("Authorization", id)
+        .send({ isAnalyticsEnabled: 69, hello: "world" });
+      expect(resp.status).toEqual(400);
+    });
+
     const registerTestUser = async () => {
       const id = randomUUID();
       await registerUser({ id, name: "test", handle: "test" });
