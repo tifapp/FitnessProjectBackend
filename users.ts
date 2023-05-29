@@ -63,18 +63,23 @@ export const createUserRouter = (environment: ServerEnvironment) => {
   });
 
   router.get("/self/settings", async (_, res) => {
-    const settings = await userSettingsWithId(
-      environment.conn,
-      res.locals.selfId
-    );
-    if (!settings) {
+    const settings = await environment.conn.transaction(async (tx) => {
+      return await userSettingsWithId(tx, res.locals.selfId);
+    });
+    if (settings.status === "error") {
       return userNotFoundResponse(res, res.locals.selfId);
     }
-    return res.status(200).json(settings);
+    return res.status(200).json(settings.value ?? DEFAULT_USER_SETTINGS);
   });
 
-  router.patch("/self/settings", async (_, res) => {
-    return userNotFoundResponse(res, res.locals.selfId);
+  router.patch("/self/settings", async (req, res) => {
+    const result = await environment.conn.transaction(async (tx) => {
+      return await writeUserSettings(tx, res.locals.selfId, req.body);
+    });
+    if (result.status === "error") {
+      return userNotFoundResponse(res, res.locals.selfId);
+    }
+    return res.status(204).send();
   });
 
   return router;
@@ -104,13 +109,107 @@ export const DEFAULT_USER_SETTINGS = {
   isFriendRequestNotificationsEnabled: true,
 } as const;
 
-const userSettingsWithId = async (conn: Connection, id: string) => {
-  return await conn.transaction(async (tx) => {
-    if (!(await userWithIdExists(tx, id))) {
-      return undefined;
-    }
-    return DEFAULT_USER_SETTINGS;
+const writeUserSettings = async (
+  conn: SQLExecutable,
+  userId: string,
+  settings: Partial<UserSettings>
+): Promise<Result<void, "user-not-found">> => {
+  const currentSettingsResult = await userSettingsWithId(conn, userId);
+  if (currentSettingsResult.status === "error") {
+    return currentSettingsResult;
+  }
+
+  if (!currentSettingsResult.value) {
+    await insertUserSettings(conn, userId, {
+      ...DEFAULT_USER_SETTINGS,
+      ...settings,
+    });
+    return { status: "success", value: undefined };
+  }
+  await updateUserSettings(conn, userId, {
+    ...currentSettingsResult.value,
+    ...settings,
   });
+  return { status: "success", value: undefined };
+};
+
+const updateUserSettings = async (
+  conn: SQLExecutable,
+  userId: string,
+  settings: UserSettings
+) => {
+  await conn.execute(
+    `
+    UPDATE userSettings 
+    SET 
+      isAnalyticsEnabled = :isAnalyticsEnabled,
+      isCrashReportingEnabled = :isCrashReportingEnabled,
+      isEventNotificationsEnabled = :isEventNotificationsEnabled,
+      isMentionsNotificationsEnabled = :isMentionsNotificationsEnabled,
+      isChatNotificationsEnabled = :isChatNotificationsEnabled,
+      isFriendRequestNotificationsEnabled = :isFriendRequestNotificationsEnabled
+    WHERE 
+      userId = :userId 
+  `,
+    { userId, ...settings }
+  );
+};
+
+const insertUserSettings = async (
+  conn: SQLExecutable,
+  userId: string,
+  settings: UserSettings
+) => {
+  await conn.execute(
+    `
+    INSERT INTO userSettings (
+      userId, 
+      isAnalyticsEnabled, 
+      isCrashReportingEnabled,
+      isEventNotificationsEnabled, 
+      isMentionsNotificationsEnabled, 
+      isChatNotificationsEnabled, 
+      isFriendRequestNotificationsEnabled
+    ) VALUES (
+      :userId, 
+      :isAnalyticsEnabled, 
+      :isCrashReportingEnabled, 
+      :isEventNotificationsEnabled, 
+      :isMentionsNotificationsEnabled,
+      :isChatNotificationsEnabled, 
+      :isFriendRequestNotificationsEnabled
+    )
+  `,
+    { userId, ...settings }
+  );
+};
+
+const userSettingsWithId = async (
+  conn: SQLExecutable,
+  id: string
+): Promise<Result<UserSettings | undefined, "user-not-found">> => {
+  if (!(await userWithIdExists(conn, id))) {
+    return { status: "error", value: "user-not-found" };
+  }
+  return { status: "success", value: await queryUserSettings(conn, id) };
+};
+
+const queryUserSettings = async (conn: SQLExecutable, userId: string) => {
+  return await queryFirst<UserSettings>(
+    conn,
+    `
+    SELECT 
+      isAnalyticsEnabled, 
+      isCrashReportingEnabled, 
+      isEventNotificationsEnabled, 
+      isMentionsNotificationsEnabled, 
+      isChatNotificationsEnabled, 
+      isFriendRequestNotificationsEnabled
+    FROM userSettings
+    WHERE userId = :userId
+  `,
+    { userId }
+  );
 };
 
 /**

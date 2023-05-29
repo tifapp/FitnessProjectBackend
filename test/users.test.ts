@@ -198,6 +198,23 @@ describe("Users tests", () => {
       expect(resp.body).toMatchObject(userNotFoundBody(id));
     });
 
+    it("should be able to retrieve the user's edited settings", async () => {
+      const id = await registerTestUser();
+      await editSettings(id, { isChatNotificationsEnabled: false });
+      await editSettings(id, { isCrashReportingEnabled: false });
+
+      const resp = await fetchSettings(id);
+      expect(resp.status).toEqual(200);
+      expect(resp.body).toMatchObject({
+        isAnalyticsEnabled: true,
+        isCrashReportingEnabled: false,
+        isEventNotificationsEnabled: true,
+        isMentionsNotificationsEnabled: true,
+        isChatNotificationsEnabled: false,
+        isFriendRequestNotificationsEnabled: true,
+      });
+    });
+
     const registerTestUser = async () => {
       const id = randomUUID();
       await registerUser({ id, name: "test", handle: "test" });

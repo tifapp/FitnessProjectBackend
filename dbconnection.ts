@@ -1,12 +1,24 @@
-import { ExecutedQuery, connect } from "@planetscale/database";
+import { ExecutedQuery, connect, Field, cast } from "@planetscale/database";
 import fetch from "node-fetch";
 import { envVars } from "./env";
+
+/**
+ * A cast function that turns all INT8 types into booleans.
+ * This exists solely because of the tinyint type in MySQL.
+ */
+export const int8ToBoolCast = (field: Field, value: string | null) => {
+  if (field.type === "INT8") {
+    return parseInt(value ?? "0") > 0;
+  }
+  return cast(field, value);
+};
 
 /**
  * The main planet scale connection to use.
  */
 export const conn = connect({
   fetch,
+  cast: int8ToBoolCast, // NB: Should we use this as the global caster?
   host: envVars.DATABASE_HOST,
   username: envVars.DATABASE_USERNAME,
   password: envVars.DATABASE_PASSWORD,
