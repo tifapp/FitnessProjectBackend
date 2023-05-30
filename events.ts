@@ -43,7 +43,6 @@ export const EventRouter = (environment: ServerEnvironment) => {
 
 const CreateEventSchema = z.object({
   description: z.string().max(500),
-  handle: z.string().regex(/^[a-z_0-9]{1,15}$/),
   startDate: z.string(),
   endDate: z.string(),
   color: z.number(),
