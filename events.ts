@@ -14,7 +14,7 @@ import { z } from "zod";
  * @param environment see {@link ServerEnvironment}.
  * @returns a router for user related operations.
  */
-export const eventRouter = (environment: ServerEnvironment) => {
+export const EventRouter = (environment: ServerEnvironment) => {
   const router = express.Router();
 
   router.post("/", async (req, res) => {
@@ -38,6 +38,7 @@ export const eventRouter = (environment: ServerEnvironment) => {
       return res.status(200).json({ result });
     });
   });
+  return router;
 }
 
 const CreateEventSchema = z.object({
