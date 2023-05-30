@@ -96,6 +96,7 @@ export const createEvent = async (
   await conn.execute(
     `
     INSERT INTO Event (
+        hostId,
         title, 
         description, 
         startDate, 
@@ -106,6 +107,7 @@ export const createEvent = async (
         latitude, 
         longitude
     ) VALUES (
+      :userId,
       :title, 
       :description, 
       :startDate, 
