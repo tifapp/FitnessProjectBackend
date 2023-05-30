@@ -26,9 +26,13 @@ export const eventRouter = (environment: ServerEnvironment) => {
 
   router.get("/", async (req, res) => {
     await environment.conn.transaction(async (tx) => {
+      console.log("query params");
+      console.log(req.query);
       const result = await getEvents(tx, {
-        selfId: res.locals.selfId,
-        ...req.query,
+        userId: res.locals.selfId,
+        longitude: req.query.longitude as unknown as number,
+        latitude: req.query.latitude as unknown as number,
+        radiusMeters: req.query.radiusMeters as unknown as number
       });
       console.log("result:" + result);
       return res.status(200).json({ result });
@@ -48,6 +52,7 @@ const CreateEventSchema = z.object({
   latitude: z.number().min(-90).max(90),
   longitude: z.number().min(-180).max(180)
 });
+
 
 export type EventColor =
   | "#EF6351"
@@ -70,8 +75,8 @@ export type CreateEventRequest = {
 
 export type GetEventsRequest = {
   userId: string;
-  latitude: number;
-  longitude: number;
+  latitude: number | string;
+  longitude: number | string;
   radiusMeters: number;
 }
 
@@ -128,6 +133,7 @@ export const getEvents = async (
     FROM blockedUsers 
     WHERE user = E.ownerId AND blocked = :userId) 
     GROUP BY E.eventId
-  `
-  )
-}
+  `,
+  request
+  );
+};
