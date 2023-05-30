@@ -125,15 +125,15 @@ export const getEvents = async (
   await conn.execute( 
    `SELECT E.*, COUNT(A.userId) AS attendee_count, 
     CASE WHEN F.user IS NOT NULL THEN 1 ELSE 0 END AS is_friend 
-    FROM Event E JOIN Location L ON E.eventId = L.eventId 
-    LEFT JOIN eventAttendance A ON E.eventId = A.eventId 
-    LEFT JOIN Friends F ON E.ownerId = F.friend AND F.user = :userId 
+    FROM Event E JOIN Location L ON E.id = L.eventId 
+    LEFT JOIN eventAttendance A ON E.id = A.eventId 
+    LEFT JOIN Friends F ON E.hostId = F.friend AND F.user = :userId 
     WHERE ST_Distance_Sphere(POINT(:longitude, :latitude), POINT(lon, lat)) < :radiusMeters 
     AND E.endDate > NOW() 
     AND :userId NOT IN (SELECT blocked 
     FROM blockedUsers 
-    WHERE user = E.ownerId AND blocked = :userId) 
-    GROUP BY E.eventId
+    WHERE user = E.hostId AND blocked = :userId) 
+    GROUP BY E.id
   `,
   request
   );
