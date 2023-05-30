@@ -123,7 +123,7 @@ export const getEvents = async (
   request: GetEventsRequest
 ) => {
   await conn.execute( 
-   `SELECT E.name AS event_name, E.description, E.eventId, E.ownerId, E.startDate, E.endDate, COUNT(A.userId) AS attendee_count, 
+   `SELECT E.*, COUNT(A.userId) AS attendee_count, 
     CASE WHEN F.user IS NOT NULL THEN 1 ELSE 0 END AS is_friend 
     FROM Event E JOIN Location L ON E.eventId = L.eventId 
     LEFT JOIN eventAttendance A ON E.eventId = A.eventId 
