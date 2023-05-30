@@ -20,7 +20,7 @@ export const EventRouter = (environment: ServerEnvironment) => {
   router.post("/", async (req, res) => {
     await environment.conn.transaction(async (tx) => {
       const result = await createEvent(tx, {
-        selfId: res.locals.selfId,
+        hostId: res.locals.selfId,
         ...req.body,
       });
       console.log("result:" + result);
