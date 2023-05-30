@@ -27,10 +27,14 @@ export const withValidatedRequest = async <Schema extends AnyZodObject>(
   req: Request,
   res: Response,
   schema: Schema,
-  fn: (data: z.infer<Schema>) => Promise<void>
+  //Todo: change promise type
+  fn: (data: z.infer<Schema>) => Promise<any>
 ) => {
+  console.log("req body is");
+  console.log(req.body);
+  console.log("req body done");
   try {
-    const data = await schema.passthrough().parseAsync(req);
+    const data = await schema.passthrough().parseAsync(req.body);
     return await fn(data);
   } catch (err) {
     return res.status(400).json(err);

@@ -1,8 +1,8 @@
 import express from "express";
-import { SQLExecutable, queryResults, hasResults } from "./dbconnection";
-import { ServerEnvironment } from "./env";
-import { withValidatedRequest } from "./validation";
 import { z } from "zod";
+import { SQLExecutable, hasResults, queryResults } from "./dbconnection.js";
+import { ServerEnvironment } from "./env.js";
+import { withValidatedRequest } from "./validation.js";
 
 /**
  * Creates routes related to user operations.
@@ -26,10 +26,11 @@ export const createUserRouter = (environment: ServerEnvironment) => {
 
         await insertUser(tx, {
           id: res.locals.selfId,
-          ...data.body,
+          ...data,
         });
-        return res.status(201).json({ id: res.locals.selfId });
       });
+      
+      return res.status(201).json({ id: res.locals.selfId });
     });
   });
 
@@ -54,10 +55,21 @@ export const createUserRouter = (environment: ServerEnvironment) => {
       }
 
       await addPendingFriendRequest(tx, res.locals.selfId, req.params.userId);
-      return res.status(201).json({ status: "friend-request-pending" });
     });
+    
+    return res.status(201).json({ status: "friend-request-pending" });
   });
 
+  router.patch("/self", async (req, res) => {
+    await environment.conn.transaction(async (tx) => {
+      const result = await updateSelf(tx, {
+        selfId: res.locals.selfId,
+        ...req.body,
+      });
+      console.log("result:" + result);
+      return res.status(200).json({ result });
+    });
+  });
   return router;
 };
 
@@ -69,6 +81,13 @@ export type UserToProfileRelationStatus =
   | "friend-request-pending"
   | "friends"
   | "blocked";
+
+const updateUser = async (
+  conn: SQLExecutable,
+  selfId: string,
+  name: string,
+  bio: string
+) => {};
 
 const twoWayUserRelation = async (
   conn: SQLExecutable,
@@ -100,6 +119,26 @@ const twoWayUserRelation = async (
   };
 };
 
+export type userUpdateRequest = {
+  selfId: string;
+  name: string;
+  bio: string;
+  handle: string;
+};
+
+export const updateSelf = async (
+  conn: SQLExecutable,
+  request: userUpdateRequest
+) => {
+  await conn.execute(
+    `
+    UPDATE user 
+    SET name = :name, bio = :bio, handle = :handle
+    WHERE id = :selfId 
+  `,
+    request
+  );
+};
 const makeFriends = async (conn: SQLExecutable, id1: string, id2: string) => {
   await conn.execute(
     `
@@ -123,10 +162,8 @@ const addPendingFriendRequest = async (
 };
 
 const CreateUserSchema = z.object({
-  body: z.object({
-    name: z.string().max(50),
-    handle: z.string().regex(/^[a-z_0-9]{1,15}$/),
-  }),
+  name: z.string().max(50),
+  handle: z.string().regex(/^[a-z_0-9]{1,15}$/),
 });
 
 const userWithHandleExists = async (conn: SQLExecutable, handle: string) => {
@@ -155,6 +192,7 @@ export const insertUser = async (
   conn: SQLExecutable,
   request: InsertUserRequest
 ) => {
+
   await conn.execute(
     `INSERT INTO user (id, name, handle) VALUES (:id, :name, :handle)`,
     request
