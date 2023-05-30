@@ -76,10 +76,10 @@ export const createUserRouter = (environment: ServerEnvironment) => {
     await withValidatedRequest(
       req,
       res,
-      WriteUserSettingsRequestSchema,
+      PatchUserSettingsRequestSchema,
       async (data) => {
         const result = await environment.conn.transaction(async (tx) => {
-          return await writeUserSettings(tx, res.locals.selfId, data.body);
+          return await overwriteUserSettings(tx, res.locals.selfId, data.body);
         });
         if (result.status === "error") {
           return userNotFoundResponse(res, res.locals.selfId);
@@ -121,11 +121,11 @@ export const DEFAULT_USER_SETTINGS = {
   isFriendRequestNotificationsEnabled: true,
 } as const;
 
-const WriteUserSettingsRequestSchema = z.object({
+const PatchUserSettingsRequestSchema = z.object({
   body: UserSettingsSchema.partial(),
 });
 
-const writeUserSettings = async (
+const overwriteUserSettings = async (
   conn: SQLExecutable,
   userId: string,
   settings: Partial<UserSettings>
