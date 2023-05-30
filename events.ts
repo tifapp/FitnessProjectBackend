@@ -18,9 +18,13 @@ export const EventRouter = (environment: ServerEnvironment) => {
   const router = express.Router();
 
   router.post("/", async (req, res) => {
-    await withValidatedRequest(req, res, CreateEventSchema, async (data) => {
-      
-      return res.status(201).json({ id: res.locals.selfId });
+    await environment.conn.transaction(async (tx) => {
+      const result = await createEvent(tx, {
+        selfId: res.locals.selfId,
+        ...req.body,
+      });
+      console.log("result:" + result);
+      return res.status(200).json({ result });
     });
   });
 
