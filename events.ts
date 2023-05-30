@@ -67,8 +67,8 @@ export type EventColor =
 export type CreateEventRequest = {
   title: string;
   description: string;
-  startDate: string;
-  endDate: string;
+  startDate: Date;
+  endDate: Date;
   color: EventColor;
   shouldHideAfterStartDate: boolean;
   isChatEnabled: boolean;
