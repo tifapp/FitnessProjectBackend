@@ -31,10 +31,10 @@ export const createUserRouter = (environment: ServerEnvironment) => {
 
   router.post("/", async (req, res) => {
     await withValidatedRequest(req, res, CreateUserSchema, async (data) => {
-      const result = await registerNewUser(
-        environment.conn,
-        Object.assign(data.body, { id: res.locals.selfId })
-      );
+      const result = await environment.conn.transaction(async (tx) => {
+        const registerReq = Object.assign(data.body, { id: res.locals.selfId });
+        return await registerNewUser(tx, registerReq);
+      });
 
       if (result.status === "error") {
         return res.status(400).json({ error: result.value });
@@ -44,11 +44,9 @@ export const createUserRouter = (environment: ServerEnvironment) => {
   });
 
   router.post("/friend/:userId", async (req, res) => {
-    const result = await sendFriendRequest(
-      environment.conn,
-      res.locals.selfId,
-      req.params.userId
-    );
+    const result = await environment.conn.transaction(async (tx) => {
+      return await sendFriendRequest(tx, res.locals.selfId, req.params.userId);
+    });
     return res
       .status(result.statusChanged ? 201 : 200)
       .json({ status: result.status });
@@ -257,32 +255,30 @@ export type UserToProfileRelationStatus =
   | "blocked";
 
 const sendFriendRequest = async (
-  conn: Connection,
+  conn: SQLExecutable,
   senderId: string,
   receiverId: string
 ) => {
-  return await conn.transaction(async (tx) => {
-    const { youToThemStatus, themToYouStatus } = await twoWayUserRelation(
-      tx,
-      senderId,
-      receiverId
-    );
+  const { youToThemStatus, themToYouStatus } = await twoWayUserRelation(
+    conn,
+    senderId,
+    receiverId
+  );
 
-    if (
-      youToThemStatus === "friends" ||
-      youToThemStatus === "friend-request-pending"
-    ) {
-      return { statusChanged: false, status: youToThemStatus };
-    }
+  if (
+    youToThemStatus === "friends" ||
+    youToThemStatus === "friend-request-pending"
+  ) {
+    return { statusChanged: false, status: youToThemStatus };
+  }
 
-    if (themToYouStatus === "friend-request-pending") {
-      await makeFriends(tx, senderId, receiverId);
-      return { statusChanged: true, status: "friends" };
-    }
+  if (themToYouStatus === "friend-request-pending") {
+    await makeFriends(conn, senderId, receiverId);
+    return { statusChanged: true, status: "friends" };
+  }
 
-    await addPendingFriendRequest(tx, senderId, receiverId);
-    return { statusChanged: true, status: "friend-request-pending" };
-  });
+  await addPendingFriendRequest(conn, senderId, receiverId);
+  return { statusChanged: true, status: "friend-request-pending" };
 };
 
 const twoWayUserRelation = async (
@@ -345,23 +341,21 @@ const CreateUserSchema = z.object({
 });
 
 const registerNewUser = async (
-  conn: Connection,
+  conn: SQLExecutable,
   request: RegisterUserRequest
 ): Promise<
   Result<{ id: string }, "user-already-exists" | "duplicate-handle">
 > => {
-  return await conn.transaction(async (tx) => {
-    if (await userWithIdExists(tx, request.id)) {
-      return { status: "error", value: "user-already-exists" };
-    }
+  if (await userWithIdExists(conn, request.id)) {
+    return { status: "error", value: "user-already-exists" };
+  }
 
-    if (await userWithHandleExists(tx, request.handle)) {
-      return { status: "error", value: "duplicate-handle" };
-    }
+  if (await userWithHandleExists(conn, request.handle)) {
+    return { status: "error", value: "duplicate-handle" };
+  }
 
-    await insertUser(tx, request);
-    return { status: "success", value: { id: request.id } };
-  });
+  await insertUser(conn, request);
+  return { status: "success", value: { id: request.id } };
 };
 
 const userWithHandleExists = async (conn: SQLExecutable, handle: string) => {
