@@ -87,6 +87,16 @@ export const createUserRouter = (environment: ServerEnvironment) => {
     );
   });
 
+  router.patch("/self", async (req, res) => {
+    await environment.conn.transaction(async (tx) => {
+      const result = await updateSelf(tx, {
+        selfId: res.locals.selfId,
+        ...req.body,
+      });
+      console.log("result:" + result);
+      return res.status(200).json({ result });
+    });
+  });
   return router;
 };
 
@@ -311,6 +321,26 @@ const twoWayUserRelation = async (
   };
 };
 
+export type userUpdateRequest = {
+  selfId: string;
+  name: string;
+  bio: string;
+  handle: string;
+};
+
+export const updateSelf = async (
+  conn: SQLExecutable,
+  request: userUpdateRequest
+) => {
+  await conn.execute(
+    `
+    UPDATE user 
+    SET name = :name, bio = :bio, handle = :handle
+    WHERE id = :selfId 
+  `,
+    request
+  );
+};
 const makeFriends = async (conn: SQLExecutable, id1: string, id2: string) => {
   await conn.execute(
     `

@@ -1,5 +1,5 @@
-import { SQLExecutable } from "./dbconnection";
-import { LocationCoordinate2D } from "./location";
+import { SQLExecutable } from "./dbconnection.js";
+import { LocationCoordinate2D } from "./location.js";
 
 export type EventColor =
   | "#EF6351"
