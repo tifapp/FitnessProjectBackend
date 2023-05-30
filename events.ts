@@ -44,8 +44,8 @@ export const EventRouter = (environment: ServerEnvironment) => {
 const CreateEventSchema = z.object({
   description: z.string().max(500),
   handle: z.string().regex(/^[a-z_0-9]{1,15}$/),
-  startDate: z.date(),
-  endDate: z.date(),
+  startDate: z.string(),
+  endDate: z.string(),
   color: z.number(),
   title: z.string().max(50),
   shouldHideAfterStartDate: z.number(), //  can only be 0 or 1
@@ -67,8 +67,8 @@ export type EventColor =
 export type CreateEventRequest = {
   title: string;
   description: string;
-  startDate: Date;
-  endDate: Date;
+  startDate: string;
+  endDate: string;
   color: EventColor;
   shouldHideAfterStartDate: boolean;
   isChatEnabled: boolean;
