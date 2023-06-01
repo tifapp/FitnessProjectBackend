@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { Request, Response, RequestHandler } from "express";
 import { AnyZodObject, z } from "zod";
 
 /**
@@ -27,14 +27,10 @@ export const withValidatedRequest = async <Schema extends AnyZodObject>(
   req: Request,
   res: Response,
   schema: Schema,
-  //Todo: change promise type
   fn: (data: z.infer<Schema>) => Promise<any>
 ) => {
-  console.log("req body is");
-  console.log(req.body);
-  console.log("req body done");
   try {
-    const data = await schema.passthrough().parseAsync(req.body);
+    const data = await schema.passthrough().parseAsync(req);
     return await fn(data);
   } catch (err) {
     return res.status(400).json(err);

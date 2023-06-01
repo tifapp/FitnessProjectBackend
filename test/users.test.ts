@@ -4,7 +4,12 @@ import {
   resetDatabaseBeforeEach,
 } from "./database";
 import { conn } from "../dbconnection";
-import { InsertUserRequest, insertUser } from "../users";
+import {
+  RegisterUserRequest,
+  UserSettings,
+  insertUser,
+  userNotFoundBody,
+} from "../users";
 import request from "supertest";
 import { createTestApp } from "./testApp";
 
@@ -125,11 +130,124 @@ describe("Users tests", () => {
 
     it("should have a friend status when the receiver sends a friend request to someone who sent them a pending friend request", async () => {
       await friendUser(youId, otherId);
+
       const resp = await friendUser(otherId, youId);
       expect(resp.status).toEqual(201);
       expect(resp.body).toMatchObject({ status: "friends" });
     });
   });
+
+  describe("GetSelf tests", () => {
+    it("404s when you have no account", async () => {
+      const id = randomUUID();
+      const resp = await fetchSelf(id);
+      expect(resp.status).toEqual(404);
+      expect(resp.body).toMatchObject(userNotFoundBody(id));
+    });
+
+    it("should be able to fetch your private account info", async () => {
+      const id = randomUUID();
+      const accountInfo = {
+        id,
+        name: "Matthew Hayes",
+        handle: "little_chungus",
+      };
+      await registerUser(accountInfo);
+      const resp = await fetchSelf(id);
+
+      expect(resp.status).toEqual(200);
+      expect(resp.body).toMatchObject(
+        expect.objectContaining({
+          ...accountInfo,
+          bio: null,
+          updatedAt: null,
+          profileImageURL: null,
+        })
+      );
+      expect(Date.parse(resp.body.creationDate)).not.toBeNaN();
+    });
+  });
+
+  describe("Settings tests", () => {
+    it("should 404 when gettings settings when user does not exist", async () => {
+      const id = randomUUID();
+      const resp = await fetchSettings(id);
+      expect(resp.status).toEqual(404);
+      expect(resp.body).toEqual(userNotFoundBody(id));
+    });
+
+    it("should return the default settings when settings not edited", async () => {
+      const id = await registerTestUser();
+
+      const resp = await fetchSettings(id);
+      expect(resp.status).toEqual(200);
+      expect(resp.body).toEqual({
+        isAnalyticsEnabled: true,
+        isCrashReportingEnabled: true,
+        isEventNotificationsEnabled: true,
+        isMentionsNotificationsEnabled: true,
+        isChatNotificationsEnabled: true,
+        isFriendRequestNotificationsEnabled: true,
+      });
+    });
+
+    it("should 404 when attempting edit settings for non-existent user", async () => {
+      const id = randomUUID();
+      const resp = await editSettings(id, { isAnalyticsEnabled: false });
+      expect(resp.status).toEqual(404);
+      expect(resp.body).toMatchObject(userNotFoundBody(id));
+    });
+
+    it("should be able to retrieve the user's edited settings", async () => {
+      const id = await registerTestUser();
+      await editSettings(id, { isChatNotificationsEnabled: false });
+      await editSettings(id, { isCrashReportingEnabled: false });
+
+      const resp = await fetchSettings(id);
+      expect(resp.status).toEqual(200);
+      expect(resp.body).toMatchObject({
+        isAnalyticsEnabled: true,
+        isCrashReportingEnabled: false,
+        isEventNotificationsEnabled: true,
+        isMentionsNotificationsEnabled: true,
+        isChatNotificationsEnabled: false,
+        isFriendRequestNotificationsEnabled: true,
+      });
+    });
+
+    it("should 400 invalid settings body when updating settings", async () => {
+      const id = await registerTestUser();
+      const resp = await request(app)
+        .patch("/user/self/settings")
+        .set("Authorization", id)
+        .send({ isAnalyticsEnabled: 69, hello: "world" });
+      expect(resp.status).toEqual(400);
+    });
+
+    const registerTestUser = async () => {
+      const id = randomUUID();
+      await registerUser({ id, name: "test", handle: "test" });
+      return id;
+    };
+  });
+
+  const editSettings = async (id: string, settings: Partial<UserSettings>) => {
+    return await request(app)
+      .patch("/user/self/settings")
+      .set("Authorization", id)
+      .send(settings);
+  };
+
+  const fetchSettings = async (id: string) => {
+    return await request(app)
+      .get("/user/self/settings")
+      .set("Authorization", id)
+      .send();
+  };
+
+  const fetchSelf = async (id: string) => {
+    return await request(app).get("/user/self").set("Authorization", id).send();
+  };
 
   const friendUser = async (user1Id: string, user2Id: string) => {
     return await request(app)
@@ -138,7 +256,7 @@ describe("Users tests", () => {
       .send();
   };
 
-  const registerUser = async (req: InsertUserRequest) => {
+  const registerUser = async (req: RegisterUserRequest) => {
     return await request(app).post("/user").set("Authorization", req.id).send({
       name: req.name,
       handle: req.handle,

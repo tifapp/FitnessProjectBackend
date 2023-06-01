@@ -1,7 +1,7 @@
 import express, { Application } from "express";
-import { ServerEnvironment } from "./env.js";
-import { createUserRouter } from "./users.js";
-import { EventRouter } from "./events.js"
+import { ServerEnvironment } from "./env";
+import { createUserRouter } from "./users";
+import { EventRouter } from "./events";
 
 /**
  * Creates an application instance.
@@ -26,4 +26,3 @@ export const addRoutes = (app: Application, environment: ServerEnvironment) => {
   app.use("/user", createUserRouter(environment));
   app.use("/event", EventRouter(environment));
 };
-

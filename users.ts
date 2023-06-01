@@ -1,8 +1,24 @@
-import express from "express";
+import express, { Response } from "express";
+import {
+  SQLExecutable,
+  queryResults,
+  hasResults,
+  queryFirst,
+} from "./dbconnection";
+import { ServerEnvironment } from "./env";
+import { withValidatedRequest } from "./validation";
 import { z } from "zod";
-import { SQLExecutable, hasResults, queryResults } from "./dbconnection.js";
-import { ServerEnvironment } from "./env.js";
-import { withValidatedRequest } from "./validation.js";
+import { Result } from "./utils";
+import { Connection } from "@planetscale/database";
+
+export const userNotFoundBody = (userId: string) => ({
+  userId,
+  error: "user-not-found",
+});
+
+export const userNotFoundResponse = (res: Response, userId: string) => {
+  res.status(404).json(userNotFoundBody(userId));
+};
 
 /**
  * Creates routes related to user operations.
@@ -15,49 +31,60 @@ export const createUserRouter = (environment: ServerEnvironment) => {
 
   router.post("/", async (req, res) => {
     await withValidatedRequest(req, res, CreateUserSchema, async (data) => {
-      await environment.conn.transaction(async (tx) => {
-        if (await userWithIdExists(tx, res.locals.selfId)) {
-          return res.status(400).json({ error: "user-already-exists" });
-        }
-
-        if (await userWithHandleExists(tx, req.body.handle)) {
-          return res.status(400).json({ error: "duplicate-handle" });
-        }
-
-        await insertUser(tx, {
-          id: res.locals.selfId,
-          ...data,
-        });
+      const result = await environment.conn.transaction(async (tx) => {
+        const registerReq = Object.assign(data.body, { id: res.locals.selfId });
+        return await registerNewUser(tx, registerReq);
       });
-      
-      return res.status(201).json({ id: res.locals.selfId });
+
+      if (result.status === "error") {
+        return res.status(400).json({ error: result.value });
+      }
+      return res.status(201).json(result.value);
     });
   });
 
   router.post("/friend/:userId", async (req, res) => {
-    await environment.conn.transaction(async (tx) => {
-      const { youToThemStatus, themToYouStatus } = await twoWayUserRelation(
-        tx,
-        res.locals.selfId,
-        req.params.userId
-      );
-
-      if (
-        youToThemStatus === "friends" ||
-        youToThemStatus === "friend-request-pending"
-      ) {
-        return res.status(200).json({ status: youToThemStatus });
-      }
-
-      if (themToYouStatus === "friend-request-pending") {
-        await makeFriends(tx, res.locals.selfId, req.params.userId);
-        return res.status(201).json({ status: "friends" });
-      }
-
-      await addPendingFriendRequest(tx, res.locals.selfId, req.params.userId);
+    const result = await environment.conn.transaction(async (tx) => {
+      return await sendFriendRequest(tx, res.locals.selfId, req.params.userId);
     });
-    
-    return res.status(201).json({ status: "friend-request-pending" });
+    return res
+      .status(result.statusChanged ? 201 : 200)
+      .json({ status: result.status });
+  });
+
+  router.get("/self", async (_, res) => {
+    const user = await userWithId(environment.conn, res.locals.selfId);
+    if (!user) {
+      return userNotFoundResponse(res, res.locals.selfId);
+    }
+    return res.status(200).json(user);
+  });
+
+  router.get("/self/settings", async (_, res) => {
+    const settings = await environment.conn.transaction(async (tx) => {
+      return await userSettingsWithId(tx, res.locals.selfId);
+    });
+    if (settings.status === "error") {
+      return userNotFoundResponse(res, res.locals.selfId);
+    }
+    return res.status(200).json(settings.value ?? DEFAULT_USER_SETTINGS);
+  });
+
+  router.patch("/self/settings", async (req, res) => {
+    await withValidatedRequest(
+      req,
+      res,
+      PatchUserSettingsRequestSchema,
+      async (data) => {
+        const result = await environment.conn.transaction(async (tx) => {
+          return await overwriteUserSettings(tx, res.locals.selfId, data.body);
+        });
+        if (result.status === "error") {
+          return userNotFoundResponse(res, res.locals.selfId);
+        }
+        return res.status(204).send();
+      }
+    );
   });
 
   router.patch("/self", async (req, res) => {
@@ -74,6 +101,161 @@ export const createUserRouter = (environment: ServerEnvironment) => {
 };
 
 /**
+ * A zod schema for {@link UserSettingsSchema}.
+ */
+export const UserSettingsSchema = z.object({
+  isAnalyticsEnabled: z.boolean(),
+  isCrashReportingEnabled: z.boolean(),
+  isEventNotificationsEnabled: z.boolean(),
+  isMentionsNotificationsEnabled: z.boolean(),
+  isChatNotificationsEnabled: z.boolean(),
+  isFriendRequestNotificationsEnabled: z.boolean(),
+});
+
+/**
+ * A type representing a user's settings.
+ */
+export type UserSettings = z.infer<typeof UserSettingsSchema>;
+
+/**
+ * The default user settings, which enables all fields.
+ */
+export const DEFAULT_USER_SETTINGS = {
+  isAnalyticsEnabled: true,
+  isCrashReportingEnabled: true,
+  isEventNotificationsEnabled: true,
+  isMentionsNotificationsEnabled: true,
+  isChatNotificationsEnabled: true,
+  isFriendRequestNotificationsEnabled: true,
+} as const;
+
+const PatchUserSettingsRequestSchema = z.object({
+  body: UserSettingsSchema.partial(),
+});
+
+const overwriteUserSettings = async (
+  conn: SQLExecutable,
+  userId: string,
+  settings: Partial<UserSettings>
+): Promise<Result<void, "user-not-found">> => {
+  const currentSettingsResult = await userSettingsWithId(conn, userId);
+  if (currentSettingsResult.status === "error") {
+    return currentSettingsResult;
+  }
+
+  if (!currentSettingsResult.value) {
+    await insertUserSettings(conn, userId, {
+      ...DEFAULT_USER_SETTINGS,
+      ...settings,
+    });
+    return { status: "success", value: undefined };
+  }
+  await updateUserSettings(conn, userId, {
+    ...currentSettingsResult.value,
+    ...settings,
+  });
+  return { status: "success", value: undefined };
+};
+
+const updateUserSettings = async (
+  conn: SQLExecutable,
+  userId: string,
+  settings: UserSettings
+) => {
+  await conn.execute(
+    `
+    UPDATE userSettings 
+    SET 
+      isAnalyticsEnabled = :isAnalyticsEnabled,
+      isCrashReportingEnabled = :isCrashReportingEnabled,
+      isEventNotificationsEnabled = :isEventNotificationsEnabled,
+      isMentionsNotificationsEnabled = :isMentionsNotificationsEnabled,
+      isChatNotificationsEnabled = :isChatNotificationsEnabled,
+      isFriendRequestNotificationsEnabled = :isFriendRequestNotificationsEnabled
+    WHERE 
+      userId = :userId 
+  `,
+    { userId, ...settings }
+  );
+};
+
+const insertUserSettings = async (
+  conn: SQLExecutable,
+  userId: string,
+  settings: UserSettings
+) => {
+  await conn.execute(
+    `
+    INSERT INTO userSettings (
+      userId, 
+      isAnalyticsEnabled, 
+      isCrashReportingEnabled,
+      isEventNotificationsEnabled, 
+      isMentionsNotificationsEnabled, 
+      isChatNotificationsEnabled, 
+      isFriendRequestNotificationsEnabled
+    ) VALUES (
+      :userId, 
+      :isAnalyticsEnabled, 
+      :isCrashReportingEnabled, 
+      :isEventNotificationsEnabled, 
+      :isMentionsNotificationsEnabled,
+      :isChatNotificationsEnabled, 
+      :isFriendRequestNotificationsEnabled
+    )
+  `,
+    { userId, ...settings }
+  );
+};
+
+const userSettingsWithId = async (
+  conn: SQLExecutable,
+  id: string
+): Promise<Result<UserSettings | undefined, "user-not-found">> => {
+  if (!(await userWithIdExists(conn, id))) {
+    return { status: "error", value: "user-not-found" };
+  }
+  return { status: "success", value: await queryUserSettings(conn, id) };
+};
+
+const queryUserSettings = async (conn: SQLExecutable, userId: string) => {
+  return await queryFirst<UserSettings>(
+    conn,
+    `
+    SELECT 
+      isAnalyticsEnabled, 
+      isCrashReportingEnabled, 
+      isEventNotificationsEnabled, 
+      isMentionsNotificationsEnabled, 
+      isChatNotificationsEnabled, 
+      isFriendRequestNotificationsEnabled
+    FROM userSettings
+    WHERE userId = :userId
+  `,
+    { userId }
+  );
+};
+
+/**
+ * A type representing the main user fields.
+ */
+export type User = {
+  id: string;
+  name: string;
+  handle: string;
+  bio?: string;
+  profileImageURL?: string;
+  creationDate: Date;
+  updatedAt?: Date;
+};
+
+const userWithId = async (conn: SQLExecutable, userId: string) => {
+  return await queryFirst<User>(conn, "SELECT * FROM user WHERE id = :userId", {
+    userId,
+  });
+};
+
+/**
  * A type representing the relationship status between 2 users.
  */
 export type UserToProfileRelationStatus =
@@ -82,12 +264,32 @@ export type UserToProfileRelationStatus =
   | "friends"
   | "blocked";
 
-const updateUser = async (
+const sendFriendRequest = async (
   conn: SQLExecutable,
-  selfId: string,
-  name: string,
-  bio: string
-) => {};
+  senderId: string,
+  receiverId: string
+) => {
+  const { youToThemStatus, themToYouStatus } = await twoWayUserRelation(
+    conn,
+    senderId,
+    receiverId
+  );
+
+  if (
+    youToThemStatus === "friends" ||
+    youToThemStatus === "friend-request-pending"
+  ) {
+    return { statusChanged: false, status: youToThemStatus };
+  }
+
+  if (themToYouStatus === "friend-request-pending") {
+    await makeFriends(conn, senderId, receiverId);
+    return { statusChanged: true, status: "friends" };
+  }
+
+  await addPendingFriendRequest(conn, senderId, receiverId);
+  return { statusChanged: true, status: "friend-request-pending" };
+};
 
 const twoWayUserRelation = async (
   conn: SQLExecutable,
@@ -162,21 +364,43 @@ const addPendingFriendRequest = async (
 };
 
 const CreateUserSchema = z.object({
-  name: z.string().max(50),
-  handle: z.string().regex(/^[a-z_0-9]{1,15}$/),
+  body: z.object({
+    name: z.string().max(50),
+    handle: z.string().regex(/^[a-z_0-9]{1,15}$/),
+  }),
 });
 
+const registerNewUser = async (
+  conn: SQLExecutable,
+  request: RegisterUserRequest
+): Promise<
+  Result<{ id: string }, "user-already-exists" | "duplicate-handle">
+> => {
+  if (await userWithIdExists(conn, request.id)) {
+    return { status: "error", value: "user-already-exists" };
+  }
+
+  if (await userWithHandleExists(conn, request.handle)) {
+    return { status: "error", value: "duplicate-handle" };
+  }
+
+  await insertUser(conn, request);
+  return { status: "success", value: { id: request.id } };
+};
+
 const userWithHandleExists = async (conn: SQLExecutable, handle: string) => {
-  return await hasResults(conn, "SELECT * FROM user WHERE handle = :handle", {
-    handle,
-  });
+  return await hasResults(
+    conn,
+    "SELECT TRUE FROM user WHERE handle = :handle",
+    { handle }
+  );
 };
 
 const userWithIdExists = async (conn: SQLExecutable, id: string) => {
-  return await hasResults(conn, "SELECT * FROM user WHERE id = :id", { id });
+  return await hasResults(conn, "SELECT TRUE FROM user WHERE id = :id", { id });
 };
 
-export type InsertUserRequest = {
+export type RegisterUserRequest = {
   id: string;
   name: string;
   handle: string;
@@ -186,13 +410,12 @@ export type InsertUserRequest = {
  * Creates a new user in the database.
  *
  * @param conn see {@link SQLExecutable}
- * @param request see {@link InsertUserRequest}
+ * @param request see {@link RegisterUserRequest}
  */
 export const insertUser = async (
   conn: SQLExecutable,
-  request: InsertUserRequest
+  request: RegisterUserRequest
 ) => {
-
   await conn.execute(
     `INSERT INTO user (id, name, handle) VALUES (:id, :name, :handle)`,
     request
