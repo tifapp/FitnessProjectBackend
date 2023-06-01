@@ -1,6 +1,6 @@
 import express, { Application } from "express";
 import { ServerEnvironment } from "./env";
-import { createUserRouter } from "./users";
+import { createUserRouter } from "./user";
 import { createEventRouter } from "./events";
 
 /**
