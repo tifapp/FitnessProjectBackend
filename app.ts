@@ -1,6 +1,7 @@
 import express, { Application } from "express";
 import { ServerEnvironment } from "./env";
 import { createUserRouter } from "./users";
+import { EventRouter } from "./events";
 
 /**
  * Creates an application instance.
@@ -23,4 +24,5 @@ export const createApp = () => {
  */
 export const addRoutes = (app: Application, environment: ServerEnvironment) => {
   app.use("/user", createUserRouter(environment));
+  app.use("/event", EventRouter(environment));
 };
