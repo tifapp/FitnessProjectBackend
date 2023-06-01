@@ -1,4 +1,3 @@
-import { z } from "zod";
 import {
   SQLExecutable,
   queryFirst,
@@ -13,6 +12,15 @@ import {
   UserToProfileRelationStatus,
 } from "./models";
 
+/**
+ * Updates the user's settings with the specified fields in the settings object.
+ * Fields that are not present in the settings object do not get updated and
+ * retain their current value.
+ *
+ * @param conn the query executor to use
+ * @param userId the id of the user to update settings for
+ * @param settings the settings fields to update
+ */
 export const overwriteUserSettings = async (
   conn: SQLExecutable,
   userId: string,
@@ -88,6 +96,14 @@ const insertUserSettings = async (
   );
 };
 
+/**
+ * Queries a given user's settings. If the user has never edited their settings,
+ * undefined will be returned if no errors occur.
+ *
+ * @param conn the query executor to use
+ * @param id the id of the user
+ * @returns a result that indicates that the user is not found, or their current settings
+ */
 export const userSettingsWithId = async (
   conn: SQLExecutable,
   id: string
@@ -116,12 +132,24 @@ const queryUserSettings = async (conn: SQLExecutable, userId: string) => {
   );
 };
 
+/**
+ * Queries the user with the given id.
+ */
 export const userWithId = async (conn: SQLExecutable, userId: string) => {
   return await queryFirst<User>(conn, "SELECT * FROM user WHERE id = :userId", {
     userId,
   });
 };
 
+/**
+ * Sends a friend request to the user represented by `receiverId`. If the 2 users have no
+ * prior relationship, then a `friend-request-pending` status will be returned, otherwise
+ * a `friends` status will be returned if the receiver has sent a friend request to the sender.
+ *
+ * @param conn the query executor to use
+ * @param senderId the id of the user who is sending the friend request
+ * @param receiverId the id of the user who is receiving the friend request
+ */
 export const sendFriendRequest = async (
   conn: SQLExecutable,
   senderId: string,
@@ -201,16 +229,22 @@ const addPendingFriendRequest = async (
   );
 };
 
-export type userUpdateRequest = {
+export type UpdateUserRequest = {
   selfId: string;
   name: string;
   bio: string;
   handle: string;
 };
 
-export const updateSelf = async (
+/**
+ * Updates the current user's profile with the given settings.
+ *
+ * @param conn the query executor to use
+ * @param request the fields of the user's profile to update
+ */
+export const updateUserProfile = async (
   conn: SQLExecutable,
-  request: userUpdateRequest
+  request: UpdateUserRequest
 ) => {
   await conn.execute(
     `
@@ -222,6 +256,13 @@ export const updateSelf = async (
   );
 };
 
+/**
+ * Attempts to register a new user in the database.
+ *
+ * @param conn the query executor to use
+ * @param request the initial fields required to create a user
+ * @returns an object containing the id of the newly registered user
+ */
 export const registerNewUser = async (
   conn: SQLExecutable,
   request: RegisterUserRequest
