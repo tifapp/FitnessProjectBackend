@@ -1,20 +1,16 @@
 import express from "express";
-import { SQLExecutable } from "./dbconnection.js";
-import { ServerEnvironment } from "./env.js";
-import { LocationCoordinate2D } from "./location.js";
-import { insertUser } from "./users.js";
-import { withValidatedRequest } from "./validation.js";
+import { SQLExecutable } from "./dbconnection";
+import { ServerEnvironment } from "./env";
+import { LocationCoordinate2D } from "./location";
 import { z } from "zod";
 
-
-
 /**
- * Creates routes related to user operations.
+ * Creates routes related to event operations.
  *
  * @param environment see {@link ServerEnvironment}.
- * @returns a router for user related operations.
+ * @returns a router for event related operations.
  */
-export const EventRouter = (environment: ServerEnvironment) => {
+export const createEventRouter = (environment: ServerEnvironment) => {
   const router = express.Router();
 
   router.post("/", async (req, res) => {
@@ -36,14 +32,14 @@ export const EventRouter = (environment: ServerEnvironment) => {
         userId: res.locals.selfId,
         longitude: req.query.longitude as unknown as number,
         latitude: req.query.latitude as unknown as number,
-        radiusMeters: req.query.radiusMeters as unknown as number
+        radiusMeters: req.query.radiusMeters as unknown as number,
       });
       console.log("result:" + result);
       return res.status(200).json({ result });
     });
   });
   return router;
-}
+};
 
 const CreateEventSchema = z.object({
   description: z.string().max(500),
@@ -54,9 +50,8 @@ const CreateEventSchema = z.object({
   shouldHideAfterStartDate: z.number(), //  can only be 0 or 1
   isChatEnabled: z.number(),
   latitude: z.number().min(-90).max(90),
-  longitude: z.number().min(-180).max(180)
+  longitude: z.number().min(-180).max(180),
 });
-
 
 export type EventColor =
   | "#EF6351"
@@ -82,7 +77,7 @@ export type GetEventsRequest = {
   latitude: number | string;
   longitude: number | string;
   radiusMeters: number;
-}
+};
 
 /**
  * Creates an event in the database.
@@ -127,8 +122,8 @@ export const getEvents = async (
   conn: SQLExecutable,
   request: GetEventsRequest
 ) => {
-  await conn.execute( 
-   `SELECT E.*, COUNT(A.userId) AS attendee_count, 
+  await conn.execute(
+    `SELECT E.*, COUNT(A.userId) AS attendee_count, 
     CASE WHEN F.user IS NOT NULL THEN 1 ELSE 0 END AS is_friend 
     FROM Event E JOIN Location L ON E.id = L.eventId 
     LEFT JOIN eventAttendance A ON E.id = A.eventId 
@@ -140,6 +135,6 @@ export const getEvents = async (
     WHERE user = E.hostId AND blocked = :userId) 
     GROUP BY E.id
   `,
-  request
+    request
   );
 };
