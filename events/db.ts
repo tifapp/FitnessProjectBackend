@@ -44,16 +44,16 @@ export const createEvent = async (
   await conn.execute(
     `
     INSERT INTO Event (
-        hostId,
-        title, 
-        description, 
-        startDate, 
-        endDate, 
-        color, 
-        shouldHideAfterStartDate, 
-        isChatEnabled, 
-        latitude, 
-        longitude
+      hostId,
+      title, 
+      description, 
+      startDate, 
+      endDate, 
+      color, 
+      shouldHideAfterStartDate, 
+      isChatEnabled, 
+      latitude, 
+      longitude
     ) VALUES (
       :userId,
       :title, 
