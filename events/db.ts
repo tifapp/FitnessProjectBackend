@@ -1,45 +1,7 @@
-import express from "express";
-import { SQLExecutable } from "./dbconnection";
-import { ServerEnvironment } from "./env";
-import { LocationCoordinate2D } from "./location";
 import { z } from "zod";
-
-/**
- * Creates routes related to event operations.
- *
- * @param environment see {@link ServerEnvironment}.
- * @returns a router for event related operations.
- */
-export const createEventRouter = (environment: ServerEnvironment) => {
-  const router = express.Router();
-
-  router.post("/", async (req, res) => {
-    await environment.conn.transaction(async (tx) => {
-      const result = await createEvent(tx, {
-        userId: res.locals.selfId,
-        ...req.body,
-      });
-      console.log("result:" + result);
-      return res.status(200).json({ result });
-    });
-  });
-
-  router.get("/", async (req, res) => {
-    await environment.conn.transaction(async (tx) => {
-      console.log("query params");
-      console.log(req.query);
-      const result = await getEvents(tx, {
-        userId: res.locals.selfId,
-        longitude: req.query.longitude as unknown as number,
-        latitude: req.query.latitude as unknown as number,
-        radiusMeters: req.query.radiusMeters as unknown as number,
-      });
-      console.log("result:" + result);
-      return res.status(200).json({ result });
-    });
-  });
-  return router;
-};
+import { SQLExecutable } from "../dbconnection";
+import { LocationCoordinate2D } from "../location";
+import { EventColor } from "./models";
 
 const CreateEventSchema = z.object({
   description: z.string().max(500),
@@ -52,15 +14,6 @@ const CreateEventSchema = z.object({
   latitude: z.number().min(-90).max(90),
   longitude: z.number().min(-180).max(180),
 });
-
-export type EventColor =
-  | "#EF6351"
-  | "#CB9CF2"
-  | "#88BDEA"
-  | "#72B01D"
-  | "#F7B2BD"
-  | "#F4845F"
-  | "#F6BD60";
 
 export type CreateEventRequest = {
   title: string;
