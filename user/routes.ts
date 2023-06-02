@@ -83,6 +83,10 @@ export const createUserRouter = (environment: ServerEnvironment) => {
     return res.status(200).json(settings.value ?? DEFAULT_USER_SETTINGS);
   });
 
+  router.get("/:userId", async (req, res) => {
+    return userNotFoundResponse(res, req.params.userId);
+  });
+
   router.patch("/self/settings", async (req, res) => {
     await withValidatedRequest(
       req,

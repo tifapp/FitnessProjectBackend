@@ -36,5 +36,7 @@ export const createEventRouter = (environment: ServerEnvironment) => {
       return res.status(200).json({ result });
     });
   });
+
+  //router.get("/event/:eventId", )
   return router;
 };

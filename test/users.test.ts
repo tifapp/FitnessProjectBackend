@@ -39,6 +39,19 @@ describe("Users tests", () => {
     });
   });
 
+  describe("GetUser tests", () => {
+    it("should 404 on non existing user", async () => {
+      const userId = randomUUID();
+      const resp = await request(app)
+        .get(`/user/${userId}`)
+        .set("Authorization", randomUUID())
+        .send();
+
+      expect(resp.status).toEqual(404);
+      expect(resp.body).toMatchObject(userNotFoundBody(userId));
+    });
+  });
+
   describe("CreateUser tests", () => {
     it("should 400 on invalid request body", async () => {
       request(app)
