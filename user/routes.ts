@@ -84,7 +84,11 @@ export const createUserRouter = (environment: ServerEnvironment) => {
   });
 
   router.get("/:userId", async (req, res) => {
-    return userNotFoundResponse(res, req.params.userId);
+    const user = await userWithId(environment.conn, req.params.userId);
+    if (!user) {
+      return userNotFoundResponse(res, req.params.userId);
+    }
+    return res.status(200).json({ ...user, relation: "not-friends" });
   });
 
   router.patch("/self/settings", async (req, res) => {

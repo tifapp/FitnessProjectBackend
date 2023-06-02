@@ -42,13 +42,35 @@ describe("Users tests", () => {
   describe("GetUser tests", () => {
     it("should 404 on non existing user", async () => {
       const userId = randomUUID();
-      const resp = await request(app)
-        .get(`/user/${userId}`)
-        .set("Authorization", randomUUID())
-        .send();
+      const youId = randomUUID();
+      const resp = await fetchUser(youId, userId);
 
       expect(resp.status).toEqual(404);
       expect(resp.body).toMatchObject(userNotFoundBody(userId));
+    });
+
+    it("should retrieve a user that exists", async () => {
+      const userId = randomUUID();
+      const youId = randomUUID();
+      await registerUser({
+        id: userId,
+        name: "John Burke",
+        handle: "johncann",
+      });
+      const resp = await fetchUser(youId, userId);
+
+      expect(resp.status).toEqual(200);
+      expect(resp.body).toMatchObject(
+        expect.objectContaining({
+          id: userId,
+          name: "John Burke",
+          handle: "johncann",
+          bio: null,
+          updatedAt: null,
+          profileImageURL: null,
+          relation: "not-friends",
+        })
+      );
     });
   });
 
@@ -274,5 +296,12 @@ describe("Users tests", () => {
       name: req.name,
       handle: req.handle,
     });
+  };
+
+  const fetchUser = async (youId: string, userId: string) => {
+    return await request(app)
+      .get(`/user/${userId}`)
+      .set("Authorization", youId)
+      .send();
   };
 });
