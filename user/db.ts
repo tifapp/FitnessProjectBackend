@@ -1,139 +1,27 @@
-import express, { Response } from "express";
 import {
   SQLExecutable,
+  queryFirst,
   queryResults,
   hasResults,
-  queryFirst,
-} from "./dbconnection";
-import { ServerEnvironment } from "./env";
-import { withValidatedRequest } from "./validation";
-import { z } from "zod";
-import { Result } from "./utils";
-import { Connection } from "@planetscale/database";
-
-export const userNotFoundBody = (userId: string) => ({
-  userId,
-  error: "user-not-found",
-});
-
-export const userNotFoundResponse = (res: Response, userId: string) => {
-  res.status(404).json(userNotFoundBody(userId));
-};
+} from "../dbconnection";
+import { Result } from "../utils";
+import {
+  DEFAULT_USER_SETTINGS,
+  User,
+  UserSettings,
+  UserToProfileRelationStatus,
+} from "./models";
 
 /**
- * Creates routes related to user operations.
+ * Updates the user's settings with the specified fields in the settings object.
+ * Fields that are not present in the settings object do not get updated and
+ * retain their current value.
  *
- * @param environment see {@link ServerEnvironment}.
- * @returns a router for user related operations.
+ * @param conn the query executor to use
+ * @param userId the id of the user to update settings for
+ * @param settings the settings fields to update
  */
-export const createUserRouter = (environment: ServerEnvironment) => {
-  const router = express.Router();
-
-  router.post("/", async (req, res) => {
-    await withValidatedRequest(req, res, CreateUserSchema, async (data) => {
-      const result = await environment.conn.transaction(async (tx) => {
-        const registerReq = Object.assign(data.body, { id: res.locals.selfId });
-        return await registerNewUser(tx, registerReq);
-      });
-
-      if (result.status === "error") {
-        return res.status(400).json({ error: result.value });
-      }
-      return res.status(201).json(result.value);
-    });
-  });
-
-  router.post("/friend/:userId", async (req, res) => {
-    const result = await environment.conn.transaction(async (tx) => {
-      return await sendFriendRequest(tx, res.locals.selfId, req.params.userId);
-    });
-    return res
-      .status(result.statusChanged ? 201 : 200)
-      .json({ status: result.status });
-  });
-
-  router.get("/self", async (_, res) => {
-    const user = await userWithId(environment.conn, res.locals.selfId);
-    if (!user) {
-      return userNotFoundResponse(res, res.locals.selfId);
-    }
-    return res.status(200).json(user);
-  });
-
-  router.get("/self/settings", async (_, res) => {
-    const settings = await environment.conn.transaction(async (tx) => {
-      return await userSettingsWithId(tx, res.locals.selfId);
-    });
-    if (settings.status === "error") {
-      return userNotFoundResponse(res, res.locals.selfId);
-    }
-    return res.status(200).json(settings.value ?? DEFAULT_USER_SETTINGS);
-  });
-
-  router.patch("/self/settings", async (req, res) => {
-    await withValidatedRequest(
-      req,
-      res,
-      PatchUserSettingsRequestSchema,
-      async (data) => {
-        const result = await environment.conn.transaction(async (tx) => {
-          return await overwriteUserSettings(tx, res.locals.selfId, data.body);
-        });
-        if (result.status === "error") {
-          return userNotFoundResponse(res, res.locals.selfId);
-        }
-        return res.status(204).send();
-      }
-    );
-  });
-
-  router.patch("/self", async (req, res) => {
-    await environment.conn.transaction(async (tx) => {
-      const result = await updateSelf(tx, {
-        selfId: res.locals.selfId,
-        ...req.body,
-      });
-      console.log("result:" + result);
-      return res.status(200).json({ result });
-    });
-  });
-  return router;
-};
-
-/**
- * A zod schema for {@link UserSettingsSchema}.
- */
-export const UserSettingsSchema = z.object({
-  isAnalyticsEnabled: z.boolean(),
-  isCrashReportingEnabled: z.boolean(),
-  isEventNotificationsEnabled: z.boolean(),
-  isMentionsNotificationsEnabled: z.boolean(),
-  isChatNotificationsEnabled: z.boolean(),
-  isFriendRequestNotificationsEnabled: z.boolean(),
-});
-
-/**
- * A type representing a user's settings.
- */
-export type UserSettings = z.infer<typeof UserSettingsSchema>;
-
-/**
- * The default user settings, which enables all fields.
- */
-export const DEFAULT_USER_SETTINGS = {
-  isAnalyticsEnabled: true,
-  isCrashReportingEnabled: true,
-  isEventNotificationsEnabled: true,
-  isMentionsNotificationsEnabled: true,
-  isChatNotificationsEnabled: true,
-  isFriendRequestNotificationsEnabled: true,
-} as const;
-
-const PatchUserSettingsRequestSchema = z.object({
-  body: UserSettingsSchema.partial(),
-});
-
-const overwriteUserSettings = async (
+export const overwriteUserSettings = async (
   conn: SQLExecutable,
   userId: string,
   settings: Partial<UserSettings>
@@ -208,7 +96,15 @@ const insertUserSettings = async (
   );
 };
 
-const userSettingsWithId = async (
+/**
+ * Queries a given user's settings. If the user has never edited their settings,
+ * undefined will be returned if no errors occur.
+ *
+ * @param conn the query executor to use
+ * @param id the id of the user
+ * @returns a result that indicates that the user is not found, or their current settings
+ */
+export const userSettingsWithId = async (
   conn: SQLExecutable,
   id: string
 ): Promise<Result<UserSettings | undefined, "user-not-found">> => {
@@ -237,34 +133,24 @@ const queryUserSettings = async (conn: SQLExecutable, userId: string) => {
 };
 
 /**
- * A type representing the main user fields.
+ * Queries the user with the given id.
  */
-export type User = {
-  id: string;
-  name: string;
-  handle: string;
-  bio?: string;
-  profileImageURL?: string;
-  creationDate: Date;
-  updatedAt?: Date;
-};
-
-const userWithId = async (conn: SQLExecutable, userId: string) => {
+export const userWithId = async (conn: SQLExecutable, userId: string) => {
   return await queryFirst<User>(conn, "SELECT * FROM user WHERE id = :userId", {
     userId,
   });
 };
 
 /**
- * A type representing the relationship status between 2 users.
+ * Sends a friend request to the user represented by `receiverId`. If the 2 users have no
+ * prior relationship, then a `friend-request-pending` status will be returned, otherwise
+ * a `friends` status will be returned if the receiver has sent a friend request to the sender.
+ *
+ * @param conn the query executor to use
+ * @param senderId the id of the user who is sending the friend request
+ * @param receiverId the id of the user who is receiving the friend request
  */
-export type UserToProfileRelationStatus =
-  | "not-friends"
-  | "friend-request-pending"
-  | "friends"
-  | "blocked";
-
-const sendFriendRequest = async (
+export const sendFriendRequest = async (
   conn: SQLExecutable,
   senderId: string,
   receiverId: string
@@ -321,26 +207,6 @@ const twoWayUserRelation = async (
   };
 };
 
-export type userUpdateRequest = {
-  selfId: string;
-  name: string;
-  bio: string;
-  handle: string;
-};
-
-export const updateSelf = async (
-  conn: SQLExecutable,
-  request: userUpdateRequest
-) => {
-  await conn.execute(
-    `
-    UPDATE user 
-    SET name = :name, bio = :bio, handle = :handle
-    WHERE id = :selfId 
-  `,
-    request
-  );
-};
 const makeFriends = async (conn: SQLExecutable, id1: string, id2: string) => {
   await conn.execute(
     `
@@ -363,14 +229,41 @@ const addPendingFriendRequest = async (
   );
 };
 
-const CreateUserSchema = z.object({
-  body: z.object({
-    name: z.string().max(50),
-    handle: z.string().regex(/^[a-z_0-9]{1,15}$/),
-  }),
-});
+export type UpdateUserRequest = {
+  selfId: string;
+  name: string;
+  bio: string;
+  handle: string;
+};
 
-const registerNewUser = async (
+/**
+ * Updates the current user's profile with the given settings.
+ *
+ * @param conn the query executor to use
+ * @param request the fields of the user's profile to update
+ */
+export const updateUserProfile = async (
+  conn: SQLExecutable,
+  request: UpdateUserRequest
+) => {
+  await conn.execute(
+    `
+    UPDATE user 
+    SET name = :name, bio = :bio, handle = :handle
+    WHERE id = :selfId 
+  `,
+    request
+  );
+};
+
+/**
+ * Attempts to register a new user in the database.
+ *
+ * @param conn the query executor to use
+ * @param request the initial fields required to create a user
+ * @returns an object containing the id of the newly registered user
+ */
+export const registerNewUser = async (
   conn: SQLExecutable,
   request: RegisterUserRequest
 ): Promise<

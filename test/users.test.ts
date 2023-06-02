@@ -9,7 +9,7 @@ import {
   UserSettings,
   insertUser,
   userNotFoundBody,
-} from "../users";
+} from "../user";
 import request from "supertest";
 import { createTestApp } from "./testApp";
 
