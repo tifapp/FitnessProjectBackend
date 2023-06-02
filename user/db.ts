@@ -289,7 +289,7 @@ const userWithHandleExists = async (conn: SQLExecutable, handle: string) => {
   );
 };
 
-const userWithIdExists = async (conn: SQLExecutable, id: string) => {
+export const userWithIdExists = async (conn: SQLExecutable, id: string) => {
   return await hasResults(conn, "SELECT TRUE FROM user WHERE id = :id", { id });
 };
 

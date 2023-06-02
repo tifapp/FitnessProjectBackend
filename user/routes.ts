@@ -10,6 +10,7 @@ import {
   userSettingsWithId,
   overwriteUserSettings,
   updateUserProfile,
+  userWithIdExists,
 } from "./db";
 
 /**
@@ -72,6 +73,13 @@ export const createUserRouter = (environment: ServerEnvironment) => {
     }
     return res.status(200).json(user);
   });
+
+  router.delete("/self", async (_, res) => {
+    if (await userWithIdExists(environment.conn, res.locals.selfId)) {
+      return res.status(204).send();
+    }
+    return userNotFoundResponse(res, res.locals.selfId);
+  })
 
   router.get("/self/settings", async (_, res) => {
     const settings = await environment.conn.transaction(async (tx) => {

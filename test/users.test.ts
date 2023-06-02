@@ -39,6 +39,28 @@ describe("Users tests", () => {
     });
   });
 
+  describe("DeleteSelf tests", () => {
+    it("should 404 on non existing user", async() => {
+      const userId = randomUUID();
+      const resp = await deleteSelf(userId);
+
+      expect(resp.status).toEqual(404);
+      expect(resp.body).toMatchObject(userNotFoundBody(userId));
+    });
+
+    it("should give a 204 when you sucessfully delete the user", async() => {
+      const userId = randomUUID();
+      await registerUser({
+        id: userId,
+        name: "Big Chungus",
+        handle: "big_chungus",
+      });
+
+      const resp = await deleteSelf(userId);
+      expect(resp.status).toEqual(204);
+    })
+  })
+
   describe("GetUser tests", () => {
     it("should 404 on non existing user", async () => {
       const userId = randomUUID();
@@ -303,5 +325,12 @@ describe("Users tests", () => {
       .get(`/user/${userId}`)
       .set("Authorization", youId)
       .send();
+  };
+
+  const deleteSelf = async(userId: string) => {
+    return await request(app)
+    .delete("/user/self")
+    .set("Authorization", userId)
+    .send();
   };
 });
