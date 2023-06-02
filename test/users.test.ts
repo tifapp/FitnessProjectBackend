@@ -39,6 +39,19 @@ describe("Users tests", () => {
     });
   });
 
+  describe("DeleteSelf tests", () => {
+    it("should 404 on non existing user", async() => {
+      const userId = randomUUID();
+      const resp = await request(app)
+        .delete("/user/self")
+        .set("Authorization", userId)
+        .send();
+
+      expect(resp.status).toEqual(404);
+      expect(resp.body).toMatchObject(userNotFoundBody(userId));
+    })
+  })
+
   describe("GetUser tests", () => {
     it("should 404 on non existing user", async () => {
       const userId = randomUUID();
