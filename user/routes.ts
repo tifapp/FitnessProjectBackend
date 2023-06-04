@@ -42,7 +42,9 @@ export const userNotFoundResponse = (res: Response, userId: string) => {
  */
 export const createUserRouter = (environment: ServerEnvironment) => {
   const router = express.Router();
-
+  /**
+   * creates a new user
+   */
   router.post("/", async (req, res) => {
     await withValidatedRequest(req, res, CreateUserSchema, async (data) => {
       const result = await environment.conn.transaction(async (tx) => {
@@ -56,7 +58,9 @@ export const createUserRouter = (environment: ServerEnvironment) => {
       return res.status(201).json(result.value);
     });
   });
-
+  /**
+   * sends a friend request to the specified userId
+   */
   router.post("/friend/:userId", async (req, res) => {
     const result = await environment.conn.transaction(async (tx) => {
       return await sendFriendRequest(tx, res.locals.selfId, req.params.userId);
@@ -65,7 +69,9 @@ export const createUserRouter = (environment: ServerEnvironment) => {
       .status(result.statusChanged ? 201 : 200)
       .json({ status: result.status });
   });
-
+  /**
+   * gets the current user's account info
+   */
   router.get("/self", async (_, res) => {
     const user = await userWithId(environment.conn, res.locals.selfId);
     if (!user) {
@@ -73,14 +79,18 @@ export const createUserRouter = (environment: ServerEnvironment) => {
     }
     return res.status(200).json(user);
   });
-
+  /**
+   * deletes the current user's account
+   */
   router.delete("/self", async (_, res) => {
     if (await userWithIdExists(environment.conn, res.locals.selfId)) {
       return res.status(204).send();
     }
     return userNotFoundResponse(res, res.locals.selfId);
   })
-
+  /**
+   * gets the current user's settings info
+   */
   router.get("/self/settings", async (_, res) => {
     const settings = await environment.conn.transaction(async (tx) => {
       return await userSettingsWithId(tx, res.locals.selfId);
@@ -90,7 +100,9 @@ export const createUserRouter = (environment: ServerEnvironment) => {
     }
     return res.status(200).json(settings.value ?? DEFAULT_USER_SETTINGS);
   });
-
+  /**
+   * gets the user with the specified userId
+   */
   router.get("/:userId", async (req, res) => {
     const user = await userWithId(environment.conn, req.params.userId);
     if (!user) {
@@ -98,7 +110,9 @@ export const createUserRouter = (environment: ServerEnvironment) => {
     }
     return res.status(200).json({ ...user, relation: "not-friends" });
   });
-
+  /**
+   * updates the current user's settings
+   */
   router.patch("/self/settings", async (req, res) => {
     await withValidatedRequest(
       req,
@@ -115,7 +129,9 @@ export const createUserRouter = (environment: ServerEnvironment) => {
       }
     );
   });
-
+  /**
+   * updates the current user's profile
+   */
   router.patch("/self", async (req, res) => {
     await environment.conn.transaction(async (tx) => {
       const result = await updateUserProfile(tx, {
