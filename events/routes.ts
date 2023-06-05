@@ -8,6 +8,18 @@ import { createEvent, getEvents } from "../events";
  * @param environment see {@link ServerEnvironment}.
  * @returns a router for event related operations.
  */
+
+/**
+ * Returns an object that indicates that can be used as the response
+ * body when an event is not found.
+ *
+ * @param eventId the id of the user who was not found.
+ */
+export const eventNotFoundBody = (eventId: number) => ({
+  eventId,
+  error: "event-not-found"
+});
+
 export const createEventRouter = (environment: ServerEnvironment) => {
   const router = express.Router();
   /**

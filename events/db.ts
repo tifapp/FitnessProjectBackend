@@ -18,8 +18,8 @@ const CreateEventSchema = z.object({
 export type CreateEventRequest = {
   title: string;
   description: string;
-  startDate: Date;
-  endDate: Date;
+  startDate: string;
+  endDate: string;
   color: EventColor;
   shouldHideAfterStartDate: boolean;
   isChatEnabled: boolean;
