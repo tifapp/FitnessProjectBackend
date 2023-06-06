@@ -6,4 +6,7 @@ export default {
     "^.+\\.ts?$": "ts-jest",
   },
   transformIgnorePatterns: ["/node_modules/(?!@planetscale)"],
+  moduleNameMapper: {
+    '^(\\.{1,2}/.*)\\.js$': '$1',
+  },
 };

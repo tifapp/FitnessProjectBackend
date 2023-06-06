@@ -1,16 +1,16 @@
 import {
   SQLExecutable,
+  hasResults,
   queryFirst,
   queryResults,
-  hasResults,
-} from "../dbconnection";
-import { Result } from "../utils";
+} from "../dbconnection.js";
+import { Result } from "../utils.js";
 import {
   DEFAULT_USER_SETTINGS,
   User,
   UserSettings,
   UserToProfileRelationStatus,
-} from "./models";
+} from "./models.js";
 
 /**
  * Updates the user's settings with the specified fields in the settings object.

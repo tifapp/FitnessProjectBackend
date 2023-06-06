@@ -1,7 +1,7 @@
 import express, { Application } from "express";
-import { ServerEnvironment } from "./env";
-import { createUserRouter } from "./user";
-import { createEventRouter } from "./events";
+import { ServerEnvironment } from "./env.js";
+import { createEventRouter } from "./events/routes.js";
+import { createUserRouter } from "./user/routes.js";
 
 /**
  * Creates an application instance.

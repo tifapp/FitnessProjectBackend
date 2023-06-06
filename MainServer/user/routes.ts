@@ -1,17 +1,17 @@
 import express, { Response } from "express";
-import { ServerEnvironment } from "../env";
-import { DEFAULT_USER_SETTINGS, UserSettingsSchema } from "./models";
-import { withValidatedRequest } from "../validation";
 import { z } from "zod";
+import { ServerEnvironment } from "../env.js";
+import { withValidatedRequest } from "../validation.js";
 import {
+  overwriteUserSettings,
   registerNewUser,
   sendFriendRequest,
-  userWithId,
-  userSettingsWithId,
-  overwriteUserSettings,
   updateUserProfile,
+  userSettingsWithId,
+  userWithId,
   userWithIdExists,
-} from "./db";
+} from "./db.js";
+import { DEFAULT_USER_SETTINGS, UserSettingsSchema } from "./models.js";
 
 /**
  * Returns an object that indicates that can be used as the response

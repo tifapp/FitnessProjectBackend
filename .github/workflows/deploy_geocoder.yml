@@ -19,22 +19,10 @@ jobs:
         with:
           node-version: '18'
 
-      - name: Install dependencies
-        run: cd MainServer && npm ci
-
-      - name: Build the project
-        run: cd MainServer && npm run build
-
-      - name: Remove dev dependencies
-        run: cd MainServer && cd dist && npm prune --production
-
       - name: Zip the project
         run: |
-          cd MainServer
-          shopt -s extglob
-          cp -R !(test|.github|dist|*.ts) dist/
-          cd dist
-          zip -r ../dist.zip .
+          cd GeocodingLambda
+          zip -r ./dist.zip .
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -45,4 +33,4 @@ jobs:
 
       - name: Deploy to AWS Lambda
         run: |
-          aws lambda update-function-code --function-name lambdaSQLRoute --zip-file fileb://MainServer/dist.zip
+          aws lambda update-function-code --function-name geocodingPipeline --zip-file fileb://GeocodingLambda/dist.zip

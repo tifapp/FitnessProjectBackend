@@ -1,7 +1,7 @@
 import { Application } from "express";
-import { addRoutes, createApp } from "../app";
-import { ServerEnvironment } from "../env";
-import { UNAUTHORIZED_RESPONSE } from "../auth";
+import { addRoutes, createApp } from "../app.js";
+import { UNAUTHORIZED_RESPONSE } from "../auth.js";
+import { ServerEnvironment } from "../env.js";
 
 /**
  * Creates a test environment application.

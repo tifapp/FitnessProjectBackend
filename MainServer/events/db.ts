@@ -1,7 +1,7 @@
 import { z } from "zod";
-import { SQLExecutable } from "../dbconnection";
-import { LocationCoordinate2D } from "../location";
-import { EventColor } from "./models";
+import { SQLExecutable } from "../dbconnection.js";
+import { LocationCoordinate2D } from "../location.js";
+import { EventColor } from "./models.js";
 
 const CreateEventSchema = z.object({
   description: z.string().max(500),

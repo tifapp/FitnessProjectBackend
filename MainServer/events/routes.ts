@@ -1,6 +1,6 @@
 import express from "express";
-import { ServerEnvironment } from "../env";
-import { createEvent, getEvents } from "../events";
+import { ServerEnvironment } from "../env.js";
+import { createEvent, getEvents } from "./db.js";
 
 /**
  * Creates routes related to event operations.

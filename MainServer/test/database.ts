@@ -1,5 +1,5 @@
 import { fail } from "assert";
-import { conn } from "../dbconnection";
+import { conn } from "../dbconnection.js";
 
 const resetDB = async () => {
   await conn.transaction(async (tx) => {

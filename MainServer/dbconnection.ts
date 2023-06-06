@@ -1,6 +1,6 @@
-import { ExecutedQuery, connect, Field, cast } from "@planetscale/database";
+import { ExecutedQuery, Field, cast, connect } from "@planetscale/database";
 import fetch from "node-fetch";
-import { envVars } from "./env";
+import { envVars } from "./env.js";
 
 /**
  * A cast function that turns all INT8 types into booleans.
