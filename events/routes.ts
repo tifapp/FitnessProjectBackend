@@ -1,6 +1,6 @@
 import express from "express";
 import { ServerEnvironment } from "../env";
-import { createEvent, getEvents } from "../events";
+import { insertEvent, getEvents } from "../events";
 
 /**
  * Creates routes related to event operations.
@@ -15,7 +15,7 @@ export const createEventRouter = (environment: ServerEnvironment) => {
    */
   router.post("/", async (req, res) => {
     await environment.conn.transaction(async (tx) => {
-      const result = await createEvent(tx, {
+      const result = await insertEvent(tx, {
         userId: res.locals.selfId,
         ...req.body,
       });

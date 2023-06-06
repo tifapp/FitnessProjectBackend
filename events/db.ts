@@ -37,7 +37,7 @@ export type GetEventsRequest = {
  *
  * @param request see {@link CreateEventRequest}
  */
-export const createEvent = async (
+export const insertEvent = async (
   conn: SQLExecutable,
   request: CreateEventRequest
 ) => {
