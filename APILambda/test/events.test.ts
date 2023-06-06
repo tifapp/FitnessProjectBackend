@@ -1,5 +1,5 @@
 import { conn } from "../dbconnection";
-import { createEvent } from "../events";
+import { insertEvent } from "../events";
 import {
   expectFailsCheckConstraint,
   resetDatabaseBeforeEach,
@@ -12,7 +12,7 @@ describe("Events tests", () => {
   describe("CheckConstraint tests", () => {
     it("does not allow the end date to be before the start date", async () => {
       await expectFailsCheckConstraint(async () => {
-        await createEvent(conn, {
+        await insertEvent(conn, {
           title: "no",
           description: "yay",
           startDate: new Date(1),
