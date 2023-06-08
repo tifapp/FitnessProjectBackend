@@ -40,7 +40,7 @@ describe("Users tests", () => {
   });
 
   describe("DeleteSelf tests", () => {
-    it("should 404 on non existing user", async() => {
+    it("should 404 on non existing user", async () => {
       const userId = randomUUID();
       const resp = await deleteSelf(userId);
 
@@ -48,7 +48,7 @@ describe("Users tests", () => {
       expect(resp.body).toMatchObject(userNotFoundBody(userId));
     });
 
-    it("should give a 204 when you sucessfully delete the user", async() => {
+    it("should give a 204 when you sucessfully delete the user", async () => {
       const userId = randomUUID();
       await registerUser({
         id: userId,
@@ -58,8 +58,8 @@ describe("Users tests", () => {
 
       const resp = await deleteSelf(userId);
       expect(resp.status).toEqual(204);
-    })
-  })
+    });
+  });
 
   describe("GetUser tests", () => {
     it("should 404 on non existing user", async () => {
@@ -288,6 +288,17 @@ describe("Users tests", () => {
     };
   });
 
+  describe("BlockedUsers tests", async () => {
+    it("should 404 on non existing user", async () => {
+      const userId = randomUUID();
+      const youId = randomUUID();
+      const resp = await fetchUser(youId, userId);
+
+      expect(resp.status).toEqual(404);
+      expect(resp.body).toMatchObject(userNotFoundBody(userId));
+    });
+  });
+
   const editSettings = async (id: string, settings: Partial<UserSettings>) => {
     return await request(app)
       .patch("/user/self/settings")
@@ -327,10 +338,10 @@ describe("Users tests", () => {
       .send();
   };
 
-  const deleteSelf = async(userId: string) => {
+  const deleteSelf = async (userId: string) => {
     return await request(app)
-    .delete("/user/self")
-    .set("Authorization", userId)
-    .send();
+      .delete("/user/self")
+      .set("Authorization", userId)
+      .send();
   };
 });

@@ -87,7 +87,7 @@ export const createUserRouter = (environment: ServerEnvironment) => {
       return res.status(204).send();
     }
     return userNotFoundResponse(res, res.locals.selfId);
-  })
+  });
   /**
    * gets the current user's settings info
    */
@@ -142,6 +142,11 @@ export const createUserRouter = (environment: ServerEnvironment) => {
       return res.status(200).json({ result });
     });
   });
+
+  router.post("/blocked:userId", async (req, res) => {
+    
+  });
+
   return router;
 };
 
