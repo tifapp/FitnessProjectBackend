@@ -15,7 +15,7 @@ export const createEventRouter = (environment: ServerEnvironment) => {
    */
   router.post("/", async (req, res) => {
     const result = await environment.conn.transaction(async (tx) => {
-      return await createEvent(tx, res.locals.selfId, req.body);
+      return await createEvent(environment, tx, res.locals.selfId, req.body);
     });
     if (result.status === "error") {
       return res.status(404).json(result.value)

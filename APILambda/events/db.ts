@@ -8,7 +8,11 @@ import { SQLExecutable } from "../dbconnection";
 import { LocationCoordinate2D } from "../location";
 import { EventColor } from "./models";
 import { userNotFoundBody, userWithIdExists } from "../user";
+<<<<<<< HEAD:APILambda/events/db.ts
 >>>>>>> 5fbff49 (created test to test that you get a 404 if a user that doesn't exist tries to create an event):events/db.ts
+=======
+import { ServerEnvironment } from "../env";
+>>>>>>> c2f0123 (tried to create test for if user exists they should be able to create an event but it doesn't work):events/db.ts
 
 const CreateEventSchema = z.object({
   description: z.string().max(500),
@@ -46,7 +50,8 @@ export type GetEventsRequest = {
  */
 export const insertEvent = async (
   conn: SQLExecutable,
-  request: CreateEventInput
+  request: CreateEventInput,
+  hostId: string
 ) => {
   await conn.execute(
     `
@@ -62,7 +67,7 @@ export const insertEvent = async (
       latitude, 
       longitude
     ) VALUES (
-      :userId,
+      :hostId,
       :title, 
       :description, 
       :startDate, 
@@ -74,7 +79,7 @@ export const insertEvent = async (
       :longitude
     )
     `,
-    request
+    {...request, hostId}
   );
 };
 
@@ -99,7 +104,16 @@ export const getEvents = async (
   );
 };
 
+export const getLastEventId = async (
+  conn: SQLExecutable
+) => {
+  await conn.execute(
+  `SELECT E.id FROM Event E WHERE E.id = LAST_INSERT_ID()`
+  );
+};
+
 export const createEvent = async (
+  environment: ServerEnvironment,
   conn: SQLExecutable,
   hostId: string,
   input: CreateEventInput
@@ -108,5 +122,13 @@ export const createEvent = async (
   if (!userExists) {
     return {status: "error", value: userNotFoundBody(hostId)}
   }
-  return {status: "success"}
+
+  const result = await environment.conn.transaction(async (tx) => {
+    insertEvent(conn, input, hostId);
+    const results = getLastEventId(conn);
+    console.log(results);
+  })
+
+  return {status: "success"};
+
 }

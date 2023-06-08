@@ -9,6 +9,7 @@ import { createTestEvent } from "./helpers/events";
 import { mockLocationCoordinate2D } from "./mockData";
 import { createTestApp } from "./testApp";
 import { userNotFoundBody } from "../user";
+import { registerUser } from "./helpers/users";
 
 describe("Events tests", () => {
   const app = createTestApp({conn})
@@ -46,6 +47,28 @@ describe("Events tests", () => {
       });
       expect(resp.status).toEqual(404);
       expect(resp.body).toEqual(userNotFoundBody(id));
+    });
+
+    it("should allow a user to create an event if the user exists", async () => {
+      const hostId = randomUUID();
+      await registerUser(app, 
+        {
+          id: hostId,
+          name: 'name',
+          handle: 'handle'
+        });
+      const resp = await createTestEvent(app, hostId,
+      {
+        title: "no",
+        description: "yay",
+        startDate: '1970-01-01 00:00:00',
+        endDate: '1970-02-01 00:00:00',
+        color: "#72B01D",
+        shouldHideAfterStartDate: true,
+        isChatEnabled: true,
+        ...mockLocationCoordinate2D()
+      });
+      expect(resp.status).toEqual(200);
     });
   })
 });
