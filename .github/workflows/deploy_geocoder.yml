@@ -18,6 +18,17 @@ jobs:
         uses: actions/setup-node@v2
         with:
           node-version: '18'
+      
+      - name: Replace @layer/ alias
+        run: |
+          npm install -g replace
+          replace '@layer/' '/opt/nodejs/' ./ -r --include="*.ts,*.tsx"
+
+      - name: Install dependencies
+        run: npm install -g typescript
+      
+      - name: Build the project
+        run: tsc ./GeocodingLambda/*.ts
 
       - name: Zip the project
         run: |

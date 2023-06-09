@@ -2,10 +2,9 @@
  * @type {import('@types/aws-lambda').APIGatewayProxyHandler}
  */
 
-import AWS from "aws-sdk"
-import {connect} from "@planetscale/database"
 import { LocationClient, SearchPlaceIndexForPositionCommand } from "@aws-sdk/client-location"; // ES Modules import
-
+import { scheduleLambda } from "@layer/utils";
+import { connect } from "@planetscale/database";
 
 export const conn = connect({
   host: process.env.DATABASE_HOST,
@@ -15,44 +14,57 @@ export const conn = connect({
 
 //takes in a lat/long and converts it to address
 //inserts address in planetscale db
-export const handler = async (event, context, callback) => {
-  console.log(event)
-  console.log(context)
-  
+export const handler = async (location: { longitude: number; latitude: number; }) => {
   const client = new LocationClient({ region: "us-west-2" });
-  const input = { // SearchPlaceIndexForPositionRequest
+  const input = {
     IndexName: "placeIndexed3975f4-dev", 
-    Position: [event.longitude, event.latitude],
+    Position: [location.longitude, location.latitude],
     MaxResults: 1,
     Language: "en-US",
   };
 
   const command = new SearchPlaceIndexForPositionCommand(input);
-  const response = await client.send(command);
-  console.log(JSON.stringify(response.Results));
-  console.log("between");
-  console.log(JSON.stringify(response.Results[0].Place.Label));
-  const place = response.Results[0].Place;
-  const city = place.Municipality;
-  const country_code = place.Country;
-  const street = place.Street;
-  // const street_num = place.s
-
-  addLocation("Santa Cruz", "USA", "McHenry Service Rd");
+  try {
+    const response = await client.send(command);
+    const place = response.Results?.[0].Place;
+  
+    if (place)
+      addLocation({
+        lat: location.latitude,
+        lon: location.longitude,
+        name: place.Label ?? "Unknown Location",
+        city: place.Neighborhood ?? place.Municipality ?? place.SubRegion ?? "Unknown Place",
+        country: place.Country ?? place.Region ?? "Unknown Country",
+        street: place.Street ?? "Unknown Address",
+        street_num: place.AddressNumber ?? "",
+        unit_number: place.UnitNumber ?? "",
+      }
+    );
+  } catch (e) {
+    const repeatDate = new Date();
+    repeatDate.setHours(repeatDate.getHours() + 1);
+    scheduleLambda(`geocodingRetry${repeatDate.toISOString()}`, repeatDate.toISOString(), "arn:aws:lambda:us-west-2:213277979580:function:geocodingPipeline", location)
+  }
 }
 
-const addLocation = async (
-  city: string,
-  country_code: string,
-  street: string
-  ) => {
-    await conn.execute(
+interface Location {
+  lat: number;
+  lon: number;
+  name: string;
+  city: string;
+  country: string;
+  street: string;
+  street_num: string;
+  unit_number: string;
+}
+
+const addLocation = async (place: Location) => {
+  await conn.execute(
     `
-    INSERT INTO Location (name, city, country_code, street, 
-    street_num, lat, lon, eventId)
-    VALUES ("name", :city, :country_code, :street, "street_num", event.longitude,
-    event.latitude, 5)
+    INSERT INTO Location (name, city, country_code, street, street_num, lat, lon)
+    VALUES (:name, :city, :country_code, :street, :street_num, :lon, :lat)
    `, 
-  { city, country_code, street})
+    place
+  )
 }
 

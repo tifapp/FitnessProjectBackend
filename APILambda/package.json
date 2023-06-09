@@ -1,5 +1,9 @@
 {
   "type": "module",
+  "exports": {
+    "./user": "./uesr",
+    "./other": "./src/other/index.js"
+  },
   "name": "backend",
   "version": "1.0.0",
   "description": "",

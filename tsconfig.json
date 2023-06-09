@@ -8,8 +8,11 @@
     "removeComments": true,
     "allowJs": true,
     "moduleResolution": "node",
-    "paths": {},
+    "baseUrl": "./",
+    "paths": {
+      "@layer/*": ["./*"]
+    },
     "esModuleInterop": true,
     "resolveJsonModule": true
-  }
+  },
 }
