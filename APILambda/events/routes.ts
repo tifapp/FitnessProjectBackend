@@ -20,7 +20,7 @@ export const createEventRouter = (environment: ServerEnvironment) => {
     if (result.status === "error") {
       return res.status(404).json(result.value)
     }
-    return res.status(200).json({ result });
+    return res.status(201).json(result.value);
   });
   /** 
    * Get events by region
