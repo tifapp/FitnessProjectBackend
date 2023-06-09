@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { SQLExecutable } from "../dbconnection";
+import { SQLExecutable, selectLastInsertionId, selectLastInsertionNumericId } from "../dbconnection";
 import { LocationCoordinate2D } from "../location";
 import { EventColor } from "./models";
 import { userNotFoundBody, userWithIdExists } from "../user";
@@ -7,8 +7,8 @@ import { ServerEnvironment } from "../env";
 
 const CreateEventSchema = z.object({
   description: z.string().max(500),
-  startDate: z.string(),
-  endDate: z.string(),
+  startDate: z.number(),
+  endDate: z.number(),
   color: z.number(),
   title: z.string().max(50),
   shouldHideAfterStartDate: z.number(), //  can only be 0 or 1
@@ -20,8 +20,8 @@ const CreateEventSchema = z.object({
 export type CreateEventInput = {
   title: string;
   description: string;
-  startDate: string;
-  endDate: string;
+  startTimeStamp: number;
+  endTimeStamp: number;
   color: EventColor;
   shouldHideAfterStartDate: boolean;
   isChatEnabled: boolean;
@@ -50,8 +50,8 @@ export const insertEvent = async (
       hostId,
       title, 
       description, 
-      startDate, 
-      endDate, 
+      startTimeStamp, 
+      endTimeStamp, 
       color, 
       shouldHideAfterStartDate, 
       isChatEnabled, 
@@ -61,8 +61,8 @@ export const insertEvent = async (
       :hostId,
       :title, 
       :description, 
-      :startDate, 
-      :endDate, 
+      FROM_UNIXTIME(:startTimeStamp), 
+      FROM_UNIXTIME(:endTimeStamp), 
       :color, 
       :shouldHideAfterStartDate, 
       :isChatEnabled, 
@@ -98,9 +98,7 @@ export const getEvents = async (
 export const getLastEventId = async (
   conn: SQLExecutable
 ) => {
-  await conn.execute(
-  `SELECT E.id FROM Event E WHERE E.id = LAST_INSERT_ID()`
-  );
+  
 };
 
 export const createEvent = async (
@@ -115,11 +113,10 @@ export const createEvent = async (
   }
 
   const result = await environment.conn.transaction(async (tx) => {
-    insertEvent(conn, input, hostId);
-    const results = getLastEventId(conn);
-    console.log(results);
+    await insertEvent(tx, input, hostId);
+    return {id: await selectLastInsertionNumericId(tx)};
   })
 
-  return {status: "success"};
+  return {status: "success", value: result};
 
 }
