@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - development 
+      - deploy-test 
 
 jobs:
   build:
@@ -20,10 +21,12 @@ jobs:
           node-version: '18'
 
       - name: Install dependencies
-        run: npm ci
+        run: |
+          npm ci
+          npm install -g typescript
 
       - name: Build the project
-        run: npm run build
+        run: tsc
 
       - name: Remove dev dependencies
         run: cd dist && npm prune --production

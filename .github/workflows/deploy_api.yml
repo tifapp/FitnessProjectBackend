@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - development 
+      - deploy-test 
 
 jobs:
   build:
@@ -20,18 +21,18 @@ jobs:
           node-version: '18'
 
       - name: Install dependencies
-        run: cd APILambda && npm ci
+        run: cd APILambda && npm ci && 
+
+      - name: Build the project
+        run: tsc
+
+      - name: Remove dev dependencies
+        run: cd dist/APILambda && npm prune --production
 
       - name: Replace @layer/ alias
         run: |
-        npm install -g replace
-        replace '@layer/' '/opt/nodejs/' ./ -r --include="*.ts,*.tsx"
-
-      - name: Build the project
-        run: cd APILambda && npm run build
-
-      - name: Remove dev dependencies
-        run: cd APILambda && cd dist && npm prune --production
+          npm install -g replace
+          replace '@layer/' '/opt/nodejs/' ./ -r --include="*.ts,*.tsx"
 
       - name: Zip the project
         run: |

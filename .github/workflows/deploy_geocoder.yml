@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - development 
+      - deploy-test 
 
 jobs:
   build:
@@ -18,21 +19,21 @@ jobs:
         uses: actions/setup-node@v2
         with:
           node-version: '18'
-      
-      - name: Replace @layer/ alias
-        run: |
-          npm install -g replace
-          replace '@layer/' '/opt/nodejs/' ./ -r --include="*.ts,*.tsx"
 
       - name: Install dependencies
         run: npm install -g typescript
       
       - name: Build the project
-        run: tsc ./GeocodingLambda/*.ts
+        run: tsc
+      
+      - name: Replace @layer/ alias
+        run: |
+          npm install -g replace
+          replace '@layer/' '/opt/nodejs/' ./dist/GeocodingLambda/ -r --include="*.ts,*.tsx"
 
       - name: Zip the project
         run: |
-          cd GeocodingLambda
+          cd ./dist/GeocodingLambda
           zip -r ./dist.zip .
 
       - name: Configure AWS credentials

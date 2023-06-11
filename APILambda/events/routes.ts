@@ -1,3 +1,4 @@
+import { scheduleLambda } from "@layer/utils.js";
 import express from "express";
 import { ServerEnvironment } from "../env.js";
 import { createEvent, getEvents } from "./db.js";
@@ -15,6 +16,7 @@ export const createEventRouter = (environment: ServerEnvironment) => {
    */
   router.post("/", async (req, res) => {
     await environment.conn.transaction(async (tx) => {
+      scheduleLambda(req.body.eventName, new Date().toISOString(), "arn:aws:lambda:us-west-2:213277979580:function:geocodingPipeline", req.body.location)
       const result = await createEvent(tx, {
         userId: res.locals.selfId,
         ...req.body,
