@@ -1,6 +1,7 @@
 import express from "express";
 import { ServerEnvironment } from "../env.js";
 import { createEvent, getEvents } from "./db.js";
+import { invokeLambda } from "./utils.js";
 
 /**
  * Creates routes related to event operations.
@@ -15,6 +16,7 @@ export const createEventRouter = (environment: ServerEnvironment) => {
    */
   router.post("/", async (req, res) => {
     await environment.conn.transaction(async (tx) => {
+      invokeLambda("geocodingPipeline", {location: req.body.location})
       const result = await createEvent(tx, {
         userId: res.locals.selfId,
         ...req.body,
