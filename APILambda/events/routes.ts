@@ -1,7 +1,7 @@
 import { invokeLambda } from "@layer/utils.js";
 import express from "express";
 import { ServerEnvironment } from "../env.js";
-import { createEvent, getEvents } from "./db.js";
+import { createEvent, getEvents } from "../events";
 
 /**
  * Creates routes related to event operations.
@@ -15,15 +15,14 @@ export const createEventRouter = (environment: ServerEnvironment) => {
    * Create an event
    */
   router.post("/", async (req, res) => {
-    await environment.conn.transaction(async (tx) => {
+    const result = await environment.conn.transaction(async (tx) => {
       invokeLambda("geocodingPipeline", {location: req.body.location})
-      const result = await createEvent(tx, {
-        userId: res.locals.selfId,
-        ...req.body,
-      });
-      console.log("result:" + result);
-      return res.status(200).json({ result });
+      return await createEvent(environment, tx, res.locals.selfId, req.body);
     });
+    if (result.status === "error") {
+      return res.status(404).json(result.value)
+    }
+    return res.status(201).json(result.value);
   });
   /** 
    * Get events by region

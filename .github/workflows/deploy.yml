@@ -74,7 +74,7 @@ jobs:
         run: |
           aws lambda update-function-code --function-name lambdaSQLRoute --zip-file fileb://api.zip    
         
-      - name: Zip the project
+      - name: Zip the geocoding lambda
         run: |
           cd dist/GeocodingLambda
           mkdir geocoding
