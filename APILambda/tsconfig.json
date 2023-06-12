@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "module": "esnext",
+    "target": "es2020",
+    "strict": true,
+    "declaration": true,
+    "outDir": "dist",
+    "removeComments": true,
+    "allowJs": true,
+    "moduleResolution": "node",
+    "paths": {},
+    "esModuleInterop": true,
+    "resolveJsonModule": true
+  }
+}
