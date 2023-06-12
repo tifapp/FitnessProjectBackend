@@ -19,10 +19,22 @@ jobs:
         with:
           node-version: '18'
 
+      - name: Install dependencies
+        run: cd GeocodingLambda && npm ci
+
+      - name: Build the project
+        run: cd GeocodingLambda && npm run build
+
+      - name: Remove dev dependencies
+        run: cd GeocodingLambda && cd dist && npm prune --production
+
       - name: Zip the project
         run: |
           cd GeocodingLambda
-          zip -r ./dist.zip .
+          shopt -s extglob
+          cp -R !(test|.github|dist|*.ts) dist/
+          cd dist
+          zip -r ../dist.zip .
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
