@@ -3,7 +3,7 @@
  */
 
 import { LocationClient, SearchPlaceIndexForPositionCommand } from "@aws-sdk/client-location"; // ES Modules import
-import { scheduleLambda } from "@layer/utils";
+import { scheduleLambda } from "@layer/utils.js";
 import { connect } from "@planetscale/database";
 
 export const conn = connect({
@@ -14,11 +14,11 @@ export const conn = connect({
 
 //takes in a lat/long and converts it to address
 //inserts address in planetscale db
-export const handler = async (location: { longitude: number; latitude: number; }) => {
+export const handler = async (event: {location: { longitude: number; latitude: number; }, retries: number}) => {
   const client = new LocationClient({ region: "us-west-2" });
   const input = {
     IndexName: "placeIndexed3975f4-dev", 
-    Position: [location.longitude, location.latitude],
+    Position: [event.location.longitude, event.location.latitude],
     MaxResults: 1,
     Language: "en-US",
   };
@@ -30,8 +30,8 @@ export const handler = async (location: { longitude: number; latitude: number; }
   
     if (place)
       addLocation({
-        lat: location.latitude,
-        lon: location.longitude,
+        lat: event.location.latitude,
+        lon: event.location.longitude,
         name: place.Label ?? "Unknown Location",
         city: place.Neighborhood ?? place.Municipality ?? place.SubRegion ?? "Unknown Place",
         country: place.Country ?? place.Region ?? "Unknown Country",
@@ -41,9 +41,11 @@ export const handler = async (location: { longitude: number; latitude: number; }
       }
     );
   } catch (e) {
-    const repeatDate = new Date();
-    repeatDate.setHours(repeatDate.getHours() + 1);
-    scheduleLambda(`geocodingRetry${repeatDate.toISOString()}`, repeatDate.toISOString(), "arn:aws:lambda:us-west-2:213277979580:function:geocodingPipeline", location)
+    if (event.retries < 3) {
+      const repeatDate = new Date();
+      repeatDate.setHours(repeatDate.getHours() + (Math.pow(2, event.retries)));
+      scheduleLambda(`geocodingRetry${repeatDate.toISOString()}`, repeatDate.toISOString(), "arn:aws:lambda:us-west-2:213277979580:function:geocodingPipeline", {location: event.location, retries: (event.retries ?? 0) + 1})
+    }
   }
 }
 

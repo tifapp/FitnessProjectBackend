@@ -32,3 +32,15 @@ export const scheduleLambda = async (name: string, dateString: string, targetLam
   };
   return await eventbridge.putTargets(targetParams).promise();
 }
+
+const lambda = new AWS.Lambda();
+
+export const invokeLambda = async (lambdaName: string, targetLambdaParams?: any) => {
+  var params = {
+    FunctionName: lambdaName,
+    InvocationType: 'Event',
+    Payload: JSON.stringify(targetLambdaParams)
+  };
+
+  return await lambda.invoke(params).promise();
+}

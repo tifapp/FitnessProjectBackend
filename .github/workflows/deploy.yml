@@ -1,0 +1,88 @@
+name: Build and Deploy AWS Lambda Layer and Lambda Functions
+
+on:
+  push:
+    branches:
+      - main
+      - development 
+      - deploy-test 
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v2
+        with:
+          node-version: '18'
+      
+      - name: Install dependencies
+        run: npm ci && cd APILambda && npm ci
+
+      - name: Build the project
+        run: npm run build
+
+      - name: Replace @layer/ alias
+        run: |
+          npm install -g replace
+          replace '@layer/' '/opt/nodejs/' ./ -r --include="*.ts,*.tsx"
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Zip the lambda layer
+        run: |
+          cd dist
+          mkdir layer
+          mkdir layer/nodejs
+          shopt -s extglob
+          cp -R !(test|.github|dist|*.ts|APILambda|GeocodingLambda|layer) layer/nodejs/
+          cd layer
+          zip -r ../../layer.zip .
+        
+      - name: Deploy to AWS Lambda Layer
+        run: |
+          OUTPUT=$(aws lambda publish-layer-version --layer-name tifSharedBackendResources --zip-file fileb://layer.zip)
+          echo "LAYER_VERSION_ARN=$(echo $OUTPUT | jq -r '.LayerVersionArn')" >> $GITHUB_ENV
+
+      - name: Update lambda layer usages
+        run: |
+          aws lambda update-function-configuration --function-name lambdaSQLRoute --layers ${{ env.LAYER_VERSION_ARN }}  
+          aws lambda update-function-configuration --function-name geocodingPipeline --layers ${{ env.LAYER_VERSION_ARN }}
+
+      - name: Zip the api lambda
+        run: |
+          cd ./APILambda
+          npm prune --production
+          mv ./node_modules ../dist/APILambda
+          cd ../dist/APILambda
+          mkdir api
+          shopt -s extglob
+          cp -R !(test|.github|dist|*.ts|api) api/
+          cd api
+          zip -r ../../../api.zip .
+
+      - name: Deploy api lambda to AWS
+        run: |
+          aws lambda update-function-code --function-name lambdaSQLRoute --zip-file fileb://api.zip    
+        
+      - name: Zip the project
+        run: |
+          cd dist/GeocodingLambda
+          mkdir geocoding
+          shopt -s extglob
+          cp -R !(test|.github|dist|*.ts|geocoding) geocoding/
+          cd geocoding
+          zip -r ../../../geocoding.zip .
+
+      - name: Deploy geocoding lambda to AWS
+        run: |
+          aws lambda update-function-code --function-name geocodingPipeline --zip-file fileb://geocoding.zip
