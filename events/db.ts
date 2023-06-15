@@ -1,5 +1,9 @@
 import { z } from "zod";
-import { SQLExecutable, selectLastInsertionId, selectLastInsertionNumericId } from "../dbconnection";
+import {
+  SQLExecutable,
+  selectLastInsertionId,
+  selectLastInsertionNumericId,
+} from "../dbconnection";
 import { LocationCoordinate2D } from "../location";
 import { EventColor } from "./models";
 import { userNotFoundBody, userWithIdExists } from "../user";
@@ -70,7 +74,7 @@ export const insertEvent = async (
       :longitude
     )
     `,
-    {...request, hostId}
+    { ...request, hostId }
   );
 };
 
@@ -95,11 +99,13 @@ export const getEvents = async (
   );
 };
 
-export const getLastEventId = async (
-  conn: SQLExecutable
-) => {
-  
-};
+export const getLastEventId = async (conn: SQLExecutable) => {};
+
+export const getEventWithId = async (
+  conn: SQLExecutable,
+  selfId: string,
+  eventId: number
+) => {};
 
 export const createEvent = async (
   environment: ServerEnvironment,
@@ -109,14 +115,13 @@ export const createEvent = async (
 ) => {
   const userExists = await userWithIdExists(conn, hostId);
   if (!userExists) {
-    return {status: "error", value: userNotFoundBody(hostId)}
+    return { status: "error", value: userNotFoundBody(hostId) };
   }
 
   const result = await environment.conn.transaction(async (tx) => {
     await insertEvent(tx, input, hostId);
-    return {id: await selectLastInsertionNumericId(tx)};
-  })
+    return { id: await selectLastInsertionNumericId(tx) };
+  });
 
-  return {status: "success", value: result};
-
-}
+  return { status: "success", value: result };
+};
