@@ -20,11 +20,11 @@ export const createEventRouter = (environment: ServerEnvironment) => {
       return await createEvent(environment, tx, res.locals.selfId, req.body);
     });
     if (result.status === "error") {
-      return res.status(404).json(result.value)
+      return res.status(404).json(result.value);
     }
     return res.status(201).json(result.value);
   });
-  /** 
+  /**
    * Get events by region
    */
   router.get("/", async (req, res) => {
@@ -42,6 +42,13 @@ export const createEventRouter = (environment: ServerEnvironment) => {
     });
   });
 
-  //router.get("/event/:eventId", )
+  router.get("/:eventId", async (req, res) => {
+    return res
+      .status(404)
+      .json({
+        error: "event-not-found",
+        eventId: parseInt(req.params.eventId),
+      });
+  });
   return router;
 };
