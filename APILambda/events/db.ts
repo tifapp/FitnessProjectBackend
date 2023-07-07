@@ -1,7 +1,14 @@
 import { z } from "zod";
+<<<<<<< HEAD:APILambda/events/db.ts
 import { SQLExecutable } from "../dbconnection.js";
 import { LocationCoordinate2D } from "../location.js";
 import { EventColor } from "./models.js";
+=======
+import { SQLExecutable } from "../dbconnection";
+import { LocationCoordinate2D } from "../location";
+import { EventColor } from "./models";
+import { userNotFoundBody, userWithIdExists } from "../user";
+>>>>>>> 5fbff49 (created test to test that you get a 404 if a user that doesn't exist tries to create an event):events/db.ts
 
 const CreateEventSchema = z.object({
   description: z.string().max(500),
@@ -15,11 +22,11 @@ const CreateEventSchema = z.object({
   longitude: z.number().min(-180).max(180),
 });
 
-export type CreateEventRequest = {
+export type CreateEventInput = {
   title: string;
   description: string;
-  startDate: Date;
-  endDate: Date;
+  startDate: string;
+  endDate: string;
   color: EventColor;
   shouldHideAfterStartDate: boolean;
   isChatEnabled: boolean;
@@ -39,7 +46,7 @@ export type GetEventsRequest = {
  */
 export const insertEvent = async (
   conn: SQLExecutable,
-  request: CreateEventRequest
+  request: CreateEventInput
 ) => {
   await conn.execute(
     `
@@ -91,3 +98,15 @@ export const getEvents = async (
     request
   );
 };
+
+export const createEvent = async (
+  conn: SQLExecutable,
+  hostId: string,
+  input: CreateEventInput
+) => {
+  const userExists = await userWithIdExists(conn, hostId);
+  if (!userExists) {
+    return {status: "error", value: userNotFoundBody(hostId)}
+  }
+  return {status: "success"}
+}
