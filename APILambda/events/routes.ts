@@ -14,16 +14,15 @@ export const createEventRouter = (environment: ServerEnvironment) => {
    * Create an event
    */
   router.post("/", async (req, res) => {
-    await environment.conn.transaction(async (tx) => {
-      const result = await createEvent(tx, {
-        userId: res.locals.selfId,
-        ...req.body,
-      });
-      console.log("result:" + result);
-      return res.status(200).json({ result });
+    const result = await environment.conn.transaction(async (tx) => {
+      return await createEvent(environment, tx, res.locals.selfId, req.body);
     });
+    if (result.status === "error") {
+      return res.status(404).json(result.value);
+    }
+    return res.status(201).json(result.value);
   });
-  /** 
+  /**
    * Get events by region
    */
   router.get("/", async (req, res) => {
@@ -41,6 +40,13 @@ export const createEventRouter = (environment: ServerEnvironment) => {
     });
   });
 
-  //router.get("/event/:eventId", )
+  router.get("/:eventId", async (req, res) => {
+    return res
+      .status(404)
+      .json({
+        error: "event-not-found",
+        eventId: parseInt(req.params.eventId),
+      });
+  });
   return router;
 };

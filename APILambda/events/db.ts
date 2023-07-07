@@ -1,12 +1,17 @@
 import { z } from "zod";
-import { SQLExecutable } from "../dbconnection.js";
+import {
+  SQLExecutable,
+  selectLastInsertionNumericId
+} from "../dbconnection.js";
+import { ServerEnvironment } from "../env.js";
 import { LocationCoordinate2D } from "../location.js";
+import { userNotFoundBody, userWithIdExists } from "../user";
 import { EventColor } from "./models.js";
 
 const CreateEventSchema = z.object({
   description: z.string().max(500),
-  startDate: z.string(),
-  endDate: z.string(),
+  startDate: z.number(),
+  endDate: z.number(),
   color: z.number(),
   title: z.string().max(50),
   shouldHideAfterStartDate: z.number(), //  can only be 0 or 1
@@ -15,11 +20,11 @@ const CreateEventSchema = z.object({
   longitude: z.number().min(-180).max(180),
 });
 
-export type CreateEventRequest = {
+export type CreateEventInput = {
   title: string;
   description: string;
-  startDate: Date;
-  endDate: Date;
+  startTimeStamp: number;
+  endTimeStamp: number;
   color: EventColor;
   shouldHideAfterStartDate: boolean;
   isChatEnabled: boolean;
@@ -37,9 +42,10 @@ export type GetEventsRequest = {
  *
  * @param request see {@link CreateEventRequest}
  */
-export const createEvent = async (
+export const insertEvent = async (
   conn: SQLExecutable,
-  request: CreateEventRequest
+  request: CreateEventInput,
+  hostId: string
 ) => {
   await conn.execute(
     `
@@ -47,19 +53,19 @@ export const createEvent = async (
       hostId,
       title, 
       description, 
-      startDate, 
-      endDate, 
+      startTimeStamp, 
+      endTimeStamp, 
       color, 
       shouldHideAfterStartDate, 
       isChatEnabled, 
       latitude, 
       longitude
     ) VALUES (
-      :userId,
+      :hostId,
       :title, 
       :description, 
-      :startDate, 
-      :endDate, 
+      FROM_UNIXTIME(:startTimeStamp), 
+      FROM_UNIXTIME(:endTimeStamp), 
       :color, 
       :shouldHideAfterStartDate, 
       :isChatEnabled, 
@@ -67,7 +73,7 @@ export const createEvent = async (
       :longitude
     )
     `,
-    request
+    { ...request, hostId }
   );
 };
 
@@ -90,4 +96,31 @@ export const getEvents = async (
   `,
     request
   );
+};
+
+export const getLastEventId = async (conn: SQLExecutable) => {};
+
+export const getEventWithId = async (
+  conn: SQLExecutable,
+  selfId: string,
+  eventId: number
+) => {};
+
+export const createEvent = async (
+  environment: ServerEnvironment,
+  conn: SQLExecutable,
+  hostId: string,
+  input: CreateEventInput
+) => {
+  const userExists = await userWithIdExists(conn, hostId);
+  if (!userExists) {
+    return { status: "error", value: userNotFoundBody(hostId) };
+  }
+
+  const result = await environment.conn.transaction(async (tx) => {
+    await insertEvent(tx, input, hostId);
+    return { id: await selectLastInsertionNumericId(tx) };
+  });
+
+  return { status: "success", value: result };
 };
