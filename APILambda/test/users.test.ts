@@ -12,6 +12,7 @@ import {
 } from "../user";
 import request from "supertest";
 import { createTestApp } from "./testApp";
+import { deleteSelf, registerUser, fetchUser, friendUser, fetchSelf, fetchSettings, editSettings } from "./helpers/users";
 
 describe("Users tests", () => {
   const app = createTestApp({ conn });
@@ -42,7 +43,7 @@ describe("Users tests", () => {
   describe("DeleteSelf tests", () => {
     it("should 404 on non existing user", async() => {
       const userId = randomUUID();
-      const resp = await deleteSelf(userId);
+      const resp = await deleteSelf(app, userId);
 
       expect(resp.status).toEqual(404);
       expect(resp.body).toMatchObject(userNotFoundBody(userId));
@@ -50,13 +51,13 @@ describe("Users tests", () => {
 
     it("should give a 204 when you sucessfully delete the user", async() => {
       const userId = randomUUID();
-      await registerUser({
+      await registerUser(app, {
         id: userId,
         name: "Big Chungus",
         handle: "big_chungus",
       });
 
-      const resp = await deleteSelf(userId);
+      const resp = await deleteSelf(app, userId);
       expect(resp.status).toEqual(204);
     })
   })
@@ -65,7 +66,7 @@ describe("Users tests", () => {
     it("should 404 on non existing user", async () => {
       const userId = randomUUID();
       const youId = randomUUID();
-      const resp = await fetchUser(youId, userId);
+      const resp = await fetchUser(app, youId, userId);
 
       expect(resp.status).toEqual(404);
       expect(resp.body).toMatchObject(userNotFoundBody(userId));
@@ -74,12 +75,12 @@ describe("Users tests", () => {
     it("should retrieve a user that exists", async () => {
       const userId = randomUUID();
       const youId = randomUUID();
-      await registerUser({
+      await registerUser(app, {
         id: userId,
         name: "John Burke",
         handle: "johncann",
       });
-      const resp = await fetchUser(youId, userId);
+      const resp = await fetchUser(app, youId, userId);
 
       expect(resp.status).toEqual(200);
       expect(resp.body).toMatchObject(
@@ -110,7 +111,7 @@ describe("Users tests", () => {
 
     it("should be able to create a new user posting to /user when user does not exist", async () => {
       const userId = randomUUID();
-      const resp = await registerUser({
+      const resp = await registerUser(app, {
         id: userId,
         name: "Big Chungus",
         handle: "big_chungus",
@@ -122,13 +123,13 @@ describe("Users tests", () => {
 
     it("should not be able to create a user with an already existing id", async () => {
       const userId = randomUUID();
-      await registerUser({
+      await registerUser(app, {
         id: userId,
         name: "Big Chungus",
         handle: "big_chungus",
       });
 
-      const resp = await registerUser({
+      const resp = await registerUser(app, {
         id: userId,
         name: "Elon Musk",
         handle: "elon_musk",
@@ -138,13 +139,13 @@ describe("Users tests", () => {
     });
 
     it("should not be able to create a user with a duplicate handle", async () => {
-      await registerUser({
+      await registerUser(app, {
         id: randomUUID(),
         name: "Big Chungus",
         handle: "big_chungus",
       });
 
-      const resp = await registerUser({
+      const resp = await registerUser(app, {
         id: randomUUID(),
         name: "Elon Musk",
         handle: "big_chungus",
@@ -159,36 +160,36 @@ describe("Users tests", () => {
     const youId = randomUUID();
 
     beforeEach(async () => {
-      await registerUser({ id: youId, name: "Elon Musk", handle: "elon_musk" });
-      await registerUser({ id: otherId, name: "A", handle: "a" });
+      await registerUser(app, { id: youId, name: "Elon Musk", handle: "elon_musk" });
+      await registerUser(app, { id: otherId, name: "A", handle: "a" });
     });
 
     it("should have a pending status when no prior relation between uses", async () => {
-      const resp = await friendUser(youId, otherId);
+      const resp = await friendUser(app, youId, otherId);
       expect(resp.status).toEqual(201);
       expect(resp.body).toMatchObject({ status: "friend-request-pending" });
     });
 
     it("should return the same status when already existing pending friend request", async () => {
-      await friendUser(youId, otherId);
-      const resp = await friendUser(youId, otherId);
+      await friendUser(app, youId, otherId);
+      const resp = await friendUser(app, youId, otherId);
       expect(resp.status).toEqual(200);
       expect(resp.body).toMatchObject({ status: "friend-request-pending" });
     });
 
     it("should return the same status when already friends", async () => {
-      await friendUser(youId, otherId);
-      await friendUser(otherId, youId);
+      await friendUser(app, youId, otherId);
+      await friendUser(app, otherId, youId);
 
-      const resp = await friendUser(youId, otherId);
+      const resp = await friendUser(app, youId, otherId);
       expect(resp.status).toEqual(200);
       expect(resp.body).toMatchObject({ status: "friends" });
     });
 
     it("should have a friend status when the receiver sends a friend request to someone who sent them a pending friend request", async () => {
-      await friendUser(youId, otherId);
+      await friendUser(app, youId, otherId);
 
-      const resp = await friendUser(otherId, youId);
+      const resp = await friendUser(app, otherId, youId);
       expect(resp.status).toEqual(201);
       expect(resp.body).toMatchObject({ status: "friends" });
     });
@@ -197,7 +198,7 @@ describe("Users tests", () => {
   describe("GetSelf tests", () => {
     it("404s when you have no account", async () => {
       const id = randomUUID();
-      const resp = await fetchSelf(id);
+      const resp = await fetchSelf(app, id);
       expect(resp.status).toEqual(404);
       expect(resp.body).toMatchObject(userNotFoundBody(id));
     });
@@ -209,8 +210,8 @@ describe("Users tests", () => {
         name: "Matthew Hayes",
         handle: "little_chungus",
       };
-      await registerUser(accountInfo);
-      const resp = await fetchSelf(id);
+      await registerUser(app, accountInfo);
+      const resp = await fetchSelf(app, id);
 
       expect(resp.status).toEqual(200);
       expect(resp.body).toMatchObject(
@@ -228,7 +229,7 @@ describe("Users tests", () => {
   describe("Settings tests", () => {
     it("should 404 when gettings settings when user does not exist", async () => {
       const id = randomUUID();
-      const resp = await fetchSettings(id);
+      const resp = await fetchSettings(app, id);
       expect(resp.status).toEqual(404);
       expect(resp.body).toEqual(userNotFoundBody(id));
     });
@@ -236,7 +237,7 @@ describe("Users tests", () => {
     it("should return the default settings when settings not edited", async () => {
       const id = await registerTestUser();
 
-      const resp = await fetchSettings(id);
+      const resp = await fetchSettings(app, id);
       expect(resp.status).toEqual(200);
       expect(resp.body).toEqual({
         isAnalyticsEnabled: true,
@@ -250,17 +251,17 @@ describe("Users tests", () => {
 
     it("should 404 when attempting edit settings for non-existent user", async () => {
       const id = randomUUID();
-      const resp = await editSettings(id, { isAnalyticsEnabled: false });
+      const resp = await editSettings(app, id, { isAnalyticsEnabled: false });
       expect(resp.status).toEqual(404);
       expect(resp.body).toMatchObject(userNotFoundBody(id));
     });
 
     it("should be able to retrieve the user's edited settings", async () => {
       const id = await registerTestUser();
-      await editSettings(id, { isChatNotificationsEnabled: false });
-      await editSettings(id, { isCrashReportingEnabled: false });
+      await editSettings(app, id, { isChatNotificationsEnabled: false });
+      await editSettings(app, id, { isCrashReportingEnabled: false });
 
-      const resp = await fetchSettings(id);
+      const resp = await fetchSettings(app, id);
       expect(resp.status).toEqual(200);
       expect(resp.body).toMatchObject({
         isAnalyticsEnabled: true,
@@ -283,54 +284,8 @@ describe("Users tests", () => {
 
     const registerTestUser = async () => {
       const id = randomUUID();
-      await registerUser({ id, name: "test", handle: "test" });
+      await registerUser(app, { id, name: "test", handle: "test" });
       return id;
     };
-  });
-
-  const editSettings = async (id: string, settings: Partial<UserSettings>) => {
-    return await request(app)
-      .patch("/user/self/settings")
-      .set("Authorization", id)
-      .send(settings);
-  };
-
-  const fetchSettings = async (id: string) => {
-    return await request(app)
-      .get("/user/self/settings")
-      .set("Authorization", id)
-      .send();
-  };
-
-  const fetchSelf = async (id: string) => {
-    return await request(app).get("/user/self").set("Authorization", id).send();
-  };
-
-  const friendUser = async (user1Id: string, user2Id: string) => {
-    return await request(app)
-      .post(`/user/friend/${user2Id}`)
-      .set("Authorization", user1Id)
-      .send();
-  };
-
-  const registerUser = async (req: RegisterUserRequest) => {
-    return await request(app).post("/user").set("Authorization", req.id).send({
-      name: req.name,
-      handle: req.handle,
-    });
-  };
-
-  const fetchUser = async (youId: string, userId: string) => {
-    return await request(app)
-      .get(`/user/${userId}`)
-      .set("Authorization", youId)
-      .send();
-  };
-
-  const deleteSelf = async(userId: string) => {
-    return await request(app)
-    .delete("/user/self")
-    .set("Authorization", userId)
-    .send();
-  };
+  }); 
 });

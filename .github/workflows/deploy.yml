@@ -1,10 +1,11 @@
-name: Build and Deploy to AWS Lambda
+name: Build and Deploy AWS Lambda Layer and Lambda Functions
 
 on:
   push:
     branches:
       - main
       - development 
+      - geocoding-connection
 
 jobs:
   build:
@@ -18,6 +19,21 @@ jobs:
         uses: actions/setup-node@v2
         with:
           node-version: '18'
+      
+      - name: Install dependencies
+        run: cd GeocodingLambda && npm ci
+
+      - name: Build the project
+        run: cd GeocodingLambda && npm run build
+
+      - name: Zip the geocoding lambda
+        run: |
+          cd GeocodingLambda/dist
+          mkdir geocoding
+          shopt -s extglob
+          cp -R !(test|.github|dist|*.ts|geocoding) geocoding/
+          cd geocoding
+          zip -r ../../../geocoding.zip .
 
       - name: Install dependencies
         run: cd APILambda && npm ci
@@ -25,16 +41,14 @@ jobs:
       - name: Build the project
         run: cd APILambda && npm run build
 
-      - name: Remove dev dependencies
-        run: cd APILambda && cd dist && npm prune --production
-
-      - name: Zip the project
+      - name: Zip the api lambda
         run: |
-          cd APILambda
+          cd APILambda/dist
+          mkdir api
           shopt -s extglob
-          cp -R !(test|.github|dist|*.ts) dist/
-          cd dist
-          zip -r ../dist.zip .
+          cp -R !(test|.github|dist|*.ts|api) api/
+          cd api
+          zip -r ../../../api.zip .
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -43,6 +57,10 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: Deploy to AWS Lambda
+      - name: Deploy api lambda to AWS
         run: |
-          aws lambda update-function-code --function-name lambdaSQLRoute --zip-file fileb://APILambda/dist.zip
+          aws lambda update-function-code --function-name lambdaSQLRoute --zip-file fileb://api.zip
+
+      - name: Deploy geocoding lambda to AWS
+        run: |
+          aws lambda update-function-code --function-name geocodingPipeline --zip-file fileb://geocoding.zip

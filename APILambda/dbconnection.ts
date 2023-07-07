@@ -88,3 +88,31 @@ export const queryFirst = async <Value>(
     return res.rows[0] as Value | undefined;
   });
 };
+ 
+ /**
+  * Gets the id of the last inserted record.
+  * Every return type from this function will be a string and then it can be parsed afterwards.
+  * 
+  * @param conn planetscale connection
+  * @returns the id of the last inserted record
+  */
+ export const selectLastInsertionId = async (
+   conn: SQLExecutable
+ ) => {
+   const result = await queryFirst <{ "LAST_INSERT_ID()": string }> (conn, 'SELECT LAST_INSERT_ID()');
+   return result?.["LAST_INSERT_ID()"];
+ }
+ 
+ /**
+  * Gets the id of the last inserted record and then attempts to return the result parsed as an int.
+  * 
+  * @param conn planetscale connection
+  * @returns the id of the last inserted record parsed as an int
+  */
+ export const selectLastInsertionNumericId = async (
+   conn: SQLExecutable
+ ) => {
+   const id = await selectLastInsertionId(conn);
+   if (!id) return undefined;
+   return parseInt(id);
+ }
