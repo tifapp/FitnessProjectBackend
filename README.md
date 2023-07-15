@@ -1,4 +1,5 @@
 Todo: Add aws section
+Todo: Add section for testing locally
 
 # FitnessProject
 
