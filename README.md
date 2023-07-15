@@ -1,3 +1,5 @@
+Todo: Add aws section
+
 # FitnessProject
 
 # Adding a New SQL Route to the Backend API
