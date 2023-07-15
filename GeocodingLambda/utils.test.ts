@@ -14,7 +14,7 @@ describe("exponentialLambdaBackoff", () => {
     
     let wrappedFunction: (event: any) => Promise<any>; // Placeholder for the wrapped function
 
-    const mockScheduleLambda = jest.fn().mockImplementation((eventName, eventTime, arn, event) => {
+    const mockScheduleLambda = jest.fn().mockImplementation((eventTime, event) => {
       return wrappedFunction(event);
     });
     

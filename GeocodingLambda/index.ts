@@ -3,13 +3,15 @@
  */
 
 import { SearchPlaceIndexForPositionCommand } from "@aws-sdk/client-location";
-import { LatLng, Placemark, SearchForPositionResultToPlacemark, conn, exponentialLambdaBackoff, locationClient } from "./utils";
+import { LatLng, Placemark, Retryable, SearchForPositionResultToPlacemark, conn, exponentialLambdaBackoff, locationClient } from "./utils";
+
+interface LocationSearchRequest extends Retryable { location: LatLng }
 
 //checks if placemark exists with given lat/lon
 //takes in a lat/long and converts it to address
 //inserts address in planetscale db
 //retries if conversion fails
-export const handler = exponentialLambdaBackoff(async (event: { location: LatLng }) => {
+export const handler = exponentialLambdaBackoff<LocationSearchRequest, string>(async(event: LocationSearchRequest) => {
   const result = await checkExistingPlacemark({latitude: parseFloat(event.location.latitude.toFixed(10)), longitude: parseFloat(event.location.longitude.toFixed(10))});
 
   if (result.rows.length > 0) return `Placemark at ${JSON.stringify(event.location)} already exists`;

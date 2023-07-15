@@ -43,19 +43,20 @@ const createCronExpressions = (dateString: string) => {
   return `cron(${minute} ${hour} ${dayOfMonth} ${month} ? ${year})`;
 }
 
-export const scheduleLambda = async (name: string, dateString: string, targetLambdaARN: string, targetLambdaParams?: any) => {
+export const scheduleLambda = async (dateString: string, targetLambdaParams?: any) => {
   const cronExpression = createCronExpressions(dateString);
+  const ruleName = `${lambdaArn}_${dateString}`;
   const ruleParams = {
-    Name: name,
+    Name: ruleName,
     ScheduleExpression: cronExpression,
   };
   await eventbridge.putRule(ruleParams).promise();
   const targetParams = {
-    Rule: name,
+    Rule: ruleName,
     Targets: [
       {
-        Arn: targetLambdaARN,
-        Id: name
+        Arn: lambdaArn,
+        Id: ruleName
       }
     ],
     Input: JSON.stringify(targetLambdaParams)
@@ -75,6 +76,10 @@ export const invokeLambda = async (lambdaName: string, targetLambdaParams?: any)
   return await lambda.invoke(params).promise();
 }
 
+export interface Retryable {
+  retries?: number
+}
+
 /**
  * Wraps a lambda function to add exponential backoff retry logic.
  *
@@ -82,22 +87,23 @@ export const invokeLambda = async (lambdaName: string, targetLambdaParams?: any)
  * @param {number} maxRetries The maximum number of retries before the error is rethrown.
  * @returns {function} A new function that performs the same operation as the original function, but with exponential backoff retries.
  */
-export const exponentialLambdaBackoff = (
-  lambdaFunction: (event: any) => Promise<any>,
+export const exponentialLambdaBackoff = <T extends Retryable,U>(
+  lambdaFunction: (event: T) => Promise<U>,
   maxRetries: number = 3,
   scheduleLambdaMethod = scheduleLambda, //parameterized for testing
 ) => {
-  return async (event: any) => {
+  return async (event: T) => {
     try {
       return await lambdaFunction(event);
     } catch (e) {
-      if (event.retries < maxRetries) {
-        const retryDelay = Math.pow(2, event.retries);
+      const retries = (event.retries ?? 0) 
+      if (retries < maxRetries) {
+        const retryDelay = Math.pow(2, retries);
         const retryDate = new Date();
         retryDate.setHours(retryDate.getHours() + retryDelay);
 
-        const newEvent = {...event, retries: (event.retries ?? 0) + 1};
-        return scheduleLambdaMethod(`geocodingRetry${retryDate.toISOString()}`, retryDate.toISOString(), lambdaArn, newEvent);
+        const newEvent = {...event, retries: retries + 1};
+        return scheduleLambdaMethod(retryDate.toISOString(), newEvent);
       } else {
         throw e;
       }
