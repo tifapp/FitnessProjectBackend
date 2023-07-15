@@ -37,3 +37,21 @@
 export type Result<Success, Error> =
   | { status: "success"; value: Success }
   | { status: "error"; value: Error };
+
+import Ably from "ably";
+
+const rest = new Ably.Rest({ key: process.env.ABLY_KEY });
+
+type Permissions = Ably.Types.capabilityOp
+
+export const createTokenRequest = async (permissions: Permissions, userId: string) => {
+  return new Promise((resolve, reject) => {
+    rest.auth.createTokenRequest({ clientId: userId, capability: JSON.stringify(permissions) }, null, (err, tokenRequest) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(tokenRequest);
+      }
+    });
+  });
+}

@@ -91,3 +91,45 @@ export const getEvents = async (
     request
   );
 };
+
+export const getEvent = async (
+  conn: SQLExecutable,
+  request: {eventId: number}
+) => {
+  await conn.execute(
+    `
+    SELECT * FROM Event WHERE ID = :eventId;
+    `,
+    request
+  );
+};
+
+/*
+//ex. event = await getEvent(conn, {eventId: 6})
+//console.log(event)
+//details = event.rows[0]
+
+export const checkIfUserInEvent = async (
+  conn: SQLExecutable,
+  request: GetEventRequest
+) => {
+  await conn.execute(
+    `
+    *** //read eventattendance table
+    `,
+    request
+  );
+};
+
+export const checkIfUserBlocked = async (
+  conn: SQLExecutable,
+  request: GetEventRequest
+) => {
+  await conn.execute(
+    `
+    *** //read userRelations table
+    `,
+    request
+  );
+};
+*/

@@ -25,4 +25,8 @@ describe("Events tests", () => {
       });
     });
   });
+  /*
+  inside test:
+  const result = await request(app).get("/event/chat/9").set("Authorization", req.id);
+  */
 });
