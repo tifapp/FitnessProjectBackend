@@ -1,5 +1,6 @@
 Todo: Add aws section
 Todo: Add section for testing locally
+Todo: Add table of contents
 
 # FitnessProject
 
@@ -19,7 +20,7 @@ The main API is found in the `APILambda` folder. This folder contains different 
     └── <new_data_type_folder>
 ```
 
-## Step 2: Write SQL Statements
+## Statements
 
 In order to operate on the database you'll need to write SQL statements.
 
@@ -30,7 +31,7 @@ APILambda
 └── <your_data_type_folder> (e.g., users, products, etc.)
     ├── routes.ts
     ├── transactions.ts
-    └── SQLStatements.ts (This is where you add your SQL statements)
+    └── SQL.ts (This is where you add your SQL statements)
 ```
 
 In this file, write your SQL statements for the new route. This SQL statement should return the desired query result for your route.
@@ -42,7 +43,7 @@ For example, if you're adding a new "products" route, you might add a SQL statem
 export const getNewProduct = `SELECT * FROM products WHERE id = $1`;
 ```
 
-## Step 3: Create a Transaction
+## Transactions
 
 Transactions ensure the integrity of the database by treating a set of SQL operations as a single unit. The transactions will use the SQL statements to perform atomic operationss on the database and return a "success" or "error" result to the route.
 
@@ -53,7 +54,7 @@ APILambda
 └── <your_data_type_folder> (e.g., users, products, etc.)
     ├── routes.ts
     ├── transactions.ts (This is where you add your transactions)
-    └── SQLStatements.ts
+    └── SQL.ts
 ```
 
 For example, if you're working on the "products" route, and you have a SQL statement to retrieve a product by ID, your transaction in the transactions.ts file might look like this:
@@ -75,7 +76,7 @@ export async function getNewProductTransaction(id) {
 
 This transaction uses the getNewProduct SQL statement to retrieve data from the database, and handles any potential errors to maintain the stability of the backend API.
 
-## Step 4: Define a New Route
+## Routes
 
 Routes determine the way your API responds to the client at specific URI endpoints. Routes are composed of transactions and will consume the "success" or "error" results from transactions and convert them into proper HTTP status codes for the client.
 
@@ -86,7 +87,7 @@ APILambda
 └── <your_data_type_folder> (e.g., users, products, etc.)
     ├── routes.ts (This is where you define your route)
     ├── transactions.ts
-    └── SQLStatements.ts
+    └── SQL.ts
 ```
 
 For example, if you're adding a "products" route to get a product by its ID, your route in the routes.ts file might look like this:
@@ -114,7 +115,7 @@ export default router;
 
 This route listens to GET requests at the /new-product/:id endpoint, calls the getNewProductTransaction function, and returns the appropriate HTTP status code and data based on the transaction's result.
 
-## Step 5: Write Tests
+## Tests
 
 Tests are cruitcal to ensure the integrity and stability of your SQL route. Tests should be written for every new route or modification to an existing route. Tests are located in the 'tests' folder at the root of the project. Your tests should cover both successful transactions and potential error conditions.
 
