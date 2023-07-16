@@ -26,7 +26,8 @@ export const handler = exponentialLambdaBackoff<LocationSearchRequest, string>(a
   const place = SearchForPositionResultToPlacemark(event.location, response.Results?.[0].Place);
 
   await addPlacemark(place);
-  
+  console.log("returning place")
+  console.log(place)
   return `Placemark at ${JSON.stringify(event.location)} successfully inserted. Address is ${JSON.stringify(place)}`;
 });
 

@@ -1,16 +1,23 @@
 name: Build and Deploy to AWS Lambda
 
 on:
-  push:
+  pull_request:
+    types: [opened, synchronize]
     branches:
       - main
-      - development 
+      - development
 
 jobs:
-  deploy:
-    if: github.event_name == 'push'
-
+  test:
     runs-on: ubuntu-latest
+
+    env:
+      DATABASE_HOST: ${{ secrets.DATABASE_HOST }}
+      DATABASE_USERNAME: ${{ secrets.DATABASE_USERNAME }}
+      DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
+      AWS_REGION: ${{ secrets.AWS_REGION }}
+      AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+      AWS_LAMBDA_FUNCTION_NAME: geocodingPipeline
 
     steps:
       - name: Checkout code
@@ -33,11 +40,7 @@ jobs:
           cd GeocodingLambda
           npm ci
 
-      - name: Zip the project
+      - name: Run tests
         run: |
           cd GeocodingLambda
-          zip -r ./dist.zip .
-
-      - name: Deploy to AWS Lambda
-        run: |
-          aws lambda update-function-code --function-name geocodingPipeline --zip-file fileb://GeocodingLambda/dist.zip
+          npm run test:ci

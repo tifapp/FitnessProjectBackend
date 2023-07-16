@@ -47,7 +47,7 @@ const createCronExpressions = (dateString: string) => {
 
 export const scheduleLambda = async (dateString: string, targetLambdaParams?: any) => {
   const cronExpression = createCronExpressions(dateString);
-  const ruleName = `${lambdaArn}_${dateString}`;
+  const ruleName = `${functionName}_${dateString}`.replace(/[: ]/g, "_");
   const ruleParams = {
     Name: ruleName,
     ScheduleExpression: cronExpression,
@@ -58,10 +58,10 @@ export const scheduleLambda = async (dateString: string, targetLambdaParams?: an
     Targets: [
       {
         Arn: lambdaArn,
-        Id: ruleName
+        Id: ruleName,
+        Input: JSON.stringify(targetLambdaParams)
       }
     ],
-    Input: JSON.stringify(targetLambdaParams)
   };
   return await eventbridge.putTargets(targetParams).promise();
 }
@@ -98,6 +98,7 @@ export const exponentialLambdaBackoff = <T extends Retryable,U>(
     try {
       return await lambdaFunction(event);
     } catch (e) {
+      console.log(e)
       const retries = (event.retries ?? 0) 
       if (retries < maxRetries) {
         const retryDelay = Math.pow(2, retries);
