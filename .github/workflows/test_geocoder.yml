@@ -1,4 +1,4 @@
-name: Build and Deploy to AWS Lambda
+name: Test Geocoder Pipeline
 
 on:
   pull_request:

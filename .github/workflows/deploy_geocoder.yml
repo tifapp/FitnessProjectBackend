@@ -1,4 +1,4 @@
-name: Build and Deploy to AWS Lambda
+name: Build and Deploy Geocoding Pipeline to AWS Lambda
 
 on:
   push:
