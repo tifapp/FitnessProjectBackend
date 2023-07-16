@@ -17,16 +17,17 @@ jobs:
 
     runs-on: ubuntu-latest
 
+    env:
+      DATABASE_HOST: ${{ secrets.DATABASE_HOST }}
+      DATABASE_USERNAME: ${{ secrets.DATABASE_USERNAME }}
+      DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
+      AWS_REGION: ${{ secrets.AWS_REGION }}
+      AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+      AWS_LAMBDA_FUNCTION_NAME: geocodingPipeline
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-
-      - name: create env file
-        run: |
-          touch .env
-          echo DATABASE_HOST=${{ secrets.DATABASE_HOST }} >> .env
-          echo DATABASE_USERNAME=${{ secrets.DATABASE_USERNAME }} >> .env
-          echo DATABASE_PASSWORD=${{ secrets.DATABASE_PASSWORD }} >> .env
 
       - name: Setup Node.js environment
         uses: actions/setup-node@v2

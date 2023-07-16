@@ -2,6 +2,8 @@ import { LocationClient, Place } from '@aws-sdk/client-location';
 import { connect } from "@planetscale/database";
 import AWS from 'aws-sdk';
 
+require('dotenv').config()
+
 const functionName = process.env.AWS_LAMBDA_FUNCTION_NAME;
 const region = process.env.AWS_REGION;
 const accountId = process.env.AWS_ACCOUNT_ID;
