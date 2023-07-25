@@ -10,7 +10,7 @@ import {
   userSettingsWithId,
   userWithId,
   userWithIdExists,
-} from "./db.js";
+} from "./SQL.js";
 import { DEFAULT_USER_SETTINGS, UserSettingsSchema } from "./models.js";
 
 /**

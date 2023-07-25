@@ -1,6 +1,7 @@
 import express from "express";
 import { ServerEnvironment } from "../env.js";
 import { createEvent, getEvents } from "./SQL.js";
+import {createTokenRequestWithPermissionsTransaction } from "./transactions.js";
 
 /**
  * Creates routes related to event operations.
@@ -40,35 +41,31 @@ export const createEventRouter = (environment: ServerEnvironment) => {
       return res.status(200).json({ result });
     });
   });
+
   /** 
    * Get token for event's chat room
    */
   router.get("/chat/:eventId", async (req, res) => {
-    // given a channel id, return the signed token + permissions
    
-    //const result = createTokenRequestWithPermissionsTransaction(environment.conn, req.params.channel, res.locals.selfId)
+    const result = createTokenRequestWithPermissionsTransaction(environment, environment.conn, Number(req.params.eventId), res.locals.selfId)
 
-    /*
-    router
-    if result.status === "error" {
-      //if error is 'event does not exist', return 404
-      //if error is 'user is not apart of event', return 403
-      //if error is 'user is blocked by event host', return 403
-      //if error is 'cannot generate tokenRequest', return 500
-    } else {
+    const value = (await result).value;
+    if (value === "event does not exist") {
+      return 404;
+    } else if (value === "user is not apart of event") {
+      return 403;
+    } else if (value === "user is blocked by event host") {
+      return 403;
+    } else if (value === "cannot generate token") {
+      return 403;
+    }else {
       return {
         statusCode: 200,
-        body: JSON.stringify(result.value),
+        body: JSON.stringify((await result).value),
       };
     }
-    */
+    
   });
 
-  //router.get("/event/:eventId", )
   return router;
 };
-
-/*
-inside test:
-const result = await request(app).get("/event/chat/9").set("Authorization", req.id);
-*/

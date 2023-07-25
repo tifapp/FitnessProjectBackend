@@ -5,8 +5,8 @@ import { EventColor } from "./models.js";
 
 const CreateEventSchema = z.object({
   description: z.string().max(500),
-  startDate: z.string(),
-  endDate: z.string(),
+  startTimeStamp: z.string(),
+  endTimeStamp: z.string(),
   color: z.number(),
   title: z.string().max(50),
   shouldHideAfterStartDate: z.number(), //  can only be 0 or 1
@@ -18,8 +18,8 @@ const CreateEventSchema = z.object({
 export type CreateEventRequest = {
   title: string;
   description: string;
-  startDate: Date;
-  endDate: Date;
+  startTimeStamp: Date;
+  endTimeStamp: Date;
   color: EventColor;
   shouldHideAfterStartDate: boolean;
   isChatEnabled: boolean;
@@ -58,7 +58,7 @@ export const createEvent = async (
       :userId,
       :title, 
       :description, 
-      :startDate, 
+      :, 
       :endDate, 
       :color, 
       :shouldHideAfterStartDate, 
@@ -94,42 +94,42 @@ export const getEvents = async (
 
 export const getEvent = async (
   conn: SQLExecutable,
-  request: {eventId: number}
-) => {
-  await conn.execute(
+  eventId: number
+): Promise<any> => {
+  const result = await conn.execute(
     `
     SELECT * FROM Event WHERE ID = :eventId;
     `,
-    request
   );
+
+  return result;
 };
 
-/*
-//ex. event = await getEvent(conn, {eventId: 6})
-//console.log(event)
-//details = event.rows[0]
-
-export const checkIfUserInEvent = async (
+export const isUserInEvent = async (
   conn: SQLExecutable,
-  request: GetEventRequest
-) => {
-  await conn.execute(
+  userId: string,
+  eventId: number
+): Promise<boolean> => {
+  const result = await conn.execute(
     `
-    *** //read eventattendance table
+    SELECT * FROM eventAttendance WHERE userId = :userId AND eventId = :eventId;
     `,
-    request
+    { userId, eventId }
   );
+
+  return result.rows.length > 0;
 };
 
-export const checkIfUserBlocked = async (
+export const isUserBlocked = async (
   conn: SQLExecutable,
-  request: GetEventRequest
-) => {
-  await conn.execute(
+  userId: string,
+  hostId: string
+): Promise<boolean> => {
+  const result = await conn.execute(
     `
-    *** //read userRelations table
+    SELECT * FROM userRelations WHERE fromUserId = :hostId AND toUserId = :userId AND status = 'blocked';
     `,
-    request
   );
-};
-*/
+
+  return result.rows.length > 0;
+}
