@@ -4,7 +4,7 @@ import { conn } from "./utils";
 describe("Geocoding lambda tests", () => {
   it("Should insert a placemark with the proper address with the given lat/lon", async () => {
 
-    await conn.execute("DELETE FROM Location")
+    await conn.execute("DELETE FROM location")
     
     let result = await handler({location: {latitude: 36.99813840222285, longitude: -122.05564377465653}})
 

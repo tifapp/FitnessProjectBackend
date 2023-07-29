@@ -138,7 +138,6 @@ export const createUserRouter = (environment: ServerEnvironment) => {
         selfId: res.locals.selfId,
         ...req.body,
       });
-      console.log("result:" + result);
       return res.status(200).json({ result });
     });
   });

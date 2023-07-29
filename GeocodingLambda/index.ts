@@ -10,7 +10,6 @@ interface LocationSearchRequest extends Retryable { location: LatLng }
 //checks if placemark exists with given lat/lon
 //takes in a lat/long and converts it to address
 //inserts address in planetscale db
-//retries if conversion fails
 export const handler = exponentialLambdaBackoff<LocationSearchRequest, string>(async(event: LocationSearchRequest) => {
   const result = await checkExistingPlacemark({latitude: parseFloat(event.location.latitude.toFixed(10)), longitude: parseFloat(event.location.longitude.toFixed(10))});
 
@@ -34,7 +33,7 @@ export const handler = exponentialLambdaBackoff<LocationSearchRequest, string>(a
 const checkExistingPlacemark = async (location: LatLng) => 
   await conn.execute(
     `
-    SELECT TRUE FROM Location WHERE lat = :latitude AND lon = :longitude LIMIT 1
+    SELECT TRUE FROM location WHERE lat = :latitude AND lon = :longitude LIMIT 1
     `, 
     location
   )
@@ -43,7 +42,7 @@ const checkExistingPlacemark = async (location: LatLng) =>
 const addPlacemark = async (place: Placemark) => 
   await conn.execute(
     `
-    INSERT INTO Location (name, city, country, street, street_num, lat, lon)
+    INSERT INTO location (name, city, country, street, street_num, lat, lon)
     VALUES (:name, :city, :country, :street, :street_num, :lat, :lon)
     `, 
     place
