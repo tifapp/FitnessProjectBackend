@@ -24,6 +24,7 @@
   "dependencies": {
     "@planetscale/database": "1.7.0",
     "@vendia/serverless-express": "^4.10.3",
+    "ably": "^1.2.42",
     "aws": "^0.0.3-2",
     "aws-lambda": "^1.0.7",
     "body-parser": "^1.20.2",

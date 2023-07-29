@@ -5,8 +5,8 @@ import { EventColor } from "./models.js";
 
 const CreateEventSchema = z.object({
   description: z.string().max(500),
-  startTimeStamp: z.string(),
-  endTimeStamp: z.string(),
+  startTimestamp: z.string(),
+  endTimestamp: z.string(),
   color: z.number(),
   title: z.string().max(50),
   shouldHideAfterStartDate: z.number(), //  can only be 0 or 1
@@ -18,8 +18,8 @@ const CreateEventSchema = z.object({
 export type CreateEventRequest = {
   title: string;
   description: string;
-  startTimeStamp: Date;
-  endTimeStamp: Date;
+  startTimestamp: Date;
+  endTimestamp: Date;
   color: EventColor;
   shouldHideAfterStartDate: boolean;
   isChatEnabled: boolean;
@@ -37,7 +37,7 @@ export type GetEventsRequest = {
  *
  * @param request see {@link CreateEventRequest}
  */
-export const createEvent = async (
+export const insertEvent = async (
   conn: SQLExecutable,
   request: CreateEventRequest
 ) => {
@@ -47,8 +47,8 @@ export const createEvent = async (
       hostId,
       title, 
       description, 
-      startTimeStamp, 
-      endTimeStamp, 
+      startTimestamp, 
+      endTimestamp, 
       color, 
       shouldHideAfterStartDate, 
       isChatEnabled, 
@@ -58,7 +58,7 @@ export const createEvent = async (
       :userId,
       :title, 
       :description, 
-      :, 
+      :startDate, 
       :endDate, 
       :color, 
       :shouldHideAfterStartDate, 
@@ -104,32 +104,3 @@ export const getEvent = async (
 
   return result;
 };
-
-export const isUserInEvent = async (
-  conn: SQLExecutable,
-  userId: string,
-  eventId: number
-): Promise<boolean> => {
-  const result = await conn.execute(
-    `
-    SELECT * FROM eventAttendance WHERE userId = :userId AND eventId = :eventId;
-    `,
-    { userId, eventId }
-  );
-
-  return result.rows.length > 0;
-};
-
-export const isUserBlocked = async (
-  conn: SQLExecutable,
-  userId: string,
-  hostId: string
-): Promise<boolean> => {
-  const result = await conn.execute(
-    `
-    SELECT * FROM userRelations WHERE fromUserId = :hostId AND toUserId = :userId AND status = 'blocked';
-    `,
-  );
-
-  return result.rows.length > 0;
-}

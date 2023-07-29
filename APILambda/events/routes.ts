@@ -1,6 +1,6 @@
 import express from "express";
 import { ServerEnvironment } from "../env.js";
-import { createEvent, getEvents } from "./SQL.js";
+import { insertEvent, getEvents } from "./SQL.js";
 import {createTokenRequestWithPermissionsTransaction } from "./transactions.js";
 
 /**
@@ -16,7 +16,7 @@ export const createEventRouter = (environment: ServerEnvironment) => {
    */
   router.post("/", async (req, res) => {
     await environment.conn.transaction(async (tx) => {
-      const result = await createEvent(tx, {
+      const result = await insertEvent(tx, {
         userId: res.locals.selfId,
         ...req.body,
       });
@@ -47,24 +47,19 @@ export const createEventRouter = (environment: ServerEnvironment) => {
    */
   router.get("/chat/:eventId", async (req, res) => {
    
-    const result = createTokenRequestWithPermissionsTransaction(environment, environment.conn, Number(req.params.eventId), res.locals.selfId)
+    const result = await createTokenRequestWithPermissionsTransaction(environment, environment.conn, Number(req.params.eventId), res.locals.selfId)
 
-    const value = (await result).value;
-    if (value === "event does not exist") {
-      return 404;
-    } else if (value === "user is not apart of event") {
-      return 403;
-    } else if (value === "user is blocked by event host") {
-      return 403;
-    } else if (value === "cannot generate token") {
-      return 403;
-    }else {
+    if (result.status === "error") {
+      return {
+        statusCode: 404,
+        body: JSON.stringify(result.value)
+      }
+    } else {
       return {
         statusCode: 200,
-        body: JSON.stringify((await result).value),
+        body: JSON.stringify(result.value),
       };
     }
-    
   });
 
   return router;

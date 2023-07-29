@@ -1,33 +1,34 @@
 import {
   SQLExecutable,
-  selectLastInsertionNumericId
+  //selectLastInsertionNumericId,
+  hasResults
 } from "../dbconnection.js";
 import { ServerEnvironment } from "../env.js";
 import { userNotFoundBody, userWithIdExists } from "../user/index.js";
-import { Result, createTokenRequest } from "../utils.js";
-import { insertEvent } from "./SQLStatements.js";
-import { CreateEventInput } from "./models.js";
-import { getEvent, isUserInEvent, isUserBlocked } from "./SQL.js";
+import { Result } from "../utils.js";
+import { createTokenRequest } from "../ably.js";
+import { getEvent, insertEvent, CreateEventRequest } from "./SQL.js";
 import { resolve } from "path";
 
-export const createEvent = async (
-  environment: ServerEnvironment,
-  conn: SQLExecutable,
-  hostId: string,
-  input: CreateEventInput
-) => {
-  const userExists = await userWithIdExists(conn, hostId);
-  if (!userExists) {
-    return { status: "error", value: userNotFoundBody(hostId) };
-  }
 
-  const result = await environment.conn.transaction(async (tx) => {
-    await insertEvent(tx, input, hostId);
-    return { id: await selectLastInsertionNumericId(tx) };
-  });
+// export const createEvent = async (
+//   environment: ServerEnvironment,
+//   conn: SQLExecutable,
+//   hostId: string,
+//   input: CreateEventRequest
+// ): Promise<Result<{id:string}, string>> => {
+//   const userExists = await userWithIdExists(conn, hostId);
+//   if (!userExists) {
+//     return { status: "error", value: userNotFoundBody(hostId) };
+//   }
 
-  return { status: "success", value: result };
-};
+//   const result = await environment.conn.transaction(async (tx) => {
+//     await insertEvent(tx, input, hostId);
+//     return { id: await selectLastInsertionNumericId(tx) };
+//   });
+
+//   return { status: "success", value: result };
+// };
 
 export const createTokenRequestWithPermissionsTransaction = async (environment: ServerEnvironment, conn: SQLExecutable, eventId: number, userId: string): Promise<
 Result<{ id: string, tokenRequest: Promise<unknown>}, "event does not exist" | "user is not apart of event" | "user is blocked by event host" | "cannot generate token">
@@ -37,61 +38,52 @@ Result<{ id: string, tokenRequest: Promise<unknown>}, "event does not exist" | "
       const event = await getEvent(tx, eventId);
 
       if (event === null) {
-        return 'event-not-found';
+        return {status: "error", value: "event does not exist"};
       }
 
-      const userInEvent = await isUserInEvent(tx, userId, eventId);
+      const userInEvent = await hasResults(conn, "SELECT TRUE FROM eventAttendance WHERE userId = :userId AND eventId = :eventId;", [userId, eventId]);
 
       if (!userInEvent) {
-        return 'user-not-in-event';
+        return {status: "error", value: "user is not apart of event"}
       }
 
-      const userBlocked = await isUserBlocked(tx, userId, event.rows[0].hostId);
+      const userBlocked = await hasResults(conn, "SELECT TRUE FROM userRelations WHERE fromUserId = :hostId AND toUserId = :userId AND status = 'blocked';", [userId, event.rows[0].hostId]);
 
       if (userBlocked) {
-        return 'user-blocked';
+        return {status: "error", value: "user is blocked by event host"};
       }
 
       return event.rows[0];
     });
 
-    if (eventDetails === 'event-not-found') {
-      return {status: "error", value: "event does not exist"};
-    } else if (eventDetails === 'user-not-in-event') {
-      return {status: "error", value: "user is not apart of event"};
-    } else if (eventDetails === 'user-blocked') {
-      return {status: "error", value: "user is blocked by event host"};
+    if (eventDetails.status === "error") {
+      return eventDetails;
     }
 
-    const role = () => {
-      if (eventDetails.ownerId === userId) {
-        return "admin";
-      } else if (new Date(eventDetails.endTimeStamp) <= new Date()) {
-        return "attendee";
-      } else {
-        return "viewer";
-      }
+    let role = "viewer"
+
+    if (eventDetails.ownerId === userId) {
+      role = "admin";
+    } else if (new Date(eventDetails.endTimeStamp) <= new Date()) {
+      role = "attendee";
+    }
+
+    let permissions = {
+      [`${eventId}`]: ["history"], 
+      [`${eventId}-pinned`]: ["history"]
     };
 
-    const permissions = () => {
-
-      switch(role()) {
-        case "admin":
-          return {
-            [`eventId`]: ["history", "subscribe", "publish"], 
-            [`eventId-pinned`]: ["history", "subscribe", "publish"]
-          };
-        case "attendee":
-          return {
-            [`eventId`]: ["history", "subscribe", "publish"], 
-            [`eventId-pinned`]: ["history", "subscribe"]
-          };
-        case "viewer":
-          return {
-            [`eventId`]: ["history"], 
-            [`eventId-pinned`]: ["history"]
-          };
-      }
+    switch(role) {
+      case "admin":
+        permissions = {
+          [`${eventId}`]: ["history", "subscribe", "publish"], 
+          [`${eventId}-pinned`]: ["history", "subscribe", "publish"]
+        };
+      case "attendee":
+        permissions = {
+          [`${eventId}`]: ["history", "subscribe", "publish"], 
+          [`${eventId}-pinned`]: ["history", "subscribe"]
+        };
     }
 
     try {
