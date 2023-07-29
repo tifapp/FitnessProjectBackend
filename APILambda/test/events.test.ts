@@ -24,8 +24,8 @@ describe("Events tests", () => {
           {
             title: "no",
             description: "yay",
-            startTimestamp: 1,
-            endTimestamp: 0,
+            startTimestamp: new Date(1000),
+            endTimestamp: new Date(0),
             color: "#72B01D",
             shouldHideAfterStartDate: true,
             isChatEnabled: true,
@@ -42,8 +42,8 @@ describe("Events tests", () => {
       const resp = await createTestEvent(app, id, {
         title: "no",
         description: "yay",
-        startTimestamp: 0,
-        endTimestamp: 1000,
+        startTimestamp: new Date(0),
+        endTimestamp: new Date(1000),
         color: "#72B01D",
         shouldHideAfterStartDate: true,
         isChatEnabled: true,
@@ -63,15 +63,15 @@ describe("Events tests", () => {
       const resp = await createTestEvent(app, hostId, {
         title: "no",
         description: "yay",
-        startTimestamp: 0,
-        endTimestamp: 1000,
+        startTimestamp: new Date(0),
+        endTimestamp: new Date(1000),
         color: "#72B01D",
         shouldHideAfterStartDate: true,
         isChatEnabled: true,
         ...mockLocationCoordinate2D(),
       });
       expect(resp.status).toEqual(201);
-      expect(resp.body).toMatchObject({ id: expect.any(Number) });
+      expect(parseInt(resp.body.id)).not.toBeNaN();
     });
   });
 
@@ -83,6 +83,42 @@ describe("Events tests", () => {
 
       expect(resp.status).toEqual(404);
       expect(resp.body).toMatchObject({ error: "event-not-found", eventId });
+    });
+
+    it("should return an event if it exists in the db", async () => {
+      const hostId = randomUUID();
+      const coordinate = mockLocationCoordinate2D();
+      const startDate = "2023-11-14T22:13:20.000Z";
+      const endDate = "2023-11-14T22:30:00.000Z";
+      await registerUser(app, {
+        id: hostId,
+        name: "name",
+        handle: "handle",
+      });
+      const event = await createTestEvent(app, hostId, {
+        title: "no",
+        description: "yay",
+        startTimestamp: new Date(startDate),
+        endTimestamp: new Date(endDate),
+        color: "#72B01D",
+        shouldHideAfterStartDate: true,
+        isChatEnabled: true,
+        ...coordinate,
+      });
+
+      const resp = await getTestEvent(app, hostId, event.body.id);
+      expect(resp.status).toEqual(200)
+      expect(resp.body).toMatchObject({
+        id: event.body.id,
+        title: "no",
+        description: "yay",
+        startTimestamp: "2023-11-15T06:13:20.000Z",
+        endTimestamp: "2023-11-15T06:30:00.000Z",
+        color: "#72B01D",
+        shouldHideAfterStartDate: true,
+        isChatEnabled: true,
+        ...coordinate,
+      });
     });
   });
 });

@@ -1,34 +1,35 @@
 import { z } from "zod";
 import {
   SQLExecutable,
+  queryFirst,
+  selectLastInsertionId,
   selectLastInsertionNumericId
 } from "../dbconnection.js";
 import { ServerEnvironment } from "../env.js";
 import { LocationCoordinate2D } from "../location.js";
 import { userNotFoundBody, userWithIdExists } from "../user";
-import { EventColor } from "./models.js";
+import { EventColor, EventColorSchema } from "./models.js";
 
-const CreateEventSchema = z.object({
-  description: z.string().max(500),
-  startDate: z.number(),
-  endDate: z.number(),
-  color: z.number(),
-  title: z.string().max(50),
-  shouldHideAfterStartDate: z.number(), //  can only be 0 or 1
-  isChatEnabled: z.number(),
-  latitude: z.number().min(-90).max(90),
-  longitude: z.number().min(-180).max(180),
-});
 
-export type CreateEventInput = {
-  title: string;
-  description: string;
-  startTimestamp: number;
-  endTimestamp: number;
-  color: EventColor;
-  shouldHideAfterStartDate: boolean;
-  isChatEnabled: boolean;
-} & LocationCoordinate2D;
+export const CreateEventSchema = z
+  .object({
+    description: z.string().max(500),
+    startTimestamp: z.string().datetime(),
+    endTimestamp: z.string().datetime(),
+    color: EventColorSchema,
+    title: z.string().max(50),
+    shouldHideAfterStartDate: z.boolean(),
+    isChatEnabled: z.boolean(),
+    latitude: z.number().min(-90).max(90),
+    longitude: z.number().min(-180).max(180)
+  })
+  .transform((res) => ({
+    ...res,
+    startTimestamp: new Date(res.startTimestamp),
+    endTimestamp: new Date(res.endTimestamp)
+  }));
+
+export type CreateEventInput = z.infer<typeof CreateEventSchema>;
 
 export type GetEventsRequest = {
   userId: string;
@@ -47,6 +48,7 @@ export const insertEvent = async (
   request: CreateEventInput,
   hostId: string
 ) => {
+  console.log(request);
   await conn.execute(
     `
     INSERT INTO event (
@@ -73,7 +75,7 @@ export const insertEvent = async (
       :longitude
     )
     `,
-    { ...request, hostId }
+    { ...request, startTimestamp: request.startTimestamp.getTime() / 1000, endTimestamp: request.endTimestamp.getTime() / 1000, hostId }
   );
 };
 
@@ -100,11 +102,23 @@ export const getEvents = async (
 
 export const getLastEventId = async (conn: SQLExecutable) => {};
 
+export type DatabaseEvent = {
+  id: string
+  title: string
+  description: string
+  startTimestamp: Date
+  endTimestamp: Date
+  color: EventColor
+  latitude: number
+  longitude: number
+  shouldHideAfterStartDate: boolean
+  isChatEnabled: boolean
+}
+
 export const getEventWithId = async (
   conn: SQLExecutable,
-  selfId: string,
   eventId: number
-) => {};
+) => await queryFirst<DatabaseEvent>(conn, `SELECT * FROM event WHERE id=:eventId`, {eventId});
 
 export const createEvent = async (
   conn: SQLExecutable,
@@ -118,5 +132,5 @@ export const createEvent = async (
 
   await insertEvent(conn, input, hostId);
 
-  return { status: "success", value: { id: await selectLastInsertionNumericId(conn) } };
+  return { status: "success", value: { id: await selectLastInsertionId(conn) } };
 };

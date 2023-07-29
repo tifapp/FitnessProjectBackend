@@ -16,8 +16,6 @@ export const conn = connect({
 //takes in a lat/long and converts it to address
 //inserts address in planetscale db
 export const handler = async (event, context, callback) => {
-  console.log(event)
-  console.log(context)
   
   const client = new LocationClient({ region: "us-west-2" });
   const input = { // SearchPlaceIndexForPositionRequest
@@ -29,9 +27,6 @@ export const handler = async (event, context, callback) => {
 
   const command = new SearchPlaceIndexForPositionCommand(input);
   const response = await client.send(command);
-  console.log(JSON.stringify(response.Results));
-  console.log("between");
-  console.log(JSON.stringify(response.Results[0].Place.Label));
   const place = response.Results[0].Place;
   const city = place.Municipality;
   const country_code = place.Country;
