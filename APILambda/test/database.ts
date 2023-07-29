@@ -2,12 +2,7 @@ import { fail } from "assert";
 import { conn } from "../dbconnection.js";
 
 const resetDB = async () => {
-  await conn.transaction(async (tx) => {
-    await tx.execute("DELETE FROM user");
-    await tx.execute("DELETE FROM Event");
-    await tx.execute("DELETE FROM userRelations");
-    await tx.execute("DELETE FROM userSettings");
-  });
+  await Promise.all([conn.execute("DELETE FROM user"), conn.execute("DELETE FROM event"), conn.execute("DELETE FROM userRelations"), conn.execute("DELETE FROM userSettings")]);
 };
 
 /**

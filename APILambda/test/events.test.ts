@@ -24,8 +24,8 @@ describe("Events tests", () => {
           {
             title: "no",
             description: "yay",
-            startTimeStamp: 1,
-            endTimeStamp: 0,
+            startTimestamp: 1,
+            endTimestamp: 0,
             color: "#72B01D",
             shouldHideAfterStartDate: true,
             isChatEnabled: true,
@@ -42,8 +42,8 @@ describe("Events tests", () => {
       const resp = await createTestEvent(app, id, {
         title: "no",
         description: "yay",
-        startTimeStamp: 0,
-        endTimeStamp: 1000,
+        startTimestamp: 0,
+        endTimestamp: 1000,
         color: "#72B01D",
         shouldHideAfterStartDate: true,
         isChatEnabled: true,
@@ -63,8 +63,8 @@ describe("Events tests", () => {
       const resp = await createTestEvent(app, hostId, {
         title: "no",
         description: "yay",
-        startTimeStamp: 0,
-        endTimeStamp: 1000,
+        startTimestamp: 0,
+        endTimestamp: 1000,
         color: "#72B01D",
         shouldHideAfterStartDate: true,
         isChatEnabled: true,
