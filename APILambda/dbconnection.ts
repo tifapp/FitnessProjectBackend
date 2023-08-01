@@ -14,11 +14,26 @@ export const int8ToBoolCast = (field: Field, value: string | null) => {
 };
 
 /**
+ * Blessed
+ */
+export const tiFCast = (field: Field, value: string | null) => {
+  if (field.type === "INT8") {
+    return parseInt(value ?? "0") > 0;
+  } else if (field.type === "DATETIME" && value) {
+    return new Date(value);
+  } else if (field.type === "DECIMAL" && value) {
+    return parseFloat(value);
+  }else {
+    return cast(field, value);
+  }
+}
+
+/**
  * The main planet scale connection to use.
  */
 export const conn = connect({
   fetch,
-  cast: int8ToBoolCast, // NB: Should we use this as the global caster?
+  cast: tiFCast, // NB: Should we use this as the global caster?
   host: envVars.DATABASE_HOST,
   username: envVars.DATABASE_USERNAME,
   password: envVars.DATABASE_PASSWORD,
@@ -88,3 +103,31 @@ export const queryFirst = async <Value>(
     return res.rows[0] as Value | undefined;
   });
 };
+
+/**
+ * Gets the id of the last inserted record.
+ * Every return type from this function will be a string and then it can be parsed afterwards.
+ * 
+ * @param conn planetscale connection
+ * @returns the id of the last inserted record
+ */
+export const selectLastInsertionId = async (
+  conn: SQLExecutable
+) => {
+  const result = await queryFirst <{ "LAST_INSERT_ID()": string }> (conn, 'SELECT LAST_INSERT_ID()');
+  return result?.["LAST_INSERT_ID()"];
+}
+
+/**
+ * Gets the id of the last inserted record and then attempts to return the result parsed as an int.
+ * 
+ * @param conn planetscale connection
+ * @returns the id of the last inserted record parsed as an int
+ */
+export const selectLastInsertionNumericId = async (
+  conn: SQLExecutable
+) => {
+  const id = await selectLastInsertionId(conn);
+  if (!id) return undefined;
+  return parseInt(id);
+}

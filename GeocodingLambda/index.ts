@@ -2,57 +2,50 @@
  * @type {import('@types/aws-lambda').APIGatewayProxyHandler}
  */
 
-import AWS from "aws-sdk"
-import {connect} from "@planetscale/database"
-import { LocationClient, SearchPlaceIndexForPositionCommand } from "@aws-sdk/client-location"; // ES Modules import
+import { SearchPlaceIndexForPositionCommand } from "@aws-sdk/client-location";
+import { LatLng, Placemark, Retryable, SearchForPositionResultToPlacemark, conn, exponentialLambdaBackoff, locationClient } from "./utils";
 
+interface LocationSearchRequest extends Retryable { location: LatLng }
 
-export const conn = connect({
-  host: process.env.DATABASE_HOST,
-  username: process.env.DATABASE_USERNAME,
-  password: process.env.DATABASE_PASSWORD,
-});
-
+//checks if placemark exists with given lat/lon
 //takes in a lat/long and converts it to address
 //inserts address in planetscale db
-export const handler = async (event, context, callback) => {
-  console.log(event)
-  console.log(context)
+export const handler = exponentialLambdaBackoff<LocationSearchRequest, string>(async(event: LocationSearchRequest) => {
+  const result = await checkExistingPlacemark({latitude: parseFloat(event.location.latitude.toFixed(10)), longitude: parseFloat(event.location.longitude.toFixed(10))});
+
+  if (result.rows.length > 0) return `Placemark at ${JSON.stringify(event.location)} already exists`;
   
-  const client = new LocationClient({ region: "us-west-2" });
-  const input = { // SearchPlaceIndexForPositionRequest
-    IndexName: "placeIndexed3975f4-dev", 
-    Position: [event.longitude, event.latitude],
+  const command = new SearchPlaceIndexForPositionCommand({
+    IndexName: "placeIndexed3975f4-dev",
+    Position: [event.location.longitude, event.location.latitude],
     MaxResults: 1,
     Language: "en-US",
-  };
+  });
+  const response = await locationClient.send(command);
+  const place = SearchForPositionResultToPlacemark(event.location, response.Results?.[0].Place);
 
-  const command = new SearchPlaceIndexForPositionCommand(input);
-  const response = await client.send(command);
-  console.log(JSON.stringify(response.Results));
-  console.log("between");
-  console.log(JSON.stringify(response.Results[0].Place.Label));
-  const place = response.Results[0].Place;
-  const city = place.Municipality;
-  const country_code = place.Country;
-  const street = place.Street;
-  // const street_num = place.s
+  await addPlacemark(place);
+  console.log("returning place")
+  console.log(place)
+  return `Placemark at ${JSON.stringify(event.location)} successfully inserted. Address is ${JSON.stringify(place)}`;
+});
 
-  addLocation("Santa Cruz", "USA", "McHenry Service Rd");
-}
-
-const addLocation = async (
-  city: string,
-  country_code: string,
-  street: string
-  ) => {
-    await conn.execute(
+const checkExistingPlacemark = async (location: LatLng) => 
+  await conn.execute(
     `
-    INSERT INTO Location (name, city, country_code, street, 
-    street_num, lat, lon, eventId)
-    VALUES ("name", :city, :country_code, :street, "street_num", event.longitude,
-    event.latitude, 5)
-   `, 
-  { city, country_code, street})
-}
+    SELECT TRUE FROM location WHERE lat = :latitude AND lon = :longitude LIMIT 1
+    `, 
+    location
+  )
+
+
+const addPlacemark = async (place: Placemark) => 
+  await conn.execute(
+    `
+    INSERT INTO location (name, city, country, street, street_num, lat, lon)
+    VALUES (:name, :city, :country, :street, :street_num, :lat, :lon)
+    `, 
+    place
+  )
+
 
