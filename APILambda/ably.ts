@@ -1,15 +1,18 @@
-import Ably from 'ably'
-import { insertEvent } from "./events";
+import Ably from 'ably';
 
 const rest = new Ably.Rest({ key: process.env.ABLY_KEY });
 
-type Permissions = Ably.Types.capabilityOp
+export type ChatPermissions = Ably.Types.TokenParams["capability"];
+export type AblyTokenRequest = Ably.Types.TokenRequest;
 
-export const createTokenRequest = async (permissions: Permissions, userId: string) => {
+export const createTokenRequest = async (permissions: ChatPermissions, userId: string): Promise<Ably.Types.TokenRequest> => {
+  //use ably.rest.promise api
   return new Promise((resolve, reject) => {
     rest.auth.createTokenRequest({ clientId: userId, capability: JSON.stringify(permissions) }, null, (err, tokenRequest) => {
       if (err) {
         reject(err);
+      } else if (!tokenRequest) {
+        reject("Could not generate tokenRequest");
       } else {
         resolve(tokenRequest);
       }

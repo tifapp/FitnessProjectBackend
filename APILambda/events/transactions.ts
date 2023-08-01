@@ -1,14 +1,12 @@
+import { Connection } from "@planetscale/database";
+import { AblyTokenRequest, ChatPermissions, createTokenRequest } from "../ably.js";
 import {
   SQLExecutable,
   //selectLastInsertionNumericId,
   hasResults
 } from "../dbconnection.js";
-import { ServerEnvironment } from "../env.js";
-import { userNotFoundBody, userWithIdExists } from "../user/index.js";
 import { Result } from "../utils.js";
-import { createTokenRequest } from "../ably.js";
-import { getEvent, insertEvent, CreateEventRequest } from "./SQL.js";
-import { resolve } from "path";
+import { DatabaseEvent, getEventWithId } from "./SQL.js";
 
 
 // export const createEvent = async (
@@ -30,14 +28,19 @@ import { resolve } from "path";
 //   return { status: "success", value: result };
 // };
 
-export const createTokenRequestWithPermissionsTransaction = async (environment: ServerEnvironment, conn: SQLExecutable, eventId: number, userId: string): Promise<
-Result<{ id: string, tokenRequest: Promise<unknown>}, "event does not exist" | "user is not apart of event" | "user is blocked by event host" | "cannot generate token">
-> => {  
+type EventUserAccessError = "event does not exist" | "user is not apart of event" | "user is blocked by event host"
 
-    const eventDetails = await environment.conn.transaction(async (tx) => {
-      const event = await getEvent(tx, eventId);
+type ChatResult = Result<{ id: string, tokenRequest: AblyTokenRequest}, EventUserAccessError | "cannot generate token">
 
-      if (event === null) {
+type EventResult = Result< DatabaseEvent, EventUserAccessError>
+
+export const createTokenRequestWithPermissionsTransaction = async (conn: Connection, eventId: number, userId: string): Promise<
+ChatResult> => {  
+
+    const result:EventResult = await conn.transaction(async (tx) => {
+      const event = await getEventWithId(tx, eventId);
+
+      if (event == null) {
         return {status: "error", value: "event does not exist"};
       }
 
@@ -53,22 +56,25 @@ Result<{ id: string, tokenRequest: Promise<unknown>}, "event does not exist" | "
         return {status: "error", value: "user is blocked by event host"};
       }
 
-      return event.rows[0];
+      return {status: "success", value: event};
     });
 
-    if (eventDetails.status === "error") {
-      return eventDetails;
+    if (result.status === "error") {
+      return result;
     }
 
+    // extract to separate function
+    // input: event, userId
+    // output: ChatPermissions
     let role = "viewer"
 
-    if (eventDetails.ownerId === userId) {
+    if (result.value.hostId === userId) {
       role = "admin";
-    } else if (new Date(eventDetails.endTimeStamp) <= new Date()) {
+    } else if (new Date(result.value.endTimestamp) <= new Date()) {
       role = "attendee";
     }
 
-    let permissions = {
+    let permissions : ChatPermissions = {
       [`${eventId}`]: ["history"], 
       [`${eventId}-pinned`]: ["history"]
     };
@@ -87,7 +93,7 @@ Result<{ id: string, tokenRequest: Promise<unknown>}, "event does not exist" | "
     }
 
     try {
-      const tokenRequest = createTokenRequest(permissions, userId);
+      const tokenRequest = await createTokenRequest(permissions, userId);
       return {status: 'success', value: {id: userId, tokenRequest: tokenRequest}};
     } catch {
       return {status: 'error', value: 'cannot generate token'};
