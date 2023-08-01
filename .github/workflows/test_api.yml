@@ -44,6 +44,6 @@ jobs:
       - name: Run tests
         run: |
           cd APILambda
-          swagger-cli validate ./APILambda/swagger.json
+          npx swagger-cli validate ./swagger.json
           npm run test:ci
 
