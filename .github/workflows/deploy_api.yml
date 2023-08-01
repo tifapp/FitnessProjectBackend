@@ -52,4 +52,4 @@ jobs:
           else
             stageName="dev"
           fi
-          aws apigateway create-deployment --rest-api-id 623qsegfb9 --stage-name $stageName --description ${{ github.event.head_commit.message }}
+          aws apigateway create-deployment --rest-api-id 623qsegfb9 --stage-name $stageName --description 'Deployed'
