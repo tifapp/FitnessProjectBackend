@@ -122,22 +122,71 @@ describe("Events tests", () => {
   });
   
   describe("GetTokenRequest tests", () => {
-    it("does not allow a user to create an event if the user doesn't exist", async () => {
-      const eventId = randomInt(1000);
-      const id = randomUUID();
-      const resp = await getTestEventChatToken(app, id, eventId);
-      expect(resp.status).toEqual(404);
-      expect(resp.body).toEqual(userNotFoundBody(id));
-    });
 
     it("should return 404 if the event doesnt exist", async () => {
       const eventId = randomInt(1000);
-      const userId = randomUUID();
-      const resp = await getTestEventChatToken(app, userId, eventId);
+      const id = randomUUID();
+      const resp = await getTestEventChatToken(app, id, eventId);
 
       expect(resp.status).toEqual(404);
-      expect(resp.body).toMatchObject({ error: "event-not-found", eventId });
+      expect(resp.body).toMatchObject({body: "event does not exist"});
     });
+    
+    it("should return 404 if the user is not part of the event", async () => {
+      const id = randomUUID();
+      await registerUser(app, {
+        id: id,
+        name: "name",
+        handle: "handle",
+      });
+      const event = await createTestEvent(app, id, {
+        title: "no",
+        description: "yay",
+        startTimestamp: new Date(0),
+        endTimestamp: new Date(1000),
+        color: "#72B01D",
+        shouldHideAfterStartDate: true,
+        isChatEnabled: true,
+        ...mockLocationCoordinate2D(),
+      })
+
+      const resp = await getTestEventChatToken(app, id, event.body.id);
+
+      expect(resp.status).toEqual(404);
+      expect(resp.body).toMatchObject({body: "user is not apart of event"});
+    });
+
+    it("should return 403 if the user is blocked", async () => {
+      /*
+      const eventId = randomInt(1000);
+      const id = randomUUID();
+      const resp = await getTestEventChatToken(app, id, eventId);
+
+      expect(resp.status).toEqual(404);
+      expect(resp.body).toMatchObject({body: "event does not exist"});
+      */
+      const id = randomUUID();
+      await registerUser(app, {
+        id: id,
+        name: "name",
+        handle: "handle",
+      });
+      const event = await createTestEvent(app, id, {
+        title: "no",
+        description: "yay",
+        startTimestamp: new Date(0),
+        endTimestamp: new Date(1000),
+        color: "#72B01D",
+        shouldHideAfterStartDate: true,
+        isChatEnabled: true,
+        ...mockLocationCoordinate2D(),
+      })
+
+      const resp = await getTestEventChatToken(app, id, event.body.id);
+      expect(resp.status).toEqual(403);
+      expect(resp.body).toMatchObject({body: "user is blocked by event host"});
+    });
+    
 
     //test all error cases
     //test success case

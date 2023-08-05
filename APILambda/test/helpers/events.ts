@@ -30,7 +30,7 @@ export const getTestEventChatToken = async (
   eventId: Number
 ) => {
   return await request(app)
-    .get(`/chat/${eventId}`)
+    .get(`/event/chat/${eventId}`)
     .set("Authorization", userId)
     .send();
 };

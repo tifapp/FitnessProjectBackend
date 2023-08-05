@@ -21,7 +21,7 @@ import { DEFAULT_USER_SETTINGS, UserSettingsSchema } from "./models.js";
  */
 export const userNotFoundBody = (userId: string) => ({
   userId,
-  error: "user-not-found",
+  error: "user-not-found"
 });
 
 /**

@@ -32,6 +32,11 @@ export const createEventRouter = (environment: ServerEnvironment) => {
       return res.status(201).json(result.value);
     });
   });
+
+  /**
+   * Create user relation
+   */
+
   /**
    * Get events by region
    */
@@ -52,25 +57,15 @@ export const createEventRouter = (environment: ServerEnvironment) => {
    * Get token for event's chat room
    */
   router.get("/chat/:eventId", async (req, res) => {
-   
-    const result = await createTokenRequestWithPermissionsTransaction(environment.conn, Number(req.params.eventId), res.locals.selfId)
+    const result = await createTokenRequestWithPermissionsTransaction(environment.conn, Number(req.params.eventId), res.locals.selfId);
 
     if (result.status === "error") {
       if (result.value === "user is blocked by event host") {      
-        return {
-          statusCode: 403,
-          body: JSON.stringify(result.value)
-        }
+        return res.status(403).json({ body: result.value});
       }
-      return {
-        statusCode: 404,
-        body: JSON.stringify(result.value)
-      }
+     return res.status(404).json({ body: result.value});
     } else {
-      return {
-        statusCode: 200,
-        body: JSON.stringify(result.value),
-      };
+     return res.status(200).json({ body: result.value});
     }
   });
 
