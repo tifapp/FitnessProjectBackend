@@ -1,9 +1,9 @@
-import { exponentialLambdaBackoff } from "./lambda";
+import { exponentialFunctionBackoff } from "./utils";
 
-describe("exponentialLambdaBackoff", () => {
+describe("exponentialFunctionBackoff", () => {
   test("Should not retry if lambda function succeeds", async () => {
     const successfulLambdaFunction = jest.fn().mockResolvedValue('success');
-    const result = await exponentialLambdaBackoff(successfulLambdaFunction, 3)({retries: 0});
+    const result = await exponentialFunctionBackoff(successfulLambdaFunction, 3)({retries: 0});
     expect(successfulLambdaFunction).toHaveBeenCalledTimes(1);
     expect(result).toBe('success');
   });
@@ -17,7 +17,7 @@ describe("exponentialLambdaBackoff", () => {
       return wrappedFunction(event);
     });
     
-    wrappedFunction = exponentialLambdaBackoff(failingLambdaFunction, 2, mockScheduleLambda);
+    wrappedFunction = exponentialFunctionBackoff(failingLambdaFunction, 2, mockScheduleLambda);
 
     try {
       await wrappedFunction({retries: 0});

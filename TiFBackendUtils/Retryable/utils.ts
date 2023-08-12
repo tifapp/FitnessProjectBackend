@@ -1,6 +1,4 @@
-import { scheduleAWSLambda } from "./AWS/lambda";
-
-require('dotenv').config()
+import { scheduleAWSLambda } from "../AWS/lambdaUtils";
 
 export interface Retryable {
   retries?: number
