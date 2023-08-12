@@ -1,4 +1,4 @@
-import { Connection, DatabaseError } from "@planetscale/database";
+import { Connection } from "@planetscale/database";
 import { AblyTokenRequest, ChatPermissions, createTokenRequest } from "../ably.js";
 import {
   //selectLastInsertionNumericId,
@@ -27,6 +27,21 @@ import { DatabaseEvent, getEventWithId } from "./SQL.js";
 //   return { status: "success", value: result };
 // };
 
+const rolesMap = new Map<string, any>([
+  ['admin', {
+    event: ["history", "subscribe", "publish"],
+    eventPinned: ["history", "subscribe", "publish"]
+  }],
+  ['attendee', {
+    event: ["history", "subscribe", "publish"],
+    eventPinned: ["history", "subscribe"]
+  }],
+  ['viewer', {
+    event: ["history", "subscribe"],
+    eventPinned: ["history", "subscribe"]
+  }]
+])
+
 type EventUserAccessError = "event does not exist" | "user is not apart of event" | "user is blocked by event host"
 
 type ChatResult = Result<{ id: string, tokenRequest: AblyTokenRequest}, EventUserAccessError | "cannot generate token">
@@ -44,7 +59,7 @@ ChatResult> => {
       }
 
       const userInEvent = await hasResults(conn, "SELECT TRUE FROM eventAttendance WHERE userId = :userId AND eventId = :eventId;", {userId, eventId});
-      console.log("User in event, ", userInEvent);
+      console.debug("User in event, ", userInEvent);
       if (!userInEvent) {
         return {status: "error", value: "user is not apart of event"}
       }
@@ -73,33 +88,24 @@ ChatResult> => {
 }
 
 const determineChatPermissions = (hostId: string, endTimestamp: Date, userId: string, eventId: number): ChatPermissions => {
-  let role: string = "viewer";
 
-  if (hostId === userId) {
-    role = "admin";
-  } else if (new Date(endTimestamp) <= new Date()) {
-    role = "attendee";
+  let role = determineRole(hostId, endTimestamp, userId);
+
+  const permissions = rolesMap.get(role);
+
+  return {
+    [`${eventId}`]: permissions.event,
+    [`${eventId}-pinned`]: permissions.eventPinned
   }
-
-  let permissions : ChatPermissions = {
-    [`${eventId}`]: ["history"], 
-    [`${eventId}-pinned`]: ["history"]
-  };
-
-  switch(role) {
-    case "admin":
-      permissions = {
-        [`${eventId}`]: ["history", "subscribe", "publish"], 
-        [`${eventId}-pinned`]: ["history", "subscribe", "publish"]
-      };
-      break;
-    case "attendee":
-      permissions = {
-        [`${eventId}`]: ["history", "subscribe", "publish"], 
-        [`${eventId}-pinned`]: ["history", "subscribe"]
-      };
-      break;
-  }
-
-  return permissions;
 } 
+
+// Create a method get the user's role
+const determineRole = (hostId: string, endTimestamp: Date, userId: string): string => {
+  if (hostId === userId) {
+    return "admin";
+  } else if (new Date(endTimestamp) <= new Date()) {
+    return "attendee";
+  } else {
+    return "viewer";
+  }
+}
