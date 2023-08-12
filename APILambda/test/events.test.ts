@@ -187,9 +187,8 @@ describe("Events tests", () => {
       expect(resp.body).toMatchObject({body: "user is blocked by event host"});
     });
     
-
-    //test all error cases
-    //test success case
+    //TODO: Add happy path after event attendance endpoint is done
+    //TODO: Add "user is blocked" test
     //unit test getRole() function
   });
   /*
