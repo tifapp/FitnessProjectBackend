@@ -1,4 +1,4 @@
-name: Test Geocoder Pipeline
+name: Test Utils
 
 on:
   pull_request:
@@ -10,15 +10,7 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
-
-    env:
-      DATABASE_HOST: ${{ secrets.DATABASE_HOST }}
-      DATABASE_USERNAME: ${{ secrets.DATABASE_USERNAME }}
-      DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
-      AWS_REGION: ${{ secrets.AWS_REGION }}
-      AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
-      AWS_LAMBDA_FUNCTION_NAME: geocodingPipeline
+    timeout-minutes: 15
 
     steps:
       - name: Checkout code
@@ -38,10 +30,10 @@ jobs:
 
       - name: Install dependencies
         run: |
-          cd GeocodingLambda
+          cd TiFBackendUtils
           npm ci
 
       - name: Run tests
         run: |
-          cd GeocodingLambda
+          cd TiFBackendUtils
           npm run test:ci

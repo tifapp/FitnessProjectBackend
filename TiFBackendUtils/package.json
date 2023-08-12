@@ -5,6 +5,7 @@
   "description": "",
   "main": "index.js",
   "dependencies": {
+    "@aws-sdk/client-location": "^3.388.0",
     "@planetscale/database": "^1.7.0",
     "aws-appsync": "^4.1.1",
     "aws-sdk": "^2.978.0",

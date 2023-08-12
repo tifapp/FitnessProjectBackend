@@ -20,7 +20,7 @@ jobs:
           node-version: '18'
 
       - name: Install dependencies
-        run: cd APILambda && npm ci
+        run: cd APILambda && npm ci && npm link TiFBackendUtils
 
       - name: Build the project
         run: cd APILambda && npm run build

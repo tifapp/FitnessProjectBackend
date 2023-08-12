@@ -32,6 +32,7 @@ jobs:
         run: |
           cd GeocodingLambda
           npm ci
+          npm link TiFBackendUtils
 
       - name: Zip the project
         run: |
