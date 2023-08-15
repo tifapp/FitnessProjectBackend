@@ -38,7 +38,9 @@ jobs:
 
       - name: Install dependencies
         run: |
-          cd GeocodingLambda
+          cd TiFBackendUtils
+          npm ci
+          cd ../GeocodingLambda
           npm ci
 
       - name: Run tests
