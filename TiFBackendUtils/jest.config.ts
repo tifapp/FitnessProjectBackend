@@ -5,7 +5,7 @@ export default {
   transform: {
     "^.+\\.ts?$": "ts-jest",
   },
-  transformIgnorePatterns: ["/node_modules/(?!@planetscale|TiFBackendUtils)"],
+  transformIgnorePatterns: ["/node_modules/(?!@planetscale)"],
   moduleNameMapper: {
     '^(\\.{1,2}/.*)\\.js$': '$1',
   },

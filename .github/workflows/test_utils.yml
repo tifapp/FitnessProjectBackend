@@ -1,4 +1,4 @@
-name: Test API
+name: Test Utils
 
 on:
   pull_request:
@@ -11,14 +11,6 @@ jobs:
   test:
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    
-    env:
-      DATABASE_HOST: ${{ secrets.DATABASE_HOST }}
-      DATABASE_USERNAME: ${{ secrets.DATABASE_USERNAME }}
-      DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
-      AWS_REGION: ${{ secrets.AWS_REGION }}
-      AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
-      AWS_LAMBDA_FUNCTION_NAME: lambdaSQLRoute
 
     steps:
       - name: Checkout code
@@ -35,15 +27,13 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
-          
+
       - name: Install dependencies
         run: |
-          cd APILambda
+          cd TiFBackendUtils
           npm ci
 
       - name: Run tests
         run: |
-          cd APILambda
-          npx swagger-cli validate ./swagger.json
+          cd TiFBackendUtils
           npm run test:ci
-

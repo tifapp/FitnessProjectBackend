@@ -2,50 +2,21 @@
  * @type {import('@types/aws-lambda').APIGatewayProxyHandler}
  */
 
-import { SearchPlaceIndexForPositionCommand } from "@aws-sdk/client-location";
-import { LatLng, Placemark, Retryable, SearchForPositionResultToPlacemark, conn, exponentialLambdaBackoff, locationClient } from "./utils";
+import { LocationCoordinate2D, Retryable, SearchClosestAddressToCoordinates, exponentialFunctionBackoff } from 'TiFBackendUtils';
+import { addPlacemarkToDB, checkExistingPlacemarkInDB } from "./utils";
 
-interface LocationSearchRequest extends Retryable { location: LatLng }
+interface LocationSearchRequest extends Retryable { location: LocationCoordinate2D }
 
-//checks if placemark exists with given lat/lon
-//takes in a lat/long and converts it to address
-//inserts address in planetscale db
-export const handler = exponentialLambdaBackoff<LocationSearchRequest, string>(async(event: LocationSearchRequest) => {
-  const result = await checkExistingPlacemark({latitude: parseFloat(event.location.latitude.toFixed(10)), longitude: parseFloat(event.location.longitude.toFixed(10))});
+export const handler = exponentialFunctionBackoff<LocationSearchRequest, string>(async(event: LocationSearchRequest) => {
+  const placemarkExists = await checkExistingPlacemarkInDB({latitude: parseFloat(event.location.latitude.toFixed(10)), longitude: parseFloat(event.location.longitude.toFixed(10))});
 
-  if (result.rows.length > 0) return `Placemark at ${JSON.stringify(event.location)} already exists`;
+  if (placemarkExists) return `Placemark at ${JSON.stringify(event.location)} already exists`;
   
-  const command = new SearchPlaceIndexForPositionCommand({
-    IndexName: "placeIndexed3975f4-dev",
-    Position: [event.location.longitude, event.location.latitude],
-    MaxResults: 1,
-    Language: "en-US",
-  });
-  const response = await locationClient.send(command);
-  const place = SearchForPositionResultToPlacemark(event.location, response.Results?.[0].Place);
+  const place = await SearchClosestAddressToCoordinates(event.location);
 
-  await addPlacemark(place);
-  console.log("returning place")
+  await addPlacemarkToDB(place);
+
   console.log(place)
+
   return `Placemark at ${JSON.stringify(event.location)} successfully inserted. Address is ${JSON.stringify(place)}`;
 });
-
-const checkExistingPlacemark = async (location: LatLng) => 
-  await conn.execute(
-    `
-    SELECT TRUE FROM location WHERE lat = :latitude AND lon = :longitude LIMIT 1
-    `, 
-    location
-  )
-
-
-const addPlacemark = async (place: Placemark) => 
-  await conn.execute(
-    `
-    INSERT INTO location (name, city, country, street, street_num, lat, lon)
-    VALUES (:name, :city, :country, :street, :street_num, :lat, :lon)
-    `, 
-    place
-  )
-
-
