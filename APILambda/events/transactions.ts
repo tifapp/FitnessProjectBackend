@@ -87,7 +87,7 @@ ChatResult> => {
     }
 }
 
-const determineChatPermissions = (hostId: string, endTimestamp: Date, userId: string, eventId: number): ChatPermissions => {
+export const determineChatPermissions = (hostId: string, endTimestamp: Date, userId: string, eventId: number): ChatPermissions => {
 
   let role = determineRole(hostId, endTimestamp, userId);
 
@@ -103,7 +103,7 @@ const determineChatPermissions = (hostId: string, endTimestamp: Date, userId: st
 const determineRole = (hostId: string, endTimestamp: Date, userId: string): string => {
   if (hostId === userId) {
     return "admin";
-  } else if (new Date(endTimestamp) <= new Date()) {
+  } else if (new Date() <= new Date(endTimestamp)) {
     return "attendee";
   } else {
     return "viewer";
