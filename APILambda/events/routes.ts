@@ -1,8 +1,9 @@
 import express from "express";
-import { ServerEnvironment } from "../env.js";
-import { CreateEventSchema, createEvent, getEventWithId, getEvents } from "./db.js";
 import { z } from "zod";
+import { ServerEnvironment } from "../env.js";
 import { withValidatedRequest } from "../validation.js";
+import { CreateEventSchema, createEvent, getEventWithId, getEvents } from "./SQL.js";
+import { createTokenRequestWithPermissionsTransaction } from "./transactions.js";
 
 const CreateEventRequestSchema = z
   .object({
@@ -31,6 +32,11 @@ export const createEventRouter = (environment: ServerEnvironment) => {
       return res.status(201).json(result.value);
     });
   });
+
+  /**
+   * Create user relation
+   */
+
   /**
    * Get events by region
    */
@@ -45,6 +51,22 @@ export const createEventRouter = (environment: ServerEnvironment) => {
       console.log("result:" + result);
       return res.status(200).json({ result });
     });
+  });
+
+  /** 
+   * Get token for event's chat room
+   */
+  router.get("/chat/:eventId", async (req, res) => {
+    const result = await createTokenRequestWithPermissionsTransaction(environment.conn, Number(req.params.eventId), res.locals.selfId);
+
+    if (result.status === "error") {
+      if (result.value === "user is blocked by event host") {      
+        return res.status(403).json({ body: result.value});
+      }
+     return res.status(404).json({ body: result.value});
+    } else {
+     return res.status(200).json({ body: result.value});
+    }
   });
 
   router.get("/:eventId", async (req, res) => {

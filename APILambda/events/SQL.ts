@@ -104,6 +104,7 @@ export const getLastEventId = async (conn: SQLExecutable) => {};
 
 export type DatabaseEvent = {
   id: string
+  hostId: string
   title: string
   description: string
   startTimestamp: Date

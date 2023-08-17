@@ -10,7 +10,7 @@ import {
   userSettingsWithId,
   userWithId,
   userWithIdExists,
-} from "./db.js";
+} from "./SQL.js";
 import { DEFAULT_USER_SETTINGS, UserSettingsSchema } from "./models.js";
 
 /**
@@ -21,7 +21,7 @@ import { DEFAULT_USER_SETTINGS, UserSettingsSchema } from "./models.js";
  */
 export const userNotFoundBody = (userId: string) => ({
   userId,
-  error: "user-not-found",
+  error: "user-not-found"
 });
 
 /**
