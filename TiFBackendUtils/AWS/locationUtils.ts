@@ -25,7 +25,7 @@ export const SearchForPositionResultToPlacemark = (location: LocationCoordinate2
 
 export const SearchClosestAddressToCoordinates = async (location: LocationCoordinate2D) => {
   const response = await locationClient.send(new SearchPlaceIndexForPositionCommand({
-    IndexName: "placeIndexed3975f4-dev",
+    IndexName: "placeIndexed3975f4-dev", //environment variable?
     Position: [location.longitude, location.latitude],
     MaxResults: 1,
     Language: "en-US",

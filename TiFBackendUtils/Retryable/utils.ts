@@ -15,7 +15,7 @@ export const exponentialFunctionBackoff = <T extends Retryable,U>(
   asyncFunc: (event: T) => Promise<U>,
   maxRetries: number = 3,
   retryAsyncFunc = scheduleAWSLambda //parameterized for testing
-): any => {
+) => { //retryAsync: (date, T) => U
   return async (event: T) => {
     try {
       return await asyncFunc(event);

@@ -30,6 +30,7 @@ export const tiFCast = (field: Field, value: string | null) => {
 /**
  * The main planet scale connection to use.
  */
+// wrap in function to take host/credentials and create connection in actual app
 export const planetscaleConnection = connect({
   fetch,
   cast: tiFCast, // NB: Should we use this as the global caster?

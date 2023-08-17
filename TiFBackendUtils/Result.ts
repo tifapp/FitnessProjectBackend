@@ -1,3 +1,13 @@
+export class SuccessResult<Success> {
+  status: "success" = "success";
+  constructor(public value: Success) {}
+}
+
+export class FailureResult<Failure> {
+  status: "failure" = "failure";
+  constructor(public value: Failure) {}
+}
+
 /**
  * A union type that represents either the case of a success or an error.
  *
@@ -34,6 +44,6 @@
  * }
  * ```
  */
-export type Result<Success, Error> =
-  | { status: "success"; value: Success }
-  | { status: "error"; value: Error };
+export type Result<Success, Failure> =
+| SuccessResult<Success>
+| FailureResult<Failure>;

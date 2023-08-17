@@ -22,6 +22,6 @@ export interface Placemark {
   city: string;
   country: string;
   street: string;
-  street_num: string;
-  unit_number: string;
+  street_num: string; //camelCase
+  unit_number: string; //camelCase
 }
