@@ -46,3 +46,10 @@ jobs:
       - name: Deploy to AWS Lambda
         run: |
           aws lambda update-function-code --function-name lambdaSQLRoute --zip-file fileb://APILambda/dist.zip
+          aws apigateway put-rest-api --rest-api-id 623qsegfb9 --mode merge --parameters basepath=prepend --body fileb://APILambda/swagger.json
+          if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+            stageName="prod"
+          else
+            stageName="dev"
+          fi
+          aws apigateway create-deployment --rest-api-id 623qsegfb9 --stage-name $stageName --description 'Deployed'
