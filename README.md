@@ -157,3 +157,62 @@ describe("GET /new-product/:id", () => {
 ```
 
 These tests make HTTP requests to the new "products" route and assert that the response is as expected. The first test is for a successful transaction with a valid ID, while the second test is for an error scenario where an invalid ID is provided.
+
+# Additional Notes
+
+HTTP Request/Response <-> Express Server <-> Planetscale (SQL)
+
+- APILambda <-> mobile app
+
+- GeocodingLambda <-> APILambda
+
+- Purpose of Geocoding Lambda: Transform the location into an address
+
+- Within the APILambda consists of different folders that have the different data types: users and events. These are the data types the lambda will work with.
+
+- For each data type, there will be multiple ts files
+
+- routes.ts file takes in a HTTP request and returns an HTTP response
+
+Routes.ts ->
+
+- Returns http status codes and responses
+
+- The req includes the query params and json body
+
+- All of the routes in the user folder will be prepended with the /user path when the mobile path visits the API. 
+
+- To activate the endpoint, the app will visit the domain then /user/friend/userId. (Visiting the API)
+
+- Ideally the transactions will be in a seperate file. Not directly defined inside the routes. Reason: Transactions will call multiple SQL statements. 
+
+- Important: If we call multiple SQL statements within a transaction, it ensures that the operation is atomic. 
+
+- If we start a transaction, it will lock the database. 
+
+- Best practice: We will include a transaction for all of our routes. 
+
+- The transaction should return the success or error message
+- Then the router will consume the success or error message, then map it to a status code and return that response
+
+- Inside the transaction, we have a SQL statement that will be coming from a different file. 
+
+- The lowest level is the database level where we are working with individual SQL statements that are contained in a seperate file. 
+
+- The level above is the transactions that will return a success or error message
+
+The top level is the route that calls the transaction. It will transform the generic error to an HTTP success or error.
+
+Important: The reason we have the middle layer that returns a generic success or error message is because we might reuse the transaction in different routes.
+
+Ably Client -> mobile app
+
+- Ably client communicates with the server
+
+- The server will validate the request and pass a token request to the mobile app. The mobile app will use that token request to communicate with Ably and connect to the channels. 
+
+- Endpoint for the individual channel
+-> Reason the user can open the channel through event details or notification
+-> It will return the token for the channel and any info needed to connect to the chatroom
+-> It will be tied to events
+-> Setup infrastructure to handle image ids and images
