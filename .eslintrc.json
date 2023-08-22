@@ -1,39 +1,80 @@
 {
-  "env": {
-    "browser": true,
-    "es2021": true,
-    "jest/globals": true
-  },
-  "extends": ["standard"],
-  "parser": "@typescript-eslint/parser",
-  "parserOptions": {
-    "ecmaVersion": "latest",
-    "sourceType": "module"
-  },
-  "plugins": ["@typescript-eslint", "jest"],
-  "settings": {
-    "react": {
-      "version": "detect"
-    }
-  },
-  "rules": {
-    "quotes": ["error", "double"],
-    "no-unused-vars": "warn",
-    "eqeqeq": "warn",
-    "spaced-comment": "warn"
-  },
-  "overrides": [
-    {
-      "files": ["*.test.js", "*.test.ts"],
-      "rules": {
-        "jest/valid-expect": 0,
-        "no-undef": 0,
-        "jest/no-disabled-tests": "warn",
-        "jest/no-focused-tests": "error",
-        "jest/no-identical-title": "error",
-        "jest/prefer-to-have-length": "warn"
+    "env": {
+      "browser": true,
+      "es2021": true,
+      "jest/globals": true
+    },
+    "extends": ["plugin:react/recommended", "standard"],
+    "parser": "@typescript-eslint/parser",
+    "parserOptions": {
+      "ecmaFeatures": {
+        "jsx": true
+      },
+      "ecmaVersion": "latest",
+      "sourceType": "module"
+    },
+    "plugins": [
+      "react",
+      "react-hooks",
+      "react-native",
+      "@typescript-eslint",
+      "jest"
+    ],
+    "settings": {
+      "react": {
+        "version": "detect"
       }
-    }
-  ],
-  "indent": ["error", 2]
+    },
+    "rules": {
+      "quotes": ["error", "double"],
+      "no-unused-vars": "warn",
+      "eqeqeq": "warn",
+      "react/jsx-key": "warn",
+      "react-hooks/rules-of-hooks": "error",
+      "react-hooks/exhaustive-deps": "warn",
+      "spaced-comment": "warn",
+      "space-in-parens": "error",
+      "computed-property-spacing": "error",
+      "array-bracket-spacing": "error",
+      "object-curly-spacing": "error",
+      "comma-spacing": "error",
+      "indent": ["error", 2],
+      "@typescript-eslint/naming-convention": [
+        "warn",
+        {
+          "selector": [
+            "function",
+            "objectLiteralProperty",
+            "objectLiteralMethod"
+          ],
+          "format": ["PascalCase", "camelCase"]
+        },
+        { "selector": "typeLike", "format": ["PascalCase"] },
+        { "selector": "typeParameter", "format": ["PascalCase"] },
+  
+        { "selector": "interface", "format": ["PascalCase"] }
+      ]
+    },
+    "globals": {
+      "RequestInfo": "readonly",
+      "RequestInit": "readonly",
+      "JSX": "readonly",
+      "NodeJS": "readonly",
+      "__DEV__": "readonly"
+    },
+    "overrides": [
+      {
+        "files": ["*.test.js", "*.test.ts", "*.test.tsx"],
+        "rules": {
+          "jest/valid-expect": 0,
+          "no-undef": 0,
+          "react/react-in-jsx-scope": 0,
+          "jest/no-disabled-tests": "warn",
+          "jest/no-focused-tests": "error",
+          "jest/no-identical-title": "error",
+          "jest/prefer-to-have-length": "warn"
+        }
+      }
+    ]
 }
+  
