@@ -10,7 +10,7 @@ import { createTestEvent, getTestEvent, getTestEventChatToken } from "./helpers/
 import { registerUser } from "./helpers/users";
 import { mockLocationCoordinate2D } from "./mockData";
 import { createTestApp } from "./testApp";
-import { determineChatPermissions } from "../events/transactions";
+import { determineChatPermissions } from "../events/getChatToken";
 
 describe("Events tests", () => {
   const app = createTestApp({ conn });

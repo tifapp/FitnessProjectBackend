@@ -9,7 +9,9 @@ import { ServerEnvironment } from "../env.js";
 import { DatabaseEvent, getEventWithId } from "../shared/SQL.js";
 import { Result } from "../utils.js";
 
-const rolesMap = new Map<string, any>([
+type Role = "admin" | "attendee" | "viewer";
+
+const rolesMap = new Map<Role, ChatPermissions>([
     ['admin', {
       event: ["history", "subscribe", "publish"],
       eventPinned: ["history", "subscribe", "publish"]
@@ -30,7 +32,35 @@ type ChatResult = Result<{ id: string, tokenRequest: AblyTokenRequest}, EventUse
 
 type EventResult = Result< DatabaseEvent, EventUserAccessError>
 
-const createTokenRequestWithPermissionsTransaction = async (conn: Connection, eventId: number, userId: string): Promise<
+// Create a method get the user's role
+const determineRole = (hostId: string, endTimestamp: Date, userId: string): Role => {
+  if (hostId === userId) {
+    return "admin";
+  } else if (new Date() <= new Date(endTimestamp)) {
+    return "attendee";
+  } else {
+    return "viewer";
+  }
+}
+
+export const determineChatPermissions = (hostId: string, endTimestamp: Date, userId: string, eventId: number): ChatPermissions => {
+
+  let role = determineRole(hostId, endTimestamp, userId);
+
+  const permissions = rolesMap.get(role);
+
+  if (!permissions || typeof permissions === "string") {
+    return;
+  } else {
+    return {
+      [`${eventId}`]: permissions.event,
+      [`${eventId}-pinned`]: permissions.eventPinned
+    }
+  }
+} 
+
+
+export const createTokenRequestWithPermissionsTransaction = async (conn: Connection, eventId: number, userId: string): Promise<
 ChatResult> => {  
   
     const result:EventResult = await conn.transaction(async (tx) => {
@@ -95,26 +125,4 @@ export const createEventRouter = (environment: ServerEnvironment) => {
   });
 }
 
-const determineChatPermissions = (hostId: string, endTimestamp: Date, userId: string, eventId: number): ChatPermissions => {
-
-  let role = determineRole(hostId, endTimestamp, userId);
-
-  const permissions = rolesMap.get(role);
-
-  return {
-    [`${eventId}`]: permissions.event,
-    [`${eventId}-pinned`]: permissions.eventPinned
-  }
-} 
-
-// Create a method get the user's role
-const determineRole = (hostId: string, endTimestamp: Date, userId: string): string => {
-  if (hostId === userId) {
-    return "admin";
-  } else if (new Date() <= new Date(endTimestamp)) {
-    return "attendee";
-  } else {
-    return "viewer";
-  }
-}
 
