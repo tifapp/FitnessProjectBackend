@@ -11,20 +11,20 @@ import { Result } from "../utils.js";
 
 type Role = "admin" | "attendee" | "viewer";
 
-const rolesMap = new Map<Role, ChatPermissions>([
-    ['admin', {
-      event: ["history", "subscribe", "publish"],
-      eventPinned: ["history", "subscribe", "publish"]
-    }],
-    ['attendee', {
-      event: ["history", "subscribe", "publish"],
-      eventPinned: ["history", "subscribe"]
-    }],
-    ['viewer', {
-      event: ["history", "subscribe"],
-      eventPinned: ["history", "subscribe"]
-    }]
-  ])
+const rolesMap: Record<Role, ChatPermissions> = {
+  'admin' : {
+    event: ["history", "subscribe", "publish"],
+    eventPinned: ["history", "subscribe", "publish"]
+  },
+  'attendee' : {
+    event: ["history", "subscribe", "publish"],
+    eventPinned: ["history", "subscribe"]
+  },
+  'viewer' : {
+    event: ["history", "subscribe"],
+    eventPinned: ["history", "subscribe"]
+  }
+}
 
 type EventUserAccessError = "event does not exist" | "user is not apart of event" | "user is blocked by event host"
 
@@ -47,15 +47,11 @@ export const determineChatPermissions = (hostId: string, endTimestamp: Date, use
 
   let role = determineRole(hostId, endTimestamp, userId);
 
-  const permissions = rolesMap.get(role);
+  const permissions = rolesMap[role];
 
-  if (!permissions || typeof permissions === "string") {
-    return;
-  } else {
-    return {
-      [`${eventId}`]: permissions.event,
-      [`${eventId}-pinned`]: permissions.eventPinned
-    }
+  return {
+    [`${eventId}`]: permissions.event,
+    [`${eventId}-pinned`]: permissions.eventPinned
   }
 } 
 
