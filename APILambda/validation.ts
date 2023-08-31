@@ -1,5 +1,5 @@
-import { Request, Response, RequestHandler } from "express";
-import { AnyZodObject, z } from "zod";
+import { Request, Response, RequestHandler } from "express"
+import { AnyZodObject, z } from "zod"
 
 /**
  * Validates a request with the given zod schema and returns a 400 error status code
@@ -30,9 +30,9 @@ export const withValidatedRequest = async <Schema extends AnyZodObject>(
   fn: (data: z.infer<Schema>) => Promise<any>
 ) => {
   try {
-    const data = await schema.passthrough().parseAsync(req);
-    return await fn(data);
+    const data = await schema.passthrough().parseAsync(req)
+    return await fn(data)
   } catch (err) {
-    return res.status(400).json(err);
+    return res.status(400).json(err)
   }
-};
+}

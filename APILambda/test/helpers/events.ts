@@ -1,6 +1,6 @@
-import { Application } from "express";
-import request from "supertest";
-import { CreateEventInput } from "../../events";
+import { Application } from "express"
+import request from "supertest"
+import { CreateEventInput } from "../../events"
 
 export const createTestEvent = async (
   app: Application,
@@ -10,8 +10,8 @@ export const createTestEvent = async (
   return await request(app)
     .post("/event")
     .set("Authorization", userId)
-    .send(req);
-};
+    .send(req)
+}
 
 export const getTestEvent = async (
   app: Application,
@@ -21,8 +21,8 @@ export const getTestEvent = async (
   return await request(app)
     .get(`/event/${eventId}`)
     .set("Authorization", userId)
-    .send();
-};
+    .send()
+}
 
 export const getTestEventChatToken = async (
   app: Application,
@@ -32,5 +32,5 @@ export const getTestEventChatToken = async (
   return await request(app)
     .get(`/event/chat/${eventId}`)
     .set("Authorization", userId)
-    .send();
-};
+    .send()
+}

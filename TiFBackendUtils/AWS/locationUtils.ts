@@ -1,7 +1,7 @@
-import { LocationClient, Place, SearchPlaceIndexForPositionCommand } from "@aws-sdk/client-location";
-import { LocationCoordinate2D, Placemark } from "../location";
+import { LocationClient, Place, SearchPlaceIndexForPositionCommand } from "@aws-sdk/client-location"
+import { LocationCoordinate2D, Placemark } from "../location"
 
-const locationClient = new LocationClient({ region: "us-west-2" });
+const locationClient = new LocationClient({ region: "us-west-2" })
 
 /**
  * Converts an AWS location search result into placemark format.
@@ -10,7 +10,7 @@ const locationClient = new LocationClient({ region: "us-west-2" });
  * @param {Place | undefined} place The location search result from AWS.
  * @returns {Placemark} The location search result in placemark format.
  */
-export const SearchForPositionResultToPlacemark = (location: LocationCoordinate2D, place?: Place): Placemark => {  
+export const SearchForPositionResultToPlacemark = (location: LocationCoordinate2D, place?: Place): Placemark => {
   return ({
     lat: location.latitude,
     lon: location.longitude,
@@ -19,16 +19,16 @@ export const SearchForPositionResultToPlacemark = (location: LocationCoordinate2
     country: place?.Country ?? place?.Region ?? "Unknown Country",
     street: place?.Street ?? "Unknown Address",
     street_num: place?.AddressNumber ?? "",
-    unit_number: place?.UnitNumber ?? "",
+    unit_number: place?.UnitNumber ?? ""
   })
 }
 
 export const SearchClosestAddressToCoordinates = async (location: LocationCoordinate2D) => {
   const response = await locationClient.send(new SearchPlaceIndexForPositionCommand({
-    IndexName: "placeIndexed3975f4-dev", //environment variable?
+    IndexName: "placeIndexed3975f4-dev", // environment variable?
     Position: [location.longitude, location.latitude],
     MaxResults: 1,
-    Language: "en-US",
-  }));
-  return SearchForPositionResultToPlacemark(location, response.Results?.[0].Place);
+    Language: "en-US"
+  }))
+  return SearchForPositionResultToPlacemark(location, response.Results?.[0].Place)
 }

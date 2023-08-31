@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "zod"
 
 export const EventColorSchema = z.union([
   z.literal("#EF6351"),
@@ -7,8 +7,8 @@ export const EventColorSchema = z.union([
   z.literal("#72B01D"),
   z.literal("#F7B2BD"),
   z.literal("#F4845F"),
-  z.literal("#F6BD60"),
-]);
+  z.literal("#F6BD60")
+])
 
 /**
  * All possible colors of an event.
