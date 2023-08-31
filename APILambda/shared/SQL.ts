@@ -2,13 +2,10 @@ import { z } from "zod";
 import {
   SQLExecutable,
   queryFirst,
-  selectLastInsertionId,
-  selectLastInsertionNumericId
+  selectLastInsertionId
 } from "../dbconnection.js";
-import { ServerEnvironment } from "../env.js";
-import { LocationCoordinate2D } from "../location.js";
-import { userNotFoundBody, userWithIdExists } from "../user";
-import { EventColor, EventColorSchema } from "./models.js";
+import { EventColor, EventColorSchema } from "../events/models.js";
+import { userNotFoundBody, userWithIdExists } from "../user/index.js";
 
 
 export const CreateEventSchema = z

@@ -1,9 +1,9 @@
 import express from "express";
 import { z } from "zod";
 import { ServerEnvironment } from "../env.js";
+import { CreateEventSchema, createEvent, getEventWithId, getEvents } from "../shared/SQL.js";
 import { withValidatedRequest } from "../validation.js";
-import { CreateEventSchema, createEvent, getEventWithId, getEvents } from "./SQL.js";
-import { createTokenRequestWithPermissionsTransaction } from "./transactions.js";
+import { createTokenRequestWithPermissionsTransaction } from "../events/getChatToken.js"
 
 const CreateEventRequestSchema = z
   .object({
