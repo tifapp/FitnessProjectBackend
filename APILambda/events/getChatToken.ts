@@ -1,46 +1,28 @@
 import { Connection } from "@planetscale/database";
+import express from "express";
 import { AblyTokenRequest, ChatPermissions, createTokenRequest } from "../ably.js";
 import {
-  //selectLastInsertionNumericId,
-  hasResults
+    //selectLastInsertionNumericId,
+    hasResults
 } from "../dbconnection.js";
+import { ServerEnvironment } from "../env.js";
 import { DatabaseEvent, getEventWithId } from "../shared/SQL.js";
 import { Result } from "../utils.js";
 
-
-// export const createEvent = async (
-//   environment: ServerEnvironment,
-//   conn: SQLExecutable,
-//   hostId: string,
-//   input: CreateEventRequest
-// ): Promise<Result<{id:string}, string>> => {
-//   const userExists = await userWithIdExists(conn, hostId);
-//   if (!userExists) {
-//     return { status: "error", value: userNotFoundBody(hostId) };
-//   }
-
-//   const result = await environment.conn.transaction(async (tx) => {
-//     await insertEvent(tx, input, hostId);
-//     return { id: await selectLastInsertionNumericId(tx) };
-//   });
-
-//   return { status: "success", value: result };
-// };
-
 const rolesMap = new Map<string, any>([
-  ['admin', {
-    event: ["history", "subscribe", "publish"],
-    eventPinned: ["history", "subscribe", "publish"]
-  }],
-  ['attendee', {
-    event: ["history", "subscribe", "publish"],
-    eventPinned: ["history", "subscribe"]
-  }],
-  ['viewer', {
-    event: ["history", "subscribe"],
-    eventPinned: ["history", "subscribe"]
-  }]
-])
+    ['admin', {
+      event: ["history", "subscribe", "publish"],
+      eventPinned: ["history", "subscribe", "publish"]
+    }],
+    ['attendee', {
+      event: ["history", "subscribe", "publish"],
+      eventPinned: ["history", "subscribe"]
+    }],
+    ['viewer', {
+      event: ["history", "subscribe"],
+      eventPinned: ["history", "subscribe"]
+    }]
+  ])
 
 type EventUserAccessError = "event does not exist" | "user is not apart of event" | "user is blocked by event host"
 
@@ -48,7 +30,7 @@ type ChatResult = Result<{ id: string, tokenRequest: AblyTokenRequest}, EventUse
 
 type EventResult = Result< DatabaseEvent, EventUserAccessError>
 
-export const createTokenRequestWithPermissionsTransaction = async (conn: Connection, eventId: number, userId: string): Promise<
+const createTokenRequestWithPermissionsTransaction = async (conn: Connection, eventId: number, userId: string): Promise<
 ChatResult> => {  
   
     const result:EventResult = await conn.transaction(async (tx) => {
@@ -87,7 +69,33 @@ ChatResult> => {
     }
 }
 
-export const determineChatPermissions = (hostId: string, endTimestamp: Date, userId: string, eventId: number): ChatPermissions => {
+/**
+ * Creates routes related to event operations.
+ *
+ * @param environment see {@link ServerEnvironment}.
+ * @returns a router for event related operations.
+ */
+export const createEventRouter = (environment: ServerEnvironment) => {
+    const router = express.Router();
+  
+  /** 
+   * Get token for event's chat room
+   */
+  router.get("/chat/:eventId", async (req, res) => {
+    const result = await createTokenRequestWithPermissionsTransaction(environment.conn, Number(req.params.eventId), res.locals.selfId);
+
+    if (result.status === "error") {
+      if (result.value === "user is blocked by event host") {      
+        return res.status(403).json({ body: result.value});
+      }
+     return res.status(404).json({ body: result.value});
+    } else {
+     return res.status(200).json({ body: result.value});
+    }
+  });
+}
+
+const determineChatPermissions = (hostId: string, endTimestamp: Date, userId: string, eventId: number): ChatPermissions => {
 
   let role = determineRole(hostId, endTimestamp, userId);
 
@@ -109,3 +117,4 @@ const determineRole = (hostId: string, endTimestamp: Date, userId: string): stri
     return "viewer";
   }
 }
+
