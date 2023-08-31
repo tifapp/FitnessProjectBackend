@@ -2,15 +2,15 @@ import {
   SQLExecutable,
   hasResults,
   queryFirst,
-  queryResults,
-} from "../dbconnection.js";
-import { Result } from "../utils.js";
+  queryResults
+} from "../dbconnection.js"
+import { Result } from "../utils.js"
 import {
   DEFAULT_USER_SETTINGS,
   User,
   UserSettings,
-  UserToProfileRelationStatus,
-} from "./models.js";
+  UserToProfileRelationStatus
+} from "./models.js"
 
 /**
  * Updates the user's settings with the specified fields in the settings object.
@@ -26,24 +26,24 @@ export const overwriteUserSettings = async (
   userId: string,
   settings: Partial<UserSettings>
 ): Promise<Result<void, "user-not-found">> => {
-  const currentSettingsResult = await userSettingsWithId(conn, userId);
+  const currentSettingsResult = await userSettingsWithId(conn, userId)
   if (currentSettingsResult.status === "error") {
-    return currentSettingsResult;
+    return currentSettingsResult
   }
 
   if (!currentSettingsResult.value) {
     await insertUserSettings(conn, userId, {
       ...DEFAULT_USER_SETTINGS,
-      ...settings,
-    });
-    return { status: "success", value: undefined };
+      ...settings
+    })
+    return { status: "success", value: undefined }
   }
   await updateUserSettings(conn, userId, {
     ...currentSettingsResult.value,
-    ...settings,
-  });
-  return { status: "success", value: undefined };
-};
+    ...settings
+  })
+  return { status: "success", value: undefined }
+}
 
 const updateUserSettings = async (
   conn: SQLExecutable,
@@ -64,8 +64,8 @@ const updateUserSettings = async (
       userId = :userId 
   `,
     { userId, ...settings }
-  );
-};
+  )
+}
 
 const insertUserSettings = async (
   conn: SQLExecutable,
@@ -93,8 +93,8 @@ const insertUserSettings = async (
     )
   `,
     { userId, ...settings }
-  );
-};
+  )
+}
 
 /**
  * Queries a given user's settings. If the user has never edited their settings,
@@ -109,10 +109,10 @@ export const userSettingsWithId = async (
   id: string
 ): Promise<Result<UserSettings | undefined, "user-not-found">> => {
   if (!(await userWithIdExists(conn, id))) {
-    return { status: "error", value: "user-not-found" };
+    return { status: "error", value: "user-not-found" }
   }
-  return { status: "success", value: await queryUserSettings(conn, id) };
-};
+  return { status: "success", value: await queryUserSettings(conn, id) }
+}
 
 const queryUserSettings = async (conn: SQLExecutable, userId: string) => {
   return await queryFirst<UserSettings>(
@@ -129,17 +129,17 @@ const queryUserSettings = async (conn: SQLExecutable, userId: string) => {
     WHERE userId = :userId
   `,
     { userId }
-  );
-};
+  )
+}
 
 /**
  * Queries the user with the given id.
  */
 export const userWithId = async (conn: SQLExecutable, userId: string) => {
   return await queryFirst<User>(conn, "SELECT * FROM user WHERE id = :userId", {
-    userId,
-  });
-};
+    userId
+  })
+}
 
 /**
  * Sends a friend request to the user represented by `receiverId`. If the 2 users have no
@@ -159,23 +159,23 @@ export const sendFriendRequest = async (
     conn,
     senderId,
     receiverId
-  );
+  )
 
   if (
     youToThemStatus === "friends" ||
     youToThemStatus === "friend-request-pending"
   ) {
-    return { statusChanged: false, status: youToThemStatus };
+    return { statusChanged: false, status: youToThemStatus }
   }
 
   if (themToYouStatus === "friend-request-pending") {
-    await makeFriends(conn, senderId, receiverId);
-    return { statusChanged: true, status: "friends" };
+    await makeFriends(conn, senderId, receiverId)
+    return { statusChanged: true, status: "friends" }
   }
 
-  await addPendingFriendRequest(conn, senderId, receiverId);
-  return { statusChanged: true, status: "friend-request-pending" };
-};
+  await addPendingFriendRequest(conn, senderId, receiverId)
+  return { statusChanged: true, status: "friend-request-pending" }
+}
 
 const twoWayUserRelation = async (
   conn: SQLExecutable,
@@ -196,16 +196,16 @@ const twoWayUserRelation = async (
       (ur.id1 = :themId AND ur.id2 = :youId) 
     `,
     { youId, themId }
-  );
+  )
   return {
     youToThemStatus: results.find(
       (res) => res.id1 === youId && res.id2 === themId
     )?.status,
     themToYouStatus: results.find(
       (res) => res.id1 === themId && res.id2 === youId
-    )?.status,
-  };
-};
+    )?.status
+  }
+}
 
 const makeFriends = async (conn: SQLExecutable, id1: string, id2: string) => {
   await conn.execute(
@@ -215,8 +215,8 @@ const makeFriends = async (conn: SQLExecutable, id1: string, id2: string) => {
     WHERE (id1 = :id1 AND id2 = :id2) OR (id1 = :id2 AND id2 = :id1)
   `,
     { id1, id2 }
-  );
-};
+  )
+}
 
 const addPendingFriendRequest = async (
   conn: SQLExecutable,
@@ -226,8 +226,8 @@ const addPendingFriendRequest = async (
   await conn.execute(
     "INSERT INTO userRelations (id1, id2, status) VALUES (:senderId, :receiverId, 'friend-request-pending')",
     { senderId, receiverId }
-  );
-};
+  )
+}
 
 export type UpdateUserRequest = {
   selfId: string;
@@ -253,8 +253,8 @@ export const updateUserProfile = async (
     WHERE id = :selfId 
   `,
     request
-  );
-};
+  )
+}
 
 /**
  * Attempts to register a new user in the database.
@@ -270,28 +270,28 @@ export const registerNewUser = async (
   Result<{ id: string }, "user-already-exists" | "duplicate-handle">
 > => {
   if (await userWithIdExists(conn, request.id)) {
-    return { status: "error", value: "user-already-exists" };
+    return { status: "error", value: "user-already-exists" }
   }
 
   if (await userWithHandleExists(conn, request.handle)) {
-    return { status: "error", value: "duplicate-handle" };
+    return { status: "error", value: "duplicate-handle" }
   }
 
-  await insertUser(conn, request);
-  return { status: "success", value: { id: request.id } };
-};
+  await insertUser(conn, request)
+  return { status: "success", value: { id: request.id } }
+}
 
 const userWithHandleExists = async (conn: SQLExecutable, handle: string) => {
   return await hasResults(
     conn,
     "SELECT TRUE FROM user WHERE handle = :handle",
     { handle }
-  );
-};
+  )
+}
 
 export const userWithIdExists = async (conn: SQLExecutable, id: string) => {
-  return await hasResults(conn, "SELECT TRUE FROM user WHERE id = :id", { id });
-};
+  return await hasResults(conn, "SELECT TRUE FROM user WHERE id = :id", { id })
+}
 
 export type RegisterUserRequest = {
   id: string;
@@ -310,7 +310,7 @@ export const insertUser = async (
   request: RegisterUserRequest
 ) => {
   await conn.execute(
-    `INSERT INTO user (id, name, handle) VALUES (:id, :name, :handle)`,
+    "INSERT INTO user (id, name, handle) VALUES (:id, :name, :handle)",
     request
-  );
-};
+  )
+}
