@@ -101,7 +101,7 @@ ChatResult> => {
  * @param environment see {@link ServerEnvironment}.
  * @returns a router for event related operations.
  */
-export const createEventRouter = (environment: ServerEnvironment) => {
+export const createChatTokenRouter = (environment: ServerEnvironment) => {
     const router = express.Router();
   
   /** 
