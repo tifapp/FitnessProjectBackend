@@ -157,3 +157,8 @@ describe("GET /new-product/:id", () => {
 ```
 
 These tests make HTTP requests to the new "products" route and assert that the response is as expected. The first test is for a successful transaction with a valid ID, while the second test is for an error scenario where an invalid ID is provided.
+
+#### Staging Tests
+
+Currently npm run test:staging-unix only works on unix devices.
+For windows, copy the associated command and replace COGNITO_USER and COGNITO_PASSWORD with your desired login info.

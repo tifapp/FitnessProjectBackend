@@ -6,7 +6,7 @@
     "title" : "tifRestAPI"
   },
   "host" : "623qsegfb9.execute-api.us-west-2.amazonaws.com",
-  "basePath" : "/dev",
+  "basePath" : "/staging",
   "schemes" : [ "https" ],
   "paths" : {
     "/" : {
@@ -54,7 +54,7 @@
         },
         "x-amazon-apigateway-integration" : {
           "httpMethod" : "POST",
-          "uri" : "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:213277979580:function:lambdaSQLRoute/invocations",
+          "uri" : "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:213277979580:function:lambdaSQLRoute:dev/invocations",
           "responses" : {
             "default" : {
               "statusCode" : "200"
@@ -79,7 +79,7 @@
         },
         "x-amazon-apigateway-integration" : {
           "httpMethod" : "POST",
-          "uri" : "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:213277979580:function:lambdaSQLRoute/invocations",
+          "uri" : "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:213277979580:function:lambdaSQLRoute:dev/invocations",
           "responses" : {
             "default" : {
               "statusCode" : "200"
@@ -102,7 +102,7 @@
         },
         "x-amazon-apigateway-integration" : {
           "httpMethod" : "POST",
-          "uri" : "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:213277979580:function:lambdaSQLRoute/invocations",
+          "uri" : "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:213277979580:function:lambdaSQLRoute:dev/invocations",
           "responses" : {
             "default" : {
               "statusCode" : "200"
@@ -133,7 +133,7 @@
         },
         "x-amazon-apigateway-integration" : {
           "httpMethod" : "POST",
-          "uri" : "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:213277979580:function:lambdaSQLRoute/invocations",
+          "uri" : "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:213277979580:function:lambdaSQLRoute:dev/invocations",
           "responses" : {
             "default" : {
               "statusCode" : "200"
@@ -162,7 +162,7 @@
         },
         "x-amazon-apigateway-integration" : {
           "httpMethod" : "POST",
-          "uri" : "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:213277979580:function:lambdaSQLRoute/invocations",
+          "uri" : "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:213277979580:function:lambdaSQLRoute:dev/invocations",
           "responses" : {
             "default" : {
               "statusCode" : "200"
@@ -191,7 +191,7 @@
         },
         "x-amazon-apigateway-integration" : {
           "httpMethod" : "POST",
-          "uri" : "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:213277979580:function:lambdaSQLRoute/invocations",
+          "uri" : "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:213277979580:function:lambdaSQLRoute:dev/invocations",
           "responses" : {
             "default" : {
               "statusCode" : "200"
@@ -222,7 +222,7 @@
         },
         "x-amazon-apigateway-integration" : {
           "httpMethod" : "POST",
-          "uri" : "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:213277979580:function:lambdaSQLRoute/invocations",
+          "uri" : "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:213277979580:function:lambdaSQLRoute:dev/invocations",
           "responses" : {
             "default" : {
               "statusCode" : "200"
@@ -251,7 +251,7 @@
         },
         "x-amazon-apigateway-integration" : {
           "httpMethod" : "POST",
-          "uri" : "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:213277979580:function:lambdaSQLRoute/invocations",
+          "uri" : "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:213277979580:function:lambdaSQLRoute:dev/invocations",
           "responses" : {
             "default" : {
               "statusCode" : "200"
@@ -282,7 +282,7 @@
         },
         "x-amazon-apigateway-integration" : {
           "httpMethod" : "POST",
-          "uri" : "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:213277979580:function:lambdaSQLRoute/invocations",
+          "uri" : "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:213277979580:function:lambdaSQLRoute:dev/invocations",
           "responses" : {
             "default" : {
               "statusCode" : "200"
@@ -313,7 +313,7 @@
         },
         "x-amazon-apigateway-integration" : {
           "httpMethod" : "POST",
-          "uri" : "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:213277979580:function:lambdaSQLRoute/invocations",
+          "uri" : "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:213277979580:function:lambdaSQLRoute:dev/invocations",
           "responses" : {
             "default" : {
               "statusCode" : "200"
@@ -342,7 +342,7 @@
         },
         "x-amazon-apigateway-integration" : {
           "httpMethod" : "POST",
-          "uri" : "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:213277979580:function:lambdaSQLRoute/invocations",
+          "uri" : "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:213277979580:function:lambdaSQLRoute:dev/invocations",
           "responses" : {
             "default" : {
               "statusCode" : "200"
@@ -373,7 +373,7 @@
         },
         "x-amazon-apigateway-integration" : {
           "httpMethod" : "POST",
-          "uri" : "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:213277979580:function:lambdaSQLRoute/invocations",
+          "uri" : "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:213277979580:function:lambdaSQLRoute:dev/invocations",
           "responses" : {
             "default" : {
               "statusCode" : "200"
@@ -409,7 +409,7 @@
         },
         "x-amazon-apigateway-integration" : {
           "httpMethod" : "POST",
-          "uri" : "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:213277979580:function:lambdaSQLRoute/invocations",
+          "uri" : "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:213277979580:function:lambdaSQLRoute:dev/invocations",
           "responses" : {
             "default" : {
               "statusCode" : "200"
@@ -434,7 +434,7 @@
         },
         "x-amazon-apigateway-integration" : {
           "httpMethod" : "POST",
-          "uri" : "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:213277979580:function:lambdaSQLRoute/invocations",
+          "uri" : "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:213277979580:function:lambdaSQLRoute:dev/invocations",
           "responses" : {
             "default" : {
               "statusCode" : "200"
@@ -459,7 +459,7 @@
         },
         "x-amazon-apigateway-integration" : {
           "httpMethod" : "POST",
-          "uri" : "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:213277979580:function:lambdaSQLRoute/invocations",
+          "uri" : "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:213277979580:function:lambdaSQLRoute:dev/invocations",
           "responses" : {
             "default" : {
               "statusCode" : "200"
@@ -484,7 +484,7 @@
         },
         "x-amazon-apigateway-integration" : {
           "httpMethod" : "POST",
-          "uri" : "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:213277979580:function:lambdaSQLRoute/invocations",
+          "uri" : "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:213277979580:function:lambdaSQLRoute:dev/invocations",
           "responses" : {
             "default" : {
               "statusCode" : "200"
@@ -509,7 +509,7 @@
         },
         "x-amazon-apigateway-integration" : {
           "httpMethod" : "POST",
-          "uri" : "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:213277979580:function:lambdaSQLRoute/invocations",
+          "uri" : "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:213277979580:function:lambdaSQLRoute:dev/invocations",
           "responses" : {
             "default" : {
               "statusCode" : "200"
@@ -534,7 +534,7 @@
         },
         "x-amazon-apigateway-integration" : {
           "httpMethod" : "POST",
-          "uri" : "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:213277979580:function:lambdaSQLRoute/invocations",
+          "uri" : "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:213277979580:function:lambdaSQLRoute:dev/invocations",
           "responses" : {
             "default" : {
               "statusCode" : "200"
@@ -557,7 +557,7 @@
         },
         "x-amazon-apigateway-integration" : {
           "httpMethod" : "POST",
-          "uri" : "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:213277979580:function:lambdaSQLRoute/invocations",
+          "uri" : "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:213277979580:function:lambdaSQLRoute:dev/invocations",
           "responses" : {
             "default" : {
               "statusCode" : "200"
@@ -582,7 +582,7 @@
         },
         "x-amazon-apigateway-integration" : {
           "httpMethod" : "POST",
-          "uri" : "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:213277979580:function:lambdaSQLRoute/invocations",
+          "uri" : "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:213277979580:function:lambdaSQLRoute:dev/invocations",
           "responses" : {
             "default" : {
               "statusCode" : "200"
@@ -613,7 +613,7 @@
         },
         "x-amazon-apigateway-integration" : {
           "httpMethod" : "POST",
-          "uri" : "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:213277979580:function:lambdaSQLRoute/invocations",
+          "uri" : "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:213277979580:function:lambdaSQLRoute:dev/invocations",
           "responses" : {
             "default" : {
               "statusCode" : "200"
@@ -642,7 +642,7 @@
         },
         "x-amazon-apigateway-integration" : {
           "httpMethod" : "POST",
-          "uri" : "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:213277979580:function:lambdaSQLRoute/invocations",
+          "uri" : "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:213277979580:function:lambdaSQLRoute:dev/invocations",
           "responses" : {
             "default" : {
               "statusCode" : "200"
@@ -673,7 +673,7 @@
         },
         "x-amazon-apigateway-integration" : {
           "httpMethod" : "POST",
-          "uri" : "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:213277979580:function:lambdaSQLRoute/invocations",
+          "uri" : "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:213277979580:function:lambdaSQLRoute:dev/invocations",
           "responses" : {
             "default" : {
               "statusCode" : "200"
@@ -702,7 +702,7 @@
         },
         "x-amazon-apigateway-integration" : {
           "httpMethod" : "POST",
-          "uri" : "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:213277979580:function:lambdaSQLRoute/invocations",
+          "uri" : "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:213277979580:function:lambdaSQLRoute:dev/invocations",
           "responses" : {
             "default" : {
               "statusCode" : "200"
@@ -727,7 +727,7 @@
         },
         "x-amazon-apigateway-integration" : {
           "httpMethod" : "POST",
-          "uri" : "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:213277979580:function:lambdaSQLRoute/invocations",
+          "uri" : "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:213277979580:function:lambdaSQLRoute:dev/invocations",
           "responses" : {
             "default" : {
               "statusCode" : "200"
@@ -750,7 +750,7 @@
         },
         "x-amazon-apigateway-integration" : {
           "httpMethod" : "POST",
-          "uri" : "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:213277979580:function:lambdaSQLRoute/invocations",
+          "uri" : "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:213277979580:function:lambdaSQLRoute:dev/invocations",
           "responses" : {
             "default" : {
               "statusCode" : "200"
@@ -773,7 +773,7 @@
         },
         "x-amazon-apigateway-integration" : {
           "httpMethod" : "POST",
-          "uri" : "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:213277979580:function:lambdaSQLRoute/invocations",
+          "uri" : "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:213277979580:function:lambdaSQLRoute:dev/invocations",
           "responses" : {
             "default" : {
               "statusCode" : "200"
@@ -798,7 +798,7 @@
         },
         "x-amazon-apigateway-integration" : {
           "httpMethod" : "POST",
-          "uri" : "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:213277979580:function:lambdaSQLRoute/invocations",
+          "uri" : "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:213277979580:function:lambdaSQLRoute:dev/invocations",
           "responses" : {
             "default" : {
               "statusCode" : "200"
@@ -821,7 +821,7 @@
         },
         "x-amazon-apigateway-integration" : {
           "httpMethod" : "POST",
-          "uri" : "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:213277979580:function:lambdaSQLRoute/invocations",
+          "uri" : "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:213277979580:function:lambdaSQLRoute:dev/invocations",
           "responses" : {
             "default" : {
               "statusCode" : "200"
@@ -852,7 +852,7 @@
         },
         "x-amazon-apigateway-integration" : {
           "httpMethod" : "POST",
-          "uri" : "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:213277979580:function:lambdaSQLRoute/invocations",
+          "uri" : "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:213277979580:function:lambdaSQLRoute:dev/invocations",
           "responses" : {
             "default" : {
               "statusCode" : "200"

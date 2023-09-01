@@ -1,4 +1,4 @@
-import { z } from "zod"
+import { z } from "zod";
 
 /**
  * A zod schema for {@link UserSettingsSchema}.
@@ -31,13 +31,13 @@ export const DEFAULT_USER_SETTINGS = {
 
 /**
  * A type representing the main user fields.
- */
+ */ // use zod schema for validation then transformation
 export type User = {
-  id: string;
+  id: string; // assign to a type for clarity
   name: string;
-  handle: string;
+  handle: string; // userhandle class
   bio?: string;
-  profileImageURL?: string;
+  profileImageURL?: string; // url type
   creationDate: Date;
   updatedAt?: Date;
 };
