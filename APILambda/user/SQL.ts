@@ -191,9 +191,9 @@ const twoWayUserRelation = async (
     `
     SELECT * FROM userRelations ur 
     WHERE 
-      (ur.id1 = :youId AND ur.id2 = :themId) 
+      (ur.fromUserId = :youId AND ur.toUserId = :themId) 
       OR 
-      (ur.id1 = :themId AND ur.id2 = :youId) 
+      (ur.fromUserId = :themId AND ur.toUserId = :youId) 
     `,
     { youId, themId }
   )

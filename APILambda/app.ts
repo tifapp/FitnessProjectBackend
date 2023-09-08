@@ -1,7 +1,6 @@
 import express, { Application } from "express"
 import { ServerEnvironment } from "./env.js"
-import { createEventRouter } from "./events/routes.js"
-import { createUserRouter } from "./user/routes.js"
+import { createEventRouter } from "./events/createEvent.js"
 
 /**
  * Creates an application instance.
@@ -23,6 +22,11 @@ export const createApp = () => {
  * @param environment see {@link ServerEnvironment}
  */
 export const addRoutes = (app: Application, environment: ServerEnvironment) => {
-  app.use("/user", createUserRouter(environment))
-  app.use("/event", createEventRouter(environment))
+  app.use("/event", (() => {
+    const router = express.Router()
+    createEventRouter(environment, router)
+    return router
+  })())
+  // app.use("/user", createUserRouter(environment))
+  // app.use("/event", createEventRouter(environment))
 }
