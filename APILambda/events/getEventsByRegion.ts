@@ -1,4 +1,4 @@
-import express from "express"
+import { Router } from "express"
 import { ServerEnvironment } from "../env.js"
 import { getEvents } from "../shared/SQL.js"
 
@@ -6,11 +6,8 @@ import { getEvents } from "../shared/SQL.js"
  * Creates routes related to event operations.
  *
  * @param environment see {@link ServerEnvironment}.
- * @returns a router for event related operations.
  */
-export const createEventRouter = (environment: ServerEnvironment) => {
-  const router = express.Router();
-
+export const createEventsByRegionRouter = (environment: ServerEnvironment, router: Router) => {
   /**
    * Get events by region
    */
@@ -26,5 +23,4 @@ export const createEventRouter = (environment: ServerEnvironment) => {
       return res.status(200).json({ result })
     })
   })
-
 }

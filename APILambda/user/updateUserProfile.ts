@@ -1,4 +1,4 @@
-import express from "express"
+import { Router } from "express"
 import { ServerEnvironment } from "../env"
 import { updateUserProfile } from "./SQL"
 
@@ -8,9 +8,7 @@ import { updateUserProfile } from "./SQL"
  * @param environment see {@link ServerEnvironment}.
  * @returns a router for user related operations.
  */
-export const createUserRouter = (environment: ServerEnvironment) => {
-  const router = express.Router()
-
+export const updateUserProfileRouter = (environment: ServerEnvironment, router: Router) => {
   /**
    * updates the current user's profile
    */

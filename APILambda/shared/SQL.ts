@@ -5,7 +5,8 @@ import {
   selectLastInsertionId
 } from "../dbconnection.js"
 import { EventColor, EventColorSchema } from "../events/models.js"
-import { userNotFoundBody, userWithIdExists } from "../user/index.js"
+import { userWithIdExists } from "../user/index.js"
+import { userNotFoundBody } from "./Responses.js"
 
 export const CreateEventSchema = z
   .object({

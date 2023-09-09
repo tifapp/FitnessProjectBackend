@@ -5,14 +5,12 @@ import {
 } from "./database"
 import { conn } from "../dbconnection"
 import {
-  RegisterUserRequest,
-  UserSettings,
-  insertUser,
-  userNotFoundBody
+  insertUser
 } from "../user"
 import request from "supertest"
 import { createTestApp } from "./testApp"
 import { deleteSelf, registerUser, fetchUser, friendUser, fetchSelf, fetchSettings, editSettings } from "./helpers/users"
+import { userNotFoundBody } from "../shared/Responses"
 
 describe("Users tests", () => {
   const app = createTestApp({ conn })

@@ -12,6 +12,12 @@ import {
   UserToProfileRelationStatus
 } from "./models.js"
 
+export type RegisterUserRequest = {
+  id: string;
+  name: string;
+  handle: string;
+};
+
 /**
  * Updates the user's settings with the specified fields in the settings object.
  * Fields that are not present in the settings object do not get updated and
@@ -183,8 +189,8 @@ const twoWayUserRelation = async (
   themId: string
 ) => {
   const results = await queryResults<{
-    id1: string;
-    id2: string;
+    fromUserId : string;
+    toUserId : string;
     status: UserToProfileRelationStatus;
   }>(
     conn,
@@ -199,22 +205,22 @@ const twoWayUserRelation = async (
   )
   return {
     youToThemStatus: results.find(
-      (res) => res.id1 === youId && res.id2 === themId
+      (res) => res.fromUserId === youId && res.toUserId === themId
     )?.status,
     themToYouStatus: results.find(
-      (res) => res.id1 === themId && res.id2 === youId
+      (res) => res.fromUserId === themId && res.toUserId === youId
     )?.status
   }
 }
 
-const makeFriends = async (conn: SQLExecutable, id1: string, id2: string) => {
+const makeFriends = async (conn: SQLExecutable, fromUserId: string, toUserId: string) => {
   await conn.execute(
     `
     UPDATE userRelations 
     SET status = 'friends' 
-    WHERE (id1 = :id1 AND id2 = :id2) OR (id1 = :id2 AND id2 = :id1)
+    WHERE (fromUserId = :fromUserId AND toUserId = :toUserId) OR (fromUserId = :toUserId AND toUserId = :fromUserId)
   `,
-    { id1, id2 }
+    { fromUserId, toUserId }
   )
 }
 
@@ -224,7 +230,7 @@ const addPendingFriendRequest = async (
   receiverId: string
 ) => {
   await conn.execute(
-    "INSERT INTO userRelations (id1, id2, status) VALUES (:senderId, :receiverId, 'friend-request-pending')",
+    "INSERT INTO userRelations (, toUserId, status) VALUES (:senderId, :receiverId, 'friend-request-pending')",
     { senderId, receiverId }
   )
 }
@@ -292,12 +298,6 @@ const userWithHandleExists = async (conn: SQLExecutable, handle: string) => {
 export const userWithIdExists = async (conn: SQLExecutable, id: string) => {
   return await hasResults(conn, "SELECT TRUE FROM user WHERE id = :id", { id })
 }
-
-export type RegisterUserRequest = {
-  id: string;
-  name: string;
-  handle: string;
-};
 
 /**
  * Creates a new user in the database.

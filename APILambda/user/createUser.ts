@@ -1,4 +1,4 @@
-import express from "express"
+import { Router } from "express"
 import { z } from "zod"
 import { ServerEnvironment } from "../env.js"
 import { withValidatedRequest } from "../validation.js"
@@ -17,11 +17,8 @@ const CreateUserSchema = z.object({
  * Creates routes related to user operations.
  *
  * @param environment see {@link ServerEnvironment}.
- * @returns a router for user related operations.
  */
-export const createUserRouter = (environment: ServerEnvironment) => {
-  const router = express.Router()
-
+export const createUserRouter = (environment: ServerEnvironment, router: Router) => {
   /**
    * creates a new user
    */
@@ -38,5 +35,4 @@ export const createUserRouter = (environment: ServerEnvironment) => {
       return res.status(201).json(result.value)
     })
   })
-  return router
 }

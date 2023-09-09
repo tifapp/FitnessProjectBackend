@@ -1,4 +1,4 @@
-import express from "express"
+import { Router } from "express"
 import { ServerEnvironment } from "../env.js"
 import { userWithId } from "./SQL.js"
 import { userNotFoundResponse } from "./getCurrentUserSettings.js"
@@ -18,11 +18,8 @@ export const userNotFoundBody = (userId: string) => ({
  * Creates routes related to user operations.
  *
  * @param environment see {@link ServerEnvironment}.
- * @returns a router for user related operations.
  */
-export const createUserRouter = (environment: ServerEnvironment) => {
-  const router = express.Router()
-
+export const getUserBasedOnIdRouter = (environment: ServerEnvironment, router: Router) => {
   /**
    * gets the user with the specified userId
    */
@@ -33,6 +30,4 @@ export const createUserRouter = (environment: ServerEnvironment) => {
     }
     return res.status(200).json({ ...user, relation: "not-friends" })
   })
-
-  return router
 }

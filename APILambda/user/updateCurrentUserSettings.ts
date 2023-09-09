@@ -1,10 +1,10 @@
-import express from "express"
 import { ServerEnvironment } from "../env.js"
 import { withValidatedRequest } from "../validation"
 import { overwriteUserSettings } from "./SQL"
 import { userNotFoundResponse } from "./getUserInfo"
 import { z } from "zod"
 import { UserSettingsSchema } from "./models.js"
+import { Router } from "express"
 
 const PatchUserSettingsRequestSchema = z.object({
   body: UserSettingsSchema.partial()
@@ -14,11 +14,8 @@ const PatchUserSettingsRequestSchema = z.object({
  * Creates routes related to user operations.
  *
  * @param environment see {@link ServerEnvironment}.
- * @returns a router for user related operations.
  */
-export const createUserRouter = (environment: ServerEnvironment) => {
-  const router = express.Router()
-
+export const updateCurrentUserSettingsRouter = (environment: ServerEnvironment, router: Router) => {
   /**
    * updates the current user's settings
    */

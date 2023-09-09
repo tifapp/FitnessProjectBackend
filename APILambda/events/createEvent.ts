@@ -13,7 +13,6 @@ const CreateEventRequestSchema = z
  * Creates routes related to event operations.
  *
  * @param environment see {@link ServerEnvironment}.
- * @returns a router for event related operations.
  */
 export const createEventRouter = (environment: ServerEnvironment, router: Router) => {
   /**
