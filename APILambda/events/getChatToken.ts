@@ -1,5 +1,5 @@
 import { Connection } from "@planetscale/database"
-import express from "express"
+import { Router } from "express"
 import { AblyTokenRequest, ChatPermissions, createTokenRequest } from "../ably.js"
 import {
   // selectLastInsertionNumericId,
@@ -96,11 +96,8 @@ ChatResult> => {
  * Creates routes related to event operations.
  *
  * @param environment see {@link ServerEnvironment}.
- * @returns a router for event related operations.
  */
-export const createChatTokenRouter = (environment: ServerEnvironment) => {
-  const router = express.Router()
-
+export const createChatTokenRouter = (environment: ServerEnvironment, router: Router) => {
   /**
    * Get token for event's chat room
    */

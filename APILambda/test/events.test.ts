@@ -1,7 +1,6 @@
 import { randomInt, randomUUID } from "crypto"
 import { conn } from "../dbconnection"
 import { insertEvent } from "../events"
-import { userNotFoundBody } from "../user"
 import {
   expectFailsCheckConstraint,
   resetDatabaseBeforeEach
@@ -11,6 +10,7 @@ import { registerUser } from "./helpers/users"
 import { mockLocationCoordinate2D } from "./mockData"
 import { createTestApp } from "./testApp"
 import { determineChatPermissions } from "../events/getChatToken"
+import { userNotFoundBody } from "../shared/Responses"
 
 describe("Events tests", () => {
   const app = createTestApp({ conn })
