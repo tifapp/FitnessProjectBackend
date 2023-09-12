@@ -51,6 +51,7 @@ describe("Events tests", () => {
       })
       expect(resp.status).toEqual(404)
       expect(resp.body).toEqual(userNotFoundBody(id))
+      resp.
     })
 
     it("should allow a user to create an event if the user exists", async () => {

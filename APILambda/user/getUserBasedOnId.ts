@@ -1,7 +1,7 @@
 import { Router } from "express"
 import { ServerEnvironment } from "../env.js"
 import { userWithId } from "./SQL.js"
-import { userNotFoundResponse } from "./getCurrentUserSettings.js"
+import { userNotFoundResponse } from "../shared/Responses.js"
 
 /**
  * Returns an object that indicates that can be used as the response

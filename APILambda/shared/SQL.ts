@@ -45,7 +45,6 @@ export const insertEvent = async (
   request: CreateEventInput,
   hostId: string
 ) => {
-  console.log(request)
   await conn.execute(
     `
     INSERT INTO event (

@@ -1,7 +1,7 @@
 import { ServerEnvironment } from "../env.js"
 import { withValidatedRequest } from "../validation"
 import { overwriteUserSettings } from "./SQL"
-import { userNotFoundResponse } from "./getUserInfo"
+import { userNotFoundResponse } from "../shared/Responses.js"
 import { z } from "zod"
 import { UserSettingsSchema } from "./models.js"
 import { Router } from "express"

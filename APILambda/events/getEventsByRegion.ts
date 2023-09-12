@@ -19,7 +19,6 @@ export const createEventsByRegionRouter = (environment: ServerEnvironment, route
         latitude: req.query.latitude as unknown as number,
         radiusMeters: req.query.radiusMeters as unknown as number
       })
-      console.log("result:" + result)
       return res.status(200).json({ result })
     })
   })
