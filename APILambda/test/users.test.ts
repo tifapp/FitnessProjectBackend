@@ -1,16 +1,16 @@
 import { randomUUID } from "crypto"
+import request from "supertest"
+import { conn } from "../dbconnection"
+import { userNotFoundBody } from "../shared/Responses"
+import {
+  insertUser
+} from "../user"
 import {
   expectFailsCheckConstraint,
   resetDatabaseBeforeEach
 } from "./database"
-import { conn } from "../dbconnection"
-import {
-  insertUser
-} from "../user"
-import request from "supertest"
+import { deleteSelf, editSettings, fetchSelf, fetchSettings, fetchUser, friendUser, registerUser } from "./helpers/users"
 import { createTestApp } from "./testApp"
-import { deleteSelf, registerUser, fetchUser, friendUser, fetchSelf, fetchSettings, editSettings } from "./helpers/users"
-import { userNotFoundBody } from "../shared/Responses"
 
 describe("Users tests", () => {
   const app = createTestApp({ conn })
