@@ -26,6 +26,14 @@
       }
     },
     "rules": {
+      "no-restricted-imports": ["error", {
+        "paths": [{
+          "name": "express",
+          "importNames": ["Router"],
+          "message": "Use 'ValidatedRouter' instead."
+        }]
+      }],
+      "semi": ["error", "never"],
       "quotes": ["error", "double"],
       "no-unused-vars": "warn",
       "eqeqeq": "warn",

@@ -1,7 +1,7 @@
-import { Router } from "express"
 import { ServerEnvironment } from "../env.js"
-import { userWithId } from "./SQL.js"
 import { userNotFoundResponse } from "../shared/Responses.js"
+import { ValidatedRouter } from "../validation.js"
+import { userWithId } from "./SQL.js"
 
 /**
  * Returns an object that indicates that can be used as the response
@@ -19,7 +19,7 @@ export const userNotFoundBody = (userId: string) => ({
  *
  * @param environment see {@link ServerEnvironment}.
  */
-export const getUserBasedOnIdRouter = (environment: ServerEnvironment, router: Router) => {
+export const getUserBasedOnIdRouter = (environment: ServerEnvironment, router: ValidatedRouter) => {
   /**
    * gets the user with the specified userId
    */

@@ -1,13 +1,13 @@
 import { ServerEnvironment } from "../env.js"
 import { getEventWithId } from "../shared/SQL.js"
-import { Router } from "express"
+import { ValidatedRouter } from "../validation.js"
 
 /**
  * Creates routes related to event operations.
  *
  * @param environment see {@link ServerEnvironment}.
  */
-export const createEventByIdRouter = (environment: ServerEnvironment, router: Router) => {
+export const getEventByIdRouter = (environment: ServerEnvironment, router: ValidatedRouter) => {
   router.get("/:eventId", async (req, res) => {
     const result = await getEventWithId(environment.conn, Number(req.params.eventId))
     if (!result) {

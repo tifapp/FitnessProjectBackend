@@ -1,13 +1,13 @@
-import { Router } from "express"
 import { ServerEnvironment } from "../env.js"
 import { getEvents } from "../shared/SQL.js"
+import { ValidatedRouter } from "../validation.js"
 
 /**
  * Creates routes related to event operations.
  *
  * @param environment see {@link ServerEnvironment}.
  */
-export const createEventsByRegionRouter = (environment: ServerEnvironment, router: Router) => {
+export const getEventsByRegionRouter = (environment: ServerEnvironment, router: ValidatedRouter) => {
   /**
    * Get events by region
    */

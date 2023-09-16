@@ -1,12 +1,12 @@
-import { Router } from "express"
 import { ServerEnvironment } from "../env.js"
 import { userNotFoundResponse } from "../shared/Responses.js"
+import { ValidatedRouter } from "../validation.js"
 import {
   userSettingsWithId
 } from "./SQL.js"
 import { DEFAULT_USER_SETTINGS } from "./models.js"
 
-export const getCurrentUserSettingsRouter = (environment: ServerEnvironment, router: Router) => {
+export const getCurrentUserSettingsRouter = (environment: ServerEnvironment, router: ValidatedRouter) => {
   /**
    * gets the current user's settings info
    */
