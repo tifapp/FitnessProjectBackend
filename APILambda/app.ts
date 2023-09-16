@@ -4,7 +4,7 @@ import { createEventRouter } from "./events/createEvent.js"
 import { createChatTokenRouter } from "./events/getChatToken.js"
 import { createEventByIdRouter } from "./events/getEventById.js"
 import { createEventsByRegionRouter } from "./events/getEventsByRegion.js"
-import { createUserRouter } from "./user/createUserProfile.js"
+import { createUserProfileRouter } from "./user/createUserProfile.js"
 import { deleteUserAccountRouter } from "./user/deleteUserAccount.js"
 import { getCurrentUserSettingsRouter } from "./user/getCurrentUserSettings.js"
 import { getUserBasedOnIdRouter } from "./user/getUserBasedOnId.js"
@@ -37,7 +37,7 @@ const addEventRoutes = (environment: ServerEnvironment) => {
 
 const addUserRoutes = (environment: ServerEnvironment) => {
   const router = express.Router()
-  createUserRouter(environment, router)
+  createUserProfileRouter(environment, router)
   deleteUserAccountRouter(environment, router)
   getCurrentUserSettingsRouter(environment, router)
   getUserInfoRouter(environment, router)
