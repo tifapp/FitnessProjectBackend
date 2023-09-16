@@ -230,7 +230,7 @@ const addPendingFriendRequest = async (
   receiverId: string
 ) => {
   await conn.execute(
-    "INSERT INTO userRelations (, toUserId, status) VALUES (:senderId, :receiverId, 'friend-request-pending')",
+    "INSERT INTO userRelations (fromUserId, toUserId, status) VALUES (:senderId, :receiverId, 'friend-request-pending')",
     { senderId, receiverId }
   )
 }

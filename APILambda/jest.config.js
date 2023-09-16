@@ -5,8 +5,11 @@ export default {
   transform: {
     "^.+\\.ts?$": "ts-jest",
   },
-  transformIgnorePatterns: ["/node_modules/(?!@planetscale)"],
+  transformIgnorePatterns: [
+    "/node_modules/(?!(@planetscale|node-fetch|data-uri-to-buffer|fetch-blob|formdata-polyfill))",
+  ],
+  testPathIgnorePatterns: ["/dist/"],
   moduleNameMapper: {
-    '^(\\.{1,2}/.*)\\.js$': '$1',
+    "^(\\.{1,2}/.*)\\.js$": "$1",
   },
-};
+}
