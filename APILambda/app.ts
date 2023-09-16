@@ -1,9 +1,9 @@
 import express, { Application } from "express"
 import { ServerEnvironment } from "./env.js"
 import { createEventRouter } from "./events/createEvent.js"
-import { createChatTokenRouter } from "./events/getChatToken.js"
-import { createEventByIdRouter } from "./events/getEventById.js"
-import { createEventsByRegionRouter } from "./events/getEventsByRegion.js"
+import { getChatTokenRouter } from "./events/getChatToken.js"
+import { getEventByIdRouter } from "./events/getEventById.js"
+import { getEventsByRegionRouter } from "./events/getEventsByRegion.js"
 import { createUserProfileRouter } from "./user/createUserProfile.js"
 import { deleteUserAccountRouter } from "./user/deleteUserAccount.js"
 import { getCurrentUserSettingsRouter } from "./user/getCurrentUserSettings.js"
@@ -12,6 +12,7 @@ import { getUserInfoRouter } from "./user/getUserInfo.js"
 import { sendFriendRequestsRouter } from "./user/sendFriendRequest.js"
 import { updateCurrentUserSettingsRouter } from "./user/updateCurrentUserSettings.js"
 import { updateUserProfileRouter } from "./user/updateUserProfile.js"
+import { ValidatedRouter } from "./validation.js"
 
 /**
  * Creates an application instance.
@@ -26,17 +27,15 @@ export const createApp = () => {
   return app
 }
 
-const addEventRoutes = (environment: ServerEnvironment) => {
-  const router = express.Router()
+const addEventRoutes = (environment: ServerEnvironment, router: ValidatedRouter) => {
   createEventRouter(environment, router)
-  createChatTokenRouter(environment, router)
-  createEventByIdRouter(environment, router)
-  createEventsByRegionRouter(environment, router)
+  getChatTokenRouter(environment, router)
+  getEventByIdRouter(environment, router)
+  getEventsByRegionRouter(environment, router)
   return router
 }
 
-const addUserRoutes = (environment: ServerEnvironment) => {
-  const router = express.Router()
+const addUserRoutes = (environment: ServerEnvironment, router: ValidatedRouter) => {
   createUserProfileRouter(environment, router)
   deleteUserAccountRouter(environment, router)
   getCurrentUserSettingsRouter(environment, router)
@@ -55,6 +54,7 @@ const addUserRoutes = (environment: ServerEnvironment) => {
  * @param environment see {@link ServerEnvironment}
  */
 export const addRoutes = (app: Application, environment: ServerEnvironment) => {
-  app.use("/event", addEventRoutes(environment))
-  app.use("/user", addUserRoutes(environment))
+  const router = new ValidatedRouter()
+  app.use("/event", addEventRoutes(environment, router).asRouter())
+  app.use("/user", addUserRoutes(environment, router).asRouter())
 }

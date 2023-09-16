@@ -1,5 +1,5 @@
 import request from "supertest"
-import { RegisterUserRequest, UserSettings } from "../../user"
+import { UserSettings } from "../../user"
 import { testApp } from "../testVariables"
 
 export const callPatchSettings = async (selfId: string, settings: Partial<UserSettings>) => {
@@ -27,11 +27,8 @@ export const callPostFriendRequest = async (selfId: string, toUser: string) => {
     .send()
 }
 
-export const callPostUser = async (selfId: string, req: Omit<RegisterUserRequest, "id">) => {
-  return await request(testApp).post("/user").set("Authorization", selfId).send({
-    name: req.name,
-    handle: req.handle
-  })
+export const callPostUser = async (selfId: string) => {
+  return await request(testApp).post("/user").set("Authorization", `Bearer ${selfId}`).send()
 }
 
 export const callGetUser = async (youId: string, selfId: string) => {

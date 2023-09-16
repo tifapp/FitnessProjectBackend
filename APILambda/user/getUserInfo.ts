@@ -1,16 +1,16 @@
-import { Router } from "express"
 import { ServerEnvironment } from "../env.js"
+import { userNotFoundResponse } from "../shared/Responses.js"
+import { ValidatedRouter } from "../validation.js"
 import {
   userWithId
 } from "./SQL.js"
-import { userNotFoundResponse } from "../shared/Responses.js"
 
 /**
  * Creates routes related to user operations.
  *
  * @param environment see {@link ServerEnvironment}.
  */
-export const getUserInfoRouter = (environment: ServerEnvironment, router: Router) => {
+export const getUserInfoRouter = (environment: ServerEnvironment, router: ValidatedRouter) => {
   /**
    * gets the current user's account info
    */
