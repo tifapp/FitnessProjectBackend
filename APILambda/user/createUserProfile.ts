@@ -18,7 +18,7 @@ const CreateUserSchema = z.object({
  *
  * @param environment see {@link ServerEnvironment}.
  */
-export const createUserRouter = (environment: ServerEnvironment, router: Router) => {
+export const createUserProfileRouter = (environment: ServerEnvironment, router: Router) => {
   /**
    * creates a new user
    */
