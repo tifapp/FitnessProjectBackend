@@ -51,7 +51,6 @@ describe("Events tests", () => {
       })
       expect(resp.status).toEqual(404)
       expect(resp.body).toEqual(userNotFoundBody(id))
-      resp.
     })
 
     it("should allow a user to create an event if the user exists", async () => {
@@ -171,7 +170,8 @@ describe("determineChatPermissions", () => {
   it("should return admin permissions for a host user", () => {
     const hostId = "1234"
     const userId = "1234"
-    const endTimestamp = new Date("2023-09-15T12:00:00Z")
+    const endTimestamp = new Date() // Current Date
+    endTimestamp.setFullYear(endTimestamp.getFullYear() + 1)
     const eventId = 1
 
     const result = determineChatPermissions(hostId, endTimestamp, userId, eventId)
@@ -185,7 +185,8 @@ describe("determineChatPermissions", () => {
   it("should return attendee permissions for a non-host user before the event end date", () => {
     const hostId = "1234"
     const userId = "5678"
-    const endTimestamp = new Date("2023-09-15T12:00:00Z") // Past date
+    const endTimestamp = new Date() // Current Date
+    endTimestamp.setFullYear(endTimestamp.getFullYear() + 1)
     const eventId = 2
 
     const result = determineChatPermissions(hostId, endTimestamp, userId, eventId)
@@ -199,7 +200,7 @@ describe("determineChatPermissions", () => {
   it("should return viewer permissions for a non-host user after the event end date", () => {
     const hostId = "1234"
     const userId = "5678"
-    const endTimestamp = new Date("2022-09-15T12:00:00Z") // Future date
+    const endTimestamp = new Date("2022-09-15T12:00:00Z") // Past date
     const eventId = 3
 
     const result = determineChatPermissions(hostId, endTimestamp, userId, eventId)
