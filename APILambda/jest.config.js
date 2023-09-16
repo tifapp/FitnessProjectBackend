@@ -8,6 +8,7 @@ export default {
   transformIgnorePatterns: [
     "/node_modules/(?!(@planetscale|node-fetch|data-uri-to-buffer|fetch-blob|formdata-polyfill))",
   ],
+  testPathIgnorePatterns: ["/dist/"],
   moduleNameMapper: {
     "^(\\.{1,2}/.*)\\.js$": "$1",
   },
