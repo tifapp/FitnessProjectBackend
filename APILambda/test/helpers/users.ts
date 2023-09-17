@@ -1,49 +1,49 @@
 import request from "supertest"
-import { UserSettings, RegisterUserRequest } from "../../user"
-import { Application } from "express"
+import { RegisterUserRequest, UserSettings } from "../../user"
+import { testApp } from "../testVariables"
 
-export const editSettings = async (app: Application, id: string, settings: Partial<UserSettings>) => {
-  return await request(app)
+export const callPatchSettings = async (selfId: string, settings: Partial<UserSettings>) => {
+  return await request(testApp)
     .patch("/user/self/settings")
-    .set("Authorization", id)
+    .set("Authorization", selfId)
     .send(settings)
 }
 
-export const fetchSettings = async (app: Application, id: string) => {
-  return await request(app)
+export const callGetSettings = async (selfId: string) => {
+  return await request(testApp)
     .get("/user/self/settings")
-    .set("Authorization", id)
+    .set("Authorization", selfId)
     .send()
 }
 
-export const fetchSelf = async (app: Application, id: string) => {
-  return await request(app).get("/user/self").set("Authorization", id).send()
+export const callGetSelf = async (selfId: string) => {
+  return await request(testApp).get("/user/self").set("Authorization", selfId).send()
 }
 
-export const friendUser = async (app: Application, user1Id: string, user2Id: string) => {
-  return await request(app)
-    .post(`/user/friend/${user2Id}`)
-    .set("Authorization", user1Id)
+export const callPostFriendRequest = async (selfId: string, toUser: string) => {
+  return await request(testApp)
+    .post(`/user/friend/${toUser}`)
+    .set("Authorization", selfId)
     .send()
 }
 
-export const registerUser = async (app: Application, req: RegisterUserRequest) => {
-  return await request(app).post("/user").set("Authorization", req.id).send({
+export const callPostUser = async (selfId: string, req: Omit<RegisterUserRequest, "id">) => {
+  return await request(testApp).post("/user").set("Authorization", selfId).send({
     name: req.name,
     handle: req.handle
   })
 }
 
-export const fetchUser = async (app: Application, youId: string, userId: string) => {
-  return await request(app)
-    .get(`/user/${userId}`)
+export const callGetUser = async (youId: string, selfId: string) => {
+  return await request(testApp)
+    .get(`/user/${selfId}`)
     .set("Authorization", youId)
     .send()
 }
 
-export const deleteSelf = async (app: Application, userId: string) => {
-  return await request(app)
+export const callDeleteSelf = async (selfId: string) => {
+  return await request(testApp)
     .delete("/user/self")
-    .set("Authorization", userId)
+    .set("Authorization", selfId)
     .send()
 }

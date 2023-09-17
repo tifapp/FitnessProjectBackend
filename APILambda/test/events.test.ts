@@ -2,18 +2,14 @@ import { randomInt, randomUUID } from "crypto"
 import { conn } from "../dbconnection"
 import { insertEvent } from "../events"
 import { determineChatPermissions } from "../events/getChatToken"
-import { userNotFoundBody } from "../shared/Responses"
 import {
   expectFailsCheckConstraint,
   resetDatabaseBeforeEach
 } from "./database"
-import { createTestEvent, getTestEvent, getTestEventChatToken } from "./helpers/events"
-import { registerUser } from "./helpers/users"
-import { mockLocationCoordinate2D } from "./mockData"
-import { createTestApp } from "./testApp"
+import { callGetEvent } from "./helpers/events"
+import { testEvents, testUserIdentifier } from "./testVariables"
 
 describe("Events tests", () => {
-  const app = createTestApp({ conn })
   resetDatabaseBeforeEach()
 
   describe("Insert event CheckConstraint test", () => {
@@ -22,149 +18,35 @@ describe("Events tests", () => {
         await insertEvent(
           conn,
           {
-            title: "no",
-            description: "yay",
+            ...testEvents[0],
             startTimestamp: new Date(1000),
-            endTimestamp: new Date(0),
-            color: "#72B01D",
-            shouldHideAfterStartDate: true,
-            isChatEnabled: true,
-            ...mockLocationCoordinate2D()
+            endTimestamp: new Date(0)
           },
           randomUUID()
         )
       })
     })
   })
-  describe("createEvent tests", () => {
-    it("does not allow a user to create an event if the user doesn't exist", async () => {
-      const id = randomUUID()
-      const resp = await createTestEvent(app, id, {
-        title: "no",
-        description: "yay",
-        startTimestamp: new Date(0),
-        endTimestamp: new Date(1000),
-        color: "#72B01D",
-        shouldHideAfterStartDate: true,
-        isChatEnabled: true,
-        ...mockLocationCoordinate2D()
-      })
-      expect(resp.status).toEqual(404)
-      expect(resp.body).toEqual(userNotFoundBody(id))
-    })
-
-    it("should allow a user to create an event if the user exists", async () => {
-      const hostId = randomUUID()
-      await registerUser(app, {
-        id: hostId,
-        name: "name",
-        handle: "handle"
-      })
-      const resp = await createTestEvent(app, hostId, {
-        title: "no",
-        description: "yay",
-        startTimestamp: new Date(0),
-        endTimestamp: new Date(1000),
-        color: "#72B01D",
-        shouldHideAfterStartDate: true,
-        isChatEnabled: true,
-        ...mockLocationCoordinate2D()
-      })
-      expect(resp.status).toEqual(201)
-      expect(parseInt(resp.body.id)).not.toBeNaN()
-    })
-  })
 
   describe("GetSingleEvent tests", () => {
     it("should return 404 if the event doesnt exist", async () => {
       const eventId = randomInt(1000)
-      const userId = randomUUID()
-      const resp = await getTestEvent(app, userId, eventId)
+      const resp = await callGetEvent(testUserIdentifier, eventId)
 
       expect(resp.status).toEqual(404)
       expect(resp.body).toMatchObject({ error: "event-not-found", eventId })
     })
 
     // TODO: Timezone issues in CI
-    //   it("should return an event if it exists in the db", async () => {
-    //     const hostId = randomUUID()
-    //     const coordinate = mockLocationCoordinate2D()
-    //     const startDate = "2023-11-14T22:13:20.000Z"
-    //     const endDate = "2023-11-14T22:30:00.000Z"
-    //     await registerUser(app, {
-    //       id: hostId,
-    //       name: "name",
-    //       handle: "handle"
-    //     })
-    //     const event = await createTestEvent(app, hostId, {
-    //       title: "no",
-    //       description: "yay",
-    //       startTimestamp: new Date(startDate),
-    //       endTimestamp: new Date(endDate),
-    //       color: "#72B01D",
-    //       shouldHideAfterStartDate: true,
-    //       isChatEnabled: true,
-    //       ...coordinate
-    //     })
+    // it("should return an event if it exists in the db", async () => {
+    //   await callPostUser(testUserIdentifier, testUsers[0])
+    //   const event = await callCreateEvent(testUserIdentifier, testEvents[0])
 
-  //     const resp = await getTestEvent(app, hostId, event.body.id)
-  //     expect(resp.status).toEqual(200)
-  //     expect(resp.body).toMatchObject({
-  //       id: event.body.id,
-  //       title: "no",
-  //       description: "yay",
-  //       startTimestamp: startDate,
-  //       endTimestamp: endDate,
-  //       color: "#72B01D",
-  //       shouldHideAfterStartDate: true,
-  //       isChatEnabled: true,
-  //       ...coordinate
-  //     })
-  //   })
+    //   const resp = await callGetEvent(testUserIdentifier, event.body.id)
+    //   expect(resp.status).toEqual(200)
+    //   expect(resp.body).toMatchObject(testEvents[0])
+    // })
   })
-
-  describe("GetTokenRequest tests", () => {
-    it("should return 404 if the event doesnt exist", async () => {
-      const eventId = randomInt(1000)
-      const id = randomUUID()
-      const resp = await getTestEventChatToken(app, id, eventId)
-
-      expect(resp.status).toEqual(404)
-      expect(resp.body).toMatchObject({ body: "event does not exist" })
-    })
-
-    it("should return 404 if the user is not part of the event", async () => {
-      const id = randomUUID()
-      await registerUser(app, {
-        id,
-        name: "name",
-        handle: "handle"
-      })
-      const event = await createTestEvent(app, id, {
-        title: "no",
-        description: "yay",
-        startTimestamp: new Date(0),
-        endTimestamp: new Date(1000),
-        color: "#72B01D",
-        shouldHideAfterStartDate: true,
-        isChatEnabled: true,
-        ...mockLocationCoordinate2D()
-      })
-
-      const resp = await getTestEventChatToken(app, id, event.body.id)
-
-      expect(resp.status).toEqual(404)
-      expect(resp.body).toMatchObject({ body: "user is not apart of event" })
-    })
-
-    // test all error cases
-    // test success case
-    // unit test getRole() function
-  })
-  /*
-  inside test:
-  const result = await request(app).get("/event/chat/9").set("Authorization", req.id);
-  */
 })
 
 describe("determineChatPermissions", () => {

@@ -1,36 +1,33 @@
-import { Application } from "express"
 import request from "supertest"
 import { CreateEventInput } from "../../events"
+import { testApp } from "../testVariables"
 
-export const createTestEvent = async (
-  app: Application,
-  userId: string,
+export const callCreateEvent = async (
+  selfId: string,
   req: CreateEventInput
 ) => {
-  return await request(app)
+  return await request(testApp)
     .post("/event")
-    .set("Authorization", userId)
+    .set("Authorization", selfId)
     .send(req)
 }
 
-export const getTestEvent = async (
-  app: Application,
-  userId: string,
+export const callGetEvent = async (
+  selfId: string,
   eventId: Number
 ) => {
-  return await request(app)
+  return await request(testApp)
     .get(`/event/${eventId}`)
-    .set("Authorization", userId)
+    .set("Authorization", selfId)
     .send()
 }
 
-export const getTestEventChatToken = async (
-  app: Application,
-  userId: string,
+export const callGetEventChatToken = async (
+  selfId: string,
   eventId: Number
 ) => {
-  return await request(app)
+  return await request(testApp)
     .get(`/event/chat/${eventId}`)
-    .set("Authorization", userId)
+    .set("Authorization", selfId)
     .send()
 }

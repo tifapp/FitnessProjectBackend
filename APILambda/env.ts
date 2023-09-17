@@ -12,6 +12,8 @@ const EnvVarsSchema = z
   })
   .passthrough()
 
+export type EnvironmentType = "dev" | "staging" | "prod"
+
 /**
  * A type-safe representation of the current env vars.
  */
@@ -26,5 +28,6 @@ export const envVars = EnvVarsSchema.parse(process.env)
  * Examples of this include AWS S3 buckets, or SNS/Push notification clients.
  */
 export type ServerEnvironment = {
+  environment: EnvironmentType;
   conn: Connection;
 };

@@ -1,4 +1,4 @@
-import { Request, Response, RequestHandler } from "express"
+import { Request, Response } from "express"
 import { AnyZodObject, z } from "zod"
 
 /**
@@ -33,6 +33,7 @@ export const withValidatedRequest = async <Schema extends AnyZodObject>(
     const data = await schema.passthrough().parseAsync(req)
     return await fn(data)
   } catch (err) {
-    return res.status(400).json(err)
+    console.log("failed to validate request ", err)
+    return res.status(400).json({ error: "invalid-request" })
   }
 }

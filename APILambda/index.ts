@@ -6,6 +6,6 @@ import { conn } from "./dbconnection.js"
 
 const app = createApp()
 addCognitoTokenVerification(app)
-addRoutes(app, { conn })
+addRoutes(app, { conn, environment: "prod" })
 
 export const handler = awsServerlessExpress({ app })

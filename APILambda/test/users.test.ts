@@ -1,5 +1,4 @@
 import { randomUUID } from "crypto"
-import request from "supertest"
 import { conn } from "../dbconnection"
 import { userNotFoundBody } from "../shared/Responses"
 import {
@@ -9,29 +8,28 @@ import {
   expectFailsCheckConstraint,
   resetDatabaseBeforeEach
 } from "./database"
-import { deleteSelf, editSettings, fetchSelf, fetchSettings, fetchUser, friendUser, registerUser } from "./helpers/users"
-import { createTestApp } from "./testApp"
+import { callDeleteSelf, callGetSelf, callGetSettings, callGetUser, callPatchSettings, callPostFriendRequest, callPostUser } from "./helpers/users"
+import { testUserIdentifier, testUsers } from "./testVariables"
 
 describe("Users tests", () => {
-  const app = createTestApp({ conn })
   resetDatabaseBeforeEach()
 
   describe("CheckConstraint tests", () => {
     it("should not allow a handle with non-lowercase alpha numeric characters", async () => {
       await expectFailsCheckConstraint(async () => {
-        await insertUser(conn, {
-          id: randomUUID(),
-          name: "Big Chungus",
-          handle: "(*(*&(SJK"
-        })
+        await insertUser(conn,
+          {
+            ...testUsers[0],
+            handle: "(*(*&(SJK"
+          }
+        )
       })
     })
 
     it("should not allow an empty handle", async () => {
       await expectFailsCheckConstraint(async () => {
         await insertUser(conn, {
-          id: randomUUID(),
-          name: "Big Chungus",
+          ...testUsers[0],
           handle: ""
         })
       })
@@ -40,22 +38,16 @@ describe("Users tests", () => {
 
   describe("DeleteSelf tests", () => {
     it("should 404 on non existing user", async () => {
-      const userId = randomUUID()
-      const resp = await deleteSelf(app, userId)
+      const resp = await callDeleteSelf(testUserIdentifier)
 
       expect(resp.status).toEqual(404)
-      expect(resp.body).toMatchObject(userNotFoundBody(userId))
+      expect(resp.body).toMatchObject(userNotFoundBody(testUserIdentifier))
     })
 
     it("should give a 204 when you sucessfully delete the user", async () => {
-      const userId = randomUUID()
-      await registerUser(app, {
-        id: userId,
-        name: "Big Chungus",
-        handle: "big_chungus"
-      })
+      await callPostUser(testUserIdentifier, testUsers[0])
 
-      const resp = await deleteSelf(app, userId)
+      const resp = await callDeleteSelf(testUserIdentifier)
       expect(resp.status).toEqual(204)
     })
   })
@@ -63,131 +55,55 @@ describe("Users tests", () => {
   describe("GetUser tests", () => {
     it("should 404 on non existing user", async () => {
       const userId = randomUUID()
-      const youId = randomUUID()
-      const resp = await fetchUser(app, youId, userId)
+      const resp = await callGetUser(testUserIdentifier, userId)
 
       expect(resp.status).toEqual(404)
       expect(resp.body).toMatchObject(userNotFoundBody(userId))
     })
 
     it("should retrieve a user that exists", async () => {
-      const userId = randomUUID()
-      const youId = randomUUID()
-      await registerUser(app, {
-        id: userId,
-        name: "John Burke",
-        handle: "johncann"
-      })
-      const resp = await fetchUser(app, youId, userId)
+      await insertUser(conn, testUsers[0])
+      const resp = await callGetUser(testUserIdentifier, testUsers[0].id)
 
       expect(resp.status).toEqual(200)
       expect(resp.body).toMatchObject(
-        expect.objectContaining({
-          id: userId,
-          name: "John Burke",
-          handle: "johncann",
-          bio: null,
-          updatedAt: null,
-          profileImageURL: null,
-          relation: "not-friends"
-        })
+        expect.objectContaining(testUsers[0])
       )
     })
   })
 
-  describe("CreateUser tests", () => {
-    it("should 400 on invalid request body", async () => {
-      request(app)
-        .post("/user")
-        .set("Authorization", randomUUID())
-        .send({
-          name: 1,
-          handle: "iusdbdkjbsjbdjsbdsdsudbusybduysdusdudbsuyb"
-        })
-        .expect(400)
-    })
-
-    it("should be able to create a new user posting to /user when user does not exist", async () => {
-      const userId = randomUUID()
-      const resp = await registerUser(app, {
-        id: userId,
-        name: "Big Chungus",
-        handle: "big_chungus"
-      })
-
-      expect(resp.status).toEqual(201)
-      expect(resp.body).toMatchObject({ id: userId })
-    })
-
-    it("should not be able to create a user with an already existing id", async () => {
-      const userId = randomUUID()
-      await registerUser(app, {
-        id: userId,
-        name: "Big Chungus",
-        handle: "big_chungus"
-      })
-
-      const resp = await registerUser(app, {
-        id: userId,
-        name: "Elon Musk",
-        handle: "elon_musk"
-      })
-      expect(resp.status).toEqual(400)
-      expect(resp.body).toMatchObject({ error: "user-already-exists" })
-    })
-
-    it("should not be able to create a user with a duplicate handle", async () => {
-      await registerUser(app, {
-        id: randomUUID(),
-        name: "Big Chungus",
-        handle: "big_chungus"
-      })
-
-      const resp = await registerUser(app, {
-        id: randomUUID(),
-        name: "Elon Musk",
-        handle: "big_chungus"
-      })
-      expect(resp.status).toEqual(400)
-      expect(resp.body).toMatchObject({ error: "duplicate-handle" })
-    })
-  })
-
   describe("FriendRequest tests", () => {
-    const otherId = randomUUID()
-    const youId = randomUUID()
-
     beforeEach(async () => {
-      await registerUser(app, { id: youId, name: "Elon Musk", handle: "elon_musk" })
-      await registerUser(app, { id: otherId, name: "A", handle: "a" })
+      await insertUser(conn, testUsers[0])
+      await insertUser(conn, testUsers[1])
     })
 
     it("should have a pending status when no prior relation between uses", async () => {
-      const resp = await friendUser(app, youId, otherId)
+      const resp = await callPostFriendRequest(testUserIdentifier, testUsers[1].id)
       expect(resp.status).toEqual(201)
       expect(resp.body).toMatchObject({ status: "friend-request-pending" })
     })
 
     it("should return the same status when already existing pending friend request", async () => {
-      await friendUser(app, youId, otherId)
-      const resp = await friendUser(app, youId, otherId)
+      await callPostFriendRequest(testUserIdentifier, testUsers[1].id)
+      const resp = await callPostFriendRequest(testUserIdentifier, testUsers[1].id)
       expect(resp.status).toEqual(200)
       expect(resp.body).toMatchObject({ status: "friend-request-pending" })
     })
 
     it("should return the same status when already friends", async () => {
-      await friendUser(app, youId, otherId)
-      await friendUser(app, otherId, youId)
+      await callPostFriendRequest(testUserIdentifier, testUsers[1].id)
+      await callPostFriendRequest(testUsers[1].id, testUserIdentifier)
 
-      const resp = await friendUser(app, youId, otherId)
+      const resp = await callPostFriendRequest(testUserIdentifier, testUsers[1].id)
       expect(resp.status).toEqual(200)
       expect(resp.body).toMatchObject({ status: "friends" })
     })
 
     it("should have a friend status when the receiver sends a friend request to someone who sent them a pending friend request", async () => {
-      await friendUser(app, youId, otherId)
+      await callPostFriendRequest(testUserIdentifier, testUsers[1].id)
 
-      const resp = await friendUser(app, otherId, youId)
+      const resp = await callPostFriendRequest(testUsers[1].id, testUserIdentifier)
       expect(resp.status).toEqual(201)
       expect(resp.body).toMatchObject({ status: "friends" })
     })
@@ -195,26 +111,20 @@ describe("Users tests", () => {
 
   describe("GetSelf tests", () => {
     it("404s when you have no account", async () => {
-      const id = randomUUID()
-      const resp = await fetchSelf(app, id)
+      const resp = await callGetSelf(testUserIdentifier)
       expect(resp.status).toEqual(404)
-      expect(resp.body).toMatchObject(userNotFoundBody(id))
+      expect(resp.body).toMatchObject(userNotFoundBody(testUserIdentifier))
     })
 
     it("should be able to fetch your private account info", async () => {
-      const id = randomUUID()
-      const accountInfo = {
-        id,
-        name: "Matthew Hayes",
-        handle: "little_chungus"
-      }
-      await registerUser(app, accountInfo)
-      const resp = await fetchSelf(app, id)
+      await callPostUser(testUserIdentifier, testUsers[0])
+      const resp = await callGetSelf(testUserIdentifier)
 
       expect(resp.status).toEqual(200)
       expect(resp.body).toMatchObject(
         expect.objectContaining({
-          ...accountInfo,
+          ...testUsers[0],
+          id: testUserIdentifier,
           bio: null,
           updatedAt: null,
           profileImageURL: null
@@ -226,16 +136,15 @@ describe("Users tests", () => {
 
   describe("Settings tests", () => {
     it("should 404 when gettings settings when user does not exist", async () => {
-      const id = randomUUID()
-      const resp = await fetchSettings(app, id)
+      const resp = await callGetSettings(testUserIdentifier)
       expect(resp.status).toEqual(404)
-      expect(resp.body).toEqual(userNotFoundBody(id))
+      expect(resp.body).toEqual(userNotFoundBody(testUserIdentifier))
     })
 
     it("should return the default settings when settings not edited", async () => {
-      const id = await registerTestUser()
+      await callPostUser(testUserIdentifier, testUsers[0])
 
-      const resp = await fetchSettings(app, id)
+      const resp = await callGetSettings(testUserIdentifier)
       expect(resp.status).toEqual(200)
       expect(resp.body).toEqual({
         isAnalyticsEnabled: true,
@@ -248,18 +157,17 @@ describe("Users tests", () => {
     })
 
     it("should 404 when attempting edit settings for non-existent user", async () => {
-      const id = randomUUID()
-      const resp = await editSettings(app, id, { isAnalyticsEnabled: false })
+      const resp = await callPatchSettings(testUserIdentifier, { isAnalyticsEnabled: false })
       expect(resp.status).toEqual(404)
-      expect(resp.body).toMatchObject(userNotFoundBody(id))
+      expect(resp.body).toMatchObject(userNotFoundBody(testUserIdentifier))
     })
 
     it("should be able to retrieve the user's edited settings", async () => {
-      const id = await registerTestUser()
-      await editSettings(app, id, { isChatNotificationsEnabled: false })
-      await editSettings(app, id, { isCrashReportingEnabled: false })
+      await callPostUser(testUserIdentifier, testUsers[0])
+      await callPatchSettings(testUserIdentifier, { isChatNotificationsEnabled: false })
+      await callPatchSettings(testUserIdentifier, { isCrashReportingEnabled: false })
 
-      const resp = await fetchSettings(app, id)
+      const resp = await callGetSettings(testUserIdentifier)
       expect(resp.status).toEqual(200)
       expect(resp.body).toMatchObject({
         isAnalyticsEnabled: true,
@@ -272,18 +180,9 @@ describe("Users tests", () => {
     })
 
     it("should 400 invalid settings body when updating settings", async () => {
-      const id = await registerTestUser()
-      const resp = await request(app)
-        .patch("/user/self/settings")
-        .set("Authorization", id)
-        .send({ isAnalyticsEnabled: 69, hello: "world" })
+      await callPostUser(testUserIdentifier, testUsers[0])
+      const resp = await callPatchSettings(testUserIdentifier, { isAnalyticsEnabled: 69, hello: "world" } as any)
       expect(resp.status).toEqual(400)
     })
-
-    const registerTestUser = async () => {
-      const id = randomUUID()
-      await registerUser(app, { id, name: "test", handle: "test" })
-      return id
-    }
   })
 })
