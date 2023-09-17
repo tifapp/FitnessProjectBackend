@@ -44,10 +44,12 @@ jobs:
 
       - name: Deploy to AWS Lambda
         run: |
+          aws lambda update-function-code --function-name geocodingPipeline --zip-file fileb://GeocodingLambda/dist.zip
           if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
             sed -i 's/:dev/:prod/g' APILambda/swagger.json
             stageName="prod"
+            VERSION_NUMBER=$(aws lambda publish-version --function-name geocodingPipeline | jq -r '.Version')
+            aws lambda update-alias --function-name geocodingPipeline --name prod --function-version $VERSION_NUMBER
           else
             stageName="staging"
           fi
-          aws lambda update-function-code --function-name geocodingPipeline:$stageName --zip-file fileb://GeocodingLambda/dist.zip
