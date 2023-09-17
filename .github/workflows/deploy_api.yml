@@ -19,11 +19,14 @@ jobs:
         with:
           node-version: '18'
 
-      - name: Install dependencies
-        run: cd APILambda && npm ci --omit=dev
+      - name: Install all dependencies
+        run: cd APILambda && npm ci
 
       - name: Build the project
         run: cd APILambda && npm run build
+      
+      - name: Remove dev dependencies
+        run: cd APILambda && npm ci --omit=dev
 
       - name: Zip the project
         run: |
@@ -54,5 +57,8 @@ jobs:
           fi
           aws apigateway create-deployment --rest-api-id 623qsegfb9 --stage-name $stageName --description 'Deployed'
 
+      - name: Install all dependencies
+        run: cd APILambda && npm ci
+        
       - name: Authenticate with AWS Cognito and run tests
         run: cd APILambda && COGNITO_USER=${{ secrets.COGNITO_USER }} COGNITO_PASSWORD=${{ secrets.COGNITO_PASSWORD }} npm run test:staging-unix
