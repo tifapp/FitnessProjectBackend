@@ -29,13 +29,11 @@ export const withValidatedRequest = async <Schema extends AnyZodObject>(
   schema: Schema,
   fn: (data: z.infer<Schema>) => Promise<any>
 ) => {
-  console.log("attempting to validate request")
   try {
     const data = await schema.passthrough().parseAsync(req)
-    console.log("passed to validate request")
     return await fn(data)
   } catch (err) {
-    console.log("failed to validate request")
-    return res.status(400).json(err)
+    console.log("failed to validate request ", err)
+    return res.status(400).json({ error: "invalid-request" })
   }
 }

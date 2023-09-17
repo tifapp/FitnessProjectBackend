@@ -6,7 +6,7 @@ import { UNAUTHORIZED_RESPONSE } from "../auth.js"
 import { conn } from "../dbconnection.js"
 import { ServerEnvironment } from "../env.js"
 import { CreateEventInput } from "../events/index.js"
-import { User } from "../user/models.js"
+import { RegisterUserRequest } from "../user/SQL.js"
 
 export const testEnv: ServerEnvironment = {
   // use env vars
@@ -38,12 +38,11 @@ export const testApp = testEnv.environment === "staging"
     return app
   })()
 
-const createTestUser = (): User => {
+const createTestUser = (): RegisterUserRequest => {
   return ({
     id: randomUUID(),
     name: faker.name.firstName(),
-    handle: faker.internet.userName(),
-    creationDate: new Date()
+    handle: `handle${Math.floor(Math.random() * 9999)}` // TODO: find better handle generator
   })
 }
 
@@ -67,11 +66,13 @@ const mockLocationCoordinate2D = () => ({
 })
 
 const createTestEvent = (): CreateEventInput => {
+  const startDate = Math.floor(Math.random() * 1000)
+  const endDate = startDate + 10000
   return ({
     title: faker.word.noun(),
     description: faker.animal.rodent(),
-    startTimestamp: new Date(1000),
-    endTimestamp: new Date(0),
+    startTimestamp: new Date(startDate),
+    endTimestamp: new Date(endDate),
     color: "#72B01D",
     shouldHideAfterStartDate: true,
     isChatEnabled: true,

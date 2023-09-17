@@ -66,46 +66,9 @@ describe("Users tests", () => {
       const resp = await callGetUser(testUserIdentifier, testUsers[0].id)
 
       expect(resp.status).toEqual(200)
-      expect(resp.body).toMatchObject(testUsers[0])
-    })
-  })
-
-  describe("CreateUser tests", () => {
-    it("should 400 on invalid request body", async () => {
-      const resp = await callPostUser(testUserIdentifier, {
-        name: 1,
-        handle: "iusdbdkjbsjbdjsbdsdsudbusybduysdusdudbsuyb"
-      } as any)
-
-      expect(resp.status).toEqual(404)
-      expect(resp.body).toMatchObject(userNotFoundBody(testUserIdentifier))
-    })
-
-    it("should be able to create a new user posting to /user when user does not exist", async () => {
-      const userId = randomUUID()
-      const resp = await callPostUser(testUserIdentifier, testUsers[0])
-
-      expect(resp.status).toEqual(201)
-      expect(resp.body).toMatchObject({ id: userId })
-    })
-
-    it("should not be able to create a user with an already existing id", async () => {
-      await callPostUser(testUserIdentifier, testUsers[0])
-
-      const resp = await callPostUser(testUserIdentifier, testUsers[0])
-      expect(resp.status).toEqual(400)
-      expect(resp.body).toMatchObject({ error: "user-already-exists" })
-    })
-
-    it("should not be able to create a user with a duplicate handle", async () => {
-      await insertUser(conn, testUsers[1])
-
-      const resp = await callPostUser(testUserIdentifier, {
-        ...testUsers[0],
-        handle: testUsers[1].handle
-      })
-      expect(resp.status).toEqual(400)
-      expect(resp.body).toMatchObject({ error: "duplicate-handle" })
+      expect(resp.body).toMatchObject(
+        expect.objectContaining(testUsers[0])
+      )
     })
   })
 
@@ -161,6 +124,7 @@ describe("Users tests", () => {
       expect(resp.body).toMatchObject(
         expect.objectContaining({
           ...testUsers[0],
+          id: testUserIdentifier,
           bio: null,
           updatedAt: null,
           profileImageURL: null

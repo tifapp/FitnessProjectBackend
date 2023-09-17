@@ -131,3 +131,6 @@ export const createEvent = async (
 
   return { status: "success", value: { id: await selectLastInsertionId(conn) } }
 }
+
+// add withvalidatedrequest middleware to all
+// add with valid user check to some

@@ -12,8 +12,8 @@
     "build": "npx tsc",
     "start": "node dist/index.js",
     "dev": "concurrently \"npx tsc --watch\" \"nodemon -q dist/index.js\"",
-    "test": "jest",
-    "test:ci": "jest --ci --detectOpenHandles --forceExit",
+    "test": "jest --runInBand",
+    "test:ci": "jest --ci --detectOpenHandles --forceExit --runInBand",
     "test:staging-unix": "USER_TOKEN=$(aws cognito-idp initiate-auth --auth-flow USER_PASSWORD_AUTH --auth-parameters USERNAME=$COGNITO_USER,PASSWORD=$COGNITO_PASSWORD --client-id 3lfnaahkhjaotal2m13huv05ji --query 'AuthenticationResult.IdToken' --output text) jest --ci --detectOpenHandles",
     "lint": "eslint"
   },

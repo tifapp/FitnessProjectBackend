@@ -2,14 +2,12 @@ import { randomInt, randomUUID } from "crypto"
 import { conn } from "../dbconnection"
 import { insertEvent } from "../events"
 import { determineChatPermissions } from "../events/getChatToken"
-import { userNotFoundBody } from "../shared/Responses"
 import {
   expectFailsCheckConstraint,
   resetDatabaseBeforeEach
 } from "./database"
-import { callCreateEvent, callGetEvent, callGetEventChatToken } from "./helpers/events"
-import { callPostUser } from "./helpers/users"
-import { testEvents, testUserIdentifier, testUsers } from "./testVariables"
+import { callGetEvent } from "./helpers/events"
+import { testEvents, testUserIdentifier } from "./testVariables"
 
 describe("Events tests", () => {
   resetDatabaseBeforeEach()
@@ -27,21 +25,6 @@ describe("Events tests", () => {
           randomUUID()
         )
       })
-    })
-  })
-  describe("createEvent tests", () => {
-    it("does not allow a user to create an event if the user doesn't exist", async () => {
-      const id = randomUUID()
-      const resp = await callCreateEvent(id, testEvents[0])
-      expect(resp.status).toEqual(404)
-      expect(resp.body).toEqual(userNotFoundBody(id))
-    })
-
-    it("should allow a user to create an event if the user exists", async () => {
-      await callPostUser(testUserIdentifier, testUsers[0])
-      const resp = await callCreateEvent(testUserIdentifier, testEvents[0])
-      expect(resp.status).toEqual(201)
-      expect(parseInt(resp.body.id)).not.toBeNaN()
     })
   })
 
@@ -64,36 +47,6 @@ describe("Events tests", () => {
     //   expect(resp.body).toMatchObject(testEvents[0])
     // })
   })
-
-  describe("GetTokenRequest tests", () => {
-    it("should return 404 if the event doesnt exist", async () => {
-      const eventId = randomInt(1000)
-      const id = randomUUID()
-      const resp = await callGetEventChatToken(id, eventId)
-
-      expect(resp.status).toEqual(404)
-      expect(resp.body).toMatchObject({ body: "event does not exist" })
-    })
-
-    it("should return 404 if the user is not part of the event", async () => {
-      await callPostUser(testUserIdentifier, testUsers[0])
-      const event = await callCreateEvent(testUserIdentifier, testEvents[0])
-
-      const id = randomUUID()
-      const resp = await callGetEventChatToken(id, event.body.id)
-
-      expect(resp.status).toEqual(404)
-      expect(resp.body).toMatchObject({ body: "user is not apart of event" })
-    })
-
-    // test all error cases
-    // test success case
-    // unit test getRole() function
-  })
-  /*
-  inside test:
-  const result = await request(app).get("/event/chat/9").set("Authorization", req.id);
-  */
 })
 
 describe("determineChatPermissions", () => {

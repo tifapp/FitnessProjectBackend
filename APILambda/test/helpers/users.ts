@@ -29,10 +29,8 @@ export const callPostFriendRequest = async (selfId: string, toUser: string) => {
 
 export const callPostUser = async (selfId: string, req: Omit<RegisterUserRequest, "id">) => {
   return await request(testApp).post("/user").set("Authorization", selfId).send({
-    body: {
-      name: req.name,
-      handle: req.handle
-    }
+    name: req.name,
+    handle: req.handle
   })
 }
 

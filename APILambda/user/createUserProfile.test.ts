@@ -1,14 +1,12 @@
-import { randomUUID } from "crypto"
 import {
   insertUser
 } from "."
 import { conn } from "../dbconnection"
-import { userNotFoundBody } from "../shared/Responses"
 import { resetDatabaseBeforeEach } from "../test/database"
 import { callPostUser } from "../test/helpers/users"
 import { testUserIdentifier, testUsers } from "../test/testVariables"
 
-describe("Users tests", () => {
+describe("Create User Profile tests", () => {
   resetDatabaseBeforeEach()
 
   it("should 400 on invalid request body", async () => {
@@ -17,16 +15,15 @@ describe("Users tests", () => {
       handle: "iusdbdkjbsjbdjsbdsdsudbusybduysdusdudbsuyb"
     } as any)
 
-    expect(resp.status).toEqual(404)
-    expect(resp.body).toMatchObject(userNotFoundBody(testUserIdentifier))
+    expect(resp.status).toEqual(400)
+    expect(resp.body).toMatchObject({ error: "invalid-request" })
   })
 
   it("should 201 when creating a user with a unique id and handle", async () => {
-    const userId = randomUUID()
     const resp = await callPostUser(testUserIdentifier, testUsers[0])
 
     expect(resp.status).toEqual(201)
-    expect(resp.body).toMatchObject({ id: userId })
+    expect(resp.body).toMatchObject({ id: testUserIdentifier })
   })
 
   it("should 400 when trying to create a user with an already existing id", async () => {
