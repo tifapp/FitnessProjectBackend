@@ -1,6 +1,12 @@
+import { z } from "zod"
 import { ServerEnvironment } from "../env.js"
 import { getEventWithId } from "../shared/SQL.js"
 import { ValidatedRouter } from "../validation.js"
+
+const eventRequestSchema = z
+  .object({
+    eventId: z.string()
+  })
 
 /**
  * Creates routes related to event operations.
@@ -8,7 +14,7 @@ import { ValidatedRouter } from "../validation.js"
  * @param environment see {@link ServerEnvironment}.
  */
 export const getEventByIdRouter = (environment: ServerEnvironment, router: ValidatedRouter) => {
-  router.get("/:eventId", async (req, res) => {
+  router.get("/:eventId", { pathParamsSchema: eventRequestSchema }, async (req, res) => {
     const result = await getEventWithId(environment.conn, Number(req.params.eventId))
     if (!result) {
       return res

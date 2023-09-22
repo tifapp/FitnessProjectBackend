@@ -3,7 +3,7 @@ import { userNotFoundBody } from "../shared/Responses"
 import { resetDatabaseBeforeEach } from "../test/database"
 import { callCreateEvent } from "../test/helpers/events"
 import { callPostUser } from "../test/helpers/users"
-import { testEvents, testUserIdentifier, testUsers } from "../test/testVariables"
+import { testEvents, testUserIdentifier } from "../test/testVariables"
 
 describe("CreateEvent tests", () => {
   resetDatabaseBeforeEach()
@@ -16,7 +16,7 @@ describe("CreateEvent tests", () => {
   })
 
   it("should allow a user to create an event if the user exists", async () => {
-    await callPostUser(testUserIdentifier, testUsers[0])
+    await callPostUser(testUserIdentifier)
     const resp = await callCreateEvent(testUserIdentifier, testEvents[0])
     expect(resp.status).toEqual(201)
     expect(parseInt(resp.body.id)).not.toBeNaN()
