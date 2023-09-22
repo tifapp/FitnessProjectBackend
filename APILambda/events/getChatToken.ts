@@ -1,5 +1,4 @@
 import { Connection } from "@planetscale/database"
-import { Router } from "express"
 import { AblyTokenRequest, ChatPermissions, createTokenRequest } from "../ably.js"
 import {
   // selectLastInsertionNumericId,
@@ -8,6 +7,7 @@ import {
 import { ServerEnvironment } from "../env.js"
 import { DatabaseEvent, getEventWithId } from "../shared/SQL.js"
 import { Result } from "../utils.js"
+import { ValidatedRouter } from "../validation.js"
 
 type Role = "admin" | "attendee" | "viewer";
 
@@ -97,7 +97,7 @@ ChatResult> => {
  *
  * @param environment see {@link ServerEnvironment}.
  */
-export const createChatTokenRouter = (environment: ServerEnvironment, router: Router) => {
+export const getChatTokenRouter = (environment: ServerEnvironment, router: ValidatedRouter) => {
   /**
    * Get token for event's chat room
    */

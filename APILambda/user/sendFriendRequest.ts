@@ -1,5 +1,5 @@
-import { Router } from "express"
 import { ServerEnvironment } from "../env.js"
+import { ValidatedRouter } from "../validation.js"
 import {
   sendFriendRequest
 } from "./SQL.js"
@@ -9,7 +9,7 @@ import {
  *
  * @param environment see {@link ServerEnvironment}.
  */
-export const sendFriendRequestsRouter = (environment: ServerEnvironment, router: Router) => {
+export const sendFriendRequestsRouter = (environment: ServerEnvironment, router: ValidatedRouter) => {
   /**
    * sends a friend request to the specified userId
    */
