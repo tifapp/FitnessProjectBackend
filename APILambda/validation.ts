@@ -72,8 +72,8 @@ export class ValidatedRouter {
     this.router = express.Router()
   }
 
-  get (path: string, ...handlers: RequestHandler[]): this {
-    this.router.get(path, validateRequest({}), ...handlers)
+  get (path: string, schema: Pick<ValidationSchemas, "querySchema" | "pathParamsSchema">, ...handlers: RequestHandler[]): this {
+    this.router.get(path, validateRequest(schema), ...handlers)
     return this
   }
 

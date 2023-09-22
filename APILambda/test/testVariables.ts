@@ -90,10 +90,8 @@ export const mockClaims: AuthClaims = {
 }
 
 export const generateMockToken = (claims: AuthClaims) => {
-  // Using a dummy secret for mock purposes
   const secret = "supersecret"
 
-  // The algorithm can be adjusted as required
   const token = jwt.sign(claims, secret, { algorithm: "HS256" })
 
   return token
@@ -101,5 +99,4 @@ export const generateMockToken = (claims: AuthClaims) => {
 
 export const mockToken = generateMockToken(mockClaims)
 
-// export const testUserIdentifier = `Bearer ${process.env.USER_TOKEN ?? mockToken}` // how does this work for staging tests??? We have to make an unverified user each time.
-// should generate the user in the staging test, not here
+export const testUserIdentifier = `Bearer ${process.env.USER_TOKEN ?? mockToken}`
