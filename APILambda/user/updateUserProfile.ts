@@ -32,3 +32,9 @@ export const updateUserProfileRouter = (environment: ServerEnvironment, router: 
 
   return router
 }
+
+// Add a SQL statement that returns { status: "error", value: "duplicate-handle" } when the handle already exists
+
+// Need to add checking logic when we update the user profile so that the handle isn't a duplicate
+
+// Be aware of edge case where the user changes their handle but it is the same as the handle they had before
