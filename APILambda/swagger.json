@@ -6,7 +6,7 @@
     "title" : "tifRestAPI"
   },
   "host" : "623qsegfb9.execute-api.us-west-2.amazonaws.com",
-  "basePath" : "/staging",
+  "basePath" : "/",
   "schemes" : [ "https" ],
   "paths" : {
     "/" : {

@@ -11,4 +11,9 @@
     "esModuleInterop": true,
     "resolveJsonModule": true
   },
+  "exclude": [
+    "**/*.test.ts",
+    "**/*.spec.ts",
+    "node_modules"
+  ]
 }
