@@ -1,9 +1,9 @@
 import { randomUUID } from "crypto"
-import { userNotFoundBody } from "../shared/Responses"
-import { resetDatabaseBeforeEach } from "../test/database"
-import { callCreateEvent } from "../test/helpers/events"
-import { callPostUser } from "../test/helpers/users"
-import { testEvents, testUserIdentifier } from "../test/testVariables"
+import { userNotFoundBody } from "../shared/Responses.js"
+import { resetDatabaseBeforeEach } from "../test/database.js"
+import { callCreateEvent } from "../test/helpers/events.js"
+import { callPostUser } from "../test/helpers/users.js"
+import { testEvents, testUserIdentifier } from "../test/testVariables.js"
 
 describe("CreateEvent tests", () => {
   resetDatabaseBeforeEach()
