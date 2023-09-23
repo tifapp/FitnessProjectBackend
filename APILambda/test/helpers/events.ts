@@ -3,31 +3,31 @@ import { CreateEventInput } from "../../events"
 import { testApp } from "../testVariables"
 
 export const callCreateEvent = async (
-  selfId: string,
+  bearerToken: string,
   req: CreateEventInput
 ) => {
   return await request(testApp)
     .post("/event")
-    .set("Authorization", selfId)
+    .set("Authorization", bearerToken)
     .send(req)
 }
 
 export const callGetEvent = async (
-  selfId: string,
+  bearerToken: string,
   eventId: Number
 ) => {
   return await request(testApp)
     .get(`/event/${eventId}`)
-    .set("Authorization", selfId)
+    .set("Authorization", bearerToken)
     .send()
 }
 
 export const callGetEventChatToken = async (
-  selfId: string,
+  bearerToken: string,
   eventId: Number
 ) => {
   return await request(testApp)
     .get(`/event/chat/${eventId}`)
-    .set("Authorization", selfId)
+    .set("Authorization", bearerToken)
     .send()
 }

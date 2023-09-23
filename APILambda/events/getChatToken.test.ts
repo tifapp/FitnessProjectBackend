@@ -2,7 +2,7 @@ import { randomInt, randomUUID } from "crypto"
 import { resetDatabaseBeforeEach } from "../test/database"
 import { callCreateEvent, callGetEventChatToken } from "../test/helpers/events"
 import { callPostUser } from "../test/helpers/users"
-import { testEvents, testUserIdentifier, testUsers } from "../test/testVariables"
+import { testEvents, testUserIdentifier } from "../test/testVariables"
 
 describe("GetTokenRequest tests", () => {
   resetDatabaseBeforeEach()
@@ -17,7 +17,7 @@ describe("GetTokenRequest tests", () => {
   })
 
   it("should return 404 if the user is not part of the event", async () => {
-    await callPostUser(testUserIdentifier, testUsers[0])
+    await callPostUser(testUserIdentifier)
     const event = await callCreateEvent(testUserIdentifier, testEvents[0])
 
     // check if user exists too

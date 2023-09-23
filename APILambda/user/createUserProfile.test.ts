@@ -34,16 +34,4 @@ describe("Create User Profile tests", () => {
     expect(resp.status).toEqual(201)
     expect(resp.body).toMatchObject({ id: mockClaims.sub })
   })
-
-  // TODO: Add test for update user profile tests
-  // it("should 400 when trying to create a user with a duplicate handle", async () => {
-  //   await insertUser(conn, testUsers[1])
-
-  //   const resp = await callPostUser(testUserIdentifier, {
-  //     ...testUsers[0],
-  //     handle: testUsers[1].handle
-  //   })
-  //   expect(resp.status).toEqual(400)
-  //   expect(resp.body).toMatchObject({ error: "duplicate-handle" })
-  // })
 })

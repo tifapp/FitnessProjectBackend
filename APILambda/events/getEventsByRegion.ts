@@ -11,7 +11,7 @@ export const getEventsByRegionRouter = (environment: ServerEnvironment, router: 
   /**
    * Get events by region
    */
-  router.get("/", async (req, res) => {
+  router.get("/", {}, async (req, res) => {
     await environment.conn.transaction(async (tx) => {
       const result = await getEvents(tx, {
         userId: res.locals.selfId,

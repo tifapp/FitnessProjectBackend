@@ -14,7 +14,7 @@ export const getUserInfoRouter = (environment: ServerEnvironment, router: Valida
   /**
    * gets the current user's account info
    */
-  router.get("/self", async (_, res) => {
+  router.get("/self", {}, async (_, res) => {
     const user = await userWithId(environment.conn, res.locals.selfId)
     if (!user) {
       return userNotFoundResponse(res, res.locals.selfId)

@@ -1,6 +1,6 @@
-import { Application } from "express"
-import { z } from "zod"
-import { ServerEnvironment } from "./env"
+import { Application } from "express";
+import { z } from "zod";
+import { ServerEnvironment } from "./env";
 
 const AuthClaimsSchema = z.object({
   sub: z.string(),
@@ -11,7 +11,7 @@ const AuthClaimsSchema = z.object({
   phone_number_verified: z.boolean()
 })
 
-// use zod schema to parse claims to ensure safety from input and then transform into claims object for typescript safety when coding
+export type AuthClaims = z.infer<typeof AuthClaimsSchema>;
 
 export const UNAUTHORIZED_RESPONSE = {
   error: "Unauthorized"

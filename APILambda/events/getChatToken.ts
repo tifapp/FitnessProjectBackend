@@ -1,4 +1,5 @@
 import { Connection } from "@planetscale/database"
+import { z } from "zod"
 import { AblyTokenRequest, ChatPermissions, createTokenRequest } from "../ably.js"
 import {
   // selectLastInsertionNumericId,
@@ -92,6 +93,11 @@ ChatResult> => {
   }
 }
 
+const eventRequestSchema = z
+  .object({
+    eventId: z.string()
+  })
+
 /**
  * Creates routes related to event operations.
  *
@@ -101,7 +107,7 @@ export const getChatTokenRouter = (environment: ServerEnvironment, router: Valid
   /**
    * Get token for event's chat room
    */
-  router.get("/chat/:eventId", async (req, res) => {
+  router.get("/chat/:eventId", { pathParamsSchema: eventRequestSchema }, async (req, res) => {
     const result = await createTokenRequestWithPermissionsTransaction(environment.conn, Number(req.params.eventId), res.locals.selfId)
 
     if (result.status === "error") {

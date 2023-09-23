@@ -10,7 +10,7 @@ export const getCurrentUserSettingsRouter = (environment: ServerEnvironment, rou
   /**
    * gets the current user's settings info
    */
-  router.get("/self/settings", async (_, res) => {
+  router.get("/self/settings", {}, async (_, res) => {
     const settings = await environment.conn.transaction(async (tx) => {
       return await userSettingsWithId(tx, res.locals.selfId)
     })

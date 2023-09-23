@@ -27,7 +27,8 @@ export const createApp = () => {
   return app
 }
 
-const addEventRoutes = (environment: ServerEnvironment, router: ValidatedRouter) => {
+const addEventRoutes = (environment: ServerEnvironment) => {
+  const router = new ValidatedRouter()
   createEventRouter(environment, router)
   getChatTokenRouter(environment, router)
   getEventByIdRouter(environment, router)
@@ -35,7 +36,8 @@ const addEventRoutes = (environment: ServerEnvironment, router: ValidatedRouter)
   return router
 }
 
-const addUserRoutes = (environment: ServerEnvironment, router: ValidatedRouter) => {
+const addUserRoutes = (environment: ServerEnvironment) => {
+  const router = new ValidatedRouter()
   createUserProfileRouter(environment, router)
   deleteUserAccountRouter(environment, router)
   getCurrentUserSettingsRouter(environment, router)
@@ -54,7 +56,6 @@ const addUserRoutes = (environment: ServerEnvironment, router: ValidatedRouter) 
  * @param environment see {@link ServerEnvironment}
  */
 export const addRoutes = (app: Application, environment: ServerEnvironment) => {
-  const router = new ValidatedRouter()
-  app.use("/event", addEventRoutes(environment, router).asRouter())
-  app.use("/user", addUserRoutes(environment, router).asRouter())
+  app.use("/event", addEventRoutes(environment).asRouter())
+  app.use("/user", addUserRoutes(environment).asRouter())
 }
