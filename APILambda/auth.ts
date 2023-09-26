@@ -1,6 +1,6 @@
 import { Application } from "express";
 import { z } from "zod";
-import { ServerEnvironment } from "./env";
+import { ServerEnvironment } from "./env.js";
 
 const AuthClaimsSchema = z.object({
   sub: z.string(),
@@ -12,10 +12,6 @@ const AuthClaimsSchema = z.object({
 })
 
 export type AuthClaims = z.infer<typeof AuthClaimsSchema>;
-
-export const UNAUTHORIZED_RESPONSE = {
-  error: "Unauthorized"
-}
 
 /**
  * Adds AWS cognito token verification to an app.
@@ -29,12 +25,11 @@ export const addCognitoTokenVerification = (app: Application, env: ServerEnviron
     }
 
     if (!auth || Array.isArray(auth)) {
-      res.status(401).json(UNAUTHORIZED_RESPONSE)
-      return
+      return res.status(401).json({ error: "invalid-headers" })
     }
     // TODO: perform JWT verification if envType !== dev
 
-    const token = auth.split(" ")[1] // TODO: ensure correct format of auth header
+    const token = auth.split(" ")[1] // TODO: ensure correct format of auth header ("Bearer {token}")
 
     try {
       // eslint-disable-next-line camelcase
@@ -47,12 +42,13 @@ export const addCognitoTokenVerification = (app: Application, env: ServerEnviron
       res.locals.isContactInfoVerified = email_verified || phone_number_verified
 
       if (!res.locals.isContactInfoVerified) {
-        res.status(401).json(UNAUTHORIZED_RESPONSE)
+        // TODO: Enforce return after res.status or res.json to avoid side effects from continued execution
+        return res.status(401).json({ error: "unverified-user" })
       }
 
       next()
     } catch (err) {
-      res.status(401).json(UNAUTHORIZED_RESPONSE)
+      return res.status(401).json({ error: "invalid-claims" })
     }
   })
 }

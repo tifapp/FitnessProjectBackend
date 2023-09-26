@@ -1,6 +1,6 @@
 import request from "supertest"
-import { CreateEventInput } from "../../events"
-import { testApp } from "../testVariables"
+import { CreateEventInput } from "../../events/index.js"
+import { testApp } from "../testVariables.js"
 
 export const callCreateEvent = async (
   bearerToken: string,
