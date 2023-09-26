@@ -1,13 +1,13 @@
 import { randomInt, randomUUID } from "crypto"
-import { conn } from "../dbconnection"
-import { insertEvent } from "../events"
-import { determineChatPermissions } from "../events/getChatToken"
+import { conn } from "../dbconnection.js"
+import { determineChatPermissions } from "../events/getChatToken.js"
+import { insertEvent } from "../events/index.js"
 import {
   expectFailsCheckConstraint,
   resetDatabaseBeforeEach
-} from "./database"
-import { callGetEvent } from "./helpers/events"
-import { testEvents, testUserIdentifier } from "./testVariables"
+} from "./database.js"
+import { callGetEvent } from "./helpers/events.js"
+import { testEvents, testUserIdentifier } from "./testVariables.js"
 
 describe("Events tests", () => {
   resetDatabaseBeforeEach()

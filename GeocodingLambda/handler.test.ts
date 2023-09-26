@@ -1,5 +1,5 @@
 import { conn } from "TiFBackendUtils"
-import { handler } from "."
+import { handler } from "./index.js"
 
 describe("Geocoding lambda tests", () => {
   it("Should insert a placemark with the proper address with the given lat/lon", async () => {
