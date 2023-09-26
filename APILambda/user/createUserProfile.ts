@@ -1,3 +1,4 @@
+import { UNAUTHORIZED_RESPONSE } from "../auth.js"
 import { ServerEnvironment } from "../env.js"
 import { ValidatedRouter } from "../validation.js"
 import {
@@ -7,6 +8,12 @@ import { generateUniqueUsername } from "./generateUserHandle.js"
 
 export const createUserProfileRouter = (environment: ServerEnvironment, router: ValidatedRouter) =>
   router.post("/", {}, async (req, res) => {
+    if (res.locals.name === "") {
+      console.error("invalid headers")
+      res.status(401).json(UNAUTHORIZED_RESPONSE)
+      return
+    }
+
     const registerReq = {
       id: res.locals.selfId,
       name: res.locals.name
@@ -26,6 +33,7 @@ export const createUserProfileRouter = (environment: ServerEnvironment, router: 
 
       return res.status(201).json(result.value)
     } catch (e) {
+      console.log("create user error is ", e)
       return res.status(500).json({ error: e })
     }
   })

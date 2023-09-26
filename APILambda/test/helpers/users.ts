@@ -1,6 +1,6 @@
 import request from "supertest"
-import { UserSettings } from "../../user"
-import { testApp } from "../testVariables"
+import { UserSettings } from "../../user/index.js"
+import { testApp } from "../testVariables.js"
 
 export const callPatchSettings = async (bearerToken: string, settings: Partial<UserSettings>) => {
   return await request(testApp)
