@@ -1,6 +1,6 @@
 import { Application } from "express";
 import { z } from "zod";
-import { ServerEnvironment } from "./env";
+import { ServerEnvironment } from "./env.js";
 
 const AuthClaimsSchema = z.object({
   sub: z.string(),
@@ -29,12 +29,13 @@ export const addCognitoTokenVerification = (app: Application, env: ServerEnviron
     }
 
     if (!auth || Array.isArray(auth)) {
+      console.error("invalid headers")
       res.status(401).json(UNAUTHORIZED_RESPONSE)
       return
     }
     // TODO: perform JWT verification if envType !== dev
 
-    const token = auth.split(" ")[1] // TODO: ensure correct format of auth header
+    const token = auth.split(" ")[1] // TODO: ensure correct format of auth header ("Bearer {token}")
 
     try {
       // eslint-disable-next-line camelcase
@@ -47,11 +48,13 @@ export const addCognitoTokenVerification = (app: Application, env: ServerEnviron
       res.locals.isContactInfoVerified = email_verified || phone_number_verified
 
       if (!res.locals.isContactInfoVerified) {
-        res.status(401).json(UNAUTHORIZED_RESPONSE)
+        console.error("user not verified")
+        return res.status(401).json(UNAUTHORIZED_RESPONSE) // different responses?
       }
 
       next()
     } catch (err) {
+      console.error("could not parse claims", err)
       res.status(401).json(UNAUTHORIZED_RESPONSE)
     }
   })

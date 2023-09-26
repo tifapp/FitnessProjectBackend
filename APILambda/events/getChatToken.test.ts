@@ -7,10 +7,16 @@ import { testEvents, testUserIdentifier } from "../test/testVariables.js"
 describe("GetTokenRequest tests", () => {
   resetDatabaseBeforeEach()
 
-  it("should return 404 if the event doesnt exist", async () => {
-    const eventId = randomInt(1000)
+  it("should return 401 if user does not exist", async () => {
     const id = randomUUID()
-    const resp = await callGetEventChatToken(id, eventId)
+    const resp = await callGetEventChatToken(id, randomInt(1000))
+
+    expect(resp.status).toEqual(401)
+    expect(resp.body).toMatchObject({ body: "user does not exist" })
+  })
+
+  it("should return 404 if the event doesnt exist", async () => {
+    const resp = await callGetEventChatToken(testUserIdentifier, randomInt(1000))
 
     expect(resp.status).toEqual(404)
     expect(resp.body).toMatchObject({ body: "event does not exist" })
