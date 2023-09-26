@@ -1,4 +1,4 @@
-import { exponentialFunctionBackoff } from "./utils"
+import { exponentialFunctionBackoff } from "./utils.js"
 
 describe("exponentialFunctionBackoff", () => {
   test("Should not retry if lambda function succeeds", async () => {
