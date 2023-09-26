@@ -16,7 +16,7 @@ export const createEventRouter = (environment: ServerEnvironment, router: Valida
       return await createEvent(tx, res.locals.selfId, req.body)
     })
     if (result.status === "error") {
-      return res.status(404).json(result.value)
+      return res.status(401).json(result.value)
     }
     return res.status(201).json(result.value)
   })

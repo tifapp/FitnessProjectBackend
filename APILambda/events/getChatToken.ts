@@ -27,7 +27,7 @@ const rolesMap: Record<Role, ChatPermissions> = {
   }
 }
 
-type EventUserAccessError = "event does not exist" | "user is not apart of event" | "user is blocked by event host"
+type EventUserAccessError = "event does not exist" | "user is not apart of event" | "user is blocked by event host" | "user does not exist"
 
 type ChatResult = Result<{ id: string, tokenRequest: AblyTokenRequest}, EventUserAccessError | "cannot generate token">
 
@@ -110,6 +110,7 @@ export const getChatTokenRouter = (environment: ServerEnvironment, router: Valid
   router.get("/chat/:eventId", { pathParamsSchema: eventRequestSchema }, async (req, res) => {
     const result = await createTokenRequestWithPermissionsTransaction(environment.conn, Number(req.params.eventId), res.locals.selfId)
 
+    // TODO: should use a map of result.values to error codes to avoid this conditional
     if (result.status === "error") {
       if (result.value === "user is blocked by event host") {
         return res.status(403).json({ body: result.value })

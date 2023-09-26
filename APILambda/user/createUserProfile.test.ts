@@ -5,19 +5,27 @@ import { generateMockToken, mockClaims, testUserIdentifier } from "../test/testV
 describe("Create User Profile tests", () => {
   resetDatabaseBeforeEach()
 
+  // TODO: Move to separate unit test file for auth middleware
+  it("should 401 when no token is passed", async () => {
+    const resp = await callPostUser()
+
+    expect(resp.status).toEqual(401)
+    expect(resp.body).toMatchObject({ error: "invalid-headers" })
+  })
+
   it("should 401 when user is not verified", async () => {
     // TODO: Remove "Bearer" from test
     const resp = await callPostUser(`Bearer ${generateMockToken({ ...mockClaims, email_verified: false, phone_number_verified: false })}`)
 
     expect(resp.status).toEqual(401)
-    expect(resp.body).toMatchObject({ error: "Unauthorized" })
+    expect(resp.body).toMatchObject({ error: "unverified-user" })
   })
 
   it("should 401 when user is missing 'name' attribute", async () => {
     const resp = await callPostUser(`Bearer ${generateMockToken({ ...mockClaims, name: "" })}`)
 
     expect(resp.status).toEqual(401)
-    expect(resp.body).toMatchObject({ error: "Unauthorized" })
+    expect(resp.body).toMatchObject({ error: "invalid-claims" })
   })
 
   it("should 400 when trying to create a user with an already existing id", async () => {

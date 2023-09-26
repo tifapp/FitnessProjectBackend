@@ -27,7 +27,10 @@ export const callPostFriendRequest = async (bearerToken: string, toUser: string)
     .send()
 }
 
-export const callPostUser = async (bearerToken: string) => {
+export const callPostUser = async (bearerToken?: string) => {
+  if (!bearerToken) {
+    return await request(testApp).post("/user").send()
+  }
   return await request(testApp).post("/user").set("Authorization", bearerToken).send()
 }
 

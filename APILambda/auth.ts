@@ -13,10 +13,6 @@ const AuthClaimsSchema = z.object({
 
 export type AuthClaims = z.infer<typeof AuthClaimsSchema>;
 
-export const UNAUTHORIZED_RESPONSE = {
-  error: "Unauthorized"
-}
-
 /**
  * Adds AWS cognito token verification to an app.
  */
@@ -29,9 +25,7 @@ export const addCognitoTokenVerification = (app: Application, env: ServerEnviron
     }
 
     if (!auth || Array.isArray(auth)) {
-      console.error("invalid headers")
-      res.status(401).json(UNAUTHORIZED_RESPONSE)
-      return
+      return res.status(401).json({ error: "invalid-headers" })
     }
     // TODO: perform JWT verification if envType !== dev
 
@@ -48,14 +42,13 @@ export const addCognitoTokenVerification = (app: Application, env: ServerEnviron
       res.locals.isContactInfoVerified = email_verified || phone_number_verified
 
       if (!res.locals.isContactInfoVerified) {
-        console.error("user not verified")
-        return res.status(401).json(UNAUTHORIZED_RESPONSE) // different responses?
+        // TODO: Enforce return after res.status or res.json to avoid side effects from continued execution
+        return res.status(401).json({ error: "unverified-user" })
       }
 
       next()
     } catch (err) {
-      console.error("could not parse claims", err)
-      res.status(401).json(UNAUTHORIZED_RESPONSE)
+      return res.status(401).json({ error: "invalid-claims" })
     }
   })
 }
