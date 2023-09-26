@@ -1,7 +1,7 @@
 import { it } from "node:test"
-import { resetDatabaseBeforeEach } from "../test/database"
-import { callPostUser } from "../test/helpers/users"
-import { generateMockToken, mockClaims, mockToken } from "../test/testVariables"
+import { resetDatabaseBeforeEach } from "../test/database.js"
+import { callPostUser } from "../test/helpers/users.js"
+import { generateMockToken, mockClaims, mockToken } from "../test/testVariables.js"
 
 describe("Create User Profile tests", () => {
   resetDatabaseBeforeEach()

@@ -1,7 +1,7 @@
 import express, { Express } from "express"
 import request from "supertest"
 import { z } from "zod"
-import { validateRequest } from "./validation"
+import { validateRequest } from "./validation.js"
 
 describe("validateRequest", () => {
   let app: Express

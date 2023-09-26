@@ -84,8 +84,12 @@ export const mockClaims: AuthClaims = {
   sub: randomUUID(),
   name: "John Doe",
   email: "john.doe@example.com",
+  // properties taken from cognito
+  // eslint-disable-next-line @typescript-eslint/naming-convention
   email_verified: true,
+  // eslint-disable-next-line @typescript-eslint/naming-convention
   phone_number: "+1234567890",
+  // eslint-disable-next-line @typescript-eslint/naming-convention
   phone_number_verified: true
 }
 

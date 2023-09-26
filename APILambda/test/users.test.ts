@@ -1,15 +1,15 @@
 import { randomUUID } from "crypto"
-import { conn } from "../dbconnection"
-import { userNotFoundBody } from "../shared/Responses"
+import { conn } from "../dbconnection.js"
+import { userNotFoundBody } from "../shared/Responses.js"
 import {
   insertUser
-} from "../user"
+} from "../user/index.js"
 import {
   expectFailsCheckConstraint,
   resetDatabaseBeforeEach
-} from "./database"
-import { callDeleteSelf, callGetSelf, callGetSettings, callGetUser, callPatchSettings, callPostFriendRequest, callPostUser } from "./helpers/users"
-import { mockClaims, testUserIdentifier, testUsers } from "./testVariables"
+} from "./database.js"
+import { callDeleteSelf, callGetSelf, callGetSettings, callGetUser, callPatchSettings, callPostFriendRequest, callPostUser } from "./helpers/users.js"
+import { mockClaims, testUserIdentifier, testUsers } from "./testVariables.js"
 
 describe("Users tests", () => {
   resetDatabaseBeforeEach()

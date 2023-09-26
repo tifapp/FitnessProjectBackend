@@ -1,4 +1,4 @@
-import { UserHandle } from "./UserHandle"
+import { UserHandle } from "./UserHandle.js"
 
 describe("UserHandle tests", () => {
   it("should parse a valid user handle from a string", () => {
