@@ -29,10 +29,10 @@ export const getUserBasedOnIdRouter = (environment: ServerEnvironment, router: V
   /**
    * gets the user with the specified userId
    */
-  router.get("/:userId", { pathParamsSchema: friendRequestSchema }, async (req, res) => {
-    const user = await userWithId(environment.conn, req.params.userId)
+  router.get("/", { querySchema: friendRequestSchema }, async (req, res) => {
+    const user = await userWithId(environment.conn, req.query.userId as string)
     if (!user) {
-      return userNotFoundResponse(res, req.params.userId)
+      return userNotFoundResponse(res, req.query.userId as string)
     }
     return res.status(200).json({ ...user, relation: "not-friends" })
   })

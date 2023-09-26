@@ -36,7 +36,8 @@ export const callPostUser = async (bearerToken?: string) => {
 
 export const callGetUser = async (bearerToken: string, userId: string) => {
   return await request(testApp)
-    .get(`/user/${userId}`)
+    .get("/user")
+    .query({ userId })
     .set("Authorization", bearerToken)
     .send()
 }
