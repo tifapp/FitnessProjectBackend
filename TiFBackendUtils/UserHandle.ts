@@ -17,6 +17,9 @@ export class UserHandle {
     return `@${this.rawValue}`
   }
 
+  /**
+   * A zod schema for an {@link UserHandle}.
+   */
   static schema = ZodUtils.createOptionalParseableSchema(UserHandle)
 
   private static REGEX = /^[A-Za-z0-9_]{1,15}$/

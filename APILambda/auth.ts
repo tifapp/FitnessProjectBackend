@@ -29,8 +29,7 @@ export const addCognitoTokenVerification = (app: Application, env: ServerEnviron
     }
 
     if (!auth || Array.isArray(auth)) {
-      res.status(401).json(UNAUTHORIZED_RESPONSE)
-      return
+      return res.status(401).json(UNAUTHORIZED_RESPONSE)
     }
     // TODO: perform JWT verification if envType !== dev
 
@@ -47,11 +46,12 @@ export const addCognitoTokenVerification = (app: Application, env: ServerEnviron
       res.locals.isContactInfoVerified = email_verified || phone_number_verified
 
       if (!res.locals.isContactInfoVerified) {
-        res.status(401).json(UNAUTHORIZED_RESPONSE)
+        return res.status(401).json(UNAUTHORIZED_RESPONSE)
       }
 
       next()
     } catch (err) {
+      console.log(err)
       res.status(401).json(UNAUTHORIZED_RESPONSE)
     }
   })

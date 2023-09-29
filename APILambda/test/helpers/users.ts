@@ -1,6 +1,7 @@
 import request from "supertest"
 import { UserSettings } from "../../user"
-import { testApp } from "../testVariables"
+import { generateMockToken, mockClaims, testApp } from "../testVariables"
+import { randomUUID } from "crypto"
 
 export const callPatchSettings = async (bearerToken: string, settings: Partial<UserSettings>) => {
   return await request(testApp)
@@ -28,7 +29,7 @@ export const callPostFriendRequest = async (bearerToken: string, toUser: string)
 }
 
 export const callPostUser = async (bearerToken: string) => {
-  return await request(testApp).post("/user").set("Authorization", bearerToken).send()
+  return await request(testApp).post("/user").set("Authorization", `Bearer ${bearerToken}`).send()
 }
 
 export const callGetUser = async (bearerToken: string, userId: string) => {
@@ -42,5 +43,13 @@ export const callDeleteSelf = async (bearerToken: string) => {
   return await request(testApp)
     .delete("/user/self")
     .set("Authorization", bearerToken)
+    .send()
+}
+
+export const callAutocompleteUsers = async (handleString: string, limit: number) => {
+  return await request(testApp)
+    .get("/user/autocomplete")
+    .query({ handle: handleString, limit })
+    .set("Authorization", `Bearer ${generateMockToken({ ...mockClaims, sub: randomUUID() })}`) // TODO: - This endpoint shouldn't need auth.
     .send()
 }
