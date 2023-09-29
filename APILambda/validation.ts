@@ -67,7 +67,7 @@ export const validateRequest = ({ bodySchema, querySchema, pathParamsSchema }: V
 type InferRequestSchemaType<T> = T extends ZodSchema<any> ? z.infer<T> : never;
 
 type ValidatedRequestHandler<S extends ValidationSchemas> = (
-  req: Request & {
+  req: Omit<Request, "body" | "query" | "params"> & {
     body: InferRequestSchemaType<S["bodySchema"]>;
     query: InferRequestSchemaType<S["querySchema"]>;
     params: InferRequestSchemaType<S["pathParamsSchema"]>;
@@ -119,27 +119,27 @@ export class ValidatedRouter {
   }
 
   get<Schema extends ValidationSchemas> (path: string, schema: Pick<Schema, "querySchema" | "pathParamsSchema">, ...handlers: ValidatedRequestHandler<Schema>[]): this {
-    this.router.get(path, validateRequest(schema), ...handlers)
+    this.router.get(path, validateRequest(schema), ...handlers as any)
     return this
   }
 
   delete<Schema extends ValidationSchemas> (path: string, schema: Schema, ...handlers: ValidatedRequestHandler<Schema>[]): this {
-    this.router.delete(path, validateRequest(schema), ...handlers)
+    this.router.delete(path, validateRequest(schema), ...handlers as any)
     return this
   }
 
   patch<Schema extends ValidationSchemas> (path: string, schema: Schema, ...handlers: ValidatedRequestHandler<Schema>[]): this {
-    this.router.patch(path, validateRequest(schema), ...handlers)
+    this.router.patch(path, validateRequest(schema), ...handlers as any)
     return this
   }
 
   put<Schema extends ValidationSchemas> (path: string, schema: Schema, ...handlers: ValidatedRequestHandler<Schema>[]): this {
-    this.router.put(path, validateRequest(schema), ...handlers)
+    this.router.put(path, validateRequest(schema), ...handlers as any)
     return this
   }
 
   post<Schema extends ValidationSchemas> (path: string, schema: Schema, ...handlers: ValidatedRequestHandler<Schema>[]): this {
-    this.router.post(path, validateRequest(schema), ...handlers)
+    this.router.post(path, validateRequest(schema), ...handlers as any)
     return this
   }
 
