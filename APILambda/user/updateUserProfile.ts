@@ -3,6 +3,7 @@ import { z } from "zod"
 import { SQLExecutable } from "../dbconnection.js"
 import { ServerEnvironment } from "../env.js"
 import { ValidatedRouter } from "../validation.js"
+import { userWithId } from "./SQL.js"
 
 const UpdateUserRequestSchema = z.object({
   name: z.string().optional(),
@@ -44,6 +45,10 @@ export const updateUserProfileRouter = (environment: ServerEnvironment, router: 
    */
   router.patch("/self", { bodySchema: UpdateUserRequestSchema }, async (req, res) => {
     const result = await environment.conn.transaction(async (tx) => {
+      const currentUserResult = await userWithId(tx, res.locals.selfId)
+      // if (currentUserResult.status === "error") {
+      //   return currentUserResult
+      // }
       // Add a SQL statement that returns { status: "error", value: "duplicate-handle" } when the handle already exists
 
       // Need to add checking logic when we update the user profile so that the handle isn't a duplicate
@@ -51,6 +56,7 @@ export const updateUserProfileRouter = (environment: ServerEnvironment, router: 
       // Be aware of edge case where the user changes their handle but it is the same as the handle they had before
 
       return await updateUserProfile(tx, {
+        ...currentUserResult,
         selfId: res.locals.selfId,
         ...req.body
       })
