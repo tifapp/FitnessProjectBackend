@@ -46,11 +46,15 @@ export const validateRequest = ({ bodySchema, querySchema, pathParamsSchema }: V
         params: pathParamsSchema ?? z.object({}).strict()
       })
 
-      await validationSchema.parseAsync({
+      const { body, query, params } = await validationSchema.parseAsync({
         body: req.body,
         query: req.query,
         params: req.params
       })
+
+      req.body = body
+      req.query = query
+      req.params = params
 
       next()
     } catch (error) {
