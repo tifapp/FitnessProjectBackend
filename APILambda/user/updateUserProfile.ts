@@ -13,7 +13,13 @@ export const updateUserProfileRouter = (environment: ServerEnvironment, router: 
   /**
    * updates the current user's profile
    */
-  router.patch("/self", { bodySchema: z.object({ handle: z.string() }) }, async (req, res) => {
+  router.patch("/self", {
+    bodySchema: z.object({
+      handle: z.string(),
+      name: z.string(),
+      bio: z.string()
+    })
+  }, async (req, res) => {
     const result = await environment.conn.transaction(async (tx) => {
       return await updateUserProfile(tx, {
         selfId: res.locals.selfId,

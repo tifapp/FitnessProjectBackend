@@ -93,14 +93,20 @@ export const mockClaims: AuthClaims = {
   phone_number_verified: true
 }
 
-export const generateMockToken = (claims: AuthClaims) => {
+export const generateMockAuthorizationHeader = (claims: Partial<AuthClaims>) => {
   const secret = "supersecret"
 
-  const token = jwt.sign(claims, secret, { algorithm: "HS256" })
+  const tokenPayload = { ...mockClaims, ...claims }
 
-  return token
+  if (!("sub" in claims)) {
+    tokenPayload.sub = randomUUID()
+  }
+
+  const token = jwt.sign(tokenPayload, secret, { algorithm: "HS256" })
+
+  return `Bearer ${token}`
 }
 
-export const mockToken = generateMockToken(mockClaims)
+export const mockToken = generateMockAuthorizationHeader(mockClaims)
 
-export const testUserIdentifier = `Bearer ${process.env.USER_TOKEN ?? mockToken}`
+export const testAuthorizationHeader = process.env.USER_TOKEN ?? mockToken

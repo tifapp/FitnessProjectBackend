@@ -13,6 +13,7 @@ import { sendFriendRequestsRouter } from "./user/sendFriendRequest.js"
 import { updateCurrentUserSettingsRouter } from "./user/updateCurrentUserSettings.js"
 import { updateUserProfileRouter } from "./user/updateUserProfile.js"
 import { ValidatedRouter } from "./validation.js"
+import { autocompleteUsersRouter } from "./user/autocompleteUsers.js"
 
 /**
  * Creates an application instance.
@@ -38,6 +39,7 @@ const addEventRoutes = (environment: ServerEnvironment) => {
 
 const addUserRoutes = (environment: ServerEnvironment) => {
   const router = new ValidatedRouter()
+  autocompleteUsersRouter(environment, router.asRouter())
   createUserProfileRouter(environment, router)
   deleteUserAccountRouter(environment, router)
   getCurrentUserSettingsRouter(environment, router)

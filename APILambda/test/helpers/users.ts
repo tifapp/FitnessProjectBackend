@@ -1,6 +1,6 @@
 import request from "supertest"
 import { UserSettings } from "../../user/index.js"
-import { testApp } from "../testVariables.js"
+import { testApp, testAuthorizationHeader } from "../testVariables.js"
 
 export const callPatchSettings = async (bearerToken: string, settings: Partial<UserSettings>) => {
   return await request(testApp)
@@ -45,5 +45,13 @@ export const callDeleteSelf = async (bearerToken: string) => {
   return await request(testApp)
     .delete("/user/self")
     .set("Authorization", bearerToken)
+    .send()
+}
+
+export const callAutocompleteUsers = async (handle: string, limit: number) => {
+  return await request(testApp)
+    .get("/user/autocomplete")
+    .query({ handle, limit })
+    .set("Authorization", testAuthorizationHeader)
     .send()
 }

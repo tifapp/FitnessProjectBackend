@@ -1,6 +1,6 @@
 /* eslint-disable no-restricted-imports */
-import express, { NextFunction, Request, Response, Router } from "express";
-import { ZodSchema, z } from "zod";
+import express, { NextFunction, Request, RequestHandler, Response, Router } from "express"
+import { AnyZodObject, ZodSchema, z } from "zod"
 
 interface ValidationSchemas {
   bodySchema?: ZodSchema<any>;
@@ -149,5 +149,19 @@ export class ValidatedRouter {
 
   asRouter (): Router {
     return this.router
+  }
+}
+
+export const withValidatedRequest = <Schema extends AnyZodObject>(
+  schema: Schema,
+  fn: (data: z.infer<Schema>, res: Response) => Promise<Response>
+): RequestHandler => {
+  return async (req: Request, res: Response) => {
+    try {
+      const data = await schema.passthrough().parseAsync(req)
+      return await fn(data, res)
+    } catch (err) {
+      return res.status(400).json(err)
+    }
   }
 }
