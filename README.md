@@ -158,52 +158,38 @@ describe("GET /new-product/:id", () => {
 
 These tests make HTTP requests to the new "products" route and assert that the response is as expected. The first test is for a successful transaction with a valid ID, while the second test is for an error scenario where an invalid ID is provided.
 
-# Additional Notes
+![image-2 drawio](https://github.com/tifapp/FitnessProjectBackend/assets/70039847/202c1973-4ed2-4887-859e-4b74eeced128)
 
-HTTP Request/Response <-> Express Server <-> Planetscale (SQL)
 
 ![image-1 drawio](https://github.com/tifapp/FitnessProjectBackend/assets/70039847/8ce31b28-3c75-466d-9fe5-ea274d118336)
 
-- GeocodingLambda <-> APILambda
+![image3 drawio](https://github.com/tifapp/FitnessProjectBackend/assets/70039847/2366e521-0e75-4e13-ae56-8953c2d30840)
+
+# Geocoding Lambda
 
 - Purpose of Geocoding Lambda: Transform the location into an address
 
+# API Lambda
+
 - Within the APILambda consists of different folders that have the different data types: users and events. These are the data types the lambda will work with.
 
-- For each data type, there will be multiple ts files
+# Rules for creating an endpoint
 
-- routes.ts file takes in a HTTP request and returns an HTTP response
+- Each endpoint will have its own file that contains the code to take in a HTTP Request and return a HTTP response
 
-Routes.ts ->
+- Each endpoint will have its own test file
 
-- Returns http status codes and responses
+- When needed create a a helper method inside the /test/helpers. The purpose of these endpoints is to artifically call the endpoint passing in our data in the request body.
 
 - The req includes the query params and json body
 
-- All of the routes in the user folder will be prepended with the /user path when the mobile path visits the API. 
+- All of the routes in the user folder will be prepended with the /user path when the mobile path visits the API.
 
 - To activate the endpoint, the app will visit the domain then /user/friend/userId. (Visiting the API)
-
-- Ideally the transactions will be in a seperate file. Not directly defined inside the routes. Reason: Transactions will call multiple SQL statements. 
 
 - Important: If we call multiple SQL statements within a transaction, it ensures that the operation is atomic. 
 
 - If we start a transaction, it will lock the database. 
-
-- Best practice: We will include a transaction for all of our routes. 
-
-- The transaction should return the success or error message
-- Then the router will consume the success or error message, then map it to a status code and return that response
-
-- Inside the transaction, we have a SQL statement that will be coming from a different file. 
-
-- The lowest level is the database level where we are working with individual SQL statements that are contained in a seperate file. 
-
-- The level above is the transactions that will return a success or error message
-
-The top level is the route that calls the transaction. It will transform the generic error to an HTTP success or error.
-
-Important: The reason we have the middle layer that returns a generic success or error message is because we might reuse the transaction in different routes.
 
 Ably Client -> mobile app
 
