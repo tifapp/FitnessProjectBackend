@@ -198,7 +198,7 @@ Ably Client -> mobile app
 
 # Endpoint for Channel
 
--> Reason the user can open the channel through event details or notification
--> It will return the token for the channel and any info needed to connect to the chatroom
--> It will be tied to events
--> Setup infrastructure to handle image ids and images
+- Reason the user can open the channel through event details or notification
+- It will return the token for the channel and any info needed to connect to the chatroom
+- It will be tied to events
+- Setup infrastructure to handle image ids and images
