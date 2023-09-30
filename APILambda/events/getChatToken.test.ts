@@ -1,8 +1,8 @@
-import { randomInt, randomUUID } from "crypto"
+import { randomInt } from "crypto"
 import { resetDatabaseBeforeEach } from "../test/database.js"
 import { callCreateEvent, callGetEventChatToken } from "../test/helpers/events.js"
 import { callPostUser } from "../test/helpers/users.js"
-import { generateMockAuthorizationHeader, mockClaims, testEvents, testAuthorizationHeader } from "../test/testVariables.js"
+import { generateMockAuthorizationHeader, testEvents, testAuthorizationHeader } from "../test/testVariables.js"
 
 describe("GetTokenRequest tests", () => {
   resetDatabaseBeforeEach()

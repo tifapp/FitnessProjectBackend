@@ -12,14 +12,15 @@ export const getEventsByRegionRouter = (environment: ServerEnvironment, router: 
    * Get events by region
    */
   router.get("/", {}, async (req, res) => {
-    await environment.conn.transaction(async (tx) => {
-      const result = await getEvents(tx, {
+    const result = await environment.conn.transaction(async (tx) => {
+      return await getEvents(tx, {
         userId: res.locals.selfId,
         longitude: req.query.longitude as unknown as number,
         latitude: req.query.latitude as unknown as number,
         radiusMeters: req.query.radiusMeters as unknown as number
       })
-      return res.status(200).json({ result })
     })
+
+    return res.status(200).json({ result })
   })
 }

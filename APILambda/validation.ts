@@ -1,6 +1,6 @@
 /* eslint-disable no-restricted-imports */
-import express, { NextFunction, Request, RequestHandler, Response, Router } from "express";
-import { AnyZodObject, ZodSchema, z } from "zod";
+import express, { NextFunction, Request, RequestHandler, Response, Router } from "express"
+import { AnyZodObject, ZodSchema, z } from "zod"
 
 interface ValidationSchemas {
   bodySchema?: ZodSchema<any>;
@@ -38,33 +38,83 @@ interface ValidationSchemas {
  * ```
  */
 export const validateRequest = ({ bodySchema, querySchema, pathParamsSchema }: ValidationSchemas) =>
-  (req: Request, res: Response, next: NextFunction) => {
+  async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (bodySchema) {
-        req.body = bodySchema.parse(req.body)
-      } else if (Object.keys(req.body).length !== 0) {
-        throw new Error("Unexpected request body provided")
-      }
+      const validationSchema = z.object({
+        body: bodySchema ?? z.object({}).strict(),
+        query: querySchema ?? z.object({}).strict(),
+        params: pathParamsSchema ?? z.object({}).strict()
+      })
 
-      if (querySchema) {
-        req.query = querySchema.parse(req.query)
-      } else if (Object.keys(req.query).length !== 0) {
-        throw new Error("Unexpected query parameters provided")
-      }
+      const { body, query, params } = await validationSchema.parseAsync({
+        body: req.body,
+        query: req.query,
+        params: req.params
+      })
 
-      if (pathParamsSchema) {
-        req.params = pathParamsSchema.parse(req.params)
-      } else if (Object.keys(req.params).length !== 0) {
-        throw new Error("Unexpected path parameters provided")
-      }
+      req.body = body
+      req.query = query
+      req.params = params
 
       next()
     } catch (error) {
-      console.log("failed to validate request ", error)
-      return res.status(400).json({ error: "invalid-request" })
+      if (error instanceof z.ZodError) {
+        console.log("failed to validate request ", error)
+        return res.status(400).json({ error: "invalid-request" })
+      } else {
+        console.error("Error in validation middleware: ", error)
+        return res.status(500).json({ error: "internal-server-error" })
+      }
     }
   }
 
+type InferRequestSchemaType<T> = T extends ZodSchema<any> ? z.infer<T> : never;
+
+type ValidatedRequestHandler<S extends ValidationSchemas> = (
+  req: Omit<Request, "body" | "query" | "params"> & {
+    body: InferRequestSchemaType<S["bodySchema"]>;
+    query: InferRequestSchemaType<S["querySchema"]>;
+    params: InferRequestSchemaType<S["pathParamsSchema"]>;
+  },
+  res: Response,
+  next: NextFunction
+) => Promise<Response>;
+
+/**
+ * Wrapper around the Express Router which facilitates runtime validation and
+ * TypeScript type inference for request handlers based on Zod schemas.
+ *
+ * Example Usage:
+ * ```typescript
+ * import { z } from 'zod';
+ * import { ValidatedRouter } from './validated-router';  // Assume the file is named validated-router.ts
+ *
+ * // Define your schemas
+ * const bodySchema = z.object({
+ *   name: z.string(),
+ *   age: z.number().positive(),
+ * });
+ *
+ * const querySchema = z.object({
+ *   sortBy: z.string().optional(),
+ * });
+ *
+ * // Create an instance of ValidatedRouter
+ * const router = new ValidatedRouter();
+ *
+ * // Define your route
+ * router.post('/create-user', { bodySchema, querySchema }, (req, res) => {
+ *   // At this point, req.body and req.query are correctly typed
+ *   // and have been validated to match the schemas.
+ *   // ...
+ * });
+ *
+ * // To use this router in your express application:
+ * app.use('/api', router.asRouter());
+ * ```
+ *
+ * @class ValidatedRouter
+ */
 export class ValidatedRouter {
   private router: Router
 
@@ -72,28 +122,28 @@ export class ValidatedRouter {
     this.router = express.Router()
   }
 
-  get (path: string, schema: Pick<ValidationSchemas, "querySchema" | "pathParamsSchema">, ...handlers: RequestHandler[]): this {
-    this.router.get(path, validateRequest(schema), ...handlers)
+  get<Schema extends ValidationSchemas> (path: string, schema: Pick<Schema, "querySchema" | "pathParamsSchema">, ...handlers: ValidatedRequestHandler<Schema>[]): this {
+    this.router.get(path, validateRequest(schema), ...handlers as any)
     return this
   }
 
-  delete (path: string, schema: ValidationSchemas, ...handlers: RequestHandler[]): this {
-    this.router.delete(path, validateRequest(schema), ...handlers)
+  delete<Schema extends ValidationSchemas> (path: string, schema: Schema, ...handlers: ValidatedRequestHandler<Schema>[]): this {
+    this.router.delete(path, validateRequest(schema), ...handlers as any)
     return this
   }
 
-  patch (path: string, schema: ValidationSchemas, ...handlers: RequestHandler[]): this {
-    this.router.patch(path, validateRequest(schema), ...handlers)
+  patch<Schema extends ValidationSchemas> (path: string, schema: Schema, ...handlers: ValidatedRequestHandler<Schema>[]): this {
+    this.router.patch(path, validateRequest(schema), ...handlers as any)
     return this
   }
 
-  put (path: string, schema: ValidationSchemas, ...handlers: RequestHandler[]): this {
-    this.router.put(path, validateRequest(schema), ...handlers)
+  put<Schema extends ValidationSchemas> (path: string, schema: Schema, ...handlers: ValidatedRequestHandler<Schema>[]): this {
+    this.router.put(path, validateRequest(schema), ...handlers as any)
     return this
   }
 
-  post (path: string, schema: ValidationSchemas, ...handlers: RequestHandler[]): this {
-    this.router.post(path, validateRequest(schema), ...handlers)
+  post<Schema extends ValidationSchemas> (path: string, schema: Schema, ...handlers: ValidatedRequestHandler<Schema>[]): this {
+    this.router.post(path, validateRequest(schema), ...handlers as any)
     return this
   }
 

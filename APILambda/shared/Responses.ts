@@ -18,5 +18,5 @@ export const userNotFoundBody = (userId: string) => ({
    * @param userId the id of the user who was not found.
    */
 export const userNotFoundResponse = (res: Response, userId: string) => {
-  res.status(404).json(userNotFoundBody(userId))
+  return res.status(404).json(userNotFoundBody(userId))
 }

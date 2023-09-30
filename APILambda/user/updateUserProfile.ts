@@ -1,6 +1,7 @@
-import { ServerEnvironment } from "../env"
-import { ValidatedRouter } from "../validation"
-import { updateUserProfile } from "./SQL"
+import { z } from "zod"
+import { ServerEnvironment } from "../env.js"
+import { ValidatedRouter } from "../validation.js"
+import { updateUserProfile } from "./SQL.js"
 
 /**
  * Creates routes related to user operations.
@@ -12,14 +13,21 @@ export const updateUserProfileRouter = (environment: ServerEnvironment, router: 
   /**
    * updates the current user's profile
    */
-  router.patch("/self", {}, async (req, res) => {
-    await environment.conn.transaction(async (tx) => {
-      const result = await updateUserProfile(tx, {
+  router.patch("/self", {
+    bodySchema: z.object({
+      handle: z.string(),
+      name: z.string(),
+      bio: z.string()
+    })
+  }, async (req, res) => {
+    const result = await environment.conn.transaction(async (tx) => {
+      return await updateUserProfile(tx, {
         selfId: res.locals.selfId,
         ...req.body
       })
-      return res.status(200).json({ result })
     })
+
+    return res.status(200).json({ result })
   })
 
   return router
