@@ -162,7 +162,7 @@ These tests make HTTP requests to the new "products" route and assert that the r
 
 HTTP Request/Response <-> Express Server <-> Planetscale (SQL)
 
-- APILambda <-> mobile app
+![image-1 drawio](https://github.com/tifapp/FitnessProjectBackend/assets/70039847/8ce31b28-3c75-466d-9fe5-ea274d118336)
 
 - GeocodingLambda <-> APILambda
 
