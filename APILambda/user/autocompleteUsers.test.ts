@@ -1,7 +1,6 @@
-import { randomUUID } from "crypto"
 import { resetDatabaseBeforeEach } from "../test/database.js"
 import { callAutocompleteUsers, callPostUser } from "../test/helpers/users.js"
-import { generateMockAuthorizationHeader, mockClaims } from "../test/testVariables.js"
+import { generateMockAuthorizationHeader } from "../test/testVariables.js"
 
 describe("AutocompleteUsers tests", () => {
   resetDatabaseBeforeEach()
@@ -30,8 +29,8 @@ describe("AutocompleteUsers tests", () => {
   })
 
   it("should only query up to the limit", async () => {
-    await callPostUser(generateMockAuthorizationHeader({ ...mockClaims, sub: randomUUID(), name: "Gojo" }))
-    await callPostUser(generateMockAuthorizationHeader({ ...mockClaims, sub: randomUUID(), name: "Gojo" }))
+    await callPostUser(generateMockAuthorizationHeader({ name: "Gojo" }))
+    await callPostUser(generateMockAuthorizationHeader({ name: "Gojo" }))
 
     const resp = await callAutocompleteUsers("go", 1)
     expect(resp.status).toEqual(200)
