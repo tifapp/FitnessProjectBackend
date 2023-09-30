@@ -2,14 +2,14 @@ import { randomInt } from "crypto"
 import { resetDatabaseBeforeEach } from "../test/database.js"
 import { callCreateEvent, callGetEventChatToken } from "../test/helpers/events.js"
 import { callPostUser } from "../test/helpers/users.js"
-import { generateMockAuthorizationHeader, testEvents, testAuthorizationHeader } from "../test/testVariables.js"
+import { generateMockAuthorizationHeader, testAuthorizationHeader, testEvents } from "../test/testVariables.js"
 
 describe("GetTokenRequest tests", () => {
   resetDatabaseBeforeEach()
 
   // TODO: Make shared util for this
   // it("should return 401 if user does not exist", async () => {
-  //   const resp = await callGetEventChatToken(testUserIdentifier, randomInt(1000))
+  //   const resp = await callGetEventChatToken(testAuthorizationHeader, randomInt(1000))
 
   //   expect(resp.status).toEqual(401)
   //   expect(resp.body).toMatchObject({ body: "user does not exist" })

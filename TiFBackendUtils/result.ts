@@ -47,3 +47,5 @@ export class FailureResult<Failure> {
 export type Result<Success, Failure> =
 | SuccessResult<Success>
 | FailureResult<Failure>;
+
+// try a mondaic class

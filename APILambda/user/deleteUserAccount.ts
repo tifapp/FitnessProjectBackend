@@ -16,7 +16,7 @@ export const deleteUserAccountRouter = (environment: ServerEnvironment, router: 
    */
   router.delete("/self", {}, async (_, res) => {
     if (await userWithIdExists(environment.conn, res.locals.selfId)) {
-      return res.status(204).send()
+      return res.status(204).send("No Content")
     }
     return userNotFoundResponse(res, res.locals.selfId)
   })

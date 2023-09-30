@@ -20,6 +20,6 @@ export const updateCurrentUserSettingsRouter = (environment: ServerEnvironment, 
     if (result.status === "error") {
       return userNotFoundResponse(res, res.locals.selfId)
     }
-    return res.status(204).send()
+    return res.status(204).send("No Content")
   })
 }
