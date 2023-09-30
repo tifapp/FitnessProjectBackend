@@ -1,8 +1,8 @@
 import { z } from "zod"
-import { ServerEnvironment } from "../env"
-import { withValidatedRequest } from "../validation"
+import { ServerEnvironment } from "../env.js"
+import { withValidatedRequest } from "../validation.js"
 import { UserHandle } from "TiFBackendUtils"
-import { SQLExecutable, queryResults } from "../dbconnection"
+import { SQLExecutable, queryResults } from "../dbconnection.js"
 // eslint-disable-next-line no-restricted-imports
 import { Router } from "express"
 

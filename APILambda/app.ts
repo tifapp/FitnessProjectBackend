@@ -40,7 +40,7 @@ const addEventRoutes = (environment: ServerEnvironment) => {
 const addUserRoutes = (environment: ServerEnvironment) => {
   const router = new ValidatedRouter()
   autocompleteUsersRouter(environment, router.asRouter())
-  createUserProfileRouter(environment, router.asRouter())
+  createUserProfileRouter(environment, router)
   deleteUserAccountRouter(environment, router)
   getCurrentUserSettingsRouter(environment, router)
   getUserInfoRouter(environment, router)

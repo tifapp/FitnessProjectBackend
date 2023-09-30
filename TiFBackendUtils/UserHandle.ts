@@ -1,4 +1,4 @@
-import { ZodUtils } from "./Zod"
+import { ZodUtils } from "./Zod.js"
 
 /**
  * A class representing a valid user handle string.

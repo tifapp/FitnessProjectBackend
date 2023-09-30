@@ -3,7 +3,7 @@
  */
 
 import { LocationCoordinate2D, Retryable, SearchClosestAddressToCoordinates, exponentialFunctionBackoff } from "TiFBackendUtils"
-import { addPlacemarkToDB, checkExistingPlacemarkInDB } from "./utils"
+import { addPlacemarkToDB, checkExistingPlacemarkInDB } from "./utils.js"
 
 interface LocationSearchRequest extends Retryable { location: LocationCoordinate2D }
 

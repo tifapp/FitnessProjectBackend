@@ -40,7 +40,6 @@ interface ValidationSchemas {
 export const validateRequest = ({ bodySchema, querySchema, pathParamsSchema }: ValidationSchemas) =>
   (req: Request, res: Response, next: NextFunction) => {
     try {
-      console.log(req.query, querySchema)
       if (bodySchema) {
         req.body = bodySchema.parse(req.body)
       } else if (Object.keys(req.body).length !== 0) {

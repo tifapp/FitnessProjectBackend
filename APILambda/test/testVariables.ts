@@ -84,19 +84,29 @@ export const mockClaims: AuthClaims = {
   sub: randomUUID(),
   name: "John Doe",
   email: "john.doe@example.com",
+  // properties taken from cognito
+  // eslint-disable-next-line @typescript-eslint/naming-convention
   email_verified: true,
+  // eslint-disable-next-line @typescript-eslint/naming-convention
   phone_number: "+1234567890",
+  // eslint-disable-next-line @typescript-eslint/naming-convention
   phone_number_verified: true
 }
 
-export const generateMockToken = (claims: AuthClaims) => {
+export const generateMockAuthorizationHeader = (claims: Partial<AuthClaims>) => {
   const secret = "supersecret"
 
-  const token = jwt.sign(claims, secret, { algorithm: "HS256" })
+  const tokenPayload = { ...mockClaims, ...claims }
 
-  return token
+  if (!("sub" in claims)) {
+    tokenPayload.sub = randomUUID()
+  }
+
+  const token = jwt.sign(tokenPayload, secret, { algorithm: "HS256" })
+
+  return `Bearer ${token}`
 }
 
-export const mockToken = generateMockToken(mockClaims)
+export const mockToken = generateMockAuthorizationHeader(mockClaims)
 
-export const testUserIdentifier = `Bearer ${process.env.USER_TOKEN ?? mockToken}`
+export const testAuthorizationHeader = process.env.USER_TOKEN ?? mockToken

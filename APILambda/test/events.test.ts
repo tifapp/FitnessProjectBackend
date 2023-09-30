@@ -1,13 +1,13 @@
 import { randomInt, randomUUID } from "crypto"
-import { conn } from "../dbconnection"
-import { insertEvent } from "../events"
-import { determineChatPermissions } from "../events/getChatToken"
+import { conn } from "../dbconnection.js"
+import { determineChatPermissions } from "../events/getChatToken.js"
+import { insertEvent } from "../events/index.js"
 import {
   expectFailsCheckConstraint,
   resetDatabaseBeforeEach
-} from "./database"
-import { callGetEvent } from "./helpers/events"
-import { testEvents, testUserIdentifier } from "./testVariables"
+} from "./database.js"
+import { callGetEvent } from "./helpers/events.js"
+import { testEvents, testAuthorizationHeader } from "./testVariables.js"
 
 describe("Events tests", () => {
   resetDatabaseBeforeEach()
@@ -31,7 +31,7 @@ describe("Events tests", () => {
   describe("GetSingleEvent tests", () => {
     it("should return 404 if the event doesnt exist", async () => {
       const eventId = randomInt(1000)
-      const resp = await callGetEvent(testUserIdentifier, eventId)
+      const resp = await callGetEvent(testAuthorizationHeader, eventId)
 
       expect(resp.status).toEqual(404)
       expect(resp.body).toMatchObject({ error: "event-not-found", eventId })

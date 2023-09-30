@@ -1,7 +1,7 @@
 import { ServerEnvironment } from "../env.js"
 import { userNotFoundResponse } from "../shared/Responses.js"
-import { ValidatedRouter } from "../validation"
-import { overwriteUserSettings } from "./SQL"
+import { ValidatedRouter } from "../validation.js"
+import { overwriteUserSettings } from "./SQL.js"
 import { UserSettingsSchema } from "./models.js"
 
 /**

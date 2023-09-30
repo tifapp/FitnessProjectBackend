@@ -1,5 +1,5 @@
-import { conn } from "../dbconnection"
-import { generateUniqueUsername } from "./generateUserHandle"
+import { conn } from "../dbconnection.js"
+import { generateUniqueUsername } from "./generateUserHandle.js"
 
 describe("generateUniqueUsername", () => {
   it("should generate a unique usernames from the same name", async () => {

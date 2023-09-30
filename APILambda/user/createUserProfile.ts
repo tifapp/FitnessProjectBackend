@@ -7,6 +7,10 @@ import { generateUniqueUsername } from "./generateUserHandle.js"
 
 export const createUserProfileRouter = (environment: ServerEnvironment, router: ValidatedRouter) =>
   router.post("/", {}, async (req, res) => {
+    if (res.locals.name === "") {
+      return res.status(401).json({ error: "invalid-claims" })
+    }
+
     const registerReq = {
       id: res.locals.selfId,
       name: res.locals.name
@@ -26,6 +30,7 @@ export const createUserProfileRouter = (environment: ServerEnvironment, router: 
 
       return res.status(201).json(result.value)
     } catch (e) {
+      console.log("create user error is ", e)
       return res.status(500).json({ error: e })
     }
   })

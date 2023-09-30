@@ -1,15 +1,15 @@
 import { randomUUID } from "crypto"
-import { resetDatabaseBeforeEach } from "../test/database"
-import { callAutocompleteUsers, callPostUser } from "../test/helpers/users"
-import { generateMockToken, mockClaims } from "../test/testVariables"
+import { resetDatabaseBeforeEach } from "../test/database.js"
+import { callAutocompleteUsers, callPostUser } from "../test/helpers/users.js"
+import { generateMockAuthorizationHeader, mockClaims } from "../test/testVariables.js"
 
 describe("AutocompleteUsers tests", () => {
   resetDatabaseBeforeEach()
 
-  test("basic request", async () => {
-    const user1Data = (await callPostUser(generateMockToken({ ...mockClaims, sub: randomUUID(), name: "Bitchell Dickle" }))).body
-    await callPostUser(generateMockToken({ ...mockClaims, name: "Gojo" }))
-    const user2Data = (await callPostUser(generateMockToken({ ...mockClaims, sub: randomUUID(), name: "Big Chungus" }))).body
+  test("autocomplete endpoint basic request", async () => {
+    const user1Data = (await callPostUser(generateMockAuthorizationHeader({ name: "Bitchell Dickle" }))).body
+    await callPostUser(generateMockAuthorizationHeader({ name: "Gojo" }))
+    const user2Data = (await callPostUser(generateMockAuthorizationHeader({ name: "Big Chungus" }))).body
 
     const resp = await callAutocompleteUsers("bi", 50)
     expect(resp.status).toEqual(200)
@@ -30,8 +30,8 @@ describe("AutocompleteUsers tests", () => {
   })
 
   it("should only query up to the limit", async () => {
-    await callPostUser(generateMockToken({ ...mockClaims, sub: randomUUID(), name: "Gojo" }))
-    await callPostUser(generateMockToken({ ...mockClaims, sub: randomUUID(), name: "Gojo" }))
+    await callPostUser(generateMockAuthorizationHeader({ ...mockClaims, sub: randomUUID(), name: "Gojo" }))
+    await callPostUser(generateMockAuthorizationHeader({ ...mockClaims, sub: randomUUID(), name: "Gojo" }))
 
     const resp = await callAutocompleteUsers("go", 1)
     expect(resp.status).toEqual(200)
