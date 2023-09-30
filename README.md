@@ -158,30 +158,29 @@ describe("GET /new-product/:id", () => {
 
 These tests make HTTP requests to the new "products" route and assert that the response is as expected. The first test is for a successful transaction with a valid ID, while the second test is for an error scenario where an invalid ID is provided.
 
-![image-2 drawio](https://github.com/tifapp/FitnessProjectBackend/assets/70039847/202c1973-4ed2-4887-859e-4b74eeced128)
-
-
-![image-1 drawio](https://github.com/tifapp/FitnessProjectBackend/assets/70039847/8ce31b28-3c75-466d-9fe5-ea274d118336)
+# Geocoding Lambda
 
 ![image3 drawio](https://github.com/tifapp/FitnessProjectBackend/assets/70039847/2366e521-0e75-4e13-ae56-8953c2d30840)
-
-# Geocoding Lambda
 
 - Purpose of Geocoding Lambda: Transform the location into an address
 
 # API Lambda
 
+![image-1 drawio](https://github.com/tifapp/FitnessProjectBackend/assets/70039847/8ce31b28-3c75-466d-9fe5-ea274d118336)
+
 - Within the APILambda consists of different folders that have the different data types: users and events. These are the data types the lambda will work with.
 
 # Rules for creating an endpoint
+
+![image-2 drawio](https://github.com/tifapp/FitnessProjectBackend/assets/70039847/202c1973-4ed2-4887-859e-4b74eeced128)
 
 - Each endpoint will have its own file that contains the code to take in a HTTP Request and return a HTTP response
 
 - Each endpoint will have its own test file
 
-- When needed create a a helper method inside the /test/helpers. The purpose of these endpoints is to artifically call the endpoint passing in our data in the request body.
+- When needed create a helper method inside the /test/helpers. The purpose of these helpers is to artifically call the endpoint passing in our data in the request body.
 
-- The req includes the query params and json body
+- The req includes the path params, query params, and json body
 
 - All of the routes in the user folder will be prepended with the /user path when the mobile path visits the API.
 
@@ -189,7 +188,7 @@ These tests make HTTP requests to the new "products" route and assert that the r
 
 - Important: If we call multiple SQL statements within a transaction, it ensures that the operation is atomic. 
 
-- If we start a transaction, it will lock the database. 
+- Warning: If we start a transaction, it will lock the database. 
 
 Ably Client -> mobile app
 
@@ -197,7 +196,8 @@ Ably Client -> mobile app
 
 - The server will validate the request and pass a token request to the mobile app. The mobile app will use that token request to communicate with Ably and connect to the channels. 
 
-- Endpoint for the individual channel
+# Endpoint for Channel
+
 -> Reason the user can open the channel through event details or notification
 -> It will return the token for the channel and any info needed to connect to the chatroom
 -> It will be tied to events
