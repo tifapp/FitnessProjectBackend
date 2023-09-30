@@ -235,33 +235,6 @@ const addPendingFriendRequest = async (
   )
 }
 
-export type UpdateUserRequest = {
-  selfId: string;
-  name: string;
-  bio: string;
-  handle: string;
-};
-
-/**
- * Updates the current user's profile with the given settings.
- *
- * @param conn the query executor to use
- * @param request the fields of the user's profile to update
- */
-export const updateUserProfile = async (
-  conn: SQLExecutable,
-  request: UpdateUserRequest
-) => {
-  await conn.execute(
-    `
-    UPDATE user 
-    SET name = :name, bio = :bio, handle = :handle
-    WHERE id = :selfId 
-  `,
-    request
-  )
-}
-
 /**
  * Attempts to register a new user in the database.
  *
