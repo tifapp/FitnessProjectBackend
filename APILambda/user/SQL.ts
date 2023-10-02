@@ -7,7 +7,7 @@ import {
 import { Result } from "../utils.js";
 import {
   DEFAULT_USER_SETTINGS,
-  User,
+  DatabaseUser,
   UserSettings,
   UserToProfileRelationStatus
 } from "./models.js";
@@ -142,7 +142,7 @@ const queryUserSettings = async (conn: SQLExecutable, userId: string) => {
  * Queries the user with the given id.
  */
 export const userWithId = async (conn: SQLExecutable, userId: string) => {
-  return await queryFirst<User>(conn, "SELECT * FROM user WHERE id = :userId", {
+  return await queryFirst<DatabaseUser>(conn, "SELECT * FROM user WHERE id = :userId", {
     userId
   })
 }
@@ -235,33 +235,6 @@ const addPendingFriendRequest = async (
   )
 }
 
-export type UpdateUserRequest = {
-  selfId: string;
-  name: string;
-  bio: string;
-  handle: string;
-};
-
-/**
- * Updates the current user's profile with the given settings.
- *
- * @param conn the query executor to use
- * @param request the fields of the user's profile to update
- */
-export const updateUserProfile = async (
-  conn: SQLExecutable,
-  request: UpdateUserRequest
-) => {
-  await conn.execute(
-    `
-    UPDATE user 
-    SET name = :name, bio = :bio, handle = :handle
-    WHERE id = :selfId 
-  `,
-    request
-  )
-}
-
 /**
  * Attempts to register a new user in the database.
  *
@@ -273,7 +246,7 @@ export const registerNewUser = async (
   conn: SQLExecutable,
   request: RegisterUserRequest
 ): Promise<
-  Result<{ id: string }, "user-already-exists" | "duplicate-handle">
+  Result<{ id: string, handle: string }, "user-already-exists" | "duplicate-handle">
 > => {
   if (await userWithIdExists(conn, request.id)) {
     return { status: "error", value: "user-already-exists" }
@@ -284,10 +257,10 @@ export const registerNewUser = async (
   }
 
   await insertUser(conn, request)
-  return { status: "success", value: { id: request.id } }
+  return { status: "success", value: { id: request.id, handle: request.handle } }
 }
 
-const userWithHandleExists = async (conn: SQLExecutable, handle: string) => {
+export const userWithHandleExists = async (conn: SQLExecutable, handle: string) => {
   return await hasResults(
     conn,
     "SELECT TRUE FROM user WHERE handle = :handle",

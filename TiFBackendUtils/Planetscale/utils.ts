@@ -1,5 +1,6 @@
 import { Field, cast, connect } from "@planetscale/database"
 import { envVars } from "./env.js"
+import fetch from "node-fetch"
 
 /**
  * A cast function that turns all INT8 types into booleans.

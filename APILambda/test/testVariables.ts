@@ -1,8 +1,8 @@
 import { faker } from "@faker-js/faker"
 import { randomUUID } from "crypto"
-import { Application } from "express"
+import jwt from "jsonwebtoken"
 import { addRoutes, createApp } from "../app.js"
-import { UNAUTHORIZED_RESPONSE } from "../auth.js"
+import { AuthClaims, addCognitoTokenVerification } from "../auth.js"
 import { conn } from "../dbconnection.js"
 import { ServerEnvironment } from "../env.js"
 import { CreateEventInput } from "../events/index.js"
@@ -14,16 +14,6 @@ export const testEnv: ServerEnvironment = {
   conn
 }
 
-const addTestAuth = (app: Application) => {
-  app.use((req, res, next) => {
-    if (!req.headers.authorization) {
-      return res.status(401).json(UNAUTHORIZED_RESPONSE)
-    }
-    res.locals.selfId = req.headers.authorization
-    next()
-  })
-}
-
 /**
  * Creates a test environment application.
  *
@@ -33,7 +23,7 @@ export const testApp = testEnv.environment === "staging"
   ? process.env.API_ENDPOINT
   : (() => {
     const app = createApp()
-    testEnv.environment === "dev" && addTestAuth(app)
+    addCognitoTokenVerification(app, testEnv)
     addRoutes(app, testEnv)
     return app
   })()
@@ -56,9 +46,7 @@ const createTestUsers = (users: number) => {
   return result
 }
 
-export const testUsers = createTestUsers(10)
-
-export const testUserIdentifier = testEnv.environment === "staging" ? `Bearer ${process.env.USER_TOKEN!}` : randomUUID()
+export const testUsers: RegisterUserRequest[] = createTestUsers(10)
 
 const mockLocationCoordinate2D = () => ({
   latitude: parseFloat(faker.address.latitude()),
@@ -91,3 +79,34 @@ const createTestEvents = (events: number) => {
 }
 
 export const testEvents = createTestEvents(10)
+
+export const mockClaims: AuthClaims = {
+  sub: randomUUID(),
+  name: "John Doe",
+  email: "john.doe@example.com",
+  // properties taken from cognito
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  email_verified: true,
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  phone_number: "+1234567890",
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  phone_number_verified: true
+}
+
+export const generateMockAuthorizationHeader = (claims: Partial<AuthClaims>) => {
+  const secret = "supersecret"
+
+  const tokenPayload = { ...mockClaims, ...claims }
+
+  if (!("sub" in claims)) {
+    tokenPayload.sub = randomUUID()
+  }
+
+  const token = jwt.sign(tokenPayload, secret, { algorithm: "HS256" })
+
+  return `Bearer ${token}`
+}
+
+export const mockToken = generateMockAuthorizationHeader(mockClaims)
+
+export const testAuthorizationHeader = process.env.USER_TOKEN ?? mockToken

@@ -1,38 +1,25 @@
 import { ServerEnvironment } from "../env.js"
-import { withValidatedRequest } from "../validation"
-import { overwriteUserSettings } from "./SQL"
 import { userNotFoundResponse } from "../shared/Responses.js"
-import { z } from "zod"
+import { ValidatedRouter } from "../validation.js"
+import { overwriteUserSettings } from "./SQL.js"
 import { UserSettingsSchema } from "./models.js"
-import { Router } from "express"
-
-const PatchUserSettingsRequestSchema = z.object({
-  body: UserSettingsSchema.partial()
-})
 
 /**
  * Creates routes related to user operations.
  *
  * @param environment see {@link ServerEnvironment}.
  */
-export const updateCurrentUserSettingsRouter = (environment: ServerEnvironment, router: Router) => {
+export const updateCurrentUserSettingsRouter = (environment: ServerEnvironment, router: ValidatedRouter) => {
   /**
    * updates the current user's settings
    */
-  router.patch("/self/settings", async (req, res) => {
-    await withValidatedRequest(
-      req,
-      res,
-      PatchUserSettingsRequestSchema,
-      async (data) => {
-        const result = await environment.conn.transaction(async (tx) => {
-          return await overwriteUserSettings(tx, res.locals.selfId, data.body)
-        })
-        if (result.status === "error") {
-          return userNotFoundResponse(res, res.locals.selfId)
-        }
-        return res.status(204).send()
-      }
-    )
+  router.patch("/self/settings", { bodySchema: UserSettingsSchema.partial() }, async (req, res) => {
+    const result = await environment.conn.transaction(async (tx) => {
+      return await overwriteUserSettings(tx, res.locals.selfId, req.body)
+    })
+    if (result.status === "error") {
+      return userNotFoundResponse(res, res.locals.selfId)
+    }
+    return res.status(204).send("No Content")
   })
 }

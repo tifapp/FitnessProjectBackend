@@ -32,7 +32,7 @@ export const DEFAULT_USER_SETTINGS = {
 /**
  * A type representing the main user fields.
  */ // use zod schema for validation then transformation
-export type User = {
+export type DatabaseUser = {
   id: string; // assign to a type for clarity
   name: string;
   handle: string; // userhandle class

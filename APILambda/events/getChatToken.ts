@@ -1,5 +1,5 @@
 import { Connection } from "@planetscale/database"
-import { Router } from "express"
+import { z } from "zod"
 import { AblyTokenRequest, ChatPermissions, createTokenRequest } from "../ably.js"
 import {
   // selectLastInsertionNumericId,
@@ -8,6 +8,7 @@ import {
 import { ServerEnvironment } from "../env.js"
 import { DatabaseEvent, getEventWithId } from "../shared/SQL.js"
 import { Result } from "../utils.js"
+import { ValidatedRouter } from "../validation.js"
 
 type Role = "admin" | "attendee" | "viewer";
 
@@ -26,7 +27,7 @@ const rolesMap: Record<Role, ChatPermissions> = {
   }
 }
 
-type EventUserAccessError = "event does not exist" | "user is not apart of event" | "user is blocked by event host"
+type EventUserAccessError = "event does not exist" | "user is not apart of event" | "user is blocked by event host" | "user does not exist"
 
 type ChatResult = Result<{ id: string, tokenRequest: AblyTokenRequest}, EventUserAccessError | "cannot generate token">
 
@@ -92,18 +93,24 @@ ChatResult> => {
   }
 }
 
+const eventRequestSchema = z
+  .object({
+    eventId: z.string()
+  })
+
 /**
  * Creates routes related to event operations.
  *
  * @param environment see {@link ServerEnvironment}.
  */
-export const createChatTokenRouter = (environment: ServerEnvironment, router: Router) => {
+export const getChatTokenRouter = (environment: ServerEnvironment, router: ValidatedRouter) => {
   /**
    * Get token for event's chat room
    */
-  router.get("/chat/:eventId", async (req, res) => {
+  router.get("/chat/:eventId", { pathParamsSchema: eventRequestSchema }, async (req, res) => {
     const result = await createTokenRequestWithPermissionsTransaction(environment.conn, Number(req.params.eventId), res.locals.selfId)
 
+    // TODO: should use a map of result.values to error codes to avoid this conditional
     if (result.status === "error") {
       if (result.value === "user is blocked by event host") {
         return res.status(403).json({ body: result.value })

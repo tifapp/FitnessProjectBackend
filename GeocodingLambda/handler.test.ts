@@ -1,5 +1,8 @@
+/* eslint-disable no-multi-str */
+// address formatting
+
 import { conn } from "TiFBackendUtils"
-import { handler } from "."
+import { handler } from "./index.js"
 
 describe("Geocoding lambda tests", () => {
   it("Should insert a placemark with the proper address with the given lat/lon", async () => {
@@ -8,7 +11,7 @@ describe("Geocoding lambda tests", () => {
     const result = await handler({ location: { latitude: 36.99813840222285, longitude: -122.05564377465653 } })
 
     expect(result).toEqual("Placemark at {\"latitude\":36.99813840222285,\"longitude\":-122.05564377465653} successfully inserted. Address is \
-\{\"lat\":36.99813840222285,\
+{\"lat\":36.99813840222285,\
 \"lon\":-122.05564377465653,\
 \"name\":\"420 Hagar Dr, Santa Cruz, CA 95064, United States\",\
 \"city\":\"Westside\",\

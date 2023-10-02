@@ -1,5 +1,5 @@
 import { LocationClient, Place, SearchPlaceIndexForPositionCommand } from "@aws-sdk/client-location"
-import { LocationCoordinate2D, Placemark } from "../location"
+import { LocationCoordinate2D, Placemark } from "../location.js"
 
 const locationClient = new LocationClient({ region: "us-west-2" })
 

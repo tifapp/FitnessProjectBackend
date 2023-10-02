@@ -1,38 +1,36 @@
-import { Router } from "express"
-import { z } from "zod"
 import { ServerEnvironment } from "../env.js"
-import { withValidatedRequest } from "../validation.js"
+import { ValidatedRouter } from "../validation.js"
 import {
   registerNewUser
 } from "./SQL.js"
+import { generateUniqueUsername } from "./generateUserHandle.js"
 
-const CreateUserSchema = z.object({
-  body: z.object({
-    name: z.string().max(50),
-    handle: z.string().regex(/^[a-z_0-9]{1,15}$/)
-  })
-})
+export const createUserProfileRouter = (environment: ServerEnvironment, router: ValidatedRouter) =>
+  router.post("/", {}, async (req, res) => {
+    if (res.locals.name === "") {
+      return res.status(401).json({ error: "invalid-claims" })
+    }
 
-/**
- * Creates routes related to user operations.
- *
- * @param environment see {@link ServerEnvironment}.
- */
-export const createUserRouter = (environment: ServerEnvironment, router: Router) => {
-  /**
-   * creates a new user
-   */
-  router.post("/", async (req, res) => {
-    await withValidatedRequest(req, res, CreateUserSchema, async (data) => {
+    const registerReq = {
+      id: res.locals.selfId,
+      name: res.locals.name
+    }
+    // Check if we can pass this data as a req so then we can reuse the validation middleware.
+
+    try {
+      const handle = await generateUniqueUsername(environment.conn, registerReq.name)
+
       const result = await environment.conn.transaction(async (tx) => {
-        const registerReq = Object.assign(data.body, { id: res.locals.selfId })
-        return await registerNewUser(tx, registerReq)
+        return await registerNewUser(tx, Object.assign(registerReq, { handle }))
       })
 
       if (result.status === "error") {
         return res.status(400).json({ error: result.value })
       }
+
       return res.status(201).json(result.value)
-    })
+    } catch (e) {
+      console.log("create user error is ", e)
+      return res.status(500).json({ error: e })
+    }
   })
-}

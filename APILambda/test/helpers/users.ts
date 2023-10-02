@@ -1,49 +1,64 @@
 import request from "supertest"
-import { RegisterUserRequest, UserSettings } from "../../user"
-import { testApp } from "../testVariables"
+import { UserSettings } from "../../user/index.js"
+import { testApp, testAuthorizationHeader } from "../testVariables.js"
 
-export const callPatchSettings = async (selfId: string, settings: Partial<UserSettings>) => {
+export const callPatchSettings = async (bearerToken: string, settings: Partial<UserSettings>) => {
   return await request(testApp)
     .patch("/user/self/settings")
-    .set("Authorization", selfId)
+    .set("Authorization", bearerToken)
     .send(settings)
 }
 
-export const callGetSettings = async (selfId: string) => {
+export const callGetSettings = async (bearerToken: string) => {
   return await request(testApp)
     .get("/user/self/settings")
-    .set("Authorization", selfId)
+    .set("Authorization", bearerToken)
     .send()
 }
 
-export const callGetSelf = async (selfId: string) => {
-  return await request(testApp).get("/user/self").set("Authorization", selfId).send()
+export const callGetSelf = async (bearerToken: string) => {
+  return await request(testApp).get("/user/self").set("Authorization", bearerToken).send()
 }
 
-export const callPostFriendRequest = async (selfId: string, toUser: string) => {
+export const callPostFriendRequest = async (bearerToken: string, toUser: string) => {
   return await request(testApp)
     .post(`/user/friend/${toUser}`)
-    .set("Authorization", selfId)
+    .set("Authorization", bearerToken)
     .send()
 }
 
-export const callPostUser = async (selfId: string, req: Omit<RegisterUserRequest, "id">) => {
-  return await request(testApp).post("/user").set("Authorization", selfId).send({
-    name: req.name,
-    handle: req.handle
-  })
+export const callPostUser = async (bearerToken?: string) => {
+  if (!bearerToken) {
+    return await request(testApp).post("/user").send()
+  }
+  return await request(testApp).post("/user").set("Authorization", bearerToken).send()
 }
 
-export const callGetUser = async (youId: string, selfId: string) => {
+export const callGetUser = async (bearerToken: string, userId: string) => {
   return await request(testApp)
-    .get(`/user/${selfId}`)
-    .set("Authorization", youId)
+    .get(`/user/${userId}`)
+    .set("Authorization", bearerToken)
     .send()
 }
 
-export const callDeleteSelf = async (selfId: string) => {
+export const callDeleteSelf = async (bearerToken: string) => {
   return await request(testApp)
     .delete("/user/self")
-    .set("Authorization", selfId)
+    .set("Authorization", bearerToken)
     .send()
+}
+
+export const callAutocompleteUsers = async (handle: string, limit: number) => {
+  return await request(testApp)
+    .get("/user/autocomplete")
+    .query({ handle, limit })
+    .set("Authorization", testAuthorizationHeader)
+    .send()
+}
+
+export const callUpdateUserHandle = async (userId: string, userHandle: string) => {
+  return await request(testApp)
+    .patch("/user/self")
+    .set("Authorization", userId)
+    .send({ handle: userHandle })
 }

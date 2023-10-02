@@ -1,47 +1,46 @@
-import {
-  insertUser
-} from "."
-import { conn } from "../dbconnection"
-import { resetDatabaseBeforeEach } from "../test/database"
-import { callPostUser } from "../test/helpers/users"
-import { testUserIdentifier, testUsers } from "../test/testVariables"
+import { resetDatabaseBeforeEach } from "../test/database.js"
+import { callPostUser } from "../test/helpers/users.js"
+import { generateMockAuthorizationHeader, mockClaims, testAuthorizationHeader } from "../test/testVariables.js"
 
 describe("Create User Profile tests", () => {
   resetDatabaseBeforeEach()
 
-  it("should 400 on invalid request body", async () => {
-    const resp = await callPostUser(testUserIdentifier, {
-      name: 1,
-      handle: "iusdbdkjbsjbdjsbdsdsudbusybduysdusdudbsuyb"
-    } as any)
+  // TODO: Move to separate unit test file for auth middleware
+  it("should 401 when no token is passed", async () => {
+    const resp = await callPostUser()
 
-    expect(resp.status).toEqual(400)
-    expect(resp.body).toMatchObject({ error: "invalid-request" })
+    expect(resp.status).toEqual(401)
+    expect(resp.body).toMatchObject({ error: "invalid-headers" })
   })
 
-  it("should 201 when creating a user with a unique id and handle", async () => {
-    const resp = await callPostUser(testUserIdentifier, testUsers[0])
+  it("should 401 when user is not verified", async () => {
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    const resp = await callPostUser(generateMockAuthorizationHeader({ email_verified: false, phone_number_verified: false }))
 
-    expect(resp.status).toEqual(201)
-    expect(resp.body).toMatchObject({ id: testUserIdentifier })
+    expect(resp.status).toEqual(401)
+    expect(resp.body).toMatchObject({ error: "unverified-user" })
+  })
+
+  it("should 401 when user is missing 'name' attribute", async () => {
+    const resp = await callPostUser(generateMockAuthorizationHeader({ name: "" }))
+
+    expect(resp.status).toEqual(401)
+    expect(resp.body).toMatchObject({ error: "invalid-claims" })
   })
 
   it("should 400 when trying to create a user with an already existing id", async () => {
-    await callPostUser(testUserIdentifier, testUsers[0])
+    await callPostUser(testAuthorizationHeader)
 
-    const resp = await callPostUser(testUserIdentifier, testUsers[0])
+    const resp = await callPostUser(testAuthorizationHeader)
     expect(resp.status).toEqual(400)
     expect(resp.body).toMatchObject({ error: "user-already-exists" })
   })
 
-  it("should 400 when trying to create a user with a duplicate handle", async () => {
-    await insertUser(conn, testUsers[1])
+  it("should 201 when creating a user with a unique id and handle", async () => {
+    const resp = await callPostUser(testAuthorizationHeader)
 
-    const resp = await callPostUser(testUserIdentifier, {
-      ...testUsers[0],
-      handle: testUsers[1].handle
-    })
-    expect(resp.status).toEqual(400)
-    expect(resp.body).toMatchObject({ error: "duplicate-handle" })
+    expect(resp.status).toEqual(201)
+    expect(resp.body).toMatchObject({ id: mockClaims.sub })
+    expect(resp.body.handle).toBeTruthy()
   })
 })
