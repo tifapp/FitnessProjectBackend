@@ -7,7 +7,7 @@ import {
   resetDatabaseBeforeEach
 } from "./database.js"
 import { callGetEvent } from "./helpers/events.js"
-import { testEvents, testAuthorizationHeader } from "./testVariables.js"
+import { testAuthorizationHeader, testEvents } from "./testVariables.js"
 
 describe("Events tests", () => {
   resetDatabaseBeforeEach()
@@ -39,10 +39,10 @@ describe("Events tests", () => {
 
     // TODO: Timezone issues in CI
     // it("should return an event if it exists in the db", async () => {
-    //   await callPostUser(testUserIdentifier, testUsers[0])
-    //   const event = await callCreateEvent(testUserIdentifier, testEvents[0])
+    //   await callPostUser(testAuthorizationHeader, testUsers[0])
+    //   const event = await callCreateEvent(testAuthorizationHeader, testEvents[0])
 
-    //   const resp = await callGetEvent(testUserIdentifier, event.body.id)
+    //   const resp = await callGetEvent(testAuthorizationHeader, event.body.id)
     //   expect(resp.status).toEqual(200)
     //   expect(resp.body).toMatchObject(testEvents[0])
     // })

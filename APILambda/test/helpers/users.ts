@@ -55,3 +55,10 @@ export const callAutocompleteUsers = async (handle: string, limit: number) => {
     .set("Authorization", testAuthorizationHeader)
     .send()
 }
+
+export const callUpdateUserHandle = async (userId: string, userHandle: string) => {
+  return await request(testApp)
+    .patch("/user/self")
+    .set("Authorization", userId)
+    .send({ handle: userHandle })
+}

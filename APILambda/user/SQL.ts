@@ -7,7 +7,7 @@ import {
 import { Result } from "../utils.js";
 import {
   DEFAULT_USER_SETTINGS,
-  User,
+  DatabaseUser,
   UserSettings,
   UserToProfileRelationStatus
 } from "./models.js";
@@ -142,7 +142,7 @@ const queryUserSettings = async (conn: SQLExecutable, userId: string) => {
  * Queries the user with the given id.
  */
 export const userWithId = async (conn: SQLExecutable, userId: string) => {
-  return await queryFirst<User>(conn, "SELECT * FROM user WHERE id = :userId", {
+  return await queryFirst<DatabaseUser>(conn, "SELECT * FROM user WHERE id = :userId", {
     userId
   })
 }
@@ -232,33 +232,6 @@ const addPendingFriendRequest = async (
   await conn.execute(
     "INSERT INTO userRelations (fromUserId, toUserId, status) VALUES (:senderId, :receiverId, 'friend-request-pending')",
     { senderId, receiverId }
-  )
-}
-
-export type UpdateUserRequest = {
-  selfId: string;
-  name: string;
-  bio: string;
-  handle: string;
-};
-
-/**
- * Updates the current user's profile with the given settings.
- *
- * @param conn the query executor to use
- * @param request the fields of the user's profile to update
- */
-export const updateUserProfile = async (
-  conn: SQLExecutable,
-  request: UpdateUserRequest
-) => {
-  await conn.execute(
-    `
-    UPDATE user 
-    SET name = :name, bio = :bio, handle = :handle
-    WHERE id = :selfId 
-  `,
-    request
   )
 }
 

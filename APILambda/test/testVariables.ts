@@ -46,7 +46,7 @@ const createTestUsers = (users: number) => {
   return result
 }
 
-export const testUsers = createTestUsers(10)
+export const testUsers: RegisterUserRequest[] = createTestUsers(10)
 
 const mockLocationCoordinate2D = () => ({
   latitude: parseFloat(faker.address.latitude()),
