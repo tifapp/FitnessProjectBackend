@@ -39,7 +39,9 @@ jobs:
           
       - name: Install dependencies
         run: |
-          cd APILambda
+          cd TiFBackendUtils
+          npm ci
+          cd ../APILambda
           npm ci
 
       - name: Run tests

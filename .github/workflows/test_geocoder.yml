@@ -40,10 +40,8 @@ jobs:
         run: |
           cd TiFBackendUtils
           npm ci
-          npm pack
           cd ../GeocodingLambda
           npm ci
-          npm install ../TiFBackendUtils/TiFBackendUtils-1.0.0.tgz
 
       - name: Run tests
         run: |
