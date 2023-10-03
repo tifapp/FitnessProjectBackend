@@ -23,6 +23,8 @@ jobs:
         run: |
           cd TiFBackendUtils
           npm ci
+          npm run build
+          npm ci --omit=dev
           npm pack
           cd ../APILambda
           npm ci --omit=dev
