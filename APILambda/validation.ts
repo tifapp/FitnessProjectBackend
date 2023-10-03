@@ -71,6 +71,7 @@ export const validateRequest = ({ bodySchema, querySchema, pathParamsSchema }: V
     }
   }
 
+// AnyZodObject breaks tests
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type InferRequestSchemaType<T> = T extends ZodSchema<any> ? z.infer<T> : never;
 
