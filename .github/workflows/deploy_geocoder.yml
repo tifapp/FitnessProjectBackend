@@ -74,6 +74,16 @@ jobs:
           cp -R !(test|.github|dist|*.ts) dist/
           cd dist
           zip -r ../dist.zip .
+          
+      - name: Update AWS Lambda env variables
+        run: |
+          aws lambda update-function-configuration \
+            --function-name geocodingPipeline \
+            --environment "Variables={\
+              DATABASE_HOST=${{ secrets.DATABASE_HOST }},\
+              DATABASE_USERNAME=${{ secrets.DATABASE_USERNAME }},\
+              DATABASE_PASSWORD=${{ secrets.DATABASE_PASSWORD }}\
+            }"
 
       - name: Deploy to AWS Lambda
         run: |
