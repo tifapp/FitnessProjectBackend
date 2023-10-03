@@ -54,7 +54,7 @@ jobs:
       - name: Install dependencies
         run: |
           cd GeocodingLambda
-          npm ci --omit=dev
+          npm ci
           npm install ../TiFBackendUtils/dist/TiFBackendUtils-1.0.0.tgz
       
       - name: Build the project
