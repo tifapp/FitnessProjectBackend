@@ -1,5 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+// TODO: Replace with backend utils
 import { Connection } from "@planetscale/database"
-import { Result } from "../result"
+import { Result } from "../result.js"
 
 /**
  * An interface for performing commonly used operations on a SQL database
@@ -10,7 +12,7 @@ import { Result } from "../result"
 export class SQLExecutable {
   private conn: Connection // Define the appropriate type for your database connection
 
-  constructor (connection: any) { // Use the appropriate type for the connection
+  constructor (connection: Connection) { // Use the appropriate type for the connection
     this.conn = connection
   }
 

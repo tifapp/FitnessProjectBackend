@@ -1,10 +1,10 @@
 export class SuccessResult<Success> {
-  status: "success" = "success"
+  status = "success" as const
   constructor (public value: Success) { this.value = value }
 }
 
 export class FailureResult<Failure> {
-  status: "failure" = "failure"
+  status = "failure" as const
   constructor (public value: Failure) { this.value = value }
 }
 

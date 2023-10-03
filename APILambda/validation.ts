@@ -1,11 +1,11 @@
 /* eslint-disable no-restricted-imports */
 import express, { NextFunction, Request, RequestHandler, Response, Router } from "express"
-import { AnyZodObject, ZodSchema, z } from "zod"
+import { AnyZodObject, z } from "zod"
 
 interface ValidationSchemas {
-  bodySchema?: ZodSchema<any>;
-  querySchema?: ZodSchema<any>;
-  pathParamsSchema?: ZodSchema<any>;
+  bodySchema?: AnyZodObject
+  querySchema?: AnyZodObject
+  pathParamsSchema?: AnyZodObject
 }
 
 /**
@@ -68,7 +68,7 @@ export const validateRequest = ({ bodySchema, querySchema, pathParamsSchema }: V
     }
   }
 
-type InferRequestSchemaType<T> = T extends ZodSchema<any> ? z.infer<T> : never;
+type InferRequestSchemaType<T> = T extends AnyZodObject ? z.infer<T> : never;
 
 type ValidatedRequestHandler<S extends ValidationSchemas> = (
   req: Omit<Request, "body" | "query" | "params"> & {
@@ -123,26 +123,31 @@ export class ValidatedRouter {
   }
 
   get<Schema extends ValidationSchemas> (path: string, schema: Pick<Schema, "querySchema" | "pathParamsSchema">, ...handlers: ValidatedRequestHandler<Schema>[]): this {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     this.router.get(path, validateRequest(schema), ...handlers as any)
     return this
   }
 
   delete<Schema extends ValidationSchemas> (path: string, schema: Schema, ...handlers: ValidatedRequestHandler<Schema>[]): this {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     this.router.delete(path, validateRequest(schema), ...handlers as any)
     return this
   }
 
   patch<Schema extends ValidationSchemas> (path: string, schema: Schema, ...handlers: ValidatedRequestHandler<Schema>[]): this {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     this.router.patch(path, validateRequest(schema), ...handlers as any)
     return this
   }
 
   put<Schema extends ValidationSchemas> (path: string, schema: Schema, ...handlers: ValidatedRequestHandler<Schema>[]): this {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     this.router.put(path, validateRequest(schema), ...handlers as any)
     return this
   }
 
   post<Schema extends ValidationSchemas> (path: string, schema: Schema, ...handlers: ValidatedRequestHandler<Schema>[]): this {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     this.router.post(path, validateRequest(schema), ...handlers as any)
     return this
   }

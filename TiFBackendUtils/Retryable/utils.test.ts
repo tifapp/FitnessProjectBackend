@@ -11,7 +11,7 @@ describe("exponentialFunctionBackoff", () => {
   test("Should retry up to maxRetries times if lambda function fails", async () => {
     const failingLambdaFunction = jest.fn().mockRejectedValue(new Error("failure"))
 
-    let wrappedFunction: (event: any) => Promise<any> = async () => {} // Placeholder for the wrapped function
+    let wrappedFunction: (event: unknown) => Promise<unknown> = async () => {} // Placeholder for the wrapped function
 
     const mockScheduleLambda = jest.fn().mockImplementation((eventTime, event) => {
       return wrappedFunction(event)
@@ -21,7 +21,7 @@ describe("exponentialFunctionBackoff", () => {
 
     try {
       await wrappedFunction({ retries: 0 })
-    } catch (e: any) {
+    } catch (e) {
       expect(failingLambdaFunction).toHaveBeenCalledTimes(3)
       expect(e.message).toBe("failure")
     }

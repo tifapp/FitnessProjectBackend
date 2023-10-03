@@ -14,7 +14,7 @@ export const callCreateEvent = async (
 
 export const callGetEvent = async (
   bearerToken: string,
-  eventId: Number
+  eventId: number
 ) => {
   return await request(testApp)
     .get(`/event/${eventId}`)
@@ -24,7 +24,7 @@ export const callGetEvent = async (
 
 export const callGetEventChatToken = async (
   bearerToken: string,
-  eventId: Number
+  eventId: number
 ) => {
   return await request(testApp)
     .get(`/event/chat/${eventId}`)

@@ -4,4 +4,3 @@ export * from "./SQLExecutable/index.js"
 export * from "./UserHandle.js"
 export * from "./location.js"
 export * from "./result.js"
-

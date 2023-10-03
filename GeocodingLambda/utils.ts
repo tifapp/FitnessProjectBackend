@@ -1,6 +1,7 @@
 import { LocationCoordinate2D, Placemark, conn } from "TiFBackendUtils"
+import dotenv from "dotenv"
 
-require("dotenv").config()
+dotenv.config()
 
 export const checkExistingPlacemarkInDB = async (location: LocationCoordinate2D) =>
   await conn.hasResults(
