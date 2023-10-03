@@ -1,11 +1,14 @@
 /* eslint-disable no-restricted-imports */
 import express, { NextFunction, Request, RequestHandler, Response, Router } from "express"
-import { AnyZodObject, z } from "zod"
+import { AnyZodObject, ZodSchema, z } from "zod"
 
 interface ValidationSchemas {
-  bodySchema?: AnyZodObject
-  querySchema?: AnyZodObject
-  pathParamsSchema?: AnyZodObject
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  bodySchema?: ZodSchema<any>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  querySchema?: ZodSchema<any>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  pathParamsSchema?: ZodSchema<any>
 }
 
 /**
@@ -68,7 +71,8 @@ export const validateRequest = ({ bodySchema, querySchema, pathParamsSchema }: V
     }
   }
 
-type InferRequestSchemaType<T> = T extends AnyZodObject ? z.infer<T> : never;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type InferRequestSchemaType<T> = T extends ZodSchema<any> ? z.infer<T> : never;
 
 type ValidatedRequestHandler<S extends ValidationSchemas> = (
   req: Omit<Request, "body" | "query" | "params"> & {
