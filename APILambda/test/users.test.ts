@@ -182,6 +182,7 @@ describe("Users tests", () => {
 
     it("should 400 invalid settings body when updating settings", async () => {
       await callPostUser(testAuthorizationHeader)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const resp = await callPatchSettings(testAuthorizationHeader, { isAnalyticsEnabled: 69, hello: "world" } as any)
       expect(resp.status).toEqual(400)
     })

@@ -6,7 +6,8 @@ import { z } from "zod"
 export interface OptionalParseable<Input, Output> {
   parse(input: Input): Output | undefined
 }
-
+// TODO: FIX
+// eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace ZodUtils {
   /**
    * Creates a zod schema from an object which comforms to the {@link OptionalParseable} interface.

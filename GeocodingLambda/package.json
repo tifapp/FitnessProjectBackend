@@ -15,8 +15,7 @@
   "scripts": {
     "build": "npx tsc",
     "test": "jest",
-    "test:ci": "jest --ci --detectOpenHandles",
-    "lint": "eslint"
+    "test:ci": "jest --ci --detectOpenHandles"
   },
   "devDependencies": {
     "@types/jest": "^29.5.2",

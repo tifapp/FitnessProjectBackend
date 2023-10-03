@@ -3,9 +3,12 @@ import express, { NextFunction, Request, RequestHandler, Response, Router } from
 import { AnyZodObject, ZodSchema, z } from "zod"
 
 interface ValidationSchemas {
-  bodySchema?: ZodSchema<any>;
-  querySchema?: ZodSchema<any>;
-  pathParamsSchema?: ZodSchema<any>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  bodySchema?: ZodSchema<any>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  querySchema?: ZodSchema<any>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  pathParamsSchema?: ZodSchema<any>
 }
 
 /**
@@ -68,6 +71,7 @@ export const validateRequest = ({ bodySchema, querySchema, pathParamsSchema }: V
     }
   }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type InferRequestSchemaType<T> = T extends ZodSchema<any> ? z.infer<T> : never;
 
 type ValidatedRequestHandler<S extends ValidationSchemas> = (
@@ -123,26 +127,31 @@ export class ValidatedRouter {
   }
 
   get<Schema extends ValidationSchemas> (path: string, schema: Pick<Schema, "querySchema" | "pathParamsSchema">, ...handlers: ValidatedRequestHandler<Schema>[]): this {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     this.router.get(path, validateRequest(schema), ...handlers as any)
     return this
   }
 
   delete<Schema extends ValidationSchemas> (path: string, schema: Schema, ...handlers: ValidatedRequestHandler<Schema>[]): this {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     this.router.delete(path, validateRequest(schema), ...handlers as any)
     return this
   }
 
   patch<Schema extends ValidationSchemas> (path: string, schema: Schema, ...handlers: ValidatedRequestHandler<Schema>[]): this {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     this.router.patch(path, validateRequest(schema), ...handlers as any)
     return this
   }
 
   put<Schema extends ValidationSchemas> (path: string, schema: Schema, ...handlers: ValidatedRequestHandler<Schema>[]): this {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     this.router.put(path, validateRequest(schema), ...handlers as any)
     return this
   }
 
   post<Schema extends ValidationSchemas> (path: string, schema: Schema, ...handlers: ValidatedRequestHandler<Schema>[]): this {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     this.router.post(path, validateRequest(schema), ...handlers as any)
     return this
   }

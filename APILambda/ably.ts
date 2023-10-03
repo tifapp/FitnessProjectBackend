@@ -1,9 +1,9 @@
-import Ably from "ably";
+import Ably from "ably"
 
 const rest = new Ably.Rest({ key: process.env.ABLY_KEY })
 
-export type ChatPermissions = Exclude<Ably.Types.TokenParams["capability"], string | undefined>;
-export type AblyTokenRequest = Ably.Types.TokenRequest;
+export type ChatPermissions = Exclude<Ably.Types.TokenParams["capability"], string | undefined>
+export type AblyTokenRequest = Ably.Types.TokenRequest
 
 export const createTokenRequest = async (permissions: ChatPermissions, userId: string): Promise<Ably.Types.TokenRequest> => {
   // use ably.rest.promise api

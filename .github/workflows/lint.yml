@@ -27,4 +27,4 @@ jobs:
 
       - name: Check ESLint
         run: |
-          npx eslint .
+          npx eslint . --fix

@@ -3,14 +3,14 @@ import {
   hasResults,
   queryFirst,
   queryResults
-} from "../dbconnection.js";
-import { Result } from "../utils.js";
+} from "../dbconnection.js"
+import { Result } from "../utils.js"
 import {
   DEFAULT_USER_SETTINGS,
   DatabaseUser,
   UserSettings,
   UserToProfileRelationStatus
-} from "./models.js";
+} from "./models.js"
 
 export type RegisterUserRequest = {
   id: string;

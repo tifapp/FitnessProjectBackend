@@ -4,6 +4,7 @@ import { createEventRouter } from "./events/createEvent.js"
 import { getChatTokenRouter } from "./events/getChatToken.js"
 import { getEventByIdRouter } from "./events/getEventById.js"
 import { getEventsByRegionRouter } from "./events/getEventsByRegion.js"
+import { autocompleteUsersRouter } from "./user/autocompleteUsers.js"
 import { createUserProfileRouter } from "./user/createUserProfile.js"
 import { deleteUserAccountRouter } from "./user/deleteUserAccount.js"
 import { getCurrentUserSettingsRouter } from "./user/getCurrentUserSettings.js"
@@ -13,7 +14,6 @@ import { sendFriendRequestsRouter } from "./user/sendFriendRequest.js"
 import { updateCurrentUserSettingsRouter } from "./user/updateCurrentUserSettings.js"
 import { updateUserProfileRouter } from "./user/updateUserProfile.js"
 import { ValidatedRouter } from "./validation.js"
-import { autocompleteUsersRouter } from "./user/autocompleteUsers.js"
 
 /**
  * Creates an application instance.

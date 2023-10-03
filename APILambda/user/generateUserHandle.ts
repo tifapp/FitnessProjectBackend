@@ -1,6 +1,6 @@
 import crypto from "crypto"
-import { SQLExecutable } from "../dbconnection"
-import { userWithHandleExists } from "./SQL"
+import { SQLExecutable } from "../dbconnection.js"
+import { userWithHandleExists } from "./SQL.js"
 
 const generateNumericHash = (input: string) => {
   const hash = crypto.createHash("sha1").update(input).digest("hex")

@@ -96,8 +96,6 @@ export const getEvents = async (
   )
 }
 
-export const getLastEventId = async (conn: SQLExecutable) => {}
-
 export type DatabaseEvent = {
   id: string
   hostId: string

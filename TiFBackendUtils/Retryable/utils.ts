@@ -1,4 +1,4 @@
-import { scheduleAWSLambda } from "../AWS/lambdaUtils"
+import { scheduleAWSLambda } from "../AWS/lambdaUtils.js"
 
 export interface Retryable {
   retries?: number

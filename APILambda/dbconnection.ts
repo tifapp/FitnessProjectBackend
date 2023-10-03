@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+// TODO: Replace with backend utils
 import { ExecutedQuery, Field, cast, connect } from "@planetscale/database"
 import fetch from "node-fetch"
 import { envVars } from "./env.js"
