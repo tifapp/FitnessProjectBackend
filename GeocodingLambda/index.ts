@@ -7,7 +7,9 @@ import { addPlacemarkToDB, checkExistingPlacemarkInDB } from "./utils.js"
 
 interface LocationSearchRequest extends Retryable { location: LocationCoordinate2D }
 
-export const handler = exponentialFunctionBackoff<LocationSearchRequest, string>(async (event: LocationSearchRequest) => {
+// TODO: Fix handler type, fix util dependencies
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const handler: any = exponentialFunctionBackoff<LocationSearchRequest, string>(async (event: LocationSearchRequest) => {
   const placemarkExists = await checkExistingPlacemarkInDB({ latitude: parseFloat(event.location.latitude.toFixed(10)), longitude: parseFloat(event.location.longitude.toFixed(10)) })
 
   if (placemarkExists) return `Placemark at ${JSON.stringify(event.location)} already exists`
