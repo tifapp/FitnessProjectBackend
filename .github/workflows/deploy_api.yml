@@ -19,22 +19,44 @@ jobs:
         with:
           node-version: '18'
 
-      - name: Install dependencies
+      - name: Install backend utils dependencies
         run: |
           cd TiFBackendUtils
           npm ci
+      
+      - name: Build backend utils js
+        run: |
+          cd TiFBackendUtils
           npm run build
+      
+      - name: Remove backend utils dev dependencies
+        run: |
+          cd TiFBackendUtils
           npm ci --omit=dev
+      
+      - name: Package backend utils
+        run: |
+          cd TiFBackendUtils
+          shopt -s extglob
+          cp -R !(test|.github|dist|*.ts) dist/
+          cd dist
           npm pack
-          cd ../APILambda
+
+      - name: Install dependencies
+        run: |
+          cd APILambda
           npm ci --omit=dev
-          npm install ../TiFBackendUtils/TiFBackendUtils-1.0.0.tgz
+          npm install ../TiFBackendUtils/dist/TiFBackendUtils-1.0.0.tgz
 
       - name: Build the project
-        run: cd APILambda && npm run build
+        run: |
+          cd APILambda
+          npm run build
       
       - name: Remove dev dependencies
-        run: cd APILambda && npm ci --omit=dev
+        run: |
+          cd APILambda
+          npm ci --omit=dev
 
       - name: Zip the project
         run: |
