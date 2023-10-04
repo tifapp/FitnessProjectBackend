@@ -14,7 +14,7 @@ const AuthClaimsSchema = z.object({
   phone_number_verified: z.boolean()
 })
 
-export type AuthClaims = z.infer<typeof AuthClaimsSchema>;
+export type AuthClaims = z.infer<typeof AuthClaimsSchema>
 
 const TransformedAuthClaimsSchema = AuthClaimsSchema.transform((res) => ({
   sub: res.sub,
@@ -30,9 +30,9 @@ const TransformedAuthClaimsSchema = AuthClaimsSchema.transform((res) => ({
 export const addCognitoTokenVerification = (app: Application, env: ServerEnvironment) => {
   // TODO: - Verify JWT properly
   app.use(async (req, res, next) => {
-    let auth = req.headers.Authorization
+    let auth = req.headers?.Authorization
     if (env.environment === "dev") {
-      auth = req.headers.authorization
+      auth = req.headers?.authorization
     }
 
     if (!auth || Array.isArray(auth)) {
