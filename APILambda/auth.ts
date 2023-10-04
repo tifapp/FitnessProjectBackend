@@ -7,21 +7,22 @@ const AuthClaimsSchema = z.object({
   name: z.string(),
   email: z.string().email(),
   // eslint-disable-next-line @typescript-eslint/naming-convention
-  email_verified: z.boolean(),
+  email_verified: z.string(),
   // eslint-disable-next-line @typescript-eslint/naming-convention
   phone_number: z.string(), // is there a phone number type?
   // eslint-disable-next-line @typescript-eslint/naming-convention
-  phone_number_verified: z.boolean()
+  phone_number_verified: z.string()
 })
 
 export type AuthClaims = z.infer<typeof AuthClaimsSchema>
 
 const TransformedAuthClaimsSchema = AuthClaimsSchema.transform((res) => ({
-  sub: res.sub,
+  selfId: res.sub,
   name: res.name,
   email: res.email,
   phoneNumber: res.phone_number,
-  isContactInfoVerfied: res.email_verified || res.phone_number_verified
+  // cognito claims encode them as strings
+  isContactInfoVerfied: res.email_verified === "true" || res.phone_number_verified === "true"
 }))
 
 /**
@@ -44,7 +45,7 @@ export const addCognitoTokenVerification = (app: Application, env: ServerEnviron
 
     try {
       // eslint-disable-next-line camelcase
-      const { sub: selfId, name, isContactInfoVerfied } = TransformedAuthClaimsSchema.parse(JSON.parse(
+      const { selfId, name, isContactInfoVerfied } = TransformedAuthClaimsSchema.parse(JSON.parse(
         Buffer.from(token.split(".")[1], "base64").toString()
       ))
       res.locals.selfId = selfId
