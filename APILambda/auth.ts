@@ -8,11 +8,11 @@ const AuthClaimsSchema = z.object({
 }).and(
   z.object({
     email: z.string().email(),
-    email_verified: z.string()
+    email_verified: z.boolean()
   }).or(
     z.object({
       phone_number: z.string(),
-      phone_number_verified: z.string()
+      phone_number_verified: z.boolean()
     })
   )
 )
@@ -28,7 +28,7 @@ const TransformedAuthClaimsSchema = AuthClaimsSchema.transform((res) => ({
   phoneNumber: res.phone_number ?? undefined,
   // cognito claims encode them as strings
   // @ts-expect-error email or phone number may be missing from claims
-  isContactInfoVerfied: res.email_verified === "true" || res.phone_number_verified === "true"
+  isContactInfoVerfied: res.email_verified || res.phone_number_verified
 }))
 
 /**
