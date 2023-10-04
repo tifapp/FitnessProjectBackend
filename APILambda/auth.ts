@@ -4,24 +4,30 @@ import { ServerEnvironment } from "./env.js"
 
 const AuthClaimsSchema = z.object({
   sub: z.string(),
-  name: z.string(),
-  email: z.string().email(),
-  // eslint-disable-next-line @typescript-eslint/naming-convention
-  email_verified: z.string(),
-  // eslint-disable-next-line @typescript-eslint/naming-convention
-  phone_number: z.string(), // is there a phone number type?
-  // eslint-disable-next-line @typescript-eslint/naming-convention
-  phone_number_verified: z.string()
-})
+  name: z.string()
+}).and(
+  z.object({
+    email: z.string().email(),
+    email_verified: z.string()
+  }).or(
+    z.object({
+      phone_number: z.string(),
+      phone_number_verified: z.string()
+    })
+  )
+)
 
 export type AuthClaims = z.infer<typeof AuthClaimsSchema>
 
 const TransformedAuthClaimsSchema = AuthClaimsSchema.transform((res) => ({
   selfId: res.sub,
   name: res.name,
-  email: res.email,
-  phoneNumber: res.phone_number,
+  // @ts-expect-error email may be missing from claims
+  email: res.email ?? undefined,
+  // @ts-expect-error phone number may be missing from claims
+  phoneNumber: res.phone_number ?? undefined,
   // cognito claims encode them as strings
+  // @ts-expect-error email or phone number may be missing from claims
   isContactInfoVerfied: res.email_verified === "true" || res.phone_number_verified === "true"
 }))
 
