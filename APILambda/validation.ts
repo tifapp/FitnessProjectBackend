@@ -44,9 +44,10 @@ export const validateRequest = ({ bodySchema, querySchema, pathParamsSchema }: V
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const validationSchema = z.object({
-        body: bodySchema ?? z.object({}).strict(),
-        query: querySchema ?? z.object({}).strict(),
-        params: pathParamsSchema ?? z.object({}).strict()
+        // supertest sends {} by default, lambda gets null
+        body: bodySchema ?? z.union([z.literal(null), z.object({}).strict()]),
+        query: querySchema ?? z.union([z.literal(null), z.object({}).strict()]),
+        params: pathParamsSchema ?? z.union([z.literal(null), z.object({}).strict()])
       })
 
       const { body, query, params } = await validationSchema.parseAsync({
