@@ -8,7 +8,17 @@ import { ServerEnvironment } from "./env.js"
 const addEventToRequest = (app: Express) => {
   app.use((req, res, next) => {
     const { event } = getCurrentInvoke()
-    Object.assign(req, event) // WARN: ensure fields in "event" do not overwrite fields in "req"
+
+    // TODO: Find better solution
+    for (const [key, value] of Object.entries(event)) {
+      Object.defineProperty(req, key, {
+        value,
+        writable: true,
+        enumerable: true,
+        configurable: true
+      })
+    } // WARN: ensure fields in "event" do not overwrite fields in "req"
+
     next()
   })
 }
