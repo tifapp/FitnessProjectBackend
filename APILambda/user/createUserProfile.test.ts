@@ -15,7 +15,7 @@ describe("Create User Profile tests", () => {
 
   it("should 401 when user is not verified", async () => {
     // eslint-disable-next-line @typescript-eslint/naming-convention
-    const resp = await callPostUser(generateMockAuthorizationHeader({ email_verified: "false", phone_number_verified: "false" }))
+    const resp = await callPostUser(generateMockAuthorizationHeader({ email_verified: false, phone_number_verified: false }))
 
     expect(resp.status).toEqual(401)
     expect(resp.body).toMatchObject({ error: "unverified-user" })

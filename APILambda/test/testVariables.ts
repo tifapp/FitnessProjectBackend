@@ -86,11 +86,11 @@ export const mockClaims: AuthClaims = {
   email: "john.doe@example.com",
   // properties taken from cognito
   // eslint-disable-next-line @typescript-eslint/naming-convention
-  email_verified: "true",
+  email_verified: true,
   // eslint-disable-next-line @typescript-eslint/naming-convention
   phone_number: "+1234567890",
   // eslint-disable-next-line @typescript-eslint/naming-convention
-  phone_number_verified: "true"
+  phone_number_verified: true
 }
 
 export const generateMockAuthorizationHeader = (claims: Partial<AuthClaims>) => {

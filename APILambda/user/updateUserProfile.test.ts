@@ -41,7 +41,7 @@ describe("Update user profile tests", () => {
     })
 
     it("should 401 when user tries to update user handle but the user is not verified", async () => {
-      const resp = await callUpdateUserHandle(generateMockAuthorizationHeader({ email_verified: "false", phone_number_verified: "false" }), "user-handle")
+      const resp = await callUpdateUserHandle(generateMockAuthorizationHeader({ email_verified: false, phone_number_verified: false }), "user-handle")
 
       expect(resp.status).toEqual(401)
       expect(resp.body).toMatchObject({ error: "unverified-user" })
