@@ -7,6 +7,8 @@ import { ServerEnvironment } from "./env.js"
 
 const addEventToRequest = (app: Express) => {
   app.use((req, res, next) => {
+    console.log(req)
+
     const { event } = getCurrentInvoke()
 
     // TODO: Find better solution
