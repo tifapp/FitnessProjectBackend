@@ -1,9 +1,9 @@
-import { Place } from "@aws-sdk/client-location";
-import { SearchForPositionResultToPlacemark } from "./locationUtils";
+import { Place } from "@aws-sdk/client-location"
+import { SearchForPositionResultToPlacemark } from "./locationUtils.js"
 
 describe("SearchForPositionResultToPlacemark", () => {
   test("Should convert a Place object to a Placemark correctly", () => {
-    const location = { latitude: 12.34, longitude: 56.78 };
+    const location = { latitude: 12.34, longitude: 56.78 }
     const place = {
       Label: "Sample Location",
       Neighborhood: "Sample Neighborhood",
@@ -14,7 +14,7 @@ describe("SearchForPositionResultToPlacemark", () => {
       Street: "Sample Street",
       AddressNumber: "1234",
       UnitNumber: "5678"
-    } as Place;
+    } as Place
 
     expect(SearchForPositionResultToPlacemark(location, place)).toEqual({
       lat: 12.34,
@@ -25,12 +25,12 @@ describe("SearchForPositionResultToPlacemark", () => {
       street: "Sample Street",
       street_num: "1234",
       unit_number: "5678"
-    });
-  });
+    })
+  })
 
   test("Should use fallback values for missing Place properties", () => {
-    const location = { latitude: 12.34, longitude: 56.78 };
-    const place = {} as Place;
+    const location = { latitude: 12.34, longitude: 56.78 }
+    const place = {} as Place
 
     expect(SearchForPositionResultToPlacemark(location, place)).toEqual({
       lat: 12.34,
@@ -41,33 +41,33 @@ describe("SearchForPositionResultToPlacemark", () => {
       street: "Unknown Address",
       street_num: "",
       unit_number: ""
-    });
-  });
+    })
+  })
 
   test("Should use Municipality when Neighborhood is missing", () => {
-    const location = { latitude: 12.34, longitude: 56.78 };
+    const location = { latitude: 12.34, longitude: 56.78 }
     const place = {
       Municipality: "Sample City"
-    } as Place;
+    } as Place
 
-    expect(SearchForPositionResultToPlacemark(location, place).city).toEqual("Sample City");
-  });
+    expect(SearchForPositionResultToPlacemark(location, place).city).toEqual("Sample City")
+  })
 
   test("Should use SubRegion when Neighborhood and Municipality are missing", () => {
-    const location = { latitude: 12.34, longitude: 56.78 };
+    const location = { latitude: 12.34, longitude: 56.78 }
     const place = {
       SubRegion: "Sample SubRegion"
-    } as Place;
+    } as Place
 
-    expect(SearchForPositionResultToPlacemark(location, place).city).toEqual("Sample SubRegion");
-  });
+    expect(SearchForPositionResultToPlacemark(location, place).city).toEqual("Sample SubRegion")
+  })
 
   test("Should use Region when Country is missing", () => {
-    const location = { latitude: 12.34, longitude: 56.78 };
+    const location = { latitude: 12.34, longitude: 56.78 }
     const place = {
       Region: "Sample Region"
-    } as Place;
+    } as Place
 
-    expect(SearchForPositionResultToPlacemark(location, place).country).toEqual("Sample Region");
-  });
-});
+    expect(SearchForPositionResultToPlacemark(location, place).country).toEqual("Sample Region")
+  })
+})

@@ -3,10 +3,10 @@ export default {
   testEnvironment: "node",
   clearMocks: true,
   transform: {
-    "^.+\\.ts?$": "ts-jest",
+    "^.+\\.ts?$": "ts-jest"
   },
   transformIgnorePatterns: ["/node_modules/(?!@planetscale|TiFBackendUtils)"],
   moduleNameMapper: {
-    '^(\\.{1,2}/.*)\\.js$': '$1',
-  },
-};
+    "^(\\.{1,2}/.*)\\.js$": "$1"
+  }
+}

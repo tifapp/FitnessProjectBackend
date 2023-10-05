@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "zod"
 
 /**
  * A zod schema for {@link UserSettingsSchema}.
@@ -9,8 +9,8 @@ export const UserSettingsSchema = z.object({
   isEventNotificationsEnabled: z.boolean(),
   isMentionsNotificationsEnabled: z.boolean(),
   isChatNotificationsEnabled: z.boolean(),
-  isFriendRequestNotificationsEnabled: z.boolean(),
-});
+  isFriendRequestNotificationsEnabled: z.boolean()
+})
 
 /**
  * A type representing a user's settings.
@@ -26,18 +26,18 @@ export const DEFAULT_USER_SETTINGS = {
   isEventNotificationsEnabled: true,
   isMentionsNotificationsEnabled: true,
   isChatNotificationsEnabled: true,
-  isFriendRequestNotificationsEnabled: true,
-} as const;
+  isFriendRequestNotificationsEnabled: true
+} as const
 
 /**
  * A type representing the main user fields.
- */
-export type User = {
-  id: string;
+ */ // use zod schema for validation then transformation
+export type DatabaseUser = {
+  id: string; // assign to a type for clarity
   name: string;
-  handle: string;
+  handle: string; // userhandle class
   bio?: string;
-  profileImageURL?: string;
+  profileImageURL?: string; // url type
   creationDate: Date;
   updatedAt?: Date;
 };

@@ -1,5 +1,7 @@
-import { Connection } from "@planetscale/database";
-import { Result } from "../result";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+// TODO: Replace with backend utils
+import { Connection } from "@planetscale/database"
+import { Result } from "../result.js"
 
 /**
  * An interface for performing commonly used operations on a SQL database
@@ -8,10 +10,10 @@ import { Result } from "../result";
  * transaction or not.
  */
 export class SQLExecutable {
-  private conn: Connection;  // Define the appropriate type for your database connection
+  private conn: Connection // Define the appropriate type for your database connection
 
-  constructor(connection: any) {  // Use the appropriate type for the connection
-    this.conn = connection;
+  constructor (connection: Connection) { // Use the appropriate type for the connection
+    this.conn = connection
   }
 
   // ==================
@@ -29,22 +31,22 @@ export class SQLExecutable {
    * console.log(results[0].id) // ✅ Typesafe
    * ```
    */
-  async execute<Value>(query: string, args: object | any[] | null = null): Promise<Value[]> {
+  async execute<Value> (query: string, args: object | any[] | null = null): Promise<Value[]> {
     // Use this.conn to execute the query and return the result rows
     // This will be the only function to directly use the database library's execute method.
-    const result = await this.conn.execute(query, args); 
-    return result.rows as Value[];
+    const result = await this.conn.execute(query, args)
+    return result.rows as Value[]
   }
 
   /**
    * Performs an idempotent transaction on the database and enforces a return type of Result<SuccessValue, ErrorValue>.
    */
-  async transaction<SuccessValue, ErrorValue>(
+  async transaction<SuccessValue, ErrorValue> (
     operation: (tx: SQLExecutable) => Promise<Result<SuccessValue, ErrorValue>>
   ): Promise<Result<SuccessValue, ErrorValue>> {
     return await this.conn.transaction(() => operation(this))
   }
-  
+
   // ==================
   // Generic Methods
   // ==================
@@ -52,9 +54,9 @@ export class SQLExecutable {
   /**
    * A helper function that returns if a given sql query has any results.
    */
-  async hasResults(query: string, args: object | any[] | null = null): Promise<boolean> {
-    const results = await this.execute(query, args);
-    return results.length > 0;
+  async hasResults (query: string, args: object | any[] | null = null): Promise<boolean> {
+    const results = await this.execute(query, args)
+    return results.length > 0
   }
 
   /**
@@ -68,9 +70,9 @@ export class SQLExecutable {
    * console.log(result?.id) // ✅ Typesafe
    * ```
    */
-  async queryFirst<Value>(query: string, args: object | any[] | null = null): Promise<Value | undefined> {
-    const results = await this.execute<Value>(query, args);
-    return results[0];
+  async queryFirst<Value> (query: string, args: object | any[] | null = null): Promise<Value | undefined> {
+    const results = await this.execute<Value>(query, args)
+    return results[0]
   }
 
   /**
@@ -78,19 +80,19 @@ export class SQLExecutable {
    * Every return type from this function will be a string and then it can be parsed afterwards.
    * @returns the id of the last inserted record
    */
-  async selectLastInsertionId(): Promise<string | undefined> {
-    const result = await this.queryFirst<{ "LAST_INSERT_ID()": string }>('SELECT LAST_INSERT_ID()');
-    return result?.["LAST_INSERT_ID()"];
+  async selectLastInsertionId (): Promise<string | undefined> {
+    const result = await this.queryFirst<{ "LAST_INSERT_ID()": string }>("SELECT LAST_INSERT_ID()")
+    return result?.["LAST_INSERT_ID()"]
   }
 
   /**
    * Gets the id of the last inserted record and then attempts to return the result parsed as an int.
    * @returns the id of the last inserted record parsed as an int
    */
-  async selectLastInsertionNumericId(): Promise<number | undefined> {
-    const id = await this.selectLastInsertionId();
-    if (!id) return undefined;
-    return parseInt(id);
+  async selectLastInsertionNumericId (): Promise<number | undefined> {
+    const id = await this.selectLastInsertionId()
+    if (!id) return undefined
+    return parseInt(id)
   }
 }
 

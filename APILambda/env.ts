@@ -1,21 +1,23 @@
-import { Connection } from "@planetscale/database";
-import dotenv from "dotenv";
-import { z } from "zod";
+import { Connection } from "@planetscale/database"
+import dotenv from "dotenv"
+import { z } from "zod"
 
-dotenv.config();
+dotenv.config()
 
 const EnvVarsSchema = z
   .object({
     DATABASE_HOST: z.string(),
     DATABASE_PASSWORD: z.string(),
-    DATABASE_USERNAME: z.string(),
+    DATABASE_USERNAME: z.string()
   })
-  .passthrough();
+  .passthrough()
+
+export type EnvironmentType = "dev" | "staging" | "prod"
 
 /**
  * A type-safe representation of the current env vars.
  */
-export const envVars = EnvVarsSchema.parse(process.env);
+export const envVars = EnvVarsSchema.parse(process.env)
 
 /**
  * A type that holds all external dependencies of this server.
@@ -26,6 +28,6 @@ export const envVars = EnvVarsSchema.parse(process.env);
  * Examples of this include AWS S3 buckets, or SNS/Push notification clients.
  */
 export type ServerEnvironment = {
+  environment: EnvironmentType;
   conn: Connection;
 };
-

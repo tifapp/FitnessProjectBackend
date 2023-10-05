@@ -1,15 +1,12 @@
-import { z } from "zod";
+import { z } from "zod"
 import {
   SQLExecutable,
   queryFirst,
-  selectLastInsertionId,
-  selectLastInsertionNumericId
-} from "../dbconnection.js";
-import { ServerEnvironment } from "../env.js";
-import { LocationCoordinate2D } from "../location.js";
-import { userNotFoundBody, userWithIdExists } from "../user";
-import { EventColor, EventColorSchema } from "./models.js";
-
+  selectLastInsertionId
+} from "../dbconnection.js"
+import { EventColor, EventColorSchema } from "../events/models.js"
+import { userWithIdExists } from "../user/index.js"
+import { userNotFoundBody } from "./Responses.js"
 
 export const CreateEventSchema = z
   .object({
@@ -27,7 +24,7 @@ export const CreateEventSchema = z
     ...res,
     startTimestamp: new Date(res.startTimestamp),
     endTimestamp: new Date(res.endTimestamp)
-  }));
+  }))
 
 export type CreateEventInput = z.infer<typeof CreateEventSchema>;
 
@@ -48,7 +45,6 @@ export const insertEvent = async (
   request: CreateEventInput,
   hostId: string
 ) => {
-  console.log(request);
   await conn.execute(
     `
     INSERT INTO event (
@@ -76,8 +72,8 @@ export const insertEvent = async (
     )
     `,
     { ...request, startTimestamp: request.startTimestamp.getTime() / 1000, endTimestamp: request.endTimestamp.getTime() / 1000, hostId }
-  );
-};
+  )
+}
 
 export const getEvents = async (
   conn: SQLExecutable,
@@ -97,10 +93,8 @@ export const getEvents = async (
     GROUP BY E.id
   `,
     request
-  );
-};
-
-export const getLastEventId = async (conn: SQLExecutable) => {};
+  )
+}
 
 export type DatabaseEvent = {
   id: string
@@ -119,19 +113,22 @@ export type DatabaseEvent = {
 export const getEventWithId = async (
   conn: SQLExecutable,
   eventId: number
-) => await queryFirst<DatabaseEvent>(conn, `SELECT * FROM event WHERE id=:eventId`, {eventId});
+) => await queryFirst<DatabaseEvent>(conn, "SELECT * FROM event WHERE id=:eventId", { eventId })
 
 export const createEvent = async (
   conn: SQLExecutable,
   hostId: string,
   input: CreateEventInput
 ) => {
-  const userExists = await userWithIdExists(conn, hostId);
+  const userExists = await userWithIdExists(conn, hostId)
   if (!userExists) {
-    return { status: "error", value: userNotFoundBody(hostId) };
+    return { status: "error", value: userNotFoundBody(hostId) }
   }
 
-  await insertEvent(conn, input, hostId);
+  await insertEvent(conn, input, hostId)
 
-  return { status: "success", value: { id: await selectLastInsertionId(conn) } };
-};
+  return { status: "success", value: { id: await selectLastInsertionId(conn) } }
+}
+
+// add withvalidatedrequest middleware to all
+// add with valid user check to some

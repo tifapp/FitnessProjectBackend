@@ -28,20 +28,70 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: Install dependencies
+      - name: Install backend utils dependencies
         run: |
           cd TiFBackendUtils
           npm ci
+      
+      - name: Build backend utils js
+        run: |
+          cd TiFBackendUtils
+          npm run build
+      
+      - name: Remove backend utils dev dependencies
+        run: |
+          cd TiFBackendUtils
+          npm ci --omit=dev
+      
+      - name: Package backend utils
+        run: |
+          cd TiFBackendUtils
+          shopt -s extglob
+          cp -R !(test|.github|dist|*.ts) dist/
+          cd dist
           npm pack
-          cd ../GeocodingLambda
+
+      - name: Install dependencies
+        run: |
+          cd GeocodingLambda
           npm ci
-          npm install ../TiFBackendUtils/TiFBackendUtils-1.0.0.tgz
+          npm install ../TiFBackendUtils/dist/TiFBackendUtils-1.0.0.tgz
+      
+      - name: Build the project
+        run: |
+          cd GeocodingLambda
+          npm run build
+      
+      - name: Remove dev dependencies
+        run: |
+          cd GeocodingLambda
+          npm ci --omit=dev
 
       - name: Zip the project
         run: |
           cd GeocodingLambda
-          zip -r ./dist.zip .
+          shopt -s extglob
+          cp -R !(test|.github|dist|*.ts) dist/
+          cd dist
+          zip -r ../dist.zip .
+          
+      - name: Update AWS Lambda env variables
+        run: |
+          aws lambda update-function-configuration \
+            --function-name geocodingPipeline \
+            --environment "Variables={\
+              DATABASE_HOST=${{ secrets.DATABASE_HOST }},\
+              DATABASE_USERNAME=${{ secrets.DATABASE_USERNAME }},\
+              DATABASE_PASSWORD=${{ secrets.DATABASE_PASSWORD }}\
+            }"
 
       - name: Deploy to AWS Lambda
         run: |
           aws lambda update-function-code --function-name geocodingPipeline --zip-file fileb://GeocodingLambda/dist.zip
+          if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+            stageName="prod"
+            VERSION_NUMBER=$(aws lambda publish-version --function-name geocodingPipeline | jq -r '.Version')
+            aws lambda update-alias --function-name geocodingPipeline --name prod --function-version $VERSION_NUMBER
+          else
+            stageName="staging"
+          fi

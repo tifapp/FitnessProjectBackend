@@ -1,36 +1,33 @@
-import { Application } from "express";
-import request from "supertest";
-import { CreateEventInput } from "../../events";
+import request from "supertest"
+import { CreateEventInput } from "../../events/index.js"
+import { testApp } from "../testVariables.js"
 
-export const createTestEvent = async (
-  app: Application,
-  userId: string,
+export const callCreateEvent = async (
+  bearerToken: string,
   req: CreateEventInput
 ) => {
-  return await request(app)
+  return await request(testApp)
     .post("/event")
-    .set("Authorization", userId)
-    .send(req);
-};
+    .set("Authorization", bearerToken)
+    .send(req)
+}
 
-export const getTestEvent = async (
-  app: Application,
-  userId: string,
-  eventId: Number
+export const callGetEvent = async (
+  bearerToken: string,
+  eventId: number
 ) => {
-  return await request(app)
+  return await request(testApp)
     .get(`/event/${eventId}`)
-    .set("Authorization", userId)
-    .send();
-};
+    .set("Authorization", bearerToken)
+    .send()
+}
 
-export const getTestEventChatToken = async (
-  app: Application,
-  userId: string,
-  eventId: Number
+export const callGetEventChatToken = async (
+  bearerToken: string,
+  eventId: number
 ) => {
-  return await request(app)
+  return await request(testApp)
     .get(`/event/chat/${eventId}`)
-    .set("Authorization", userId)
-    .send();
-};
+    .set("Authorization", bearerToken)
+    .send()
+}

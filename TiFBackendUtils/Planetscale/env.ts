@@ -1,21 +1,21 @@
-import { Connection } from "@planetscale/database";
-import dotenv from "dotenv";
-import { z } from "zod";
+import { Connection } from "@planetscale/database"
+import dotenv from "dotenv"
+import { z } from "zod"
 
-dotenv.config();
+dotenv.config()
 
 const EnvVarsSchema = z
   .object({
     DATABASE_HOST: z.string(),
     DATABASE_PASSWORD: z.string(),
-    DATABASE_USERNAME: z.string(),
+    DATABASE_USERNAME: z.string()
   })
-  .passthrough();
+  .passthrough()
 
 /**
  * A type-safe representation of the current env vars.
  */
-export const envVars = EnvVarsSchema.parse(process.env);
+export const envVars = EnvVarsSchema.parse(process.env)
 
 /**
  * A type that holds all external dependencies of this server.

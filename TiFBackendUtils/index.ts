@@ -1,6 +1,6 @@
-export * from "./AWS";
-export * from "./Retryable/utils.js";
-export * from "./SQLExecutable";
-export * from "./location.js";
-export * from "./result.js";
-
+export * from "./AWS/index.js"
+export * from "./Retryable/utils.js"
+export * from "./SQLExecutable/index.js"
+export * from "./UserHandle.js"
+export * from "./location.js"
+export * from "./result.js"
