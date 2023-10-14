@@ -1,14 +1,15 @@
+import { UserHandle } from "TiFBackendUtils"
 import { z } from "zod"
+import { SQLExecutable, queryResults } from "../dbconnection.js"
 import { ServerEnvironment } from "../env.js"
 import { withValidatedRequest } from "../validation.js"
-import { UserHandle } from "TiFBackendUtils"
-import { SQLExecutable, queryResults } from "../dbconnection.js"
 // eslint-disable-next-line no-restricted-imports
 import { Router } from "express"
 
 const AutocompleteUsersRequestSchema = z.object({
   query: z.object({
-    handle: UserHandle.schema,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    handle: UserHandle.schema as any,
     limit: z.string()
       .transform(arg => parseInt(arg))
       .refine((arg) => arg >= 1 && arg <= 50)
@@ -32,7 +33,7 @@ const autocompleteUsers = async (conn: SQLExecutable, baseHandle: UserHandle, li
     SELECT id, name, handle 
     FROM user u 
     WHERE LOWER(u.handle) LIKE CONCAT(LOWER(:handle), '%') 
-    ORDER BY u.creationDate ASC, u.handle ASC
+    ORDER BY u.handle ASC, u.creationDate ASC
     LIMIT :limit
     `,
     { handle: baseHandle.rawValue, limit }

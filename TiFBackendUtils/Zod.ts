@@ -1,4 +1,4 @@
-import { z } from "zod"
+import { ZodTypeAny, z } from "zod"
 
 /**
  * An interface which defines a method of parsing that returns either an output type or `undefined`.
@@ -33,7 +33,7 @@ export namespace ZodUtils {
   export const createOptionalParseableSchema = <Input, Output>(
     parseable: OptionalParseable<Input, Output>,
     errorMessage: () => string = () => "Failure: undefined"
-  ) => {
+  ): ZodTypeAny => {
     let parsedValue: Output | undefined
     return z
       .custom<Input>()

@@ -55,7 +55,7 @@ export const callAutocompleteUsers = async (handle: string, limit: number) => {
   return await request(testApp)
     .get("/user/autocomplete")
     .query({ handle, limit })
-    .set("Authorization", global.testUsers[0].authorization) // todo: remove auth
+    .set("Authorization", global.defaultUser.auth) // todo: remove auth
     .send()
 }
 
