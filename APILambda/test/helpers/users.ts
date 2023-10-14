@@ -28,9 +28,6 @@ export const callPostFriendRequest = async (bearerToken: string, toUser: string)
 }
 
 export const callPostUser = async (bearerToken?: string) => {
-  // extra if statement to check if we're in a dev environment and register with cognito?
-  // should we even bother separating register with insertion?
-  // the creator function is only really useful if we have to create a user with custom attributes. but there are lots of tests where we just need an existing user with some random attributes and we're not testing out behavior for specific attributes
   if (!bearerToken) {
     return await request(testApp).post("/user").send()
   }
