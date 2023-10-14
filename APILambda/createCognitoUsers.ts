@@ -1,6 +1,9 @@
 import { faker } from "@faker-js/faker"
 import AWS from "aws-sdk"
+import dotenv from "dotenv"
 import { TestUser, TestUserInput } from "./global.d"
+
+dotenv.config()
 
 AWS.config.update({
   region: process.env.AWS_REGION,
@@ -26,6 +29,13 @@ export const createCognitoAuthToken = async (user?: TestUserInput): Promise<Test
   }
 
   const signUpResult = await cognito.signUp(signUpParams).promise()
+
+  const adminConfirmSignUpParams: AWS.CognitoIdentityServiceProvider.AdminConfirmSignUpRequest = {
+    UserPoolId: process.env.COGNITO_USER_POOL_ID ?? "",
+    Username: email
+  }
+
+  await cognito.adminConfirmSignUp(adminConfirmSignUpParams).promise()
 
   const verifyEmailParams: AWS.CognitoIdentityServiceProvider.AdminUpdateUserAttributesRequest = {
     UserPoolId: process.env.COGNITO_USER_POOL_ID ?? "",

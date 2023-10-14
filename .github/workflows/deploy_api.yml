@@ -116,5 +116,4 @@ jobs:
         
       - name: Authenticate with AWS Cognito and run tests
         run: |
-          USER_TOKEN=$(aws cognito-idp initiate-auth --auth-flow USER_PASSWORD_AUTH --auth-parameters USERNAME="${{ secrets.COGNITO_USER }}",PASSWORD="${{ secrets.COGNITO_PASSWORD }}" --client-id 3lfnaahkhjaotal2m13huv05ji --query 'AuthenticationResult.IdToken' --output text)
-          cd APILambda && npm run test:ci
+          cd APILambda && NODE_ENV=staging npm run test:ci
