@@ -17,11 +17,12 @@ export const testEnv: ServerEnvironment = {
  *
  * @returns an express app instance suitable for testing
  */
-export const testApp = process.env.TEST_ENV === "staging"
-  ? process.env.API_ENDPOINT
-  : (() => {
-    const app = createApp()
-    addCognitoTokenVerification(app, testEnv)
-    addRoutes(app, testEnv)
-    return app
-  })()
+export const testApp =
+  process.env.TEST_ENV === "staging"
+    ? process.env.API_ENDPOINT
+    : (() => {
+        const app = createApp()
+        addCognitoTokenVerification(app, testEnv)
+        addRoutes(app, testEnv)
+        return app
+      })()

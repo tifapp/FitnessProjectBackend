@@ -4,10 +4,9 @@ import { userNotFoundResponse } from "../shared/Responses.js"
 import { ValidatedRouter } from "../validation.js"
 import { userWithId } from "./SQL.js"
 
-const friendRequestSchema = z
-  .object({
-    userId: z.string()
-  })
+const friendRequestSchema = z.object({
+  userId: z.string()
+})
 
 /**
  * Returns an object that indicates that can be used as the response
@@ -25,15 +24,22 @@ export const userNotFoundBody = (userId: string) => ({
  *
  * @param environment see {@link ServerEnvironment}.
  */
-export const getUserBasedOnIdRouter = (environment: ServerEnvironment, router: ValidatedRouter) => {
+export const getUserBasedOnIdRouter = (
+  environment: ServerEnvironment,
+  router: ValidatedRouter
+) => {
   /**
    * gets the user with the specified userId
    */
-  router.get("/:userId", { pathParamsSchema: friendRequestSchema }, async (req, res) => {
-    const user = await userWithId(environment.conn, req.params.userId)
-    if (!user) {
-      return userNotFoundResponse(res, req.params.userId)
+  router.get(
+    "/:userId",
+    { pathParamsSchema: friendRequestSchema },
+    async (req, res) => {
+      const user = await userWithId(environment.conn, req.params.userId)
+      if (!user) {
+        return userNotFoundResponse(res, req.params.userId)
+      }
+      return res.status(200).json({ ...user, relation: "not-friends" })
     }
-    return res.status(200).json({ ...user, relation: "not-friends" })
-  })
+  )
 }

@@ -51,7 +51,7 @@ export const conn = connect({
  * transaction or not.
  */
 export interface SQLExecutable {
-  execute(query: string, args?: object | any[] | null): Promise<ExecutedQuery>;
+  execute(query: string, args?: object | any[] | null): Promise<ExecutedQuery>
 }
 
 /**
@@ -113,10 +113,11 @@ export const queryFirst = async <Value>(
  * @param conn planetscale connection
  * @returns the id of the last inserted record
  */
-export const selectLastInsertionId = async (
-  conn: SQLExecutable
-) => {
-  const result = await queryFirst <{ "LAST_INSERT_ID()": string }>(conn, "SELECT LAST_INSERT_ID()")
+export const selectLastInsertionId = async (conn: SQLExecutable) => {
+  const result = await queryFirst<{ "LAST_INSERT_ID()": string }>(
+    conn,
+    "SELECT LAST_INSERT_ID()"
+  )
   return result?.["LAST_INSERT_ID()"]
 }
 
@@ -126,9 +127,7 @@ export const selectLastInsertionId = async (
  * @param conn planetscale connection
  * @returns the id of the last inserted record parsed as an int
  */
-export const selectLastInsertionNumericId = async (
-  conn: SQLExecutable
-) => {
+export const selectLastInsertionNumericId = async (conn: SQLExecutable) => {
   const id = await selectLastInsertionId(conn)
   if (!id) return undefined
   return parseInt(id)

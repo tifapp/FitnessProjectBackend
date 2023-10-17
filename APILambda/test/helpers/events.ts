@@ -12,10 +12,7 @@ export const callCreateEvent = async (
     .send(req)
 }
 
-export const callGetEvent = async (
-  bearerToken: string,
-  eventId: number
-) => {
+export const callGetEvent = async (bearerToken: string, eventId: number) => {
   return await request(testApp)
     .get(`/event/${eventId}`)
     .set("Authorization", bearerToken)

@@ -3,7 +3,9 @@ import dotenv from "dotenv"
 
 dotenv.config()
 
-export const checkExistingPlacemarkInDB = async (location: LocationCoordinate2D) =>
+export const checkExistingPlacemarkInDB = async (
+  location: LocationCoordinate2D
+) =>
   await conn.hasResults(
     `
     SELECT TRUE FROM location WHERE lat = :latitude AND lon = :longitude LIMIT 1

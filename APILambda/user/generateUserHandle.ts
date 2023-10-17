@@ -9,13 +9,19 @@ const generateNumericHash = (input: string) => {
   return numericHash.toString().padStart(4, "0")
 }
 
-export const generateUniqueUsername = async (conn: SQLExecutable, name: string, maxRetries = 3): Promise<string> => {
+export const generateUniqueUsername = async (
+  conn: SQLExecutable,
+  name: string,
+  maxRetries = 3
+): Promise<string> => {
   let cleanedName = name.replace(/[^a-zA-Z0-9]/g, "").toLowerCase()
   cleanedName = cleanedName.length ? cleanedName : "idk"
   const baseName = cleanedName.substr(0, 11)
 
   let retries = 0
-  let potentialUsername = `${baseName}${generateNumericHash(`${cleanedName}${Date.now()}`)}`
+  let potentialUsername = `${baseName}${generateNumericHash(
+    `${cleanedName}${Date.now()}`
+  )}`
 
   while (await userWithHandleExists(conn, potentialUsername)) {
     if (retries >= maxRetries) {
@@ -23,7 +29,9 @@ export const generateUniqueUsername = async (conn: SQLExecutable, name: string, 
     }
 
     retries++
-    potentialUsername = `${baseName}${generateNumericHash(`${cleanedName}${Date.now() + retries}`)}`
+    potentialUsername = `${baseName}${generateNumericHash(
+      `${cleanedName}${Date.now() + retries}`
+    )}`
   }
 
   return potentialUsername

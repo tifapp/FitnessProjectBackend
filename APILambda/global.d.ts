@@ -2,8 +2,8 @@
 /* eslint-disable semi */
 /* eslint-disable no-unused-vars */
 
-export type TestUserInput = {name?: string; isVerified?: boolean}
-export type TestUser = {auth: string, id: string}
+export type TestUserInput = { name?: string; isVerified?: boolean }
+export type TestUser = { auth: string; id: string }
 
 /* eslint-disable no-var */
 declare global {

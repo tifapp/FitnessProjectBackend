@@ -1,4 +1,6 @@
-import awsServerlessExpress, { getCurrentInvoke } from "@vendia/serverless-express"
+import awsServerlessExpress, {
+  getCurrentInvoke
+} from "@vendia/serverless-express"
 import express, { Express } from "express"
 import { addRoutes, createApp } from "./app.js"
 import { addCognitoTokenVerification } from "./auth.js"

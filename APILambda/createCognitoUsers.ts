@@ -13,7 +13,9 @@ AWS.config.update({
 
 const cognito = new AWS.CognitoIdentityServiceProvider()
 
-export const createCognitoAuthToken = async (user?: TestUserInput): Promise<TestUser> => {
+export const createCognitoAuthToken = async (
+  user?: TestUserInput
+): Promise<TestUser> => {
   const name = user?.name ?? faker.name.fullName()
   const email = faker.internet.email()
   const password = "P@$$W0Rd"
@@ -22,31 +24,35 @@ export const createCognitoAuthToken = async (user?: TestUserInput): Promise<Test
     ClientId: process.env.COGNITO_CLIENT_APP_ID ?? "",
     Username: email,
     Password: password,
-    UserAttributes: [{
-      Name: "name",
-      Value: name
-    }]
+    UserAttributes: [
+      {
+        Name: "name",
+        Value: name
+      }
+    ]
   }
 
   const signUpResult = await cognito.signUp(signUpParams).promise()
 
-  const adminConfirmSignUpParams: AWS.CognitoIdentityServiceProvider.AdminConfirmSignUpRequest = {
-    UserPoolId: process.env.COGNITO_USER_POOL_ID ?? "",
-    Username: email
-  }
+  const adminConfirmSignUpParams: AWS.CognitoIdentityServiceProvider.AdminConfirmSignUpRequest =
+    {
+      UserPoolId: process.env.COGNITO_USER_POOL_ID ?? "",
+      Username: email
+    }
 
   await cognito.adminConfirmSignUp(adminConfirmSignUpParams).promise()
 
-  const verifyEmailParams: AWS.CognitoIdentityServiceProvider.AdminUpdateUserAttributesRequest = {
-    UserPoolId: process.env.COGNITO_USER_POOL_ID ?? "",
-    Username: email,
-    UserAttributes: [
-      {
-        Name: "email_verified",
-        Value: `${user?.isVerified ?? true}`
-      }
-    ]
-  }
+  const verifyEmailParams: AWS.CognitoIdentityServiceProvider.AdminUpdateUserAttributesRequest =
+    {
+      UserPoolId: process.env.COGNITO_USER_POOL_ID ?? "",
+      Username: email,
+      UserAttributes: [
+        {
+          Name: "email_verified",
+          Value: `${user?.isVerified ?? true}`
+        }
+      ]
+    }
 
   await cognito.adminUpdateUserAttributes(verifyEmailParams).promise()
 
@@ -66,5 +72,5 @@ export const createCognitoAuthToken = async (user?: TestUserInput): Promise<Test
     throw new Error("Failed to authenticate and obtain idToken")
   }
 
-  return ({ auth: `Bearer ${idToken}`, id: signUpResult.UserSub })
+  return { auth: `Bearer ${idToken}`, id: signUpResult.UserSub }
 }

@@ -5,7 +5,9 @@ import jwt from "jsonwebtoken"
 import { AuthClaims } from "../auth"
 import { TestUser, TestUserInput } from "../global.d"
 
-export const createMockAuthToken = async (user?: Partial<TestUserInput>): Promise<TestUser> => {
+export const createMockAuthToken = async (
+  user?: Partial<TestUserInput>
+): Promise<TestUser> => {
   const secret = "supersecret"
   const id = randomUUID()
 
@@ -26,5 +28,5 @@ export const createMockAuthToken = async (user?: Partial<TestUserInput>): Promis
 
   const token = jwt.sign(tokenPayload, secret, { algorithm: "HS256" })
 
-  return ({ auth: `Bearer ${token}`, id })
+  return { auth: `Bearer ${token}`, id }
 }
