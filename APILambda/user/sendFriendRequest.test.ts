@@ -1,6 +1,9 @@
+import { resetDatabaseBeforeEach } from "../test/database.js"
 import { callPostFriendRequest, callPostUser } from "../test/helpers/users.js"
 
 describe("FriendRequest tests", () => {
+  resetDatabaseBeforeEach()
+
   beforeEach(async () => {
     await callPostUser(global.defaultUser.auth)
     await callPostUser(global.defaultUser2.auth)
