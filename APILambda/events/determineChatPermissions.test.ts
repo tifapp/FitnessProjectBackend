@@ -1,5 +1,5 @@
-import { determineChatPermissions } from "../events/getChatToken.js"
-import { resetDatabaseBeforeEach } from "./database.js"
+import { determineChatPermissions } from "./getChatToken.js"
+import { resetDatabaseBeforeEach } from "../test/database.js"
 
 describe("determineChatPermissions", () => {
   resetDatabaseBeforeEach()

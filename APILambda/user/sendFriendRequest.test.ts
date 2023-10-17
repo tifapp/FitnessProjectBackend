@@ -1,8 +1,8 @@
 import { conn } from "TiFBackendUtils"
-import { insertUser } from "../user/index.js"
-import { callPostFriendRequest } from "./helpers/users.js"
-import { testAuthorizationHeader, testUsers } from "./testVariables.js"
-import { resetDatabaseBeforeEach } from "./database.js"
+import { insertUser } from "./index.js"
+import { callPostFriendRequest } from "../test/helpers/users.js"
+import { testAuthorizationHeader, testUsers } from "../test/testVariables.js"
+import { resetDatabaseBeforeEach } from "../test/database.js"
 
 describe("FriendRequest tests", () => {
   resetDatabaseBeforeEach()

@@ -1,10 +1,10 @@
 import { conn } from "TiFBackendUtils"
 import { randomUUID } from "crypto"
 import { userNotFoundBody } from "../shared/Responses.js"
-import { insertUser } from "../user/index.js"
-import { resetDatabaseBeforeEach } from "./database.js"
-import { callGetUser } from "./helpers/users.js"
-import { testAuthorizationHeader, testUsers } from "./testVariables.js"
+import { insertUser } from "./index.js"
+import { resetDatabaseBeforeEach } from "../test/database.js"
+import { callGetUser } from "../test/helpers/users.js"
+import { testAuthorizationHeader, testUsers } from "../test/testVariables.js"
 
 describe("GetUser tests", () => {
   resetDatabaseBeforeEach()

@@ -1,6 +1,6 @@
 import { userNotFoundBody } from "../shared/Responses.js"
-import { callGetSelf, callPostUser } from "./helpers/users.js"
-import { testAuthorizationHeader, mockClaims } from "./testVariables.js"
+import { callGetSelf, callPostUser } from "../test/helpers/users.js"
+import { testAuthorizationHeader, mockClaims } from "../test/testVariables.js"
 
 describe("GetSelf tests", () => {
   it("404s when you have no account", async () => {

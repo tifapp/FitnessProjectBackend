@@ -1,6 +1,6 @@
 import { randomInt } from "crypto"
-import { callGetEvent } from "./helpers/events.js"
-import { testAuthorizationHeader } from "./testVariables.js"
+import { callGetEvent } from "../test/helpers/events.js"
+import { testAuthorizationHeader } from "../test/testVariables.js"
 
 describe("GetSingleEvent tests", () => {
   it("should return 404 if the event doesnt exist", async () => {
