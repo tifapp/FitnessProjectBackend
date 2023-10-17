@@ -28,6 +28,6 @@ export const envVars = EnvVarsSchema.parse(process.env)
  * Examples of this include AWS S3 buckets, or SNS/Push notification clients.
  */
 export type ServerEnvironment = {
-  environment: EnvironmentType;
-  conn: Connection;
-};
+  environment: EnvironmentType
+  conn: Connection
+}

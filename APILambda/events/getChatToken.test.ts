@@ -1,6 +1,9 @@
 import { randomInt } from "crypto"
 import { resetDatabaseBeforeEach } from "../test/database.js"
-import { callCreateEvent, callGetEventChatToken } from "../test/helpers/events.js"
+import {
+  callCreateEvent,
+  callGetEventChatToken
+} from "../test/helpers/events.js"
 import { callPostUser } from "../test/helpers/users.js"
 import { testEvents } from "../test/testEvents.js"
 
@@ -16,7 +19,10 @@ describe("GetTokenRequest tests", () => {
   // })
 
   it("should return 404 if the event doesnt exist", async () => {
-    const resp = await callGetEventChatToken(global.defaultUser.auth, randomInt(1000))
+    const resp = await callGetEventChatToken(
+      global.defaultUser.auth,
+      randomInt(1000)
+    )
 
     expect(resp.status).toEqual(404)
     expect(resp.body).toMatchObject({ body: "event does not exist" })

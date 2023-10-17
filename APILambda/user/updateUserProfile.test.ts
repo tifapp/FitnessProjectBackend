@@ -8,14 +8,20 @@ describe("Update user profile tests", () => {
     it("should 200 when updating the handle to a unique handle for a user that exists", async () => {
       await callPostUser(global.defaultUser.auth)
       const userHandle = "handle"
-      const resp = await callUpdateUserHandle(global.defaultUser.auth, userHandle)
+      const resp = await callUpdateUserHandle(
+        global.defaultUser.auth,
+        userHandle
+      )
 
       expect(resp.status).toEqual(204)
     })
 
     it("should 400 for an invalid handle", async () => {
       const userHandle = "@#($@(#$R%U*@#("
-      const resp = await callUpdateUserHandle(global.defaultUser.auth, userHandle) // Needs to use method from the update user endpoint
+      const resp = await callUpdateUserHandle(
+        global.defaultUser.auth,
+        userHandle
+      ) // Needs to use method from the update user endpoint
 
       expect(resp.status).toEqual(400)
       expect(resp.body).toMatchObject({ error: "invalid-request" })
@@ -23,7 +29,10 @@ describe("Update user profile tests", () => {
 
     it("should 401 on non existing user", async () => {
       const userHandle = "handle"
-      const resp = await callUpdateUserHandle(global.defaultUser.auth, userHandle) // Needs to use method from the update user endpoint
+      const resp = await callUpdateUserHandle(
+        global.defaultUser.auth,
+        userHandle
+      ) // Needs to use method from the update user endpoint
 
       expect(resp.status).toEqual(401)
       expect(resp.body).toMatchObject({ error: "user-not-found" })
@@ -34,7 +43,10 @@ describe("Update user profile tests", () => {
       const user2 = await global.registerUser()
       const user2Profile = await callPostUser(user2.auth)
 
-      const resp = await callUpdateUserHandle(global.defaultUser.auth, user2Profile.body.handle)
+      const resp = await callUpdateUserHandle(
+        global.defaultUser.auth,
+        user2Profile.body.handle
+      )
 
       expect(resp.status).toEqual(401)
       expect(resp.body).toMatchObject({ error: "duplicate-handle" })

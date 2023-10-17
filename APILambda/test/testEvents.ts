@@ -9,7 +9,7 @@ const mockLocationCoordinate2D = () => ({
 const createTestEvent = (): CreateEventInput => {
   const startDate = Math.floor(Math.random() * 1000)
   const endDate = startDate + 10000
-  return ({
+  return {
     title: faker.word.noun(),
     description: faker.animal.rodent(),
     startTimestamp: new Date(startDate),
@@ -18,7 +18,7 @@ const createTestEvent = (): CreateEventInput => {
     shouldHideAfterStartDate: true,
     isChatEnabled: true,
     ...mockLocationCoordinate2D()
-  })
+  }
 }
 
 const createTestEvents = (events: number) => {

@@ -57,7 +57,12 @@ describe("determineChatPermissions", () => {
     endTimestamp.setFullYear(endTimestamp.getFullYear() + 1)
     const eventId = 1
 
-    const result = determineChatPermissions(hostId, endTimestamp, userId, eventId)
+    const result = determineChatPermissions(
+      hostId,
+      endTimestamp,
+      userId,
+      eventId
+    )
 
     expect(result).toEqual({
       1: ["history", "subscribe", "publish"],
@@ -72,7 +77,12 @@ describe("determineChatPermissions", () => {
     endTimestamp.setFullYear(endTimestamp.getFullYear() + 1)
     const eventId = 2
 
-    const result = determineChatPermissions(hostId, endTimestamp, userId, eventId)
+    const result = determineChatPermissions(
+      hostId,
+      endTimestamp,
+      userId,
+      eventId
+    )
 
     expect(result).toEqual({
       2: ["history", "subscribe", "publish"],
@@ -86,7 +96,12 @@ describe("determineChatPermissions", () => {
     const endTimestamp = new Date("2022-09-15T12:00:00Z") // Past date
     const eventId = 3
 
-    const result = determineChatPermissions(hostId, endTimestamp, userId, eventId)
+    const result = determineChatPermissions(
+      hostId,
+      endTimestamp,
+      userId,
+      eventId
+    )
 
     expect(result).toEqual({
       3: ["history", "subscribe"],

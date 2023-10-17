@@ -29,13 +29,13 @@ export const addBenchmarking = (app: Application) => {
  *
  * @returns an express app instance suitable for testing
  */
-export const testApp = (() => process.env.TEST_ENV === "staging"
-  ? process.env.API_ENDPOINT
-  : (() => {
-    const app = createApp()
-    addBenchmarking(app)
-    addCognitoTokenVerification(app, testEnv)
-    addRoutes(app, testEnv)
-    return app
-  })()
-)()
+export const testApp = (() =>
+  process.env.TEST_ENV === "staging"
+    ? process.env.API_ENDPOINT
+    : (() => {
+      const app = createApp()
+      addBenchmarking(app)
+      addCognitoTokenVerification(app, testEnv)
+      addRoutes(app, testEnv)
+      return app
+    })())()

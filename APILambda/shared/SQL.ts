@@ -26,14 +26,14 @@ export const CreateEventSchema = z
     endTimestamp: new Date(res.endTimestamp)
   }))
 
-export type CreateEventInput = z.infer<typeof CreateEventSchema>;
+export type CreateEventInput = z.infer<typeof CreateEventSchema>
 
 export type GetEventsRequest = {
-  userId: string;
-  latitude: number | string;
-  longitude: number | string;
-  radiusMeters: number;
-};
+  userId: string
+  latitude: number | string
+  longitude: number | string
+  radiusMeters: number
+}
 
 /**
  * Creates an event in the database.
@@ -71,7 +71,12 @@ export const insertEvent = async (
       :longitude
     )
     `,
-    { ...request, startTimestamp: request.startTimestamp.getTime() / 1000, endTimestamp: request.endTimestamp.getTime() / 1000, hostId }
+    {
+      ...request,
+      startTimestamp: request.startTimestamp.getTime() / 1000,
+      endTimestamp: request.endTimestamp.getTime() / 1000,
+      hostId
+    }
   )
 }
 
@@ -110,10 +115,12 @@ export type DatabaseEvent = {
   isChatEnabled: boolean
 }
 
-export const getEventWithId = async (
-  conn: SQLExecutable,
-  eventId: number
-) => await queryFirst<DatabaseEvent>(conn, "SELECT * FROM event WHERE id=:eventId", { eventId })
+export const getEventWithId = async (conn: SQLExecutable, eventId: number) =>
+  await queryFirst<DatabaseEvent>(
+    conn,
+    "SELECT * FROM event WHERE id=:eventId",
+    { eventId }
+  )
 
 export const createEvent = async (
   conn: SQLExecutable,

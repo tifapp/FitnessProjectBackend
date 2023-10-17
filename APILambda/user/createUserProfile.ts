@@ -1,11 +1,12 @@
 import { ServerEnvironment } from "../env.js"
 import { ValidatedRouter } from "../validation.js"
-import {
-  registerNewUser
-} from "./SQL.js"
+import { registerNewUser } from "./SQL.js"
 import { generateUniqueUsername } from "./generateUserHandle.js"
 
-export const createUserProfileRouter = (environment: ServerEnvironment, router: ValidatedRouter) =>
+export const createUserProfileRouter = (
+  environment: ServerEnvironment,
+  router: ValidatedRouter
+) =>
   router.post("/", {}, async (req, res) => {
     if (res.locals.name === "") {
       return res.status(401).json({ error: "invalid-claims" })
@@ -18,7 +19,10 @@ export const createUserProfileRouter = (environment: ServerEnvironment, router: 
     // Check if we can pass this data as a req so then we can reuse the validation middleware.
 
     try {
-      const handle = await generateUniqueUsername(environment.conn, registerReq.name)
+      const handle = await generateUniqueUsername(
+        environment.conn,
+        registerReq.name
+      )
 
       const result = await environment.conn.transaction(async (tx) => {
         return await registerNewUser(tx, Object.assign(registerReq, { handle }))

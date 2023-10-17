@@ -2,7 +2,10 @@ import request from "supertest"
 import { UserSettings } from "../../user/index.js"
 import { testApp } from "../testApp.js"
 
-export const callPatchSettings = async (bearerToken: string, settings: Partial<UserSettings>) => {
+export const callPatchSettings = async (
+  bearerToken: string,
+  settings: Partial<UserSettings>
+) => {
   return await request(testApp)
     .patch("/user/self/settings")
     .set("Authorization", bearerToken)
@@ -17,10 +20,16 @@ export const callGetSettings = async (bearerToken: string) => {
 }
 
 export const callGetSelf = async (bearerToken: string) => {
-  return await request(testApp).get("/user/self").set("Authorization", bearerToken).send()
+  return await request(testApp)
+    .get("/user/self")
+    .set("Authorization", bearerToken)
+    .send()
 }
 
-export const callPostFriendRequest = async (bearerToken: string, toUser: string) => {
+export const callPostFriendRequest = async (
+  bearerToken: string,
+  toUser: string
+) => {
   return await request(testApp)
     .post(`/user/friend/${toUser}`)
     .set("Authorization", bearerToken)
@@ -31,7 +40,10 @@ export const callPostUser = async (bearerToken?: string) => {
   if (!bearerToken) {
     return await request(testApp).post("/user").send()
   }
-  return await request(testApp).post("/user").set("Authorization", bearerToken).send()
+  return await request(testApp)
+    .post("/user")
+    .set("Authorization", bearerToken)
+    .send()
 }
 
 export const callGetUser = async (bearerToken: string, userId: string) => {
@@ -56,7 +68,10 @@ export const callAutocompleteUsers = async (handle: string, limit: number) => {
     .send()
 }
 
-export const callUpdateUserHandle = async (userId: string, userHandle: string) => {
+export const callUpdateUserHandle = async (
+  userId: string,
+  userHandle: string
+) => {
   return await request(testApp)
     .patch("/user/self")
     .set("Authorization", userId)
