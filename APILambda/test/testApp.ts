@@ -12,8 +12,6 @@ export const testEnv: ServerEnvironment = {
   conn
 }
 
-console.log("env is ", process.env)
-
 /**
  * Creates a test environment application.
  *
