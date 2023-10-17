@@ -8,8 +8,7 @@ import { Router } from "express"
 
 const AutocompleteUsersRequestSchema = z.object({
   query: z.object({
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    handle: UserHandle.schema as any,
+    handle: UserHandle.schema,
     limit: z.string()
       .transform(arg => parseInt(arg))
       .refine((arg) => arg >= 1 && arg <= 50)

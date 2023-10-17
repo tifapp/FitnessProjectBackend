@@ -10,8 +10,7 @@ import { DatabaseUser } from "./models.js"
 const UpdateUserRequestSchema = z.object({
   name: z.string().optional(),
   bio: z.string().max(250).optional(),
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  handle: UserHandle.schema as any
+  handle: UserHandle.schema
 })
 
 export type UpdateUserRequest = z.infer<typeof UpdateUserRequestSchema>;
