@@ -1,8 +1,11 @@
 import { randomUUID } from "crypto"
 import { userNotFoundBody } from "../shared/Responses.js"
 import { callGetUser, callPostUser } from "../test/helpers/users.js"
+import { resetDatabaseBeforeEach } from "../test/database.js"
 
 describe("GetUser tests", () => {
+  resetDatabaseBeforeEach()
+
   it("should 404 on non existing user", async () => {
     const userId = randomUUID()
     const resp = await callGetUser(global.defaultUser.auth, userId)
