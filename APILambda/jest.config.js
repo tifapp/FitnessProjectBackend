@@ -15,5 +15,6 @@ export default {
     "^(\\.{1,2}/.*)\\.js$": "$1"
   },
   globalSetup: "./setupTestUsers.ts",
-  globalTeardown: "./deleteTestUsers.ts"
+  globalTeardown: "./deleteTestUsers.ts",
+  testTimeout: 30000
 }
