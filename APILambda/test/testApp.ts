@@ -5,7 +5,7 @@ import { ServerEnvironment } from "../env.js"
 
 export const testEnv: ServerEnvironment = {
   // use env vars
-  environment: process.env.USER_TOKEN ? "staging" : "dev",
+  environment: process.env.NODE_ENV === "staging" ? "staging" : "dev",
   conn
 }
 

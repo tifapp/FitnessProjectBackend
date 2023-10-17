@@ -3,43 +3,28 @@ import { faker } from "@faker-js/faker"
 import { randomUUID } from "crypto"
 import jwt from "jsonwebtoken"
 import { AuthClaims } from "../auth"
-import { TestUser } from "../global"
-import { RegisterUserRequest } from "../user/SQL"
+import { TestUser, TestUserInput } from "../global.d"
 
-export const createMockAuthToken = (user: Partial<RegisterUserRequest>) => {
+export const createMockAuthToken = async (user?: Partial<TestUserInput>): Promise<TestUser> => {
   const secret = "supersecret"
+  const id = randomUUID()
 
   const tokenPayload: AuthClaims = {
-    sub: user.id ?? randomUUID(),
-    name: user.name ?? faker.name.fullName(),
+    sub: id,
+    name: user?.name ?? faker.name.fullName(),
     email: faker.internet.email(),
+    // Comes from Cognito
+    // eslint-disable-next-line @typescript-eslint/naming-convention
     phone_number: faker.phone.imei(),
-    email_verified: true,
-    phone_number_verified: true
+    // Comes from Cognito
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    email_verified: user?.isVerified ?? true,
+    // Comes from Cognito
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    phone_number_verified: user?.isVerified ?? true
   }
 
   const token = jwt.sign(tokenPayload, secret, { algorithm: "HS256" })
 
-  return `Bearer ${token}`
-}
-
-const createMockUser = (): TestUser => {
-  const user = {
-    id: randomUUID(),
-    name: faker.name.fullName(),
-    handle: `handle${Math.floor(Math.random() * 9999)}` // TODO: find better handle generator
-  }
-
-  return ({ profile: user, authorization: createMockAuthToken(user) })
-}
-
-// do not use directly, use global.users in tests
-export const createMockUsers = (users: number) => {
-  const result = []
-
-  for (let i = 0; i < users; i++) {
-    result.push(createMockUser())
-  }
-
-  return result
+  return ({ auth: `Bearer ${token}`, id })
 }

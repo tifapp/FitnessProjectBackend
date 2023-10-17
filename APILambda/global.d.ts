@@ -1,14 +1,13 @@
+/* eslint-disable no-multiple-empty-lines */
+/* eslint-disable semi */
 /* eslint-disable no-unused-vars */
-import { RegisterUserRequest } from "./user/SQL.js";
 
 export type TestUserInput = {name?: string; isVerified?: boolean}
-export type TestUser = {authorization: string, profile: RegisterUserRequest}
+export type TestUser = {auth: string, id: string}
 
 /* eslint-disable no-var */
 declare global {
-  var testUsers: TestUser[]
-  var generateAuthToken: (user: TestUserInput) => string
+  var registerUser: (user?: TestUserInput) => Promise<TestUser>
+  var defaultUser: TestUser
+  var defaultUser2: TestUser
 }
-
-export { };
-

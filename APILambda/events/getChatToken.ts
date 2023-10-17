@@ -65,7 +65,7 @@ ChatResult> => {
     }
 
     const userInEvent = await hasResults(conn, "SELECT TRUE FROM eventAttendance WHERE userId = :userId AND eventId = :eventId;", { userId, eventId })
-    console.debug("User in event, ", userInEvent)
+
     if (!userInEvent) {
       return { status: "error", value: "user is not apart of event" }
     }

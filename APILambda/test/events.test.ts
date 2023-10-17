@@ -31,7 +31,7 @@ describe("Events tests", () => {
   describe("GetSingleEvent tests", () => {
     it("should return 404 if the event doesnt exist", async () => {
       const eventId = randomInt(1000)
-      const resp = await callGetEvent(global.testUsers[0].authorization, eventId)
+      const resp = await callGetEvent(global.defaultUser.auth, eventId)
 
       expect(resp.status).toEqual(404)
       expect(resp.body).toMatchObject({ error: "event-not-found", eventId })
