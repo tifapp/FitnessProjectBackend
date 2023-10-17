@@ -1,7 +1,10 @@
 import { userNotFoundBody } from "../shared/Responses.js"
+import { resetDatabaseBeforeEach } from "../test/database.js"
 import { callGetSelf, callPostUser } from "../test/helpers/users.js"
 
 describe("GetSelf tests", () => {
+  resetDatabaseBeforeEach()
+
   it("404s when you have no account", async () => {
     const resp = await callGetSelf(global.defaultUser.auth)
     expect(resp.status).toEqual(404)
