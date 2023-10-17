@@ -12,11 +12,11 @@ export const userNotFoundBody = (userId: string) => ({
 })
 
 /**
-   * Sends a user not found response given a response and user id.
-   *
-   * @param res the response object to use
-   * @param userId the id of the user who was not found.
-   */
+ * Sends a user not found response given a response and user id.
+ *
+ * @param res the response object to use
+ * @param userId the id of the user who was not found.
+ */
 export const userNotFoundResponse = (res: Response, userId: string) => {
   return res.status(404).json(userNotFoundBody(userId))
 }

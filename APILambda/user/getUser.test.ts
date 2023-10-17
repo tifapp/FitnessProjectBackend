@@ -1,28 +1,28 @@
-import { conn } from "TiFBackendUtils"
 import { randomUUID } from "crypto"
 import { userNotFoundBody } from "../shared/Responses.js"
-import { insertUser } from "./index.js"
-import { resetDatabaseBeforeEach } from "../test/database.js"
-import { callGetUser } from "../test/helpers/users.js"
-import { testAuthorizationHeader, testUsers } from "../test/testVariables.js"
+import { callGetUser, callPostUser } from "../test/helpers/users.js"
 
 describe("GetUser tests", () => {
-  resetDatabaseBeforeEach()
   it("should 404 on non existing user", async () => {
     const userId = randomUUID()
-    const resp = await callGetUser(testAuthorizationHeader, userId)
+    const resp = await callGetUser(global.defaultUser.auth, userId)
 
     expect(resp.status).toEqual(404)
     expect(resp.body).toMatchObject(userNotFoundBody(userId))
   })
 
   it("should retrieve a user that exists", async () => {
-    await insertUser(conn, testUsers[0])
-    const resp = await callGetUser(testAuthorizationHeader, testUsers[0].id)
+    const user2 = await global.registerUser({ name: "John Doe" })
+    const user2Profile = (await callPostUser(user2.auth)).body
+    const resp = await callGetUser(global.defaultUser.auth, user2Profile.id)
 
     expect(resp.status).toEqual(200)
     expect(resp.body).toMatchObject(
-      expect.objectContaining(testUsers[0])
+      expect.objectContaining({
+        id: user2.id,
+        name: "John Doe",
+        handle: user2Profile.handle
+      })
     )
   })
 })

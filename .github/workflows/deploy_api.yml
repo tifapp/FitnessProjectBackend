@@ -75,12 +75,20 @@ jobs:
       
       - name: Update AWS Lambda env variables
         run: |
+          if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+            DB_USERNAME=${{ secrets.DATABASE_USERNAME }}
+            DB_PASSWORD=${{ secrets.DATABASE_PASSWORD }}
+          else
+            DB_USERNAME=${{ secrets.DEV_DATABASE_USERNAME }}
+            DB_PASSWORD=${{ secrets.DEV_DATABASE_PASSWORD }}
+          fi
+
           aws lambda update-function-configuration \
             --function-name lambdaSQLRoute \
             --environment "Variables={\
               DATABASE_HOST=${{ secrets.DATABASE_HOST }},\
-              DATABASE_USERNAME=${{ secrets.DATABASE_USERNAME }},\
-              DATABASE_PASSWORD=${{ secrets.DATABASE_PASSWORD }},\
+              DATABASE_USERNAME=$DB_USERNAME,\
+              DATABASE_PASSWORD=$DB_PASSWORD,\
               ABLY_KEY=${{ secrets.ABLY_KEY }}\
             }"
 
@@ -101,9 +109,38 @@ jobs:
   staging_tests:
     needs: deploy
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
+    env:
+      DATABASE_HOST: ${{ secrets.DATABASE_HOST }}
+      DATABASE_USERNAME: ${{ secrets.DEV_DATABASE_USERNAME }}
+      DATABASE_PASSWORD: ${{ secrets.DEV_DATABASE_PASSWORD }}
+      AWS_REGION: ${{ secrets.AWS_REGION }}
+      AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      ABLY_KEY: ${{ secrets.ABLY_KEY }}
+      AWS_LAMBDA_FUNCTION_NAME: 'lambdaSQLRoute'
+      COGNITO_CLIENT_APP_ID: ${{ secrets.COGNITO_CLIENT_APP_ID }}
+      COGNITO_USER_POOL_ID: ${{ secrets.COGNITO_USER_POOL_ID }}
+      TEST_ENV: 'staging'
+      API_ENDPOINT: 'https://623qsegfb9.execute-api.us-west-2.amazonaws.com/staging'
+    
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
+        
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v2
+        with:
+          node-version: '18'
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
           
       - name: Install dependencies
         run: |
@@ -116,5 +153,6 @@ jobs:
         
       - name: Authenticate with AWS Cognito and run tests
         run: |
-          USER_TOKEN=$(aws cognito-idp initiate-auth --auth-flow USER_PASSWORD_AUTH --auth-parameters USERNAME="${{ secrets.COGNITO_USER }}",PASSWORD="${{ secrets.COGNITO_PASSWORD }}" --client-id 3lfnaahkhjaotal2m13huv05ji --query 'AuthenticationResult.IdToken' --output text)
-          cd APILambda && npm run test:ci
+          cd APILambda
+          export NODE_OPTIONS="--max_old_space_size=4096"
+          npm run test:ci

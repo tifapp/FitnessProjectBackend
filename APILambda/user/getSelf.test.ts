@@ -1,22 +1,21 @@
 import { userNotFoundBody } from "../shared/Responses.js"
 import { callGetSelf, callPostUser } from "../test/helpers/users.js"
-import { testAuthorizationHeader, mockClaims } from "../test/testVariables.js"
 
 describe("GetSelf tests", () => {
   it("404s when you have no account", async () => {
-    const resp = await callGetSelf(testAuthorizationHeader)
+    const resp = await callGetSelf(global.defaultUser.auth)
     expect(resp.status).toEqual(404)
-    expect(resp.body).toMatchObject(userNotFoundBody(mockClaims.sub))
+    expect(resp.body).toMatchObject(userNotFoundBody(global.defaultUser.id))
   })
 
   it("should be able to fetch your private account info", async () => {
-    await callPostUser(testAuthorizationHeader)
-    const resp = await callGetSelf(testAuthorizationHeader)
+    await callPostUser(global.defaultUser.auth)
+    const resp = await callGetSelf(global.defaultUser.auth)
 
     expect(resp.status).toEqual(200)
     expect(resp.body).toMatchObject(
       expect.objectContaining({
-        id: mockClaims.sub,
+        id: global.defaultUser.id,
         bio: null,
         updatedAt: null,
         profileImageURL: null

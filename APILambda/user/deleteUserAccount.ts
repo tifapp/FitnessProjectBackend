@@ -1,16 +1,17 @@
 import { ServerEnvironment } from "../env.js"
 import { userNotFoundResponse } from "../shared/Responses.js"
 import { ValidatedRouter } from "../validation.js"
-import {
-  userWithIdExists
-} from "./SQL.js"
+import { userWithIdExists } from "./SQL.js"
 
 /**
  * Creates routes related to user operations.
  *
  * @param environment see {@link ServerEnvironment}.
  */
-export const deleteUserAccountRouter = (environment: ServerEnvironment, router: ValidatedRouter) => {
+export const deleteUserAccountRouter = (
+  environment: ServerEnvironment,
+  router: ValidatedRouter
+) => {
   /**
    * deletes the current user's account
    */
