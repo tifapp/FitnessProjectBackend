@@ -1,10 +1,7 @@
-import dotenv from "dotenv"
 import { addBenchmarking, addRoutes, createApp } from "../app.js"
 import { addCognitoTokenVerification } from "../auth.js"
 import { conn } from "../dbconnection.js"
 import { ServerEnvironment } from "../env.js"
-
-dotenv.config()
 
 export const testEnv: ServerEnvironment = {
   // use env vars
