@@ -35,11 +35,11 @@
         }
       }
     },
-    "/chat/{eventID}" : {
+    "/chat/{eventId}" : {
       "get" : {
         "produces" : [ "application/json" ],
         "parameters" : [ {
-          "name" : "eventID",
+          "name" : "eventId",
           "in" : "path",
           "required" : true,
           "type" : "string"
