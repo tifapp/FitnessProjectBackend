@@ -1,6 +1,5 @@
 import dotenv from "dotenv"
-import { Application } from "express"
-import { addRoutes, createApp } from "../app.js"
+import { addBenchmarking, addRoutes, createApp } from "../app.js"
 import { addCognitoTokenVerification } from "../auth.js"
 import { conn } from "../dbconnection.js"
 import { ServerEnvironment } from "../env.js"
@@ -13,29 +12,19 @@ export const testEnv: ServerEnvironment = {
   conn
 }
 
-export const addBenchmarking = (app: Application) => {
-  app.use((req, res, next) => {
-    const start = Date.now()
-    res.on("finish", () => {
-      const duration = Date.now() - start
-      console.log(`[${req.method}] ${req.originalUrl} took ${duration}ms`)
-    })
-    next()
-  })
-}
+console.log("env is ", process.env)
 
 /**
  * Creates a test environment application.
  *
  * @returns an express app instance suitable for testing
  */
-export const testApp = (() =>
-  process.env.TEST_ENV === "staging"
-    ? process.env.API_ENDPOINT
-    : (() => {
-      const app = createApp()
-      addBenchmarking(app)
-      addCognitoTokenVerification(app, testEnv)
-      addRoutes(app, testEnv)
-      return app
-    })())()
+export const testApp = process.env.TEST_ENV === "staging"
+  ? process.env.API_ENDPOINT
+  : (() => {
+    const app = createApp()
+    addBenchmarking(app)
+    addCognitoTokenVerification(app, testEnv)
+    addRoutes(app, testEnv)
+    return app
+  })()
