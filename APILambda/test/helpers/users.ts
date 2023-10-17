@@ -1,6 +1,6 @@
 import request from "supertest"
 import { UserSettings } from "../../user/index.js"
-import { testApp, testAuthorizationHeader } from "../testVariables.js"
+import { testApp } from "../testApp.js"
 
 export const callPatchSettings = async (bearerToken: string, settings: Partial<UserSettings>) => {
   return await request(testApp)
@@ -28,6 +28,9 @@ export const callPostFriendRequest = async (bearerToken: string, toUser: string)
 }
 
 export const callPostUser = async (bearerToken?: string) => {
+  // extra if statement to check if we're in a dev environment and register with cognito?
+  // should we even bother separating register with insertion?
+  // the creator function is only really useful if we have to create a user with custom attributes. but there are lots of tests where we just need an existing user with some random attributes and we're not testing out behavior for specific attributes
   if (!bearerToken) {
     return await request(testApp).post("/user").send()
   }
@@ -52,7 +55,7 @@ export const callAutocompleteUsers = async (handle: string, limit: number) => {
   return await request(testApp)
     .get("/user/autocomplete")
     .query({ handle, limit })
-    .set("Authorization", testAuthorizationHeader)
+    .set("Authorization", global.testUsers[0].authorization) // todo: remove auth
     .send()
 }
 

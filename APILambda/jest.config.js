@@ -13,5 +13,7 @@ export default {
   testPathIgnorePatterns: ["/dist/"],
   moduleNameMapper: {
     "^(\\.{1,2}/.*)\\.js$": "$1"
-  }
+  },
+  globalSetup: "./setupTestUsers.ts",
+  globalTeardown: "./deleteTestUsers.ts"
 }

@@ -1,14 +1,14 @@
 import { resetDatabaseBeforeEach } from "../test/database.js"
 import { callAutocompleteUsers, callPostUser } from "../test/helpers/users.js"
-import { generateMockAuthorizationHeader } from "../test/testVariables.js"
 
 describe("AutocompleteUsers tests", () => {
   resetDatabaseBeforeEach()
 
   test("autocomplete endpoint basic request", async () => {
-    const user1Data = (await callPostUser(generateMockAuthorizationHeader({ name: "Bitchell Dickle" }))).body
-    await callPostUser(generateMockAuthorizationHeader({ name: "Gojo" }))
-    const user2Data = (await callPostUser(generateMockAuthorizationHeader({ name: "Big Chungus" }))).body
+    // create test user 1, then test
+    const user1Data = (await callPostUser(global.testUsers[0].authorization)).body
+    await callPostUser(global.testUsers[1].authorization)
+    const user2Data = (await callPostUser(global.testUsers[2].authorization)).body
 
     const resp = await callAutocompleteUsers("bi", 50)
     expect(resp.status).toEqual(200)
@@ -29,8 +29,8 @@ describe("AutocompleteUsers tests", () => {
   })
 
   it("should only query up to the limit", async () => {
-    await callPostUser(generateMockAuthorizationHeader({ name: "Gojo" }))
-    await callPostUser(generateMockAuthorizationHeader({ name: "Gojo" }))
+    await callPostUser(global.testUsers[0].authorization)
+    await callPostUser(global.testUsers[1].authorization)
 
     const resp = await callAutocompleteUsers("go", 1)
     expect(resp.status).toEqual(200)

@@ -7,7 +7,7 @@ import {
   resetDatabaseBeforeEach
 } from "./database.js"
 import { callGetEvent } from "./helpers/events.js"
-import { testAuthorizationHeader, testEvents } from "./testVariables.js"
+import { testEvents } from "./testEvents.js"
 
 describe("Events tests", () => {
   resetDatabaseBeforeEach()
@@ -31,7 +31,7 @@ describe("Events tests", () => {
   describe("GetSingleEvent tests", () => {
     it("should return 404 if the event doesnt exist", async () => {
       const eventId = randomInt(1000)
-      const resp = await callGetEvent(testAuthorizationHeader, eventId)
+      const resp = await callGetEvent(global.testUsers[0].authorization, eventId)
 
       expect(resp.status).toEqual(404)
       expect(resp.body).toMatchObject({ error: "event-not-found", eventId })
