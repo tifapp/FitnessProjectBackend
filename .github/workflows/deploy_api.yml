@@ -123,7 +123,6 @@ jobs:
       AWS_LAMBDA_FUNCTION_NAME: 'lambdaSQLRoute'
       COGNITO_CLIENT_APP_ID: ${{ secrets.COGNITO_CLIENT_APP_ID }}
       COGNITO_USER_POOL_ID: ${{ secrets.COGNITO_USER_POOL_ID }}
-      TEST_ENV: 'staging'
       API_ENDPOINT: 'https://623qsegfb9.execute-api.us-west-2.amazonaws.com/staging'
     
     steps:
@@ -155,4 +154,4 @@ jobs:
         run: |
           cd APILambda
           export NODE_OPTIONS="--max_old_space_size=4096"
-          npm run test:ci
+          TEST_ENV=staging npm run test:ci
