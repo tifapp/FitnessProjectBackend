@@ -17,7 +17,7 @@ export const testEnv: ServerEnvironment = {
  *
  * @returns an express app instance suitable for testing
  */
-export const testApp = testEnv.environment === "staging"
+export const testApp = process.env.TEST_ENV === "staging"
   ? process.env.API_ENDPOINT
   : (() => {
     const app = createApp()
