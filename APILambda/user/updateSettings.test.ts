@@ -1,31 +1,10 @@
-import { userNotFoundBody } from "../shared/Responses.js"
-import { resetDatabaseBeforeEach } from "./database.js"
-import { callGetSettings, callPostUser, callPatchSettings } from "./helpers/users.js"
-import { testAuthorizationHeader, mockClaims } from "./testVariables.js"
+import { resetDatabaseBeforeEach } from "../test/database.js"
+import { callPatchSettings, callPostUser, callGetSettings } from "../test/helpers/users.js"
+import { testAuthorizationHeader, mockClaims } from "../test/testVariables.js"
+import { userNotFoundBody } from "./getUserBasedOnId.js"
 
-describe("Settings tests", () => {
+describe("Update Settings tests", () => {
   resetDatabaseBeforeEach()
-  it("should 404 when gettings settings when user does not exist", async () => {
-    const resp = await callGetSettings(testAuthorizationHeader)
-    expect(resp.status).toEqual(404)
-    expect(resp.body).toEqual(userNotFoundBody(mockClaims.sub))
-  })
-
-  it("should return the default settings when settings not edited", async () => {
-    await callPostUser(testAuthorizationHeader)
-
-    const resp = await callGetSettings(testAuthorizationHeader)
-    expect(resp.status).toEqual(200)
-    expect(resp.body).toEqual({
-      isAnalyticsEnabled: true,
-      isCrashReportingEnabled: true,
-      isEventNotificationsEnabled: true,
-      isMentionsNotificationsEnabled: true,
-      isChatNotificationsEnabled: true,
-      isFriendRequestNotificationsEnabled: true
-    })
-  })
-
   // inside of the helper method, transform the id into jwt/mockclaims.sub. From the perspective of the test, should only deal with test users and test user ids.
   it("should 404 when attempting edit settings for non-existent user", async () => {
     const resp = await callPatchSettings(testAuthorizationHeader, { isAnalyticsEnabled: false })
