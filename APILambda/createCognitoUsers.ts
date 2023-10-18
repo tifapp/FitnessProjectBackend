@@ -1,9 +1,6 @@
 import { faker } from "@faker-js/faker"
 import AWS from "aws-sdk"
-import dotenv from "dotenv"
 import { TestUser, TestUserInput } from "./global.d"
-
-dotenv.config()
 
 AWS.config.update({
   region: process.env.AWS_REGION,

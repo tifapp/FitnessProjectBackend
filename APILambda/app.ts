@@ -28,6 +28,21 @@ export const createApp = () => {
   return app
 }
 
+export const addBenchmarking = (app: Application) => {
+  app.use((req, res, next) => {
+    const start = Date.now()
+    const startMem = process.memoryUsage().heapUsed
+    res.on("finish", () => {
+      const duration = Date.now() - start
+      console.log(`[${req.method}] ${req.originalUrl} took ${duration}ms`)
+      const endMem = process.memoryUsage().heapUsed
+      const diffMem = endMem - startMem
+      console.log(`Memory change for the request: ${diffMem} bytes`)
+    })
+    next()
+  })
+}
+
 const addEventRoutes = (environment: ServerEnvironment) => {
   const router = new ValidatedRouter()
   createEventRouter(environment, router)
