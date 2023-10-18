@@ -24,7 +24,7 @@ export class SuccessResult<Success, Failure> {
   ): AnyResult<NewSuccess, Failure | NewFailure> {
     const result = mapper(this.value)
     if (result instanceof PromiseResult || result instanceof Promise) {
-      return new PromiseResult(result)
+      return withPromise(result)
     } else {
       return result
     }
@@ -44,6 +44,15 @@ export class SuccessResult<Success, Failure> {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   mapFailure<NewFailure> (_: (value: Failure) => NewFailure) {
     return this as unknown as SuccessResult<Success, NewFailure>
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  withFailure<NewFailure> (_: NewFailure) {
+    return this as unknown as SuccessResult<Success, NewFailure>
+  }
+
+  withSuccess<NewSuccess> (value: NewSuccess) {
+    return success(value)
   }
 
   inverted () {
@@ -70,7 +79,7 @@ export class FailureResult<Success, Failure> {
   ): AnyResult<Success | NewSuccess, NewFailure> {
     const result = mapper(this.value)
     if (result instanceof PromiseResult || result instanceof Promise) {
-      return new PromiseResult(result)
+      return withPromise(result)
     } else {
       return result
     }
@@ -83,6 +92,15 @@ export class FailureResult<Success, Failure> {
 
   mapFailure<NewFailure> (mapper: (value: Failure) => NewFailure) {
     return failure(mapper(this.value)) as FailureResult<Success, NewFailure>
+  }
+
+  withFailure<NewFailure> (value: NewFailure) {
+    return failure(value)
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  withSuccess<NewSuccess> (_: NewSuccess) {
+    return this as unknown as FailureResult<NewSuccess, Failure>
   }
 
   inverted () {
@@ -112,7 +130,7 @@ export class PromiseResult<Success, Failure> {
       const newResult = result.flatMapSuccess(mapper)
       return newResult instanceof PromiseResult ? newResult.wait() : newResult
     })
-    return new PromiseResult(result)
+    return withPromise(result)
   }
 
   flatMapFailure<NewSuccess, NewFailure> (
@@ -122,21 +140,29 @@ export class PromiseResult<Success, Failure> {
       const newResult = result.flatMapFailure(mapper)
       return newResult instanceof PromiseResult ? newResult.wait() : newResult
     })
-    return new PromiseResult(result)
+    return withPromise(result)
   }
 
   mapSuccess<NewSuccess> (mapper: (value: Success) => NewSuccess) {
     const result = this.promise.then((result) => result.mapSuccess(mapper))
-    return new PromiseResult(result)
+    return withPromise(result)
   }
 
   mapFailure<NewFailure> (mapper: (value: Failure) => NewFailure) {
     const result = this.promise.then((result) => result.mapFailure(mapper))
-    return new PromiseResult(result)
+    return withPromise(result)
   }
 
   inverted () {
-    return new PromiseResult(this.promise.then((res) => res.inverted()))
+    return withPromise(this.promise.then((res) => res.inverted()))
+  }
+
+  withFailure<NewFailure> (value: NewFailure) {
+    return withPromise(this.promise.then((result) => result.withFailure(value)))
+  }
+
+  withSuccess<NewSuccess> (value: NewSuccess) {
+    return withPromise(this.promise.then((result) => result.withSuccess(value)))
   }
 
   wait () {

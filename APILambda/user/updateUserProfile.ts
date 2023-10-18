@@ -66,7 +66,7 @@ const checkForUserWithHandle = (conn: SQLExecutable, handle: UserHandle) => {
       handle: handle.rawValue
     })
     .inverted()
-    .mapFailure(() => "duplicate-handle" as const)
+    .withFailure("duplicate-handle" as const)
 }
 
 type DatabaseUserProfile = {
@@ -92,5 +92,5 @@ const getProfileSettings = (conn: SQLExecutable, userId: string) => {
       "SELECT name, handle, bio FROM user WHERE id = :userId",
       { userId }
     )
-    .mapFailure(() => "user-not-found" as const)
+    .withFailure("user-not-found" as const)
 }
