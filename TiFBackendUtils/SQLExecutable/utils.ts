@@ -1,7 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // TODO: Replace with backend utils
 import { Connection } from "@planetscale/database"
-import { Result } from "../result.js"
+import {
+  PromiseResult,
+  Result,
+  failure,
+  withPromise,
+  success
+} from "../result.js"
 
 /**
  * An interface for performing commonly used operations on a SQL database
@@ -12,7 +18,7 @@ import { Result } from "../result.js"
 export class SQLExecutable {
   private conn: Connection // Define the appropriate type for your database connection
 
-  constructor(connection: Connection) {
+  constructor (connection: Connection) {
     // Use the appropriate type for the connection
     this.conn = connection
   }
@@ -32,7 +38,7 @@ export class SQLExecutable {
    * console.log(results[0].id) // ✅ Typesafe
    * ```
    */
-  async execute<Value>(
+  async execute<Value> (
     query: string,
     args: object | any[] | null = null
   ): Promise<Value[]> {
@@ -42,13 +48,26 @@ export class SQLExecutable {
     return result.rows as Value[]
   }
 
+  run<Value> (query: string, args: object | any[] | null = null) {
+    const result = this.execute<Value>(query, args).then((values) => {
+      return success(values)
+    })
+    return withPromise(result)
+  }
+
   /**
    * Performs an idempotent transaction on the database and enforces a return type of Result<SuccessValue, ErrorValue>.
    */
-  async transaction<SuccessValue, ErrorValue>(
+  async transaction<SuccessValue, ErrorValue> (
     operation: (tx: SQLExecutable) => Promise<Result<SuccessValue, ErrorValue>>
   ): Promise<Result<SuccessValue, ErrorValue>> {
     return await this.conn.transaction(() => operation(this))
+  }
+
+  transactionResult<SuccessValue, ErrorValue> (
+    operation: (tx: SQLExecutable) => PromiseResult<SuccessValue, ErrorValue>
+  ): PromiseResult<SuccessValue, ErrorValue> {
+    return withPromise(this.conn.transaction(async () => operation(this)))
   }
 
   // ==================
@@ -58,12 +77,20 @@ export class SQLExecutable {
   /**
    * A helper function that returns if a given sql query has any results.
    */
-  async hasResults(
+  async hasResults (
     query: string,
     args: object | any[] | null = null
   ): Promise<boolean> {
     const results = await this.execute(query, args)
     return results.length > 0
+  }
+
+  checkIfHasResults (query: string, args: object | any[] | null = null) {
+    return withPromise(
+      this.hasResults(query, args).then((hasResults) => {
+        return hasResults ? success(hasResults) : failure(hasResults)
+      })
+    )
   }
 
   /**
@@ -77,7 +104,7 @@ export class SQLExecutable {
    * console.log(result?.id) // ✅ Typesafe
    * ```
    */
-  async queryFirst<Value>(
+  async queryFirst<Value> (
     query: string,
     args: object | any[] | null = null
   ): Promise<Value | undefined> {
@@ -85,12 +112,20 @@ export class SQLExecutable {
     return results[0]
   }
 
+  queryFirstResult<Value> (query: string, args: object | any[] | null = null) {
+    return withPromise(
+      this.queryFirst<Value>(query, args).then((value) => {
+        return value ? success(value) : failure(undefined)
+      })
+    )
+  }
+
   /**
    * Gets the id of the last inserted record.
    * Every return type from this function will be a string and then it can be parsed afterwards.
    * @returns the id of the last inserted record
    */
-  async selectLastInsertionId(): Promise<string | undefined> {
+  async selectLastInsertionId (): Promise<string | undefined> {
     const result = await this.queryFirst<{ "LAST_INSERT_ID()": string }>(
       "SELECT LAST_INSERT_ID()"
     )
@@ -101,7 +136,7 @@ export class SQLExecutable {
    * Gets the id of the last inserted record and then attempts to return the result parsed as an int.
    * @returns the id of the last inserted record parsed as an int
    */
-  async selectLastInsertionNumericId(): Promise<number | undefined> {
+  async selectLastInsertionNumericId (): Promise<number | undefined> {
     const id = await this.selectLastInsertionId()
     if (!id) return undefined
     return parseInt(id)

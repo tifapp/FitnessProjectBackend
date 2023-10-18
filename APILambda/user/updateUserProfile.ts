@@ -1,60 +1,16 @@
-import { UserHandle } from "TiFBackendUtils"
+import { UserHandle, success, conn, SQLExecutable } from "TiFBackendUtils"
 import { z } from "zod"
-import { SQLExecutable, queryFirst } from "../dbconnection.js"
 import { ServerEnvironment } from "../env.js"
-import { Result } from "../utils.js"
 import { ValidatedRouter } from "../validation.js"
-import { userWithHandleExists } from "./SQL.js"
 import { DatabaseUser } from "./models.js"
 
 const UpdateUserRequestSchema = z.object({
   name: z.string().optional(),
   bio: z.string().max(250).optional(),
-  handle: UserHandle.schema
+  handle: UserHandle.schema.optional()
 })
 
 export type UpdateUserRequest = z.infer<typeof UpdateUserRequestSchema>
-
-/**
- * Updates the current user's profile with the given settings.
- *
- * @param conn the query executor to use
- * @param request the fields of the user's profile to update
- */
-const updateUserProfile = async (
-  conn: SQLExecutable,
-  request: UpdateUserRequest & { selfId: string }
-) => {
-  await conn.execute(
-    `
-    UPDATE user 
-    SET name = :name, bio = :bio, handle = :handle
-    WHERE id = :selfId 
-  `,
-    { ...request, handle: request.handle.rawValue }
-  )
-}
-
-/**
- * Queries the user with the given id.
- */
-export const getProfileSettings = async (
-  conn: SQLExecutable,
-  userId: string
-) => {
-  return await queryFirst<Pick<DatabaseUser, "bio" | "handle" | "name">>(
-    conn,
-    `
-    SELECT 
-      name,
-      handle,
-      bio
-    FROM user WHERE id = :userId`,
-    {
-      userId
-    }
-  )
-}
 
 /**
  * Creates routes related to user operations.
@@ -73,49 +29,68 @@ export const updateUserProfileRouter = (
     "/self",
     { bodySchema: UpdateUserRequestSchema },
     async (req, res) => {
-      const result = await environment.conn.transaction(
-        async (
-          tx
-        ): Promise<Result<void, "user-not-found" | "duplicate-handle">> => {
-          const currentUserResult = await getProfileSettings(
-            tx,
-            res.locals.selfId
-          )
-
-          if (!currentUserResult) {
-            return { status: "error", value: "user-not-found" }
-          }
-
-          if (req.body.handle) {
-            const userWithHandle = await userWithHandleExists(
-              tx,
-              req.body.handle.rawValue
-            )
-
-            if (userWithHandle) {
-              return { status: "error", value: "duplicate-handle" }
-            }
-          }
-
-          await updateUserProfile(tx, {
-            ...currentUserResult,
-            selfId: res.locals.selfId,
-            ...req.body
-          })
-
-          return { status: "success", value: undefined }
-        }
-      )
-
-      if (result.value === "user-not-found") {
-        return res.status(401).json({ error: result.value })
-      } else if (result.value === "duplicate-handle") {
-        return res.status(401).json({ error: result.value })
-      }
-
-      return res.status(204).send("No Content") // TODO: Make util for No Content response
+      return await conn
+        .transactionResult((tx) => {
+          return overwriteProfile(tx, res.locals.selfId, req.body)
+        })
+        .mapFailure((error) => res.status(401).json({ error }))
+        .mapSuccess(() => res.status(204).send())
+        .wait()
+        .then()
     }
   )
 
   return router
+}
+
+const overwriteProfile = (
+  conn: SQLExecutable,
+  userId: string,
+  request: UpdateUserRequest
+) => {
+  const handleCheck = request.handle
+    ? checkForUserWithHandle(conn, request.handle)
+    : success(undefined)
+  return getProfileSettings(conn, userId).flatMapSuccess((settings) => {
+    return handleCheck.flatMapSuccess(() => {
+      const handle = request.handle?.rawValue ?? settings.handle
+      const profile = { ...settings, ...request, handle }
+      return updateUserProfile(conn, userId, profile)
+    })
+  })
+}
+
+const checkForUserWithHandle = (conn: SQLExecutable, handle: UserHandle) => {
+  return conn
+    .checkIfHasResults("SELECT TRUE FROM user WHERE handle = :handle", {
+      handle: handle.rawValue
+    })
+    .inverted()
+    .mapFailure(() => "duplicate-handle" as const)
+}
+
+type DatabaseUserProfile = {
+  name: string
+  handle: string
+  bio?: string
+}
+
+const updateUserProfile = (
+  conn: SQLExecutable,
+  userId: string,
+  profile: DatabaseUserProfile
+) => {
+  return conn.run(
+    "UPDATE user SET name = :name, bio = :bio, handle = :handle WHERE id = :userId",
+    { ...profile, userId }
+  )
+}
+
+const getProfileSettings = (conn: SQLExecutable, userId: string) => {
+  return conn
+    .queryFirstResult<Pick<DatabaseUser, "bio" | "handle" | "name">>(
+      "SELECT name, handle, bio FROM user WHERE id = :userId",
+      { userId }
+    )
+    .mapFailure(() => "user-not-found" as const)
 }

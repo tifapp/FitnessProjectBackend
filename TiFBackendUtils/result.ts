@@ -1,55 +1,159 @@
-export class SuccessResult<Success> {
-  status = "success" as const
-  constructor(public value: Success) {
-    this.value = value
-  }
-}
+/* eslint-disable no-use-before-define */
 
-export class FailureResult<Failure> {
-  status = "failure" as const
-  constructor(public value: Failure) {
-    this.value = value
-  }
-}
-
-/**
- * A union type that represents either the case of a success or an error.
- *
- * @example
- * ```ts
- * // Usage when returning from a function
- * const registerNewUser = async (
- *   conn: Connection,
- *   request: RegisterUserRequest
- * ): Promise<
- *   Result<{ id: string }, "user-already-exists" | "duplicate-handle">
- * > => {
- *   return await conn.transaction(async (tx) => {
- *     if (await userWithIdExists(tx, request.id)) {
- *       return { status: "error", value: "user-already-exists" };
- *     }
- *
- *    if (await userWithHandleExists(tx, request.handle)) {
- *       return { status: "error", value: "duplicate-handle" };
- *     }
- *
- *     await insertUser(tx, request);
- *     return { status: "success", value: { id: request.id } };
- *   });
- * };
- *
- * // Usage when consuming the function
- * const result = await registerNewUser(...)
- *
- * if (result.status === "success") {
- *   console.log(result.value.id) // Logs some user id
- * } else {
- *   console.log(result.value) // Logs either "user-already-exists" or "duplicate-handle"
- * }
- * ```
- */
 export type Result<Success, Failure> =
-  | SuccessResult<Success>
-  | FailureResult<Failure>
+  | SuccessResult<Success, Failure>
+  | FailureResult<Success, Failure>
 
-// try a mondaic class
+export type AnyResult<Success, Failure> =
+  | Result<Success, Failure>
+  | PromiseResult<Success, Failure>
+
+export type MappedResult<Success, Failure> =
+  | AnyResult<Success, Failure>
+  | Promise<AnyResult<Success, Failure>>
+
+export class SuccessResult<Success, Failure> {
+  status = "success" as const
+
+  constructor (public value: Success) {
+    this.value = value
+  }
+
+  flatMapSuccess<NewSuccess, NewFailure> (
+    mapper: (value: Success) => MappedResult<NewSuccess, NewFailure>
+  ): AnyResult<NewSuccess, Failure | NewFailure> {
+    const result = mapper(this.value)
+    if (result instanceof PromiseResult || result instanceof Promise) {
+      return new PromiseResult(result)
+    } else {
+      return result
+    }
+  }
+
+  flatMapFailure<NewSuccess, NewFailure> (
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _: (value: Failure) => MappedResult<NewSuccess, NewFailure>
+  ): SuccessResult<Success | NewSuccess, NewFailure> {
+    return this as unknown as SuccessResult<Success, NewFailure>
+  }
+
+  mapSuccess<NewSuccess> (mapper: (value: Success) => NewSuccess) {
+    return success(mapper(this.value)) as SuccessResult<NewSuccess, Failure>
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  mapFailure<NewFailure> (_: (value: Failure) => NewFailure) {
+    return this as unknown as SuccessResult<Success, NewFailure>
+  }
+
+  inverted () {
+    return failure(this.value) as FailureResult<Failure, Success>
+  }
+}
+
+export class FailureResult<Success, Failure> {
+  status = "failure" as const
+
+  constructor (public value: Failure) {
+    this.value = value
+  }
+
+  flatMapSuccess<NewSuccess, NewFailure> (
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _: (value: Success) => MappedResult<NewSuccess, NewFailure>
+  ): FailureResult<NewSuccess, Failure | NewFailure> {
+    return this as unknown as FailureResult<NewSuccess, Failure>
+  }
+
+  flatMapFailure<NewSuccess, NewFailure> (
+    mapper: (value: Failure) => MappedResult<NewSuccess, NewFailure>
+  ): AnyResult<Success | NewSuccess, NewFailure> {
+    const result = mapper(this.value)
+    if (result instanceof PromiseResult || result instanceof Promise) {
+      return new PromiseResult(result)
+    } else {
+      return result
+    }
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  mapSuccess<NewSuccess> (_: (value: Success) => NewSuccess) {
+    return this as unknown as FailureResult<NewSuccess, Failure>
+  }
+
+  mapFailure<NewFailure> (mapper: (value: Failure) => NewFailure) {
+    return failure(mapper(this.value)) as FailureResult<Success, NewFailure>
+  }
+
+  inverted () {
+    return success(this.value) as SuccessResult<Failure, Success>
+  }
+}
+
+export class PromiseResult<Success, Failure> {
+  private readonly promise: Promise<Result<Success, Failure>>
+
+  constructor (result: MappedResult<Success, Failure>) {
+    if (result instanceof Promise) {
+      this.promise = result.then((res) => {
+        return res instanceof PromiseResult ? res.wait() : res
+      })
+    } else if (result instanceof PromiseResult) {
+      this.promise = result.promise
+    } else {
+      this.promise = Promise.resolve(result)
+    }
+  }
+
+  flatMapSuccess<NewSuccess, NewFailure> (
+    mapper: (value: Success) => MappedResult<NewSuccess, NewFailure>
+  ): PromiseResult<NewSuccess, Failure | NewFailure> {
+    const result = this.promise.then((result) => {
+      const newResult = result.flatMapSuccess(mapper)
+      return newResult instanceof PromiseResult ? newResult.wait() : newResult
+    })
+    return new PromiseResult(result)
+  }
+
+  flatMapFailure<NewSuccess, NewFailure> (
+    mapper: (value: Failure) => MappedResult<NewSuccess, NewFailure>
+  ) {
+    const result = this.promise.then((result) => {
+      const newResult = result.flatMapFailure(mapper)
+      return newResult instanceof PromiseResult ? newResult.wait() : newResult
+    })
+    return new PromiseResult(result)
+  }
+
+  mapSuccess<NewSuccess> (mapper: (value: Success) => NewSuccess) {
+    const result = this.promise.then((result) => result.mapSuccess(mapper))
+    return new PromiseResult(result)
+  }
+
+  mapFailure<NewFailure> (mapper: (value: Failure) => NewFailure) {
+    const result = this.promise.then((result) => result.mapFailure(mapper))
+    return new PromiseResult(result)
+  }
+
+  inverted () {
+    return new PromiseResult(this.promise.then((res) => res.inverted()))
+  }
+
+  wait () {
+    return this.promise
+  }
+}
+
+export const withPromise = <Success, Failure>(
+  promise: MappedResult<Success, Failure>
+) => {
+  return new PromiseResult(promise)
+}
+
+export const success = <Success>(value: Success) => {
+  return new SuccessResult<Success, never>(value)
+}
+
+export const failure = <Failure>(failure: Failure) => {
+  return new FailureResult<never, Failure>(failure)
+}
