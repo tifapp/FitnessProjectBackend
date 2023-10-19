@@ -7,7 +7,10 @@ import { ValidatedRouter } from "../validation.js"
  *
  * @param environment see {@link ServerEnvironment}.
  */
-export const createEventRouter = (environment: ServerEnvironment, router: ValidatedRouter) => {
+export const createEventRouter = (
+  environment: ServerEnvironment,
+  router: ValidatedRouter
+) => {
   /**
    * Create an event
    */

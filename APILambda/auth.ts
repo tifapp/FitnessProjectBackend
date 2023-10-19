@@ -2,20 +2,24 @@ import { Application } from "express"
 import { z } from "zod"
 import { ServerEnvironment } from "./env.js"
 
-const AuthClaimsSchema = z.object({
-  sub: z.string(),
-  name: z.string()
-}).and(
-  z.object({
-    email: z.string().email(),
-    email_verified: z.boolean()
-  }).or(
-    z.object({
-      phone_number: z.string(),
-      phone_number_verified: z.boolean()
-    })
+const AuthClaimsSchema = z
+  .object({
+    sub: z.string(),
+    name: z.string()
+  })
+  .and(
+    z
+      .object({
+        email: z.string().email(),
+        email_verified: z.boolean()
+      })
+      .or(
+        z.object({
+          phone_number: z.string(),
+          phone_number_verified: z.boolean()
+        })
+      )
   )
-)
 
 export type AuthClaims = z.infer<typeof AuthClaimsSchema>
 
@@ -34,7 +38,10 @@ const TransformedAuthClaimsSchema = AuthClaimsSchema.transform((res) => ({
 /**
  * Adds AWS cognito token verification to an app.
  */
-export const addCognitoTokenVerification = (app: Application, env: ServerEnvironment) => {
+export const addCognitoTokenVerification = (
+  app: Application,
+  env: ServerEnvironment
+) => {
   // TODO: - Verify JWT properly
   app.use(async (req, res, next) => {
     let auth = req.headers?.Authorization
@@ -51,9 +58,10 @@ export const addCognitoTokenVerification = (app: Application, env: ServerEnviron
 
     try {
       // eslint-disable-next-line camelcase
-      const { selfId, name, isContactInfoVerfied } = TransformedAuthClaimsSchema.parse(JSON.parse(
-        Buffer.from(token.split(".")[1], "base64").toString()
-      ))
+      const { selfId, name, isContactInfoVerfied } =
+        TransformedAuthClaimsSchema.parse(
+          JSON.parse(Buffer.from(token.split(".")[1], "base64").toString())
+        )
       res.locals.selfId = selfId
       res.locals.name = name
       // eslint-disable-next-line camelcase

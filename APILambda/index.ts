@@ -1,14 +1,14 @@
-import awsServerlessExpress, { getCurrentInvoke } from "@vendia/serverless-express"
+import awsServerlessExpress, {
+  getCurrentInvoke
+} from "@vendia/serverless-express"
 import express, { Express } from "express"
-import { addRoutes, createApp } from "./app.js"
+import { addBenchmarking, addRoutes, createApp } from "./app.js"
 import { addCognitoTokenVerification } from "./auth.js"
 import { conn } from "./dbconnection.js"
 import { ServerEnvironment } from "./env.js"
 
 const addEventToRequest = (app: Express) => {
   app.use((req, res, next) => {
-    console.log(req)
-
     const { event } = getCurrentInvoke()
 
     // TODO: Find better solution
@@ -38,6 +38,7 @@ const env: ServerEnvironment = { conn, environment: "prod" }
 
 const app = createApp()
 addEventToRequest(app)
+addBenchmarking(app)
 addCognitoTokenVerification(app, env) // only apply to specific routes
 addRoutes(app, env)
 

@@ -13,4 +13,4 @@ export const LocationCoordinates2DSchema = z.object({
  */
 export type LocationCoordinate2D = Readonly<
   z.infer<typeof LocationCoordinates2DSchema>
->;
+>

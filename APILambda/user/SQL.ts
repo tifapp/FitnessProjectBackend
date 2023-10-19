@@ -8,10 +8,10 @@ import {
 } from "./models.js"
 
 export type RegisterUserRequest = {
-  id: string;
-  name: string;
-  handle: string;
-};
+  id: string
+  name: string
+  handle: string
+}
 
 /**
  * Updates the user's settings with the specified fields in the settings object.
@@ -206,7 +206,11 @@ const twoWayUserRelation = async (
   }
 }
 
-const makeFriends = async (conn: SQLExecutable, fromUserId: string, toUserId: string) => {
+const makeFriends = async (
+  conn: SQLExecutable,
+  fromUserId: string,
+  toUserId: string
+) => {
   await conn.execute(
     `
     UPDATE userRelations 
@@ -239,7 +243,10 @@ export const registerNewUser = async (
   conn: SQLExecutable,
   request: RegisterUserRequest
 ): Promise<
-  Result<{ id: string, handle: string }, "user-already-exists" | "duplicate-handle">
+  Result<
+    { id: string; handle: string },
+    "user-already-exists" | "duplicate-handle"
+  >
 > => {
   if (await userWithIdExists(conn, request.id)) {
     return { status: "error", value: "user-already-exists" }
@@ -250,10 +257,16 @@ export const registerNewUser = async (
   }
 
   await insertUser(conn, request)
-  return { status: "success", value: { id: request.id, handle: request.handle } }
+  return {
+    status: "success",
+    value: { id: request.id, handle: request.handle }
+  }
 }
 
-export const userWithHandleExists = async (conn: SQLExecutable, handle: string) => {
+export const userWithHandleExists = async (
+  conn: SQLExecutable,
+  handle: string
+) => {
   return await hasResults(
     conn,
     "SELECT TRUE FROM user WHERE handle = :handle",

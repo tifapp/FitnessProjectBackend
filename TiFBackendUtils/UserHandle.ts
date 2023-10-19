@@ -6,14 +6,14 @@ import { ZodUtils } from "./Zod.js"
 export class UserHandle {
   readonly rawValue: string
 
-  private constructor (rawValue: string) {
+  private constructor(rawValue: string) {
     this.rawValue = rawValue
   }
 
   /**
    * Formats this handle by prefixing the string with an "@".
    */
-  toString () {
+  toString() {
     return `@${this.rawValue}`
   }
 
@@ -36,7 +36,7 @@ export class UserHandle {
    * @param rawValue the raw user handle string to validate
    * @returns an {@link UserHandle} instance if successful.
    */
-  static parse (rawValue: string) {
+  static parse(rawValue: string) {
     return UserHandle.REGEX.test(rawValue)
       ? new UserHandle(rawValue)
       : undefined

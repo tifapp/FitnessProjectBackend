@@ -1,7 +1,7 @@
-import { conn } from "TiFBackendUtils"
+import { randomUUID } from "crypto"
+import { conn } from "../dbconnection.js"
 import { insertUser } from "../user/index.js"
-import { resetDatabaseBeforeEach, expectFailsCheckConstraint } from "./database.js"
-import { testUsers } from "./testVariables.js"
+import { expectFailsCheckConstraint, resetDatabaseBeforeEach } from "./database.js"
 
 describe("CheckConstraint tests", () => {
   resetDatabaseBeforeEach()
@@ -9,7 +9,8 @@ describe("CheckConstraint tests", () => {
     await expectFailsCheckConstraint(async () => {
       await insertUser(conn,
         {
-          ...testUsers[0],
+          id: randomUUID(),
+          name: "test",
           handle: "(*(*&(SJK"
         }
       )
@@ -19,7 +20,8 @@ describe("CheckConstraint tests", () => {
   it("should not allow an empty handle", async () => {
     await expectFailsCheckConstraint(async () => {
       await insertUser(conn, {
-        ...testUsers[0],
+        id: randomUUID(),
+        name: "test",
         handle: ""
       })
     })

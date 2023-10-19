@@ -50,7 +50,9 @@ describe("SearchForPositionResultToPlacemark", () => {
       Municipality: "Sample City"
     } as Place
 
-    expect(SearchForPositionResultToPlacemark(location, place).city).toEqual("Sample City")
+    expect(SearchForPositionResultToPlacemark(location, place).city).toEqual(
+      "Sample City"
+    )
   })
 
   test("Should use SubRegion when Neighborhood and Municipality are missing", () => {
@@ -59,7 +61,9 @@ describe("SearchForPositionResultToPlacemark", () => {
       SubRegion: "Sample SubRegion"
     } as Place
 
-    expect(SearchForPositionResultToPlacemark(location, place).city).toEqual("Sample SubRegion")
+    expect(SearchForPositionResultToPlacemark(location, place).city).toEqual(
+      "Sample SubRegion"
+    )
   })
 
   test("Should use Region when Country is missing", () => {
@@ -68,6 +72,8 @@ describe("SearchForPositionResultToPlacemark", () => {
       Region: "Sample Region"
     } as Place
 
-    expect(SearchForPositionResultToPlacemark(location, place).country).toEqual("Sample Region")
+    expect(SearchForPositionResultToPlacemark(location, place).country).toEqual(
+      "Sample Region"
+    )
   })
 })

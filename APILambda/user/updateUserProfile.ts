@@ -13,7 +13,7 @@ const UpdateUserRequestSchema = z.object({
   handle: UserHandle.schema
 })
 
-export type UpdateUserRequest = z.infer<typeof UpdateUserRequestSchema>;
+export type UpdateUserRequest = z.infer<typeof UpdateUserRequestSchema>
 
 /**
  * Updates the current user's profile with the given settings.
@@ -23,7 +23,7 @@ export type UpdateUserRequest = z.infer<typeof UpdateUserRequestSchema>;
  */
 const updateUserProfile = async (
   conn: SQLExecutable,
-  request: UpdateUserRequest & {selfId: string}
+  request: UpdateUserRequest & { selfId: string }
 ) => {
   await conn.execute(
     `
@@ -38,15 +38,22 @@ const updateUserProfile = async (
 /**
  * Queries the user with the given id.
  */
-export const getProfileSettings = async (conn: SQLExecutable, userId: string) => {
-  return await queryFirst<Pick<DatabaseUser, "bio" | "handle" | "name">>(conn, `
+export const getProfileSettings = async (
+  conn: SQLExecutable,
+  userId: string
+) => {
+  return await queryFirst<Pick<DatabaseUser, "bio" | "handle" | "name">>(
+    conn,
+    `
     SELECT 
       name,
       handle,
       bio
-    FROM user WHERE id = :userId`, {
-    userId
-  })
+    FROM user WHERE id = :userId`,
+    {
+      userId
+    }
+  )
 }
 
 /**
@@ -55,43 +62,60 @@ export const getProfileSettings = async (conn: SQLExecutable, userId: string) =>
  * @param environment see {@link ServerEnvironment}.
  * @returns a router for user related operations.
  */
-export const updateUserProfileRouter = (environment: ServerEnvironment, router: ValidatedRouter) => {
+export const updateUserProfileRouter = (
+  environment: ServerEnvironment,
+  router: ValidatedRouter
+) => {
   /**
    * updates the current user's profile
    */
-  router.patch("/self", { bodySchema: UpdateUserRequestSchema }, async (req, res) => {
-    const result = await environment.conn.transaction(async (tx): Promise<Result<void, "user-not-found" | "duplicate-handle">> => {
-      const currentUserResult = await getProfileSettings(tx, res.locals.selfId)
+  router.patch(
+    "/self",
+    { bodySchema: UpdateUserRequestSchema },
+    async (req, res) => {
+      const result = await environment.conn.transaction(
+        async (
+          tx
+        ): Promise<Result<void, "user-not-found" | "duplicate-handle">> => {
+          const currentUserResult = await getProfileSettings(
+            tx,
+            res.locals.selfId
+          )
 
-      if (!currentUserResult) {
-        return { status: "error", value: "user-not-found" }
-      }
+          if (!currentUserResult) {
+            return { status: "error", value: "user-not-found" }
+          }
 
-      if (req.body.handle) {
-        const userWithHandle = await userWithHandleExists(tx, req.body.handle.rawValue)
+          if (req.body.handle) {
+            const userWithHandle = await userWithHandleExists(
+              tx,
+              req.body.handle.rawValue
+            )
 
-        if (userWithHandle) {
-          return { status: "error", value: "duplicate-handle" }
+            if (userWithHandle) {
+              return { status: "error", value: "duplicate-handle" }
+            }
+          }
+
+          await updateUserProfile(tx, {
+            ...currentUserResult,
+            selfId: res.locals.selfId,
+            ...req.body
+          })
+
+          return { status: "success", value: undefined }
         }
+      )
+
+      if (result.value === "user-not-found") {
+        return res.status(401).json({ error: result.value })
+      } else if (result.value === "duplicate-handle") {
+        return res.status(401).json({ error: result.value })
       }
 
-      await updateUserProfile(tx, {
-        ...currentUserResult,
-        selfId: res.locals.selfId,
-        ...req.body
-      })
-
-      return { status: "success", value: undefined }
-    })
-
-    if (result.value === "user-not-found") {
-      return res.status(401).json({ error: result.value })
-    } else if (result.value === "duplicate-handle") {
-      return res.status(401).json({ error: result.value })
+      return res.status(204).send("No Content") // TODO: Make util for No Content response
     }
-
-    return res.status(204).send("No Content") // TODO: Make util for No Content response
-  })
+  )
 
   return router
 }

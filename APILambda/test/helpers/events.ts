@@ -1,6 +1,6 @@
 import request from "supertest"
 import { CreateEventInput } from "../../events/index.js"
-import { testApp } from "../testVariables.js"
+import { testApp } from "../testApp.js"
 
 export const callCreateEvent = async (
   bearerToken: string,
@@ -12,10 +12,7 @@ export const callCreateEvent = async (
     .send(req)
 }
 
-export const callGetEvent = async (
-  bearerToken: string,
-  eventId: number
-) => {
+export const callGetEvent = async (bearerToken: string, eventId: number) => {
   return await request(testApp)
     .get(`/event/${eventId}`)
     .set("Authorization", bearerToken)
