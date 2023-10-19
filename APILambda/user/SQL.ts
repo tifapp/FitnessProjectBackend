@@ -1,9 +1,4 @@
-import {
-  SQLExecutable,
-  hasResults,
-  queryFirst,
-  queryResults
-} from "../dbconnection.js"
+import { SQLExecutable } from "TiFBackendUtils/SQLExecutable/utils.js"
 import { Result } from "../utils.js"
 import {
   DEFAULT_USER_SETTINGS,
@@ -121,8 +116,7 @@ export const userSettingsWithId = async (
 }
 
 const queryUserSettings = async (conn: SQLExecutable, userId: string) => {
-  return await queryFirst<UserSettings>(
-    conn,
+  return await conn.queryFirst<UserSettings>(
     `
     SELECT 
       isAnalyticsEnabled, 
@@ -142,7 +136,7 @@ const queryUserSettings = async (conn: SQLExecutable, userId: string) => {
  * Queries the user with the given id.
  */
 export const userWithId = async (conn: SQLExecutable, userId: string) => {
-  return await queryFirst<DatabaseUser>(conn, "SELECT * FROM user WHERE id = :userId", {
+  return await conn.queryFirst<DatabaseUser>("SELECT * FROM user WHERE id = :userId", {
     userId
   })
 }
@@ -188,12 +182,11 @@ const twoWayUserRelation = async (
   youId: string,
   themId: string
 ) => {
-  const results = await queryResults<{
+  const results = await conn.queryFirst<{
     fromUserId : string;
     toUserId : string;
     status: UserToProfileRelationStatus;
   }>(
-    conn,
     `
     SELECT * FROM userRelations ur 
     WHERE 

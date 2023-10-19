@@ -1,9 +1,5 @@
 import { z } from "zod"
-import {
-  SQLExecutable,
-  queryFirst,
-  selectLastInsertionId
-} from "../dbconnection.js"
+import { SQLExecutable } from "TiFBackendUtils/SQLExecutable/utils.js"
 import { EventColor, EventColorSchema } from "../events/models.js"
 import { userWithIdExists } from "../user/index.js"
 import { userNotFoundBody } from "./Responses.js"
@@ -113,7 +109,7 @@ export type DatabaseEvent = {
 export const getEventWithId = async (
   conn: SQLExecutable,
   eventId: number
-) => await queryFirst<DatabaseEvent>(conn, "SELECT * FROM event WHERE id=:eventId", { eventId })
+) => await conn.queryFirst<DatabaseEvent>("SELECT * FROM event WHERE id=:eventId", { eventId })
 
 export const createEvent = async (
   conn: SQLExecutable,
@@ -127,7 +123,7 @@ export const createEvent = async (
 
   await insertEvent(conn, input, hostId)
 
-  return { status: "success", value: { id: await selectLastInsertionId(conn) } }
+  return { status: "success", value: { id: await conn.selectLastInsertionId() } }
 }
 
 // add withvalidatedrequest middleware to all
