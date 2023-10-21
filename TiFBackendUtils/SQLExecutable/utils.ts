@@ -2,11 +2,11 @@
 // TODO: Replace with backend utils
 import { Connection } from "@planetscale/database"
 import {
-  PromiseResult,
   Result,
   failure,
   withPromise,
-  success
+  success,
+  AwaitableResult
 } from "../result.js"
 
 /**
@@ -48,10 +48,13 @@ export class SQLExecutable {
     return result.rows as Value[]
   }
 
-  run<Value> (query: string, args: object | any[] | null = null) {
-    const result = this.execute<Value>(query, args).then((values) => {
-      return success(values)
-    })
+  /**
+   * Runs the given SQL query and returns a success result containing the result of the query.
+   */
+  run (query: string, args: object | any[] | null = null) {
+    const result = this.conn
+      .execute(query, args)
+      .then((values) => success(values))
     return withPromise(result)
   }
 
@@ -60,13 +63,16 @@ export class SQLExecutable {
    */
   async transaction<SuccessValue, ErrorValue> (
     operation: (tx: SQLExecutable) => Promise<Result<SuccessValue, ErrorValue>>
-  ): Promise<Result<SuccessValue, ErrorValue>> {
+  ) {
     return await this.conn.transaction(() => operation(this))
   }
 
+  /**
+   * Runs a transaction and returns the result of the transaction wrapped in a {@link PromiseResult}.
+   */
   transactionResult<SuccessValue, ErrorValue> (
-    operation: (tx: SQLExecutable) => PromiseResult<SuccessValue, ErrorValue>
-  ): PromiseResult<SuccessValue, ErrorValue> {
+    operation: (tx: SQLExecutable) => AwaitableResult<SuccessValue, ErrorValue>
+  ) {
     return withPromise(this.conn.transaction(async () => operation(this)))
   }
 
@@ -85,12 +91,17 @@ export class SQLExecutable {
     return results.length > 0
   }
 
+  /**
+   * Runs a query an returns a success result if the query returns 1 or more rows.
+   *
+   * You should not query specific data with this method, instead use a `"SELECT TRUE"`
+   * if you need to perform a select.
+   */
   checkIfHasResults (query: string, args: object | any[] | null = null) {
-    return withPromise(
-      this.hasResults(query, args).then((hasResults) => {
-        return hasResults ? success(hasResults) : failure(hasResults)
-      })
-    )
+    const result = this.hasResults(query, args).then((hasResults) => {
+      return hasResults ? success(hasResults) : failure(hasResults)
+    })
+    return withPromise(result)
   }
 
   /**
@@ -112,12 +123,14 @@ export class SQLExecutable {
     return results[0]
   }
 
+  /**
+   * Runs a query and returns a success result containing the first row of the query if one exists.
+   */
   queryFirstResult<Value> (query: string, args: object | any[] | null = null) {
-    return withPromise(
-      this.queryFirst<Value>(query, args).then((value) => {
-        return value ? success(value) : failure(undefined)
-      })
-    )
+    const result = this.queryFirst<Value>(query, args).then((value) => {
+      return value ? success(value) : failure("no-results" as const)
+    })
+    return withPromise(result)
   }
 
   /**

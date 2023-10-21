@@ -31,7 +31,7 @@ export const updateUserProfileRouter = (
     async (req, res) => {
       return await conn
         .transactionResult((tx) => {
-          return overwriteProfile(tx, res.locals.selfId, req.body)
+          return updateProfile(tx, res.locals.selfId, req.body)
         })
         .mapFailure((error) => res.status(401).json({ error }))
         .mapSuccess(() => res.status(204).send())
@@ -43,7 +43,7 @@ export const updateUserProfileRouter = (
   return router
 }
 
-const overwriteProfile = (
+const updateProfile = (
   conn: SQLExecutable,
   userId: string,
   request: UpdateUserRequest
@@ -51,13 +51,13 @@ const overwriteProfile = (
   const handleCheck = request.handle
     ? checkForUserWithHandle(conn, request.handle)
     : success(undefined)
-  return getProfileSettings(conn, userId).flatMapSuccess((settings) => {
-    return handleCheck.flatMapSuccess(() => {
+  return getProfileSettings(conn, userId)
+    .flatMapSuccess((settings) => handleCheck.withSuccess(settings))
+    .flatMapSuccess((settings) => {
       const handle = request.handle?.rawValue ?? settings.handle
       const profile = { ...settings, ...request, handle }
-      return updateUserProfile(conn, userId, profile)
+      return overwriteProfile(conn, userId, profile)
     })
-  })
 }
 
 const checkForUserWithHandle = (conn: SQLExecutable, handle: UserHandle) => {
@@ -75,7 +75,7 @@ type DatabaseUserProfile = {
   bio?: string
 }
 
-const updateUserProfile = (
+const overwriteProfile = (
   conn: SQLExecutable,
   userId: string,
   profile: DatabaseUserProfile
