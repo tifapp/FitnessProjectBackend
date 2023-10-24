@@ -1,10 +1,7 @@
-import { UserHandle } from "TiFBackendUtils"
+import { SQLExecutable, UserHandle, conn } from "TiFBackendUtils"
 import { z } from "zod"
-import { SQLExecutable, queryResults } from "../dbconnection.js"
 import { ServerEnvironment } from "../env.js"
-import { withValidatedRequest } from "../validation.js"
-// eslint-disable-next-line no-restricted-imports
-import { Router } from "express"
+import { ValidatedRouter, withValidatedRequest } from "../validation.js"
 
 const AutocompleteUsersRequestSchema = z.object({
   query: z.object({
@@ -21,13 +18,13 @@ const AutocompleteUsersRequestSchema = z.object({
  */
 export const autocompleteUsersRouter = (
   env: ServerEnvironment,
-  router: Router
+  router: ValidatedRouter
 ) => {
   router.get(
     "/autocomplete",
     withValidatedRequest(AutocompleteUsersRequestSchema, async (req, res) => {
       const users = await autocompleteUsers(
-        env.conn,
+        conn,
         req.query.handle,
         req.query.limit
       )
@@ -41,8 +38,7 @@ const autocompleteUsers = async (
   baseHandle: UserHandle,
   limit: number
 ) => {
-  return await queryResults(
-    conn,
+  return await conn.queryResults(
     `
     SELECT id, name, handle 
     FROM user u 

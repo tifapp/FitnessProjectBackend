@@ -1,5 +1,5 @@
+import { PromiseResult, SQLExecutable, failure, promiseResult, success } from "TiFBackendUtils"
 import crypto from "crypto"
-import { SQLExecutable } from "../dbconnection.js"
 import { userWithHandleExists } from "./SQL.js"
 
 const generateNumericHash = (input: string) => {
@@ -9,30 +9,26 @@ const generateNumericHash = (input: string) => {
   return numericHash.toString().padStart(4, "0")
 }
 
-export const generateUniqueUsername = async (
+// make retry function util?
+const generateUniqueUsernameAttempt = (conn: SQLExecutable, name: string, retries: number): PromiseResult<string, false | void> => {
+  const potentialUsername = `${name}${generateNumericHash(
+    `${name}${Date.now()}`
+  )}`
+  return userWithHandleExists(conn, potentialUsername)
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore Retry function
+    .flatMapFailure((error) => promiseResult(retries === 0 ? failure(error) : promiseResult(generateUniqueUsernameAttempt(name, retries - 1))))
+    .flatMapSuccess(() => success(potentialUsername))
+}
+
+export const generateUniqueUsername = (
   conn: SQLExecutable,
   name: string,
-  maxRetries = 3
-): Promise<string> => {
+  retries = 3
+) => {
   let cleanedName = name.replace(/[^a-zA-Z0-9]/g, "").toLowerCase()
   cleanedName = cleanedName.length ? cleanedName : "idk"
   const baseName = cleanedName.substr(0, 11)
 
-  let retries = 0
-  let potentialUsername = `${baseName}${generateNumericHash(
-    `${cleanedName}${Date.now()}`
-  )}`
-
-  while (await userWithHandleExists(conn, potentialUsername)) {
-    if (retries >= maxRetries) {
-      throw new Error("Max retries reached while generating a unique username.")
-    }
-
-    retries++
-    potentialUsername = `${baseName}${generateNumericHash(
-      `${cleanedName}${Date.now() + retries}`
-    )}`
-  }
-
-  return potentialUsername
+  return generateUniqueUsernameAttempt(conn, baseName, retries)
 }

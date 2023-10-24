@@ -1,6 +1,6 @@
-import { resetDatabaseBeforeEach } from "../test/database.js"
-import { callGetSettings, callPostUser } from "../test/helpers/users.js"
-import { userNotFoundBody } from "./getUserBasedOnId.js"
+import { resetDatabaseBeforeEach } from "../../test/database.js"
+import { callGetSettings, callPostUser } from "../../test/helpers/users.js"
+import { userNotFoundBody } from "../getUserBasedOnId.js"
 
 describe("Get Settings tests", () => {
   resetDatabaseBeforeEach()

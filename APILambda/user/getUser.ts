@@ -1,10 +1,10 @@
+import { conn } from "TiFBackendUtils"
 import { z } from "zod"
 import { ServerEnvironment } from "../env.js"
-import { userNotFoundResponse } from "../shared/Responses.js"
 import { ValidatedRouter } from "../validation.js"
 import { userWithId } from "./SQL.js"
 
-const friendRequestSchema = z.object({
+const userIdSchema = z.object({
   userId: z.string()
 })
 
@@ -31,15 +31,12 @@ export const getUserBasedOnIdRouter = (
   /**
    * gets the user with the specified userId
    */
-  router.get(
+  router.getWithValidation(
     "/:userId",
-    { pathParamsSchema: friendRequestSchema },
-    async (req, res) => {
-      const user = await userWithId(environment.conn, req.params.userId)
-      if (!user) {
-        return userNotFoundResponse(res, req.params.userId)
-      }
-      return res.status(200).json({ ...user, relation: "not-friends" })
-    }
+    { pathParamsSchema: userIdSchema },
+    (req, res) =>
+      userWithId(conn, req.params.userId)
+        .mapFailure((error) => res.status(400).json({ error }))
+        .mapSuccess((user) => res.status(200).json({ ...user, relation: "not-friends" }))
   )
 }

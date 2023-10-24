@@ -1,3 +1,4 @@
+import { conn } from "TiFBackendUtils"
 import { z } from "zod"
 import { ServerEnvironment } from "../env.js"
 import { ValidatedRouter } from "../validation.js"
@@ -19,17 +20,12 @@ export const sendFriendRequestsRouter = (
   /**
    * sends a friend request to the specified userId
    */
-  router.post(
+  router.postWithValidation(
     "/friend/:userId",
     { pathParamsSchema: friendRequestSchema },
-    async (req, res) => {
-      const result = await environment.conn.transaction(async (tx) => {
-        return await sendFriendRequest(tx, res.locals.selfId, req.params.userId)
-      })
-      return res
-        .status(result.statusChanged ? 201 : 200)
-        .json({ status: result.status })
-    }
+    (req, res) => conn.transaction((tx) => sendFriendRequest(tx, res.locals.selfId, req.params.userId))
+      .mapFailure((error) => res.status(500).json({ error }))
+      .mapSuccess(result => res.status(result.statusChanged ? 201 : 200).json({ status: result }).send())
   )
   return router
 }

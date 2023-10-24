@@ -145,7 +145,7 @@ export const getChatTokenRouter = (
   /**
    * Get token for event's chat room
    */
-  router.get(
+  router.getWithValidation(
     "/chat/:eventId",
     { pathParamsSchema: eventRequestSchema },
     async (req, res) => {

@@ -1,4 +1,7 @@
 /* eslint-disable no-use-before-define */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-nocheck
 
 /**
  * A type representing an "expected" success or failure of an operation.
@@ -40,7 +43,7 @@ export class SuccessResult<Success, Failure> {
   ): AnyResult<NewSuccess, Failure | NewFailure> {
     const result = mapper(this.value)
     if (result instanceof PromiseResult || result instanceof Promise) {
-      return withPromise(result)
+      return promiseResult(result)
     } else {
       return result
     }
@@ -124,7 +127,7 @@ export class FailureResult<Success, Failure> {
   ): AnyResult<Success | NewSuccess, NewFailure> {
     const result = mapper(this.value)
     if (result instanceof PromiseResult || result instanceof Promise) {
-      return withPromise(result)
+      return promiseResult(result)
     } else {
       return result
     }
@@ -171,19 +174,12 @@ export class FailureResult<Success, Failure> {
 /**
  * A result that handles a promise to a {@link Result} in a way such that it can be used like a normal synchronous result.
  */
-export class PromiseResult<Success, Failure> {
-  private readonly promise: Promise<Result<Success, Failure>>
-
-  constructor (result: AwaitableResult<Success, Failure>) {
-    if (result instanceof Promise) {
-      this.promise = result.then((res) => {
-        return res instanceof PromiseResult ? res.wait() : res
-      })
-    } else if (result instanceof PromiseResult) {
-      this.promise = result.promise
-    } else {
-      this.promise = Promise.resolve(result)
+export class PromiseResult<Success, Failure> extends Promise<Result<Success, Failure>> {
+  constructor (executor) {
+    if (typeof executor !== "function") {
+      throw new TypeError("Promise resolver " + executor + " is not a function")
     }
+    super(executor)
   }
 
   /**
@@ -195,8 +191,8 @@ export class PromiseResult<Success, Failure> {
   flatMapSuccess<NewSuccess, NewFailure> (
     mapper: (value: Success) => AwaitableResult<NewSuccess, NewFailure>
   ): PromiseResult<NewSuccess, Failure | NewFailure> {
-    const result = this.promise.then((result) => result.flatMapSuccess(mapper))
-    return withPromise(result)
+    const result = this.then((result) => result.flatMapSuccess(mapper))
+    return promiseResult(result)
   }
 
   /**
@@ -208,62 +204,71 @@ export class PromiseResult<Success, Failure> {
   flatMapFailure<NewSuccess, NewFailure> (
     mapper: (value: Failure) => AwaitableResult<NewSuccess, NewFailure>
   ) {
-    const result = this.promise.then((result) => result.flatMapFailure(mapper))
-    return withPromise(result)
+    const result = this.then((result) => result.flatMapFailure(mapper))
+    return promiseResult(result)
   }
 
   /**
    * If this result is successful, runs a function to transform the success value into a new one lazily.
    */
   mapSuccess<NewSuccess> (mapper: (value: Success) => NewSuccess) {
-    const result = this.promise.then((result) => result.mapSuccess(mapper))
-    return withPromise(result)
+    const result = this.then((result) => result.mapSuccess(mapper))
+    return promiseResult(result)
   }
 
   /**
    * If this result is unsuccessful, runs a function to transform the failure value into a new one lazily.
    */
   mapFailure<NewFailure> (mapper: (value: Failure) => NewFailure) {
-    const result = this.promise.then((result) => result.mapFailure(mapper))
-    return withPromise(result)
+    const result = this.then((result) => result.mapFailure(mapper))
+    return promiseResult(result)
   }
 
   /**
    * If this result is successful, inverts this result into an unsuccessful one and vice-versa.
    */
   inverted () {
-    return withPromise(this.promise.then((res) => res.inverted()))
+    return promiseResult(this.then((res) => res.inverted()))
   }
 
   /**
    * If this result is unsuccessful, sets the new failure value to the given value eagerly.
    */
   withFailure<NewFailure> (value: NewFailure) {
-    return withPromise(this.promise.then((result) => result.withFailure(value)))
+    return promiseResult(this.then((result) => result.withFailure(value)))
   }
 
   /**
    * If this result is successful, sets the new success value to the given value eagerly.
    */
   withSuccess<NewSuccess> (value: NewSuccess) {
-    return withPromise(this.promise.then((result) => result.withSuccess(value)))
-  }
-
-  /**
-   * Returns the promise to the underlying result.
-   */
-  wait () {
-    return this.promise
+    return promiseResult(this.then((result) => result.withSuccess(value)))
   }
 }
 
 /**
  * Wraps a result into a {@link PromiseResult}.
  */
-export const withPromise = <Success, Failure>(
+export const promiseResult = <Success, Failure>(
   promise: AwaitableResult<Success, Failure>
 ) => {
-  return new PromiseResult(promise)
+  return new PromiseResult<Success, Failure>((resolve, reject) => {
+    const handleResult = (res: AnyResult<Success, Failure>) => {
+      if (res instanceof PromiseResult) {
+        res.then(resolve).catch(reject)
+      } else {
+        resolve(res)
+      }
+    }
+
+    if (promise instanceof Promise) {
+      promise.then(handleResult).catch(reject)
+    } else if (promise instanceof PromiseResult) {
+      promise.then(resolve).catch(reject)
+    } else {
+      handleResult(promise)
+    }
+  })
 }
 
 /**

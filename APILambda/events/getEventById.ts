@@ -1,11 +1,18 @@
+import { SQLExecutable, conn } from "TiFBackendUtils"
 import { z } from "zod"
 import { ServerEnvironment } from "../env.js"
-import { getEventWithId } from "../shared/SQL.js"
+import { DatabaseEvent } from "../shared/SQL.js"
 import { ValidatedRouter } from "../validation.js"
 
 const eventRequestSchema = z.object({
   eventId: z.string()
 })
+
+export const getEventById = (conn: SQLExecutable, eventId: number) => conn.queryFirstResult<DatabaseEvent>(
+  "SELECT * FROM event WHERE id=:eventId",
+  { eventId }
+)
+  .withFailure("event-not-found" as const)
 
 /**
  * Creates routes related to event operations.
@@ -16,21 +23,15 @@ export const getEventByIdRouter = (
   environment: ServerEnvironment,
   router: ValidatedRouter
 ) => {
-  router.get(
+  router.getWithValidation(
     "/:eventId",
     { pathParamsSchema: eventRequestSchema },
-    async (req, res) => {
-      const result = await getEventWithId(
-        environment.conn,
-        Number(req.params.eventId)
-      )
-      if (!result) {
-        return res.status(404).json({
-          error: "event-not-found",
-          eventId: parseInt(req.params.eventId)
-        })
-      }
-      return res.status(200).json(result)
-    }
+    (req, res) => getEventById(
+      conn,
+      Number(req.params.eventId)
+    )
+      .mapFailure((error) => res.status(404).json({ error }))
+      .mapSuccess(() => res.status(200).send())
+
   )
 }

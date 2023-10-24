@@ -1,5 +1,5 @@
+import { conn } from "TiFBackendUtils"
 import { ServerEnvironment } from "../env.js"
-import { userNotFoundResponse } from "../shared/Responses.js"
 import { ValidatedRouter } from "../validation.js"
 import { userWithId } from "./SQL.js"
 
@@ -8,18 +8,16 @@ import { userWithId } from "./SQL.js"
  *
  * @param environment see {@link ServerEnvironment}.
  */
-export const getUserInfoRouter = (
+export const getSelfRouter = (
   environment: ServerEnvironment,
   router: ValidatedRouter
 ) => {
   /**
    * gets the current user's account info
    */
-  router.get("/self", {}, async (_, res) => {
-    const user = await userWithId(environment.conn, res.locals.selfId)
-    if (!user) {
-      return userNotFoundResponse(res, res.locals.selfId)
-    }
-    return res.status(200).json(user)
-  })
+  router.getWithValidation("/self", {}, (_, res) =>
+    userWithId(conn, res.locals.selfId)
+      .mapFailure((error) => res.status(400).json({ error }))
+      .mapSuccess((user) => res.status(200).json(user))
+  )
 }

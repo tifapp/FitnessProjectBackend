@@ -7,13 +7,13 @@ import { getEventsByRegionRouter } from "./events/getEventsByRegion.js"
 import { autocompleteUsersRouter } from "./user/autocompleteUsers.js"
 import { createUserProfileRouter } from "./user/createUserProfile.js"
 import { deleteUserAccountRouter } from "./user/deleteUserAccount.js"
-import { getCurrentUserSettingsRouter } from "./user/getCurrentUserSettings.js"
+import { getSelfRouter } from "./user/getSelf.js"
 import { getUserBasedOnIdRouter } from "./user/getUserBasedOnId.js"
-import { getUserInfoRouter } from "./user/getUserInfo.js"
+import { getCurrentUserSettingsRouter } from "./user/getUserSettings.js"
 import { sendFriendRequestsRouter } from "./user/sendFriendRequest.js"
-import { updateCurrentUserSettingsRouter } from "./user/updateCurrentUserSettings.js"
 import { updateUserProfileRouter } from "./user/updateUserProfile.js"
-import { ValidatedRouter } from "./validation.js"
+import { updateCurrentUserSettingsRouter } from "./user/updateUserSettings.js"
+import { createValidatedRouter } from "./validation.js"
 
 /**
  * Creates an application instance.
@@ -44,7 +44,7 @@ export const addBenchmarking = (app: Application) => {
 }
 
 const addEventRoutes = (environment: ServerEnvironment) => {
-  const router = new ValidatedRouter()
+  const router = createValidatedRouter()
   createEventRouter(environment, router)
   getChatTokenRouter(environment, router)
   getEventByIdRouter(environment, router)
@@ -53,12 +53,12 @@ const addEventRoutes = (environment: ServerEnvironment) => {
 }
 
 const addUserRoutes = (environment: ServerEnvironment) => {
-  const router = new ValidatedRouter()
-  autocompleteUsersRouter(environment, router.asRouter())
+  const router = createValidatedRouter()
+  autocompleteUsersRouter(environment, router)
   createUserProfileRouter(environment, router)
   deleteUserAccountRouter(environment, router)
   getCurrentUserSettingsRouter(environment, router)
-  getUserInfoRouter(environment, router)
+  getSelfRouter(environment, router)
   getUserBasedOnIdRouter(environment, router)
   sendFriendRequestsRouter(environment, router)
   updateCurrentUserSettingsRouter(environment, router)
@@ -73,6 +73,6 @@ const addUserRoutes = (environment: ServerEnvironment) => {
  * @param environment see {@link ServerEnvironment}
  */
 export const addRoutes = (app: Application, environment: ServerEnvironment) => {
-  app.use("/event", addEventRoutes(environment).asRouter())
-  app.use("/user", addUserRoutes(environment).asRouter())
+  app.use("/event", addEventRoutes(environment))
+  app.use("/user", addUserRoutes(environment))
 }

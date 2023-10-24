@@ -1,5 +1,5 @@
 import request from "supertest"
-import { UserSettings } from "../../user/index.js"
+import { UserSettings } from "../../user/settings/models.js"
 import { testApp } from "../testApp.js"
 
 export const callPatchSettings = async (
