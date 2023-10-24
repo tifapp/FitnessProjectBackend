@@ -1,12 +1,12 @@
+import { conn } from "TiFBackendUtils"
 import { fail } from "assert"
-import { conn } from "../dbconnection.js"
 
 const resetDB = async () => {
   await Promise.all([
-    conn.execute("DELETE FROM user"),
-    conn.execute("DELETE FROM event"),
-    conn.execute("DELETE FROM userRelations"),
-    conn.execute("DELETE FROM userSettings")
+    conn.queryResults("DELETE FROM user"),
+    conn.queryResults("DELETE FROM event"),
+    conn.queryResults("DELETE FROM userRelations"),
+    conn.queryResults("DELETE FROM userSettings")
   ])
 }
 

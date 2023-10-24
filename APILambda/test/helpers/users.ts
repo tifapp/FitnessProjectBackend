@@ -1,5 +1,6 @@
+import jwt from "jsonwebtoken"
 import request from "supertest"
-import { UserSettings } from "../../user/index.js"
+import { UserSettings } from "../../user/settings/models.js"
 import { testApp } from "../testApp.js"
 
 export const callPatchSettings = async (
@@ -46,6 +47,17 @@ export const callPostUser = async (bearerToken?: string) => {
     .send()
 }
 
+export const createUserAndUpdateAuth = async (bearerToken: string): Promise<string> => {
+  await callPostUser(bearerToken)
+
+  const claims = JSON.parse(Buffer.from(bearerToken.split(".")[1], "base64").toString())
+  claims.profile_created = true
+
+  const token = jwt.sign(claims, "supersecret", { algorithm: "HS256" })
+
+  return `Bearer ${token}`
+}
+
 export const callGetUser = async (bearerToken: string, userId: string) => {
   return await request(testApp)
     .get(`/user/${userId}`)
@@ -60,11 +72,11 @@ export const callDeleteSelf = async (bearerToken: string) => {
     .send()
 }
 
-export const callAutocompleteUsers = async (handle: string, limit: number) => {
+export const callAutocompleteUsers = async (auth: string, handle: string, limit: number) => { // todo: remove required auth
   return await request(testApp)
     .get("/user/autocomplete")
     .query({ handle, limit })
-    .set("Authorization", global.defaultUser.auth) // todo: remove auth
+    .set("Authorization", auth) // todo: remove required auth
     .send()
 }
 

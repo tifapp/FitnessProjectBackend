@@ -1,7 +1,7 @@
+import { conn } from "TiFBackendUtils"
 import { randomUUID } from "crypto"
-import { conn } from "../dbconnection.js"
-import { insertUser } from "../user/index.js"
-import { expectFailsCheckConstraint, resetDatabaseBeforeEach } from "./database.js"
+import { expectFailsCheckConstraint, resetDatabaseBeforeEach } from "../test/database.js"
+import { insertUser } from "./createUserProfile.js"
 
 describe("CheckConstraint tests", () => {
   resetDatabaseBeforeEach()

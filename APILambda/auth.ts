@@ -5,7 +5,9 @@ import { ServerEnvironment } from "./env.js"
 const AuthClaimsSchema = z
   .object({
     sub: z.string(),
-    name: z.string()
+    name: z.string(),
+    username: z.string(),
+    profile_created: z.boolean().optional()
   })
   .and(
     z
@@ -26,20 +28,22 @@ export type AuthClaims = z.infer<typeof AuthClaimsSchema>
 const TransformedAuthClaimsSchema = AuthClaimsSchema.transform((res) => ({
   selfId: res.sub,
   name: res.name,
+  username: res.username,
   // @ts-expect-error email may be missing from claims
   email: res.email ?? undefined,
   // @ts-expect-error phone number may be missing from claims
   phoneNumber: res.phone_number ?? undefined,
   // cognito claims encode them as strings
   // @ts-expect-error email or phone number may be missing from claims
-  isContactInfoVerfied: res.email_verified || res.phone_number_verified
+  isContactInfoVerfied: res.email_verified || res.phone_number_verified,
+  doesProfileExist: res.profile_created ?? undefined
 }))
 
 /**
  * Adds AWS cognito token verification to an app.
  */
 export const addCognitoTokenVerification = (
-  app: Application,
+  app: Application, // try a "usable" interface for middlewares
   env: ServerEnvironment
 ) => {
   // TODO: - Verify JWT properly
@@ -50,6 +54,7 @@ export const addCognitoTokenVerification = (
     }
 
     if (!auth || Array.isArray(auth)) {
+      // TODO: Change error message before release
       return res.status(401).json({ error: "invalid-headers" })
     }
     // TODO: perform JWT verification if envType !== dev
@@ -58,22 +63,40 @@ export const addCognitoTokenVerification = (
 
     try {
       // eslint-disable-next-line camelcase
-      const { selfId, name, isContactInfoVerfied } =
+      const { selfId, name, username, isContactInfoVerfied, doesProfileExist } =
         TransformedAuthClaimsSchema.parse(
           JSON.parse(Buffer.from(token.split(".")[1], "base64").toString())
         )
+      res.locals.username = username
       res.locals.selfId = selfId
       res.locals.name = name
       // eslint-disable-next-line camelcase
       res.locals.isContactInfoVerified = isContactInfoVerfied
+      res.locals.doesProfileExist = doesProfileExist
 
       if (!res.locals.isContactInfoVerified) {
-        // TODO: Enforce return after res.status or res.json to avoid side effects from continued execution
+        // TODO: Change error message before release
         return res.status(401).json({ error: "unverified-user" })
+      }
+
+      // separate attribute checker to a middleware, apply to other endpints
+      const isCreatingProfile = req.url === "/user" && req.method === "POST"
+
+      if (res.locals.doesProfileExist) {
+        if (isCreatingProfile) {
+          // TODO: Change error message before release
+          return res.status(400).json({ error: "user-already-exists" })
+        }
+      } else {
+        if (!isCreatingProfile) {
+          // TODO: Change error message before release
+          return res.status(401).json({ error: "user-does-not-exist" })
+        }
       }
 
       next()
     } catch (err) {
+      // TODO: Change error message before release
       return res.status(401).json({ error: "invalid-claims" })
     }
   })

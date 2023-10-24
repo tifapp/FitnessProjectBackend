@@ -1,10 +1,8 @@
-import { UserHandle } from "TiFBackendUtils"
+import { SQLExecutable, UserHandle, conn } from "TiFBackendUtils"
 import { z } from "zod"
-import { SQLExecutable, queryResults } from "../dbconnection.js"
 import { ServerEnvironment } from "../env.js"
-import { withValidatedRequest } from "../validation.js"
-// eslint-disable-next-line no-restricted-imports
-import { Router } from "express"
+import { ValidatedRouter, withValidatedRequest } from "../validation.js"
+import { DatabaseUser } from "./models.js"
 
 const AutocompleteUsersRequestSchema = z.object({
   query: z.object({
@@ -21,35 +19,31 @@ const AutocompleteUsersRequestSchema = z.object({
  */
 export const autocompleteUsersRouter = (
   env: ServerEnvironment,
-  router: Router
+  router: ValidatedRouter
 ) => {
   router.get(
     "/autocomplete",
-    withValidatedRequest(AutocompleteUsersRequestSchema, async (req, res) => {
-      const users = await autocompleteUsers(
-        env.conn,
+    withValidatedRequest(AutocompleteUsersRequestSchema, (req, res) =>
+      autocompleteUsers(
+        conn,
         req.query.handle,
         req.query.limit
-      )
-      return res.status(200).json({ users })
-    })
+      ).mapSuccess(users => res.status(200).json({ users }))
+    )
   )
 }
 
-const autocompleteUsers = async (
+const autocompleteUsers = (
   conn: SQLExecutable,
   baseHandle: UserHandle,
   limit: number
-) => {
-  return await queryResults(
-    conn,
-    `
+) => conn.queryResults<Pick<DatabaseUser, "id" | "name" | "handle">>(
+  `
     SELECT id, name, handle 
     FROM user u 
     WHERE LOWER(u.handle) LIKE CONCAT(LOWER(:handle), '%') 
     ORDER BY u.handle ASC, u.creationDate ASC
     LIMIT :limit
     `,
-    { handle: baseHandle.rawValue, limit }
-  )
-}
+  { handle: baseHandle.rawValue, limit }
+)

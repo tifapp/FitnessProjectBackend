@@ -1,19 +1,17 @@
 import express, { Application } from "express"
 import { ServerEnvironment } from "./env.js"
-import { createEventRouter } from "./events/createEvent.js"
-import { getChatTokenRouter } from "./events/getChatToken.js"
 import { getEventByIdRouter } from "./events/getEventById.js"
 import { getEventsByRegionRouter } from "./events/getEventsByRegion.js"
 import { autocompleteUsersRouter } from "./user/autocompleteUsers.js"
 import { createUserProfileRouter } from "./user/createUserProfile.js"
 import { deleteUserAccountRouter } from "./user/deleteUserAccount.js"
-import { getCurrentUserSettingsRouter } from "./user/getCurrentUserSettings.js"
-import { getUserBasedOnIdRouter } from "./user/getUserBasedOnId.js"
-import { getUserInfoRouter } from "./user/getUserInfo.js"
+import { getSelfRouter } from "./user/getSelf.js"
+import { getUserRouter } from "./user/getUser.js"
 import { sendFriendRequestsRouter } from "./user/sendFriendRequest.js"
-import { updateCurrentUserSettingsRouter } from "./user/updateCurrentUserSettings.js"
+import { getUserSettingsRouter } from "./user/settings/getUserSettings.js"
+import { updateUserSettingsRouter } from "./user/settings/updateUserSettings.js"
 import { updateUserProfileRouter } from "./user/updateUserProfile.js"
-import { ValidatedRouter } from "./validation.js"
+import { createValidatedRouter } from "./validation.js"
 
 /**
  * Creates an application instance.
@@ -34,34 +32,31 @@ export const addBenchmarking = (app: Application) => {
     const startMem = process.memoryUsage().heapUsed
     res.on("finish", () => {
       const duration = Date.now() - start
-      console.log(`[${req.method}] ${req.originalUrl} took ${duration}ms`)
       const endMem = process.memoryUsage().heapUsed
       const diffMem = endMem - startMem
-      console.log(`Memory change for the request: ${diffMem} bytes`)
+      console.table([{ duration: `[${req.method}] ${req.originalUrl} took ${duration}ms`, memoryUsage: `${diffMem} bytes` }])
     })
     next()
   })
 }
 
 const addEventRoutes = (environment: ServerEnvironment) => {
-  const router = new ValidatedRouter()
-  createEventRouter(environment, router)
-  getChatTokenRouter(environment, router)
+  const router = createValidatedRouter()
   getEventByIdRouter(environment, router)
   getEventsByRegionRouter(environment, router)
   return router
 }
 
 const addUserRoutes = (environment: ServerEnvironment) => {
-  const router = new ValidatedRouter()
-  autocompleteUsersRouter(environment, router.asRouter())
+  const router = createValidatedRouter()
+  autocompleteUsersRouter(environment, router)
   createUserProfileRouter(environment, router)
   deleteUserAccountRouter(environment, router)
-  getCurrentUserSettingsRouter(environment, router)
-  getUserInfoRouter(environment, router)
-  getUserBasedOnIdRouter(environment, router)
+  getUserSettingsRouter(environment, router)
+  getSelfRouter(environment, router)
+  getUserRouter(environment, router)
   sendFriendRequestsRouter(environment, router)
-  updateCurrentUserSettingsRouter(environment, router)
+  updateUserSettingsRouter(environment, router)
   updateUserProfileRouter(environment, router)
   return router
 }
@@ -73,6 +68,6 @@ const addUserRoutes = (environment: ServerEnvironment) => {
  * @param environment see {@link ServerEnvironment}
  */
 export const addRoutes = (app: Application, environment: ServerEnvironment) => {
-  app.use("/event", addEventRoutes(environment).asRouter())
-  app.use("/user", addUserRoutes(environment).asRouter())
+  app.use("/event", addEventRoutes(environment))
+  app.use("/user", addUserRoutes(environment))
 }

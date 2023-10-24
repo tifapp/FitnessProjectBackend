@@ -47,6 +47,10 @@ export const createCognitoAuthToken = async (
         {
           Name: "email_verified",
           Value: `${user?.isVerified ?? true}`
+        },
+        {
+          Name: "profile_created",
+          Value: `${user?.profileExists ?? true}`
         }
       ]
     }

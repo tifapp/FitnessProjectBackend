@@ -3,18 +3,20 @@ import dotenv from "dotenv"
 
 dotenv.config()
 
-export const checkExistingPlacemarkInDB = async (
+export const checkExistingPlacemarkInDB = (
   location: LocationCoordinate2D
 ) =>
-  await conn.hasResults(
+  conn.queryHasResults(
     `
     SELECT TRUE FROM location WHERE lat = :latitude AND lon = :longitude LIMIT 1
     `,
     location
   )
+    .inverted()
+    .withFailure("placemark-already-exists" as const)
 
-export const addPlacemarkToDB = async (place: Placemark) =>
-  await conn.execute(
+export const addPlacemarkToDB = (place: Placemark) =>
+  conn.queryResults(
     `
     INSERT INTO location (name, city, country, street, street_num, lat, lon)
     VALUES (:name, :city, :country, :street, :street_num, :lat, :lon)

@@ -1,40 +1,101 @@
+import { SQLExecutable, conn, failure, promiseResult, success } from "TiFBackendUtils"
+import AWS from "aws-sdk"
 import { ServerEnvironment } from "../env.js"
 import { ValidatedRouter } from "../validation.js"
-import { registerNewUser } from "./SQL.js"
+import { RegisterUserRequest } from "./SQL.js"
 import { generateUniqueUsername } from "./generateUserHandle.js"
+import { DatabaseUser } from "./models.js"
+
+const checkValidName = (name: string, id: string) => {
+  if (name === "") {
+    return failure("invalid-claims" as const)
+  }
+
+  return success({
+    id,
+    name
+  })
+}
+
+const userWithHandleOrIdExists = (conn: SQLExecutable, id: string, handle?: string) => {
+  return promiseResult(handle ? success() : failure("missing-handle" as const))
+    .flatMapSuccess(() => conn
+      .queryFirstResult<DatabaseUser>("SELECT TRUE FROM user WHERE handle = :handle OR id = :id", {
+        handle,
+        id
+      })
+      .inverted()
+      .mapFailure(user => user.handle === handle ? "duplicate-handle" as const : "user-exists")
+    )
+}
+
+/**
+ * Creates a new user in the database.
+ *
+ * @param conn see {@link SQLExecutable}
+ * @param request see {@link RegisterUserRequest}
+ */
+export const insertUser = (
+  conn: SQLExecutable,
+  request: RegisterUserRequest
+) => conn.queryResults(
+  "INSERT INTO user (id, name, handle) VALUES (:id, :name, :handle)",
+  request
+)
+
+/**
+ * Attempts to register a new user in the database.
+ *
+ * @param conn the query executor to use
+ * @param request the initial fields required to create a user
+ * @returns an object containing the id of the newly registered user
+ */
+const createUserProfileTransaction = (
+  request: RegisterUserRequest
+) =>
+  conn.transaction((tx) =>
+    userWithHandleOrIdExists(tx, request.id, request.handle)
+      .flatMapSuccess(() => insertUser(tx, request)).mapSuccess(() => ({ id: request.id, handle: request.handle }))
+  )
+
+const setProfileCreatedAttribute = (username: string) => {
+  AWS.config.update({
+    region: process.env.AWS_REGION,
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+  })
+
+  const cognito = new AWS.CognitoIdentityServiceProvider()
+
+  const verifyEmailParams: AWS.CognitoIdentityServiceProvider.AdminUpdateUserAttributesRequest =
+    {
+      UserPoolId: process.env.COGNITO_USER_POOL_ID ?? "",
+      Username: username,
+      UserAttributes: [
+        {
+          Name: "profile_created",
+          Value: "true"
+        }
+      ]
+    }
+
+  return promiseResult(success(cognito.adminUpdateUserAttributes(verifyEmailParams).promise())).withFailure("cannot-set-cognito-attribute" as const)
+}
 
 export const createUserProfileRouter = (
   environment: ServerEnvironment,
   router: ValidatedRouter
 ) =>
-  router.post("/", {}, async (req, res) => {
-    if (res.locals.name === "") {
-      return res.status(401).json({ error: "invalid-claims" })
-    }
-
-    const registerReq = {
-      id: res.locals.selfId,
-      name: res.locals.name
-    }
-    // Check if we can pass this data as a req so then we can reuse the validation middleware.
-
-    try {
-      const handle = await generateUniqueUsername(
-        environment.conn,
-        registerReq.name
-      )
-
-      const result = await environment.conn.transaction(async (tx) => {
-        return await registerNewUser(tx, Object.assign(registerReq, { handle }))
-      })
-
-      if (result.status === "error") {
-        return res.status(400).json({ error: result.value })
-      }
-
-      return res.status(201).json(result.value)
-    } catch (e) {
-      console.log("create user error is ", e)
-      return res.status(500).json({ error: e })
-    }
-  })
+  router.postWithValidation("/", {}, (_, res) =>
+    promiseResult(checkValidName(res.locals.name, res.locals.selfId))
+      .flatMapSuccess(registerReq =>
+        generateUniqueUsername(
+          conn,
+          registerReq.name
+        )
+          .mapSuccess(handle => Object.assign(registerReq, { handle })))
+      .flatMapSuccess(profile => createUserProfileTransaction(profile))
+      .flatMapSuccess(profile => environment.environment === "dev" ? success(profile) : setProfileCreatedAttribute(res.locals.username).withSuccess(profile))
+      .mapFailure(error => res.status(error === "user-exists" ? 400 : error === "missing-handle" || error === "cannot-set-cognito-attribute" ? 500 : 401).json({ error }))
+      .mapSuccess(profile => res.status(201).json(profile))
+  )
