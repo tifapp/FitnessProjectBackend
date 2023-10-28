@@ -1,8 +1,6 @@
 import { SQLExecutable, conn } from "TiFBackendUtils"
 import { z } from "zod"
 import { ServerEnvironment } from "../env.js"
-import { userNotFoundBody } from "../shared/Responses.js"
-import { userWithIdExists } from "../user/SQL.js"
 import { ValidatedRouter } from "../validation.js"
 import { EventColorSchema } from "./models.js"
 
@@ -26,65 +24,41 @@ const CreateEventSchema = z
 
 type CreateEventInput = z.infer<typeof CreateEventSchema>
 
-/**
- * Creates an event in the database.
- *
- * @param request see {@link CreateEventRequest}
- */
-const insertEvent = async (
+const createEvent = (
   conn: SQLExecutable,
-  request: CreateEventInput,
+  input: CreateEventInput,
   hostId: string
-) => {
-  await conn.queryResults(
-    `
-    INSERT INTO event (
-      hostId,
-      title, 
-      description, 
-      startTimestamp, 
-      endTimestamp, 
-      color, 
-      shouldHideAfterStartDate, 
-      isChatEnabled, 
-      latitude, 
-      longitude
-    ) VALUES (
-      :hostId,
-      :title, 
-      :description, 
-      FROM_UNIXTIME(:startTimestamp), 
-      FROM_UNIXTIME(:endTimestamp), 
-      :color, 
-      :shouldHideAfterStartDate, 
-      :isChatEnabled, 
-      :latitude, 
-      :longitude
-    )
-    `,
-    {
-      ...request,
-      startTimestamp: request.startTimestamp.getTime() / 1000,
-      endTimestamp: request.endTimestamp.getTime() / 1000,
-      hostId
-    }
-  )
-}
-
-const createEvent = async (
-  conn: SQLExecutable,
-  hostId: string,
-  input: CreateEventInput
-) => {
-  const userExists = await userWithIdExists(conn, hostId)
-  if (!userExists) {
-    return { status: "error", value: userNotFoundBody(hostId) }
-  }
-
-  await insertEvent(conn, input, hostId)
-
-  return { status: "success", value: { id: await selectLastInsertionId(conn) } }
-}
+) => conn.queryResultId(`
+INSERT INTO event (
+  hostId,
+  title, 
+  description, 
+  startTimestamp, 
+  endTimestamp, 
+  color, 
+  shouldHideAfterStartDate, 
+  isChatEnabled, 
+  latitude, 
+  longitude
+) VALUES (
+  :hostId,
+  :title, 
+  :description, 
+  FROM_UNIXTIME(:startTimestamp), 
+  FROM_UNIXTIME(:endTimestamp), 
+  :color, 
+  :shouldHideAfterStartDate, 
+  :isChatEnabled, 
+  :latitude, 
+  :longitude
+)
+`,
+{
+  ...input,
+  startTimestamp: input.startTimestamp.getTime() / 1000,
+  endTimestamp: input.endTimestamp.getTime() / 1000,
+  hostId
+}).withFailure("user-not-found" as const)
 
 /**
  * Creates routes related to event operations.
@@ -99,8 +73,7 @@ export const createEventRouter = (
    * Create an event
    */
   router.postWithValidation("/", { bodySchema: CreateEventSchema }, (req, res) => {
-    return conn
-      .transaction((tx) => createEvent(tx, res.locals.selfId, req.body))
+    return createEvent(tx, req.body, res.locals.selfId)
       .mapFailure((error) => res.status(401).json({ error }))
       .mapSuccess(() => res.status(201).send())
   })
