@@ -47,6 +47,7 @@ export const callPostUser = async (bearerToken?: string) => {
     .send()
 }
 
+// database is reset for each test so we need to create a new auth for each test
 export const createUserAndUpdateAuth = async (bearerToken: string): Promise<string> => {
   await callPostUser(bearerToken)
 

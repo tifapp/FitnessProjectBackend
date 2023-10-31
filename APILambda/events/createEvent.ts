@@ -22,9 +22,9 @@ const CreateEventSchema = z
     endTimestamp: new Date(res.endTimestamp)
   }))
 
-type CreateEventInput = z.infer<typeof CreateEventSchema>
+export type CreateEventInput = z.infer<typeof CreateEventSchema>
 
-const createEvent = (
+export const createEvent = (
   conn: SQLExecutable,
   input: CreateEventInput,
   hostId: string
@@ -75,6 +75,6 @@ export const createEventRouter = (
   router.postWithValidation("/", { bodySchema: CreateEventSchema }, (req, res) => {
     return createEvent(conn, req.body, res.locals.selfId)
       .mapFailure((error) => res.status(500).json({ error }))
-      .mapSuccess(() => res.status(201).send())
+      .mapSuccess((eventId) => res.status(201).json({ id: eventId }))
   })
 }

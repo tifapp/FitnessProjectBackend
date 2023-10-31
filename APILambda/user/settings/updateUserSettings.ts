@@ -25,20 +25,22 @@ export const DEFAULT_USER_SETTINGS = {
  * @param userId the id of the user to update settings for
  * @param settings the settings fields to update
  */
-export const overwriteUserSettings = (
+const overwriteUserSettings = (
   conn: SQLExecutable,
   userId: string,
   settings: Partial<UserSettings>
 ) =>
-  queryUserSettings(conn, userId)
-    .flatMapSuccess(currentSettings => updateUserSettings(conn, userId, {
-      ...currentSettings,
-      ...settings
-    }))
-    .flatMapFailure(() => insertUserSettings(conn, userId, {
-      ...DEFAULT_USER_SETTINGS,
-      ...settings
-    }))
+  conn.transaction((tx) =>
+    queryUserSettings(tx, userId)
+      .flatMapSuccess(currentSettings => updateUserSettings(tx, userId, {
+        ...currentSettings,
+        ...settings
+      }))
+      .flatMapFailure(() => insertUserSettings(tx, userId, {
+        ...DEFAULT_USER_SETTINGS,
+        ...settings
+      }))
+  )
 
 const updateUserSettings = (
   conn: SQLExecutable,
@@ -103,7 +105,7 @@ export const updateUserSettingsRouter = (
     "/self/settings",
     { bodySchema: UserSettingsSchema.partial() },
     (req, res) =>
-      conn.transaction((tx) => overwriteUserSettings(tx, res.locals.selfId, req.body))
+      overwriteUserSettings(conn, res.locals.selfId, req.body)
         .mapFailure((error) => res.status(500).json({ error }))
         .mapSuccess(() => res.status(204).send("No Content"))
   )

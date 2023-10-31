@@ -1,5 +1,5 @@
 import { faker } from "@faker-js/faker"
-import { CreateEventInput } from "../events/index.js"
+import { CreateEventInput } from "../events/createEvent.js"
 
 const mockLocationCoordinate2D = () => ({
   latitude: parseFloat(faker.address.latitude()),
