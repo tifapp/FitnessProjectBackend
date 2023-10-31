@@ -7,10 +7,12 @@ import {
   Result,
   Retryable,
   SearchClosestAddressToCoordinates,
+  addPlacemarkToDB,
+  checkExistingPlacemarkInDB,
+  conn,
   exponentialFunctionBackoff,
   success
 } from "TiFBackendUtils"
-import { addPlacemarkToDB, checkExistingPlacemarkInDB } from "./utils.js"
 
 interface LocationSearchRequest extends Retryable {
   coordinate: LocationCoordinate2D
@@ -23,11 +25,11 @@ export const handler: any = exponentialFunctionBackoff<
   Result<"placemark-successfully-inserted", "placemark-already-exists">
 >(
   async (event: LocationSearchRequest) =>
-    checkExistingPlacemarkInDB({
+    checkExistingPlacemarkInDB(conn, {
       latitude: parseFloat(event.coordinate.latitude.toFixed(10)),
       longitude: parseFloat(event.coordinate.longitude.toFixed(10))
     })
       .flatMapSuccess(async () => success(await SearchClosestAddressToCoordinates(event.coordinate)))
-      .flatMapSuccess((placemark) => addPlacemarkToDB(placemark))
+      .flatMapSuccess((placemark) => addPlacemarkToDB(conn, placemark))
       .mapSuccess(() => "placemark-successfully-inserted" as const)
 )

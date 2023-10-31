@@ -3,6 +3,7 @@ import {
   Place,
   SearchPlaceIndexForPositionCommand
 } from "@aws-sdk/client-location"
+import { SQLExecutable } from "../SQLExecutable/index.js"
 import { LocationCoordinate2D, Placemark } from "../location.js"
 
 const locationClient = new LocationClient({ region: "us-west-2" })
@@ -51,3 +52,28 @@ export const SearchClosestAddressToCoordinates = async (
     response.Results?.[0].Place
   )
 }
+
+export const checkExistingPlacemarkInDB = (
+  conn: SQLExecutable,
+  location: LocationCoordinate2D
+) =>
+  conn.queryHasResults(
+    `
+    SELECT TRUE FROM location WHERE lat = :latitude AND lon = :longitude LIMIT 1
+    `,
+    location
+  )
+    .inverted()
+    .withFailure("placemark-already-exists" as const)
+
+export const addPlacemarkToDB = (
+  conn: SQLExecutable,
+  place: Placemark
+) =>
+  conn.queryResults(
+    `
+    INSERT INTO location (name, city, country, street, street_num, lat, lon)
+    VALUES (:name, :city, :country, :street, :street_num, :lat, :lon)
+    `,
+    place
+  )
