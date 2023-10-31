@@ -1,17 +1,13 @@
 import { resetDatabaseBeforeEach } from "../test/database.js"
-import { callPostFriendRequest, callPostUser } from "../test/helpers/users.js"
+import { callPostFriendRequest, createUserAndUpdateAuth } from "../test/helpers/users.js"
 
 describe("FriendRequest tests", () => {
   resetDatabaseBeforeEach()
 
-  beforeEach(async () => {
-    await callPostUser(global.defaultUser.auth)
-    await callPostUser(global.defaultUser2.auth)
-  })
-
   it("should have a pending status when no prior relation between uses", async () => {
+    const token1 = await createUserAndUpdateAuth(global.defaultUser.auth)
     const resp = await callPostFriendRequest(
-      global.defaultUser.auth,
+      token1,
       global.defaultUser2.id
     )
     expect(resp.status).toEqual(201)
@@ -19,12 +15,13 @@ describe("FriendRequest tests", () => {
   })
 
   it("should return the same status when already existing pending friend request", async () => {
+    const token1 = await createUserAndUpdateAuth(global.defaultUser.auth)
     await callPostFriendRequest(
-      global.defaultUser.auth,
+      token1,
       global.defaultUser2.id
     )
     const resp = await callPostFriendRequest(
-      global.defaultUser.auth,
+      token1,
       global.defaultUser2.id
     )
     expect(resp.status).toEqual(200)
@@ -32,17 +29,19 @@ describe("FriendRequest tests", () => {
   })
 
   it("should return the same status when already friends", async () => {
+    const token1 = await createUserAndUpdateAuth(global.defaultUser.auth)
+    const token2 = await createUserAndUpdateAuth(global.defaultUser2.auth)
     await callPostFriendRequest(
-      global.defaultUser.auth,
+      token1,
       global.defaultUser2.id
     )
     await callPostFriendRequest(
-      global.defaultUser2.auth,
+      token2,
       global.defaultUser.id
     )
 
     const resp = await callPostFriendRequest(
-      global.defaultUser.auth,
+      token1,
       global.defaultUser2.id
     )
     expect(resp.status).toEqual(200)
@@ -50,13 +49,15 @@ describe("FriendRequest tests", () => {
   })
 
   it("should have a friend status when the receiver sends a friend request to someone who sent them a pending friend request", async () => {
+    const token1 = await createUserAndUpdateAuth(global.defaultUser.auth)
+    const token2 = await createUserAndUpdateAuth(global.defaultUser2.auth)
     await callPostFriendRequest(
-      global.defaultUser.auth,
+      token1,
       global.defaultUser2.id
     )
 
     const resp = await callPostFriendRequest(
-      global.defaultUser2.auth,
+      token2,
       global.defaultUser.id
     )
     expect(resp.status).toEqual(201)

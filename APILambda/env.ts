@@ -1,4 +1,3 @@
-import { Connection } from "@planetscale/database"
 import dotenv from "dotenv"
 import { z } from "zod"
 
@@ -29,5 +28,4 @@ export const envVars = EnvVarsSchema.parse(process.env)
  */
 export type ServerEnvironment = {
   environment: EnvironmentType
-  conn: Connection
 }

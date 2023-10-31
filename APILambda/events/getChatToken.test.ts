@@ -4,7 +4,7 @@ import {
   callCreateEvent,
   callGetEventChatToken
 } from "../test/helpers/events.js"
-import { callPostUser } from "../test/helpers/users.js"
+import { createUserAndUpdateAuth } from "../test/helpers/users.js"
 import { testEvents } from "../test/testEvents.js"
 
 describe("GetTokenRequest tests", () => {
@@ -19,25 +19,25 @@ describe("GetTokenRequest tests", () => {
   // })
 
   it("should return 404 if the event doesnt exist", async () => {
+    const userToken = await createUserAndUpdateAuth(global.defaultUser.auth)
     const resp = await callGetEventChatToken(
-      global.defaultUser.auth,
+      userToken,
       randomInt(1000)
     )
 
     expect(resp.status).toEqual(404)
-    expect(resp.body).toMatchObject({ body: "event does not exist" })
+    expect(resp.body).toMatchObject({ error: "event-not-found" })
   })
 
   it("should return 404 if the user is not part of the event", async () => {
-    await callPostUser(global.defaultUser.auth)
-    const event = await callCreateEvent(global.defaultUser.auth, testEvents[0])
+    const userToken = await createUserAndUpdateAuth(global.defaultUser.auth)
+    const event = await callCreateEvent(userToken, testEvents[0])
 
-    // check if user exists too
-    const user = await global.registerUser()
-    const resp = await callGetEventChatToken(user.auth, event.body.id)
+    const user2Token = await createUserAndUpdateAuth(global.defaultUser2.auth)
+    const resp = await callGetEventChatToken(user2Token, event.body.id)
 
-    expect(resp.status).toEqual(404)
-    expect(resp.body).toMatchObject({ body: "user is not apart of event" })
+    expect(resp.status).toEqual(403)
+    expect(resp.body).toMatchObject({ error: "user-not-attendee" })
   })
 
   // test all error cases

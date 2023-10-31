@@ -1,4 +1,5 @@
 /* eslint-disable no-restricted-imports */
+import { Result } from "TiFBackendUtils"
 import express, {
   NextFunction,
   Request,
@@ -48,37 +49,37 @@ interface ValidationSchemas {
  */
 export const validateRequest =
   ({ bodySchema, querySchema, pathParamsSchema }: ValidationSchemas) =>
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const validationSchema = z.object({
+    async (req: Request, res: Response, next: NextFunction) => {
+      try {
+        const validationSchema = z.object({
         // supertest sends {} by default, lambda gets null
-        body: bodySchema ?? z.union([z.literal(null), z.object({}).strict()]),
-        query: querySchema ?? z.union([z.literal(null), z.object({}).strict()]),
-        params:
+          body: bodySchema ?? z.union([z.literal(null), z.object({}).strict()]),
+          query: querySchema ?? z.union([z.literal(null), z.object({}).strict()]),
+          params:
           pathParamsSchema ?? z.union([z.literal(null), z.object({}).strict()])
-      })
+        })
 
-      const { body, query, params } = await validationSchema.parseAsync({
-        body: req.body,
-        query: req.query,
-        params: req.params
-      })
+        const { body, query, params } = await validationSchema.parseAsync({
+          body: req.body,
+          query: req.query,
+          params: req.params
+        })
 
-      req.body = body
-      req.query = query
-      req.params = params
+        req.body = body
+        req.query = query
+        req.params = params
 
-      next()
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        console.log("failed to validate request ", error)
-        return res.status(400).json({ error: "invalid-request" })
-      } else {
-        console.error("Error in validation middleware: ", error)
-        return res.status(500).json({ error: "internal-server-error" })
+        next()
+      } catch (error) {
+        if (error instanceof z.ZodError) {
+          // console.log("failed to validate request ", error)
+          return res.status(400).json({ error: "invalid-request" })
+        } else {
+          // console.error("Error in validation middleware: ", error)
+          return res.status(500).json({ error: "internal-server-error" })
+        }
       }
     }
-  }
 
 // AnyZodObject breaks tests
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -92,7 +93,7 @@ type ValidatedRequestHandler<S extends ValidationSchemas> = (
   },
   res: Response,
   next: NextFunction
-) => Promise<Response>
+) => Promise<Result<Response, Response>>
 
 /**
  * Wrapper around the Express Router which facilitates runtime validation and
@@ -101,7 +102,7 @@ type ValidatedRequestHandler<S extends ValidationSchemas> = (
  * Example Usage:
  * ```typescript
  * import { z } from 'zod';
- * import { ValidatedRouter } from './validated-router';  // Assume the file is named validated-router.ts
+ * import { createValidatedRouter } from './validated-router';  // Assume the file is named validated-router.ts
  *
  * // Define your schemas
  * const bodySchema = z.object({
@@ -114,7 +115,7 @@ type ValidatedRequestHandler<S extends ValidationSchemas> = (
  * });
  *
  * // Create an instance of ValidatedRouter
- * const router = new ValidatedRouter();
+ * const router = new createValidatedRouter();
  *
  * // Define your route
  * router.post('/create-user', { bodySchema, querySchema }, (req, res) => {
@@ -129,71 +130,42 @@ type ValidatedRequestHandler<S extends ValidationSchemas> = (
  *
  * @class ValidatedRouter
  */
-export class ValidatedRouter {
-  private router: Router
-
-  constructor() {
-    this.router = express.Router()
-  }
-
-  get<Schema extends ValidationSchemas>(
+type ValidatedMethods = {
+  [Method in "getWithValidation" | "deleteWithValidation" | "patchWithValidation" | "postWithValidation" | "putWithValidation"]: <Schema extends ValidationSchemas>(
     path: string,
-    schema: Pick<Schema, "querySchema" | "pathParamsSchema">,
+    schema: Partial<Schema>,
     ...handlers: ValidatedRequestHandler<Schema>[]
-  ): this {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    this.router.get(path, validateRequest(schema), ...(handlers as any))
-    return this
-  }
+  ) => Router;
+};
 
-  delete<Schema extends ValidationSchemas>(
+export type ValidatedRouter = Router & ValidatedMethods
+
+export const createValidatedRouter = (): ValidatedRouter => {
+  const router = express.Router() as ValidatedRouter
+
+  const addRoute = (
+    httpMethod: "get" | "delete" | "patch" | "post" | "put",
     path: string,
-    schema: Schema,
-    ...handlers: ValidatedRequestHandler<Schema>[]
-  ): this {
+    schema: Partial<ValidationSchemas>,
+    ...handlers: ValidatedRequestHandler<ValidationSchemas>[]
+  ) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    this.router.delete(path, validateRequest(schema), ...(handlers as any))
-    return this
+    router[httpMethod](path, validateRequest(schema), ...(handlers as any))
+    return router
   }
 
-  patch<Schema extends ValidationSchemas>(
-    path: string,
-    schema: Schema,
-    ...handlers: ValidatedRequestHandler<Schema>[]
-  ): this {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    this.router.patch(path, validateRequest(schema), ...(handlers as any))
-    return this
-  }
+  router.getWithValidation = (path, schema, ...handlers) => addRoute("get", path, schema, ...handlers)
+  router.deleteWithValidation = (path, schema, ...handlers) => addRoute("delete", path, schema, ...handlers)
+  router.patchWithValidation = (path, schema, ...handlers) => addRoute("patch", path, schema, ...handlers)
+  router.postWithValidation = (path, schema, ...handlers) => addRoute("post", path, schema, ...handlers)
+  router.putWithValidation = (path, schema, ...handlers) => addRoute("put", path, schema, ...handlers)
 
-  put<Schema extends ValidationSchemas>(
-    path: string,
-    schema: Schema,
-    ...handlers: ValidatedRequestHandler<Schema>[]
-  ): this {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    this.router.put(path, validateRequest(schema), ...(handlers as any))
-    return this
-  }
-
-  post<Schema extends ValidationSchemas>(
-    path: string,
-    schema: Schema,
-    ...handlers: ValidatedRequestHandler<Schema>[]
-  ): this {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    this.router.post(path, validateRequest(schema), ...(handlers as any))
-    return this
-  }
-
-  asRouter(): Router {
-    return this.router
-  }
+  return router
 }
 
 export const withValidatedRequest = <Schema extends AnyZodObject>(
   schema: Schema,
-  fn: (data: z.infer<Schema>, res: Response) => Promise<Response>
+  fn: (data: z.infer<Schema>, res: Response) => Promise<Result<Response, Response>>
 ): RequestHandler => {
   return async (req: Request, res: Response) => {
     try {

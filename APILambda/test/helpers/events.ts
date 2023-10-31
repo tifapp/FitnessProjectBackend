@@ -1,10 +1,11 @@
 import request from "supertest"
-import { CreateEventInput } from "../../events/index.js"
+// import { CreateEventInput } from "../../events/index.js"
 import { testApp } from "../testApp.js"
 
 export const callCreateEvent = async (
   bearerToken: string,
-  req: CreateEventInput
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  req: any
 ) => {
   return await request(testApp)
     .post("/event")

@@ -10,11 +10,13 @@ export const createMockAuthToken = async (
 ): Promise<TestUser> => {
   const secret = "supersecret"
   const id = randomUUID()
+  const email = faker.internet.email()
 
   const tokenPayload: AuthClaims = {
     sub: id,
     name: user?.name ?? faker.name.fullName(),
-    email: faker.internet.email(),
+    email,
+    username: email,
     // Comes from Cognito
     // eslint-disable-next-line @typescript-eslint/naming-convention
     phone_number: faker.phone.imei(),
@@ -23,7 +25,10 @@ export const createMockAuthToken = async (
     email_verified: user?.isVerified ?? true,
     // Comes from Cognito
     // eslint-disable-next-line @typescript-eslint/naming-convention
-    phone_number_verified: user?.isVerified ?? true
+    phone_number_verified: user?.isVerified ?? true,
+    // Comes from Cognito
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    profile_created: user?.profileExists ?? false
   }
 
   const token = jwt.sign(tokenPayload, secret, { algorithm: "HS256" })

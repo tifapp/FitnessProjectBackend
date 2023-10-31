@@ -1,23 +1,25 @@
 import { randomUUID } from "crypto"
-import { userNotFoundBody } from "../shared/Responses.js"
-import { callGetUser, callPostUser } from "../test/helpers/users.js"
 import { resetDatabaseBeforeEach } from "../test/database.js"
+import { callGetSelf, callGetUser, createUserAndUpdateAuth } from "../test/helpers/users.js"
 
 describe("GetUser tests", () => {
   resetDatabaseBeforeEach()
 
-  it("should 404 on non existing user", async () => {
+  it("should 401 on non existing user", async () => {
     const userId = randomUUID()
     const resp = await callGetUser(global.defaultUser.auth, userId)
 
-    expect(resp.status).toEqual(404)
-    expect(resp.body).toMatchObject(userNotFoundBody(userId))
+    expect(resp.status).toEqual(401)
+    expect(resp.body).toMatchObject({ error: "user-does-not-exist" })
   })
 
   it("should retrieve a user that exists", async () => {
+    const user1Token = await createUserAndUpdateAuth(global.defaultUser.auth)
+
     const user2 = await global.registerUser({ name: "John Doe" })
-    const user2Profile = (await callPostUser(user2.auth)).body
-    const resp = await callGetUser(global.defaultUser.auth, user2Profile.id)
+    const user2Token = await createUserAndUpdateAuth(user2.auth)
+    const user2Profile = (await callGetSelf(user2Token)).body
+    const resp = await callGetUser(user1Token, user2Profile.id)
 
     expect(resp.status).toEqual(200)
     expect(resp.body).toMatchObject(

@@ -1,4 +1,4 @@
-import { conn } from "../dbconnection.js"
+import { conn } from "TiFBackendUtils"
 import { generateUniqueUsername } from "./generateUserHandle.js"
 
 describe("generateUniqueUsername", () => {
@@ -10,14 +10,14 @@ describe("generateUniqueUsername", () => {
 
   it("should clean name properly", async () => {
     const username = await generateUniqueUsername(conn, "J@hn D0e!!!")
-    expect(username.substr(0, 6)).toEqual("jhnd0e")
-    expect(username.substr(6)).toMatch(/^\d{4}$/)
+    expect((username.value as string).substr(0, 6)).toEqual("jhnd0e")
+    expect((username.value as string).substr(6)).toMatch(/^\d{4}$/)
   })
 
   it("should produce a handle starting with 'idk' if name has 0 valid characters", async () => {
     const username = await generateUniqueUsername(conn, "@ !!!")
-    expect(username.substr(0, 3)).toEqual("idk")
-    expect(username.substr(3)).toMatch(/^\d{4}$/)
+    expect((username.value as string).substr(0, 3)).toEqual("idk")
+    expect((username.value as string).substr(3)).toMatch(/^\d{4}$/)
   })
 
   // it("should throw an error after max retries", async () => {

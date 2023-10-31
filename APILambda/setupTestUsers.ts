@@ -8,11 +8,13 @@ dotenv.config()
 export default async (): Promise<void> => {
   if (process.env.TEST_ENV === "staging") {
     global.registerUser = createCognitoAuthToken
-    global.defaultUser = await createCognitoAuthToken()
-    global.defaultUser2 = await createCognitoAuthToken()
+    global.unregisteredUser = await createMockAuthToken({ profileExists: true })
+    global.defaultUser = await createMockAuthToken({ profileExists: false })
+    global.defaultUser2 = await createMockAuthToken({ profileExists: false })
   } else {
     global.registerUser = createMockAuthToken
-    global.defaultUser = await createMockAuthToken()
-    global.defaultUser2 = await createMockAuthToken()
+    global.unregisteredUser = await createMockAuthToken({ profileExists: true })
+    global.defaultUser = await createMockAuthToken({ profileExists: false })
+    global.defaultUser2 = await createMockAuthToken({ profileExists: false })
   }
 }

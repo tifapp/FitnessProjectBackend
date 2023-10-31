@@ -1,16 +1,19 @@
 import { resetDatabaseBeforeEach } from "../test/database.js"
-import { callAutocompleteUsers, callPostUser } from "../test/helpers/users.js"
+import { callAutocompleteUsers, callGetSelf, createUserAndUpdateAuth } from "../test/helpers/users.js"
 
 describe("AutocompleteUsers tests", () => {
   resetDatabaseBeforeEach()
 
   test("autocomplete endpoint basic request", async () => {
     const user1 = await global.registerUser({ name: "Bitchell Dickle" })
-    const user1Profile = (await callPostUser(user1.auth)).body
-    const user2 = await global.registerUser({ name: "Big Chungus" })
-    const user2Profile = (await callPostUser(user2.auth)).body
+    const user1Token = await createUserAndUpdateAuth(user1.auth)
+    const user1Profile = (await callGetSelf(user1Token)).body
 
-    const resp = await callAutocompleteUsers("bi", 50)
+    const user2 = await global.registerUser({ name: "Big Chungus" })
+    const user2Token = await createUserAndUpdateAuth(user2.auth)
+    const user2Profile = (await callGetSelf(user2Token)).body
+
+    const resp = await callAutocompleteUsers(user1Token, "bi", 50)
     expect(resp.status).toEqual(200)
     expect(resp.body).toMatchObject({
       users: [
@@ -30,11 +33,12 @@ describe("AutocompleteUsers tests", () => {
 
   it("should only query up to the limit", async () => {
     const user1 = await global.registerUser({ name: "Bitchell Dickle" })
-    const user2 = await global.registerUser({ name: "Big Chungus" })
-    await callPostUser(user1.auth)
-    await callPostUser(user2.auth)
+    const user1Token = await createUserAndUpdateAuth(user1.auth)
 
-    const resp = await callAutocompleteUsers("bi", 1)
+    const user2 = await global.registerUser({ name: "Big Chungus" })
+    await createUserAndUpdateAuth(user2.auth)
+
+    const resp = await callAutocompleteUsers(user1Token, "bi", 1)
     expect(resp.status).toEqual(200)
     expect(resp.body.users).toHaveLength(1)
   })
