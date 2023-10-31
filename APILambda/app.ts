@@ -1,5 +1,7 @@
 import express, { Application } from "express"
 import { ServerEnvironment } from "./env.js"
+import { createEventRouter } from "./events/createEvent.js"
+import { getChatTokenRouter } from "./events/getChatToken.js"
 import { getEventByIdRouter } from "./events/getEventById.js"
 import { getEventsByRegionRouter } from "./events/getEventsByRegion.js"
 import { autocompleteUsersRouter } from "./user/autocompleteUsers.js"
@@ -42,6 +44,8 @@ export const addBenchmarking = (app: Application) => {
 
 const addEventRoutes = (environment: ServerEnvironment) => {
   const router = createValidatedRouter()
+  createEventRouter(environment, router)
+  getChatTokenRouter(environment, router)
   getEventByIdRouter(environment, router)
   getEventsByRegionRouter(environment, router)
   return router
