@@ -34,7 +34,19 @@ const blockUser = (
       return conn.queryResults(
         `
       INSERT INTO userRelations (fromUserId, toUserId, status)
-      VALUES (:fromUserId, :toUserId, "blocked")
+      VALUES (:fromUserId, :toUserId, 'blocked')
+      ON DUPLICATE KEY UPDATE
+        status = 'blocked'
+      `,
+        { fromUserId, toUserId }
+      )
+    })
+    .flatMapSuccess(() => {
+      return conn.queryResults(
+        `
+      UPDATE userRelations
+      SET status = 'not-friends'
+      WHERE fromUserId = :toUserId AND toUserId = :fromUserId;
       `,
         { fromUserId, toUserId }
       )
