@@ -1,13 +1,11 @@
 import { resetDatabaseBeforeEach } from "../../test/database.js"
-import { callGetSettings, createUserAndUpdateAuth } from "../../test/helpers/users.js"
+import {
+  callGetSettings,
+  createUserAndUpdateAuth
+} from "../../test/helpers/users.js"
 
 describe("Get Settings tests", () => {
   resetDatabaseBeforeEach()
-
-  // it("should return 500 when we can't retrieve a user's profile", async () => {
-  //   const resp = await callGetSettings(global.unregisteredUser.auth)
-  //   expect(resp.status).toEqual(500)
-  // })
 
   it("should return 401 when the user has no profile", async () => {
     const resp = await callGetSettings(global.defaultUser.auth)
@@ -24,7 +22,8 @@ describe("Get Settings tests", () => {
       isEventNotificationsEnabled: true,
       isMentionsNotificationsEnabled: true,
       isChatNotificationsEnabled: true,
-      isFriendRequestNotificationsEnabled: true
+      isFriendRequestNotificationsEnabled: true,
+      lastUpdatedAt: undefined
     })
     expect(resp.status).toEqual(200)
   })

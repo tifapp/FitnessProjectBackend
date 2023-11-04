@@ -14,8 +14,8 @@ import { DEFAULT_USER_SETTINGS } from "./updateUserSettings.js"
  * @returns a result that indicates that the user is not found, or their current settings
  */
 export const queryUserSettings = (conn: SQLExecutable, userId: string) =>
-  userWithIdExists(conn, userId)
-    .flatMapSuccess(() => conn.queryFirstResult<UserSettings>(
+  userWithIdExists(conn, userId).flatMapSuccess(() =>
+    conn.queryFirstResult<UserSettings>(
       `
     SELECT 
       isAnalyticsEnabled, 
@@ -28,7 +28,8 @@ export const queryUserSettings = (conn: SQLExecutable, userId: string) =>
     WHERE userId = :userId
   `,
       { userId }
-    ))
+    )
+  )
 
 export const getUserSettingsRouter = (
   environment: ServerEnvironment,
@@ -40,7 +41,7 @@ export const getUserSettingsRouter = (
   router.getWithValidation("/self/settings", {}, (_, res) =>
     queryUserSettings(conn, res.locals.selfId)
       .flatMapFailure(() => success(DEFAULT_USER_SETTINGS))
-      .mapFailure((error) => { console.log("error is ,", error); return res.status(500).json({ error }) })
-      .mapSuccess(settings => res.status(200).json(settings).send())
+      .mapFailure((error) => res.status(500).json({ error }))
+      .mapSuccess((settings) => res.status(200).json(settings).send())
   )
 }
