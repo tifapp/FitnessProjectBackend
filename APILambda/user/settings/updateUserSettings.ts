@@ -32,22 +32,27 @@ const overwriteUserSettings = (
 ) =>
   conn.transaction((tx) =>
     queryUserSettings(tx, userId)
-      .flatMapSuccess(currentSettings => updateUserSettings(tx, userId, {
-        ...currentSettings,
-        ...settings
-      }))
-      .flatMapFailure(() => insertUserSettings(tx, userId, {
-        ...DEFAULT_USER_SETTINGS,
-        ...settings
-      }))
+      .flatMapSuccess((currentSettings) =>
+        updateUserSettings(tx, userId, {
+          ...currentSettings,
+          ...settings
+        })
+      )
+      .flatMapFailure(() =>
+        insertUserSettings(tx, userId, {
+          ...DEFAULT_USER_SETTINGS,
+          ...settings
+        })
+      )
   )
 
 const updateUserSettings = (
   conn: SQLExecutable,
   userId: string,
   settings: UserSettings
-) => conn.queryResults<UserSettings>(
-  `
+) =>
+  conn.queryResults(
+    `
     UPDATE userSettings 
     SET 
       isAnalyticsEnabled = :isAnalyticsEnabled,
@@ -55,19 +60,21 @@ const updateUserSettings = (
       isEventNotificationsEnabled = :isEventNotificationsEnabled,
       isMentionsNotificationsEnabled = :isMentionsNotificationsEnabled,
       isChatNotificationsEnabled = :isChatNotificationsEnabled,
-      isFriendRequestNotificationsEnabled = :isFriendRequestNotificationsEnabled
+      isFriendRequestNotificationsEnabled = :isFriendRequestNotificationsEnabled,
+      lastUpdatedAt = NOW()
     WHERE 
       userId = :userId 
   `,
-  { userId, ...settings }
-)
+    { userId, ...settings }
+  )
 
 const insertUserSettings = (
   conn: SQLExecutable,
   userId: string,
   settings: UserSettings
-) => conn.queryResults<UserSettings>(
-  `
+) =>
+  conn.queryResults(
+    `
     INSERT INTO userSettings (
       userId, 
       isAnalyticsEnabled, 
@@ -86,8 +93,8 @@ const insertUserSettings = (
       :isFriendRequestNotificationsEnabled
     )
   `,
-  { userId, ...settings }
-)
+    { userId, ...settings }
+  )
 
 /**
  * Creates routes related to user operations.

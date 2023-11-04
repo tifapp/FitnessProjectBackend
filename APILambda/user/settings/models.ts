@@ -16,3 +16,5 @@ export const UserSettingsSchema = z.object({
  * A type representing a user's settings.
  */
 export type UserSettings = z.infer<typeof UserSettingsSchema>
+
+export type DatabaseUserSettings = UserSettings & { lastUpdatedAt: Date }
