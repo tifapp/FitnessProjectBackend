@@ -42,7 +42,6 @@ export const getUserSettingsRouter = (
   router.getWithValidation("/self/settings", {}, (_, res) =>
     queryUserSettings(conn, res.locals.selfId)
       .flatMapFailure(() => success(DEFAULT_USER_SETTINGS))
-      .mapFailure((error) => res.status(500).json({ error }))
-      .mapSuccess((settings) => res.status(200).json(settings).send())
+      .mapSuccess(settings => res.status(200).json(settings).send())
   )
 }
