@@ -46,7 +46,7 @@ const blockUser = (
         `
       UPDATE userRelations
       SET status = 'not-friends'
-      WHERE fromUserId = :toUserId AND toUserId = :fromUserId;
+      WHERE fromUserId = :toUserId AND toUserId = :fromUserId AND status != 'blocked';
       `,
         { fromUserId, toUserId }
       )

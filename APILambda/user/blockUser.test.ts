@@ -41,4 +41,21 @@ describe("Block User tests", () => {
       })
     )
   })
+
+  it("should not remove the relation status of blocked user when you are blocked by them", async () => {
+    const token1 = await createUserAndUpdateAuth(global.defaultUser.auth)
+    const token2 = await createUserAndUpdateAuth(global.defaultUser2.auth)
+    await callBlockUser(token1, global.defaultUser2.id)
+    await callBlockUser(token2, global.defaultUser.id)
+
+    const resp = await callGetUser(token2, global.defaultUser.id)
+    expect(resp.body).toMatchObject(
+      expect.objectContaining({
+        relations: {
+          youToThem: "blocked",
+          themToYou: "blocked"
+        }
+      })
+    )
+  })
 })

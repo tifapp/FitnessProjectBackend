@@ -38,6 +38,7 @@ type DatabaseUserWithRelation = DatabaseUser & {
 }
 
 const toUserWithRelationResponse = (user: DatabaseUserWithRelation) => ({
+  id: user.id,
   bio: user.bio,
   creationDate: user.creationDate,
   handle: user.handle,
