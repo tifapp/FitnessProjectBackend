@@ -65,7 +65,7 @@ const addUserRoutes = (environment: ServerEnvironment) => {
   getUserSettingsRouter(environment, router)
   getSelfRouter(environment, router)
   getUserRouter(environment, router)
-  sendFriendRequestsRouter(environment, router)
+  sendFriendRequestsRouter(router)
   updateUserSettingsRouter(environment, router)
   updateUserProfileRouter(environment, router)
   createBlockUserRouter(router)
