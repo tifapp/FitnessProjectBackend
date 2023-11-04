@@ -14,6 +14,7 @@ import { getUserSettingsRouter } from "./user/settings/getUserSettings.js"
 import { updateUserSettingsRouter } from "./user/settings/updateUserSettings.js"
 import { updateUserProfileRouter } from "./user/updateUserProfile.js"
 import { createValidatedRouter } from "./validation.js"
+import { createBlockUserRouter } from "./user/blockUser.js"
 
 /**
  * Creates an application instance.
@@ -36,7 +37,12 @@ export const addBenchmarking = (app: Application) => {
       const duration = Date.now() - start
       const endMem = process.memoryUsage().heapUsed
       const diffMem = endMem - startMem
-      console.table([{ duration: `[${req.method}] ${req.originalUrl} took ${duration}ms`, memoryUsage: `${diffMem} bytes` }])
+      console.table([
+        {
+          duration: `[${req.method}] ${req.originalUrl} took ${duration}ms`,
+          memoryUsage: `${diffMem} bytes`
+        }
+      ])
     })
     next()
   })
@@ -62,6 +68,7 @@ const addUserRoutes = (environment: ServerEnvironment) => {
   sendFriendRequestsRouter(environment, router)
   updateUserSettingsRouter(environment, router)
   updateUserProfileRouter(environment, router)
+  createBlockUserRouter(router)
   return router
 }
 

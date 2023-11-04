@@ -48,10 +48,14 @@ export const callPostUser = async (bearerToken?: string) => {
 }
 
 // database is reset for each test so we need to create a new auth for each test
-export const createUserAndUpdateAuth = async (bearerToken: string): Promise<string> => {
+export const createUserAndUpdateAuth = async (
+  bearerToken: string
+): Promise<string> => {
   await callPostUser(bearerToken)
 
-  const claims = JSON.parse(Buffer.from(bearerToken.split(".")[1], "base64").toString())
+  const claims = JSON.parse(
+    Buffer.from(bearerToken.split(".")[1], "base64").toString()
+  )
   claims.profile_created = true
 
   const token = jwt.sign(claims, "supersecret", { algorithm: "HS256" })
@@ -73,7 +77,12 @@ export const callDeleteSelf = async (bearerToken: string) => {
     .send()
 }
 
-export const callAutocompleteUsers = async (auth: string, handle: string, limit: number) => { // todo: remove required auth
+export const callAutocompleteUsers = async (
+  auth: string,
+  handle: string,
+  limit: number
+) => {
+  // todo: remove required auth
   return await request(testApp)
     .get("/user/autocomplete")
     .query({ handle, limit })
@@ -89,4 +98,14 @@ export const callUpdateUserHandle = async (
     .patch("/user/self")
     .set("Authorization", userId)
     .send({ handle: userHandle })
+}
+
+export const callBlockUser = async (
+  userToken: string,
+  blockedUserId: string
+) => {
+  return await request(testApp)
+    .patch(`/user/block/${blockedUserId}`)
+    .set("Authorization", userToken)
+    .send()
 }
