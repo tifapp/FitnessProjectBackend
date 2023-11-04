@@ -12,4 +12,11 @@ describe("Block User tests", () => {
     expect(resp.status).toEqual(404)
     expect(resp.body).toMatchObject({ error: "user-not-found", userId })
   })
+
+  it("should 204 when successful block", async () => {
+    const token1 = await createUserAndUpdateAuth(global.defaultUser.auth)
+    await createUserAndUpdateAuth(global.defaultUser2.auth)
+    const resp = await callBlockUser(token1, global.defaultUser2.id)
+    expect(resp.status).toEqual(204)
+  })
 })
