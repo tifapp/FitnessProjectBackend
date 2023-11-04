@@ -127,6 +127,11 @@ const addPendingFriendRequest = (
   receiverId: string
 ) =>
   conn.queryResults(
-    "INSERT INTO userRelations (fromUserId, toUserId, status) VALUES (:senderId, :receiverId, 'friend-request-pending')",
+    `
+    INSERT INTO userRelations (fromUserId, toUserId, status) 
+    VALUES (:senderId, :receiverId, 'friend-request-pending')
+    ON DUPLICATE KEY UPDATE
+      status = 'friend-request-pending'
+    `,
     { senderId, receiverId }
   )

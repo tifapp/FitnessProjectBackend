@@ -53,4 +53,14 @@ describe("FriendRequest tests", () => {
     expect(resp.status).toEqual(403)
     expect(resp.body).toMatchObject({ status: "blocked" })
   })
+
+  it("should unblock the user when trying to send friend request to blocked user", async () => {
+    const token1 = await createUserAndUpdateAuth(global.defaultUser.auth)
+    await createUserAndUpdateAuth(global.defaultUser2.auth)
+    await callBlockUser(token1, global.defaultUser2.id)
+
+    const resp = await callPostFriendRequest(token1, global.defaultUser2.id)
+    expect(resp.status).toEqual(201)
+    expect(resp.body).toMatchObject({ status: "friend-request-pending" })
+  })
 })
