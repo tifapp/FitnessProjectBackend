@@ -8,7 +8,7 @@ import {
 describe("FriendRequest tests", () => {
   resetDatabaseBeforeEach()
 
-  it("should have a pending status when no prior relation between uses", async () => {
+  it("should have a pending status when no prior relation between users", async () => {
     const token1 = await createUserAndUpdateAuth(global.defaultUser.auth)
     const resp = await callPostFriendRequest(token1, global.defaultUser2.id)
     expect(resp.status).toEqual(201)
