@@ -1,15 +1,13 @@
 import { resetDatabaseBeforeEach } from "../../test/database.js"
-import { callGetSettings, callPatchSettings, callPostUser, createUserAndUpdateAuth } from "../../test/helpers/users.js"
+import {
+  callGetSettings,
+  callPatchSettings,
+  callPostUser,
+  createUserAndUpdateAuth
+} from "../../test/helpers/users.js"
 
 describe("Update Settings tests", () => {
   resetDatabaseBeforeEach()
-
-  // it("should 500 when failing to patch settings for a user", async () => {
-  //   const resp = await callPatchSettings(global.unregisteredUser.auth, {
-  //     isAnalyticsEnabled: false
-  //   })
-  //   expect(resp.status).toEqual(500)
-  // })
 
   it("should 401 when patching settings for a user without a profile", async () => {
     const resp = await callPatchSettings(global.defaultUser.auth, {
@@ -25,21 +23,31 @@ describe("Update Settings tests", () => {
       isChatNotificationsEnabled: false
     })
     expect(updateResp.status).toEqual(204)
+
+    const settings1LastUpdatedAt = await callGetSettings(token).then(
+      (resp) => new Date(resp.body.lastUpdatedAt)
+    )
+
     const updateResp2 = await callPatchSettings(token, {
       isCrashReportingEnabled: false
     })
     expect(updateResp2.status).toEqual(204)
 
-    const resp = await callGetSettings(token)
-    expect(resp.status).toEqual(200)
-    expect(resp.body).toMatchObject({
-      isAnalyticsEnabled: true,
-      isCrashReportingEnabled: false,
-      isEventNotificationsEnabled: true,
-      isMentionsNotificationsEnabled: true,
-      isChatNotificationsEnabled: false,
-      isFriendRequestNotificationsEnabled: true
-    })
+    const settings2 = await callGetSettings(token).then((resp) => resp.body)
+    expect(settings2).toMatchObject(
+      expect.objectContaining({
+        isAnalyticsEnabled: true,
+        isCrashReportingEnabled: false,
+        isEventNotificationsEnabled: true,
+        isMentionsNotificationsEnabled: true,
+        isChatNotificationsEnabled: false,
+        isFriendRequestNotificationsEnabled: true
+      })
+    )
+    const settings2LastUpdatedAt = new Date(settings2.lastUpdatedAt)
+    expect(settings2LastUpdatedAt.getTime()).toBeGreaterThan(
+      settings1LastUpdatedAt.getTime()
+    )
   })
 
   it("should 400 invalid settings body when updating settings", async () => {
