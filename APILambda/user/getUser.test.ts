@@ -1,6 +1,10 @@
 import { randomUUID } from "crypto"
 import { resetDatabaseBeforeEach } from "../test/database.js"
-import { callGetSelf, callGetUser, createUserAndUpdateAuth } from "../test/helpers/users.js"
+import {
+  callGetSelf,
+  callGetUser,
+  createUserAndUpdateAuth
+} from "../test/helpers/users.js"
 
 describe("GetUser tests", () => {
   resetDatabaseBeforeEach()
@@ -19,7 +23,7 @@ describe("GetUser tests", () => {
     const user2 = await global.registerUser({ name: "John Doe" })
     const user2Token = await createUserAndUpdateAuth(user2.auth)
     const user2Profile = (await callGetSelf(user2Token)).body
-    const resp = await callGetUser(user1Token, user2Profile.id)
+    const resp = await callGetUser(user1Token, user2.id)
 
     expect(resp.status).toEqual(200)
     expect(resp.body).toMatchObject(
