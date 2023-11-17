@@ -19,7 +19,7 @@ export const callJoinEvent = async (
   eventId: number
 ) => {
   return await request(testApp)
-    .get(`/event/join/${eventId}`)
+    .post(`/event/join/${eventId}`)
     .set("Authorization", bearerToken)
     .send()
 }

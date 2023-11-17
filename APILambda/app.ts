@@ -15,6 +15,7 @@ import { updateUserSettingsRouter } from "./user/settings/updateUserSettings.js"
 import { updateUserProfileRouter } from "./user/updateUserProfile.js"
 import { createValidatedRouter } from "./validation.js"
 import { createBlockUserRouter } from "./user/blockUser.js"
+import { joinEventRouter } from "./events/joinEventById.js"
 
 /**
  * Creates an application instance.
@@ -54,6 +55,7 @@ const addEventRoutes = (environment: ServerEnvironment) => {
   getChatTokenRouter(environment, router)
   getEventByIdRouter(environment, router)
   getEventsByRegionRouter(environment, router)
+  joinEventRouter(environment, router)
   return router
 }
 
