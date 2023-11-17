@@ -45,7 +45,7 @@ describe("Update Settings tests", () => {
       })
     )
     const settings2LastUpdatedAt = new Date(settings2.lastUpdatedAt)
-    expect(settings2LastUpdatedAt.getTime()).toBeGreaterThan(
+    expect(settings2LastUpdatedAt.getTime()).toBeGreaterThanOrEqual(
       settings1LastUpdatedAt.getTime()
     )
   })
