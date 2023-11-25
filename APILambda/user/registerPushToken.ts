@@ -2,8 +2,13 @@ import { z } from "zod"
 import { ValidatedRouter } from "../validation.js"
 import { SQLExecutable, conn } from "TiFBackendUtils"
 
+const PlatformNameSchema = z.union([z.literal("apple"), z.literal("android")])
+
+export type PlatformName = z.infer<typeof PlatformNameSchema>
+
 const RegisterPushTokenRequestSchema = z.object({
-  deviceToken: z.string().nonempty()
+  deviceToken: z.string().nonempty(),
+  platformName: PlatformNameSchema
 })
 
 /**
@@ -14,29 +19,32 @@ export const createRegisterPushTokenRouter = (router: ValidatedRouter) => {
     "/notifications/push/register",
     { bodySchema: RegisterPushTokenRequestSchema },
     async (req, res) => {
-      return upsertPushToken(
-        conn,
-        res.locals.selfId,
-        req.body.deviceToken
-      ).mapSuccess((result) =>
-        res.status(result === "inserted" ? 201 : 204).send()
-      )
+      return upsertPushToken(conn, {
+        ...req.body,
+        userId: res.locals.selfId
+      }).mapSuccess((result) => {
+        return res.status(result === "inserted" ? 201 : 400).send()
+      })
     }
   )
 }
 
 const upsertPushToken = (
   conn: SQLExecutable,
-  userId: string,
-  deviceToken: string
-) =>
-  conn
+  upsertRequest: {
+    userId: string
+    deviceToken: string
+    platformName: PlatformName
+  }
+) => {
+  return conn
     .queryResult(
-      "INSERT IGNORE INTO pushTokens (userId, deviceToken) VALUES (:userId, :deviceToken)",
-      { userId, deviceToken }
+      "INSERT IGNORE INTO pushTokens (userId, deviceToken, platformName) VALUES (:userId, :deviceToken, :platformName)",
+      upsertRequest
     )
     .mapSuccess((result) => {
       return result.rowsAffected > 0
         ? ("inserted" as const)
         : ("no-change" as const)
     })
+}
