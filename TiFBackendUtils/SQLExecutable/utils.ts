@@ -1,12 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // TODO: Replace with backend utils
 import { Connection } from "@planetscale/database"
-import {
-  AwaitableResult,
-  failure,
-  promiseResult,
-  success
-} from "../result.js"
+import { AwaitableResult, failure, promiseResult, success } from "../result.js"
 
 /**
  * An interface for performing commonly used operations on a SQL database
@@ -14,6 +9,12 @@ import {
  * This interface allows for isolated query functions to be made and used in different contexts,
  * transaction or not.
  */
+
+type QueryResult = {
+  insertId: string
+  rowsAffected: number
+}
+
 export class SQLExecutable {
   private conn: Connection // Define the appropriate type for your database connection
 
@@ -37,6 +38,7 @@ export class SQLExecutable {
    * console.log(results[0].id) // ✅ Typesafe
    * ```
    */
+
   private async execute<Value> (
     query: string,
     args: object | any[] | null = null
@@ -47,28 +49,34 @@ export class SQLExecutable {
     return result.rows as Value[]
   }
 
-  private async executeAndReturnId (
+  private async executeAndReturnQueryResult (
     query: string,
     args: object | any[] | null = null
-  ): Promise<string> {
+  ): Promise<QueryResult> {
     // Use this.conn to execute the query and return the result rows
     // This will be the only function to directly use the database library's execute method.
     const result = await this.conn.execute(query, args)
-    return result.insertId
+    return { ...result }
   }
 
   /**
    * Runs the given SQL query and returns a success result containing the insertId of the query.
    */
-  queryResultId (query: string, args: object | any[] | null = null) {
-    return promiseResult(this.executeAndReturnId(query, args).then(id => success(id)))
+  queryResult (query: string, args: object | any[] | null = null) {
+    return promiseResult(
+      this.executeAndReturnQueryResult(query, args).then((queryResult) =>
+        success(queryResult)
+      )
+    )
   }
 
   /**
    * Runs the given SQL query and returns a success result containing the result of the query.
    */
   queryResults<Value> (query: string, args: object | any[] | null = null) {
-    return promiseResult(this.execute<Value>(query, args).then(result => success(result)))
+    return promiseResult(
+      this.execute<Value>(query, args).then((result) => success(result))
+    )
   }
 
   /**
@@ -91,10 +99,12 @@ export class SQLExecutable {
    * if you need to perform a select.
    */
   queryHasResults (query: string, args: object | any[] | null = null) {
-    return promiseResult(this.execute(query, args).then(results => {
-      const hasResults = results.length > 0
-      return hasResults ? success(hasResults) : failure(hasResults)
-    }))
+    return promiseResult(
+      this.execute(query, args).then((results) => {
+        const hasResults = results.length > 0
+        return hasResults ? success(hasResults) : failure(hasResults)
+      })
+    )
   }
 
   /**
@@ -109,7 +119,11 @@ export class SQLExecutable {
    * ```
    */
   queryFirstResult<Value> (query: string, args: object | any[] | null = null) {
-    return promiseResult(this.execute<Value>(query, args).then(results => results[0] ? success(results[0]) : failure("no-results" as const)))
+    return promiseResult(
+      this.execute<Value>(query, args).then((results) =>
+        results[0] ? success(results[0]) : failure("no-results" as const)
+      )
+    )
   }
 }
 
