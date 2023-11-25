@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // TODO: Replace with backend utils
-import { Connection, ExecutedQuery } from "@planetscale/database"
+import { Connection } from "@planetscale/database"
 import { AwaitableResult, failure, promiseResult, success } from "../result.js"
 
 /**
