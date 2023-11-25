@@ -109,3 +109,13 @@ export const callBlockUser = async (
     .set("Authorization", userToken)
     .send()
 }
+
+export const callRegisterPushToken = async (
+  userToken: string,
+  deviceToken: string
+) => {
+  return await request(testApp)
+    .post("/user/notifications/push/register")
+    .set("Authorization", userToken)
+    .send({ deviceToken })
+}

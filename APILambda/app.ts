@@ -16,6 +16,7 @@ import { updateUserProfileRouter } from "./user/updateUserProfile.js"
 import { createValidatedRouter } from "./validation.js"
 import { createBlockUserRouter } from "./user/blockUser.js"
 import { joinEventRouter } from "./events/joinEventById.js"
+import { createRegisterPushTokenRouter } from "./user/registerPushToken.js"
 
 /**
  * Creates an application instance.
@@ -71,6 +72,7 @@ const addUserRoutes = (environment: ServerEnvironment) => {
   updateUserSettingsRouter(environment, router)
   updateUserProfileRouter(environment, router)
   createBlockUserRouter(router)
+  createRegisterPushTokenRouter(router)
   return router
 }
 
