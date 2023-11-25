@@ -28,7 +28,10 @@ export const createEvent = (
   conn: SQLExecutable,
   input: CreateEventInput,
   hostId: string
-) => conn.queryResultId(`
+) =>
+  conn
+    .queryResult(
+      `
 INSERT INTO event (
   hostId,
   title, 
@@ -53,12 +56,14 @@ INSERT INTO event (
   :longitude
 )
 `,
-{
-  ...input,
-  startTimestamp: input.startTimestamp.getTime() / 1000,
-  endTimestamp: input.endTimestamp.getTime() / 1000,
-  hostId
-}).withFailure("internal-server-error" as const)
+      {
+        ...input,
+        startTimestamp: input.startTimestamp.getTime() / 1000,
+        endTimestamp: input.endTimestamp.getTime() / 1000,
+        hostId
+      }
+    )
+    .withFailure("internal-server-error" as const)
 
 /**
  * Creates routes related to event operations.
@@ -72,9 +77,13 @@ export const createEventRouter = (
   /**
    * Create an event
    */
-  router.postWithValidation("/", { bodySchema: CreateEventSchema }, (req, res) => {
-    return createEvent(conn, req.body, res.locals.selfId)
-      .mapFailure((error) => res.status(500).json({ error }))
-      .mapSuccess((eventId) => res.status(201).json({ id: eventId }))
-  })
+  router.postWithValidation(
+    "/",
+    { bodySchema: CreateEventSchema },
+    (req, res) => {
+      return createEvent(conn, req.body, res.locals.selfId)
+        .mapFailure((error) => res.status(500).json({ error }))
+        .mapSuccess(({ insertId }) => res.status(201).json({ id: insertId }))
+    }
+  )
 }
