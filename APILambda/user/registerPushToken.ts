@@ -1,14 +1,17 @@
 import { z } from "zod"
 import { ValidatedRouter } from "../validation.js"
-import { SQLExecutable, conn } from "TiFBackendUtils"
+import { SQLExecutable, conn, failure, success } from "TiFBackendUtils"
 
-const PlatformNameSchema = z.union([z.literal("apple"), z.literal("android")])
+const PushTokenPlatformNameSchema = z.union([
+  z.literal("apple"),
+  z.literal("android")
+])
 
-export type PlatformName = z.infer<typeof PlatformNameSchema>
+export type PushTokenPlatformName = z.infer<typeof PushTokenPlatformNameSchema>
 
 const RegisterPushTokenRequestSchema = z.object({
-  deviceToken: z.string().nonempty(),
-  platformName: PlatformNameSchema
+  pushToken: z.string().nonempty(),
+  platformName: PushTokenPlatformNameSchema
 })
 
 /**
@@ -19,32 +22,35 @@ export const createRegisterPushTokenRouter = (router: ValidatedRouter) => {
     "/notifications/push/register",
     { bodySchema: RegisterPushTokenRequestSchema },
     async (req, res) => {
-      return upsertPushToken(conn, {
+      return tryInsertPushToken(conn, {
         ...req.body,
         userId: res.locals.selfId
-      }).mapSuccess((result) => {
-        return res.status(result === "inserted" ? 201 : 400).send()
       })
+        .mapSuccess(() => res.status(201).send())
+        .mapFailure((error) => res.status(400).send({ error }))
     }
   )
 }
 
-const upsertPushToken = (
+const tryInsertPushToken = (
   conn: SQLExecutable,
-  upsertRequest: {
+  insertRequest: {
     userId: string
-    deviceToken: string
-    platformName: PlatformName
+    pushToken: string
+    platformName: PushTokenPlatformName
   }
 ) => {
   return conn
     .queryResult(
-      "INSERT IGNORE INTO pushTokens (userId, deviceToken, platformName) VALUES (:userId, :deviceToken, :platformName)",
-      upsertRequest
+      `
+      INSERT IGNORE INTO pushTokens (userId, pushToken, platformName) 
+      VALUES (:userId, :pushToken, :platformName)
+      `,
+      insertRequest
     )
-    .mapSuccess((result) => {
+    .flatMapSuccess((result) => {
       return result.rowsAffected > 0
-        ? ("inserted" as const)
-        : ("no-change" as const)
+        ? success("inserted" as const)
+        : failure("token-already-registered" as const)
     })
 }

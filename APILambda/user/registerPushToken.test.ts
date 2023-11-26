@@ -21,11 +21,11 @@ describe("RegisterPushToken tests", () => {
   it("should 400 when registering an existing push token on the same platform", async () => {
     const user = await global.registerUser({ name: "Bitchell Dickle" })
     const userToken = await createUserAndUpdateAuth(user.auth)
-    const deviceToken = randomUUID()
-    await callRegisterPushToken(userToken, registerPushTokenBody(deviceToken))
+    const pushToken = randomUUID()
+    await callRegisterPushToken(userToken, registerPushTokenBody(pushToken))
     const resp = await callRegisterPushToken(
       userToken,
-      registerPushTokenBody(deviceToken)
+      registerPushTokenBody(pushToken)
     )
     expect(resp.status).toEqual(400)
   })
@@ -41,8 +41,8 @@ describe("RegisterPushToken tests", () => {
     expect(resp.status).toEqual(201)
   })
 
-  const registerPushTokenBody = (deviceToken: string) => ({
-    deviceToken,
+  const registerPushTokenBody = (pushToken: string) => ({
+    pushToken,
     platformName: "android" as const
   })
 })
