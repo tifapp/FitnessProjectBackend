@@ -2,6 +2,7 @@ import jwt from "jsonwebtoken"
 import request from "supertest"
 import { UserSettings } from "../../user/settings/models.js"
 import { testApp } from "../testApp.js"
+import { PushTokenPlatformName } from "../../user/registerPushToken.js"
 
 export const callPatchSettings = async (
   bearerToken: string,
@@ -108,4 +109,14 @@ export const callBlockUser = async (
     .patch(`/user/block/${blockedUserId}`)
     .set("Authorization", userToken)
     .send()
+}
+
+export const callRegisterPushToken = async (
+  userToken: string,
+  body: { pushToken: string; platformName: PushTokenPlatformName }
+) => {
+  return await request(testApp)
+    .post("/user/notifications/push/register")
+    .set("Authorization", userToken)
+    .send(body)
 }
