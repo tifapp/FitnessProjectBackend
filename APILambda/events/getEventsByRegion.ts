@@ -1,33 +1,43 @@
 import { SQLExecutable, conn } from "TiFBackendUtils"
+import { z } from "zod"
 import { ServerEnvironment } from "../env.js"
 import { DatabaseEvent } from "../shared/SQL.js"
 import { ValidatedRouter } from "../validation.js"
 
-type GetEventsRequest = {
+const EventsRequestSchema = z.object({
+  userLatitude: z.number(),
+  userLongitude: z.number(),
+  radius: z.number()
+})
+
+type EventsRequestByRegion = {
   userId: string
-  latitude: number | string
-  longitude: number | string
-  radiusMeters: number
+  userLatitude: number
+  userLongitude: number
+  radius: number
 }
 
 const getEventsByRegion = (
   conn: SQLExecutable,
-  request: GetEventsRequest
+  eventsRequest: EventsRequestByRegion
 ) =>
   conn.queryResults<DatabaseEvent>(
-    `SELECT E.*, COUNT(A.userId) AS attendee_count, 
-    CASE WHEN F.user IS NOT NULL THEN 1 ELSE 0 END AS is_friend 
-    FROM event E JOIN Location L ON E.id = L.eventId 
-    LEFT JOIN eventAttendance A ON E.id = A.eventId 
-    LEFT JOIN Friends F ON E.hostId = F.friend AND F.user = :userId 
-    WHERE ST_Distance_Sphere(POINT(:longitude, :latitude), POINT(lon, lat)) < :radiusMeters 
-    AND E.endDate > NOW() 
-    AND :userId NOT IN (SELECT blocked 
-    FROM blockedUsers 
-    WHERE user = E.hostId AND blocked = :userId) 
-    GROUP BY E.id
+    `
+    SELECT E.*, COUNT(A.userId) AS totalAttendees, UserRelationOfHostToUser.status AS relationUserToHost, UserRelationOfUserToHost.status AS relationHostToUser, SUBSTRING_INDEX(GROUP_CONCAT(A.userId ORDER BY A.joinDate ASC), ',', 3) AS attendeesPreview
+        FROM event E
+        JOIN location L ON L.lat = :userLatitude AND L.lon = :userLongitude
+        JOIN eventAttendance A ON E.id = A.eventId
+        JOIN userRelations UserRelationOfHostToUser ON UserRelationOfHostToUser.fromUserId = E.hostId AND UserRelationOfHostToUser.toUserId = :userId
+        JOIN userRelations UserRelationOfUserToHost ON UserRelationOfUserToHost.fromUserId = :userId AND UserRelationOfUserToHost.toUserId = E.hostId
+        WHERE ST_Distance_Sphere(POINT(:userLongitude, :userLatitude), POINT(E.longitude, E.latitude)) < :radius
+        AND E.startTimestamp > NOW()
+        AND A.userId != E.hostId
+        AND UserRelationOfHostToUser.status != 'blocked'
+        AND UserRelationOfUserToHost.status != 'blocked'
+        AND A.userId != E.hostId
+        GROUP BY E.id
   `,
-    request
+    { ...eventsRequest }
   )
 
 /**
@@ -42,13 +52,17 @@ export const getEventsByRegionRouter = (
   /**
    * Get events by region
    */
-  router.getWithValidation("/", {}, (req, res) => conn.transaction((tx) => getEventsByRegion(tx, {
-    userId: res.locals.selfId,
-    longitude: req.query.longitude as unknown as number,
-    latitude: req.query.latitude as unknown as number,
-    radiusMeters: req.query.radiusMeters as unknown as number
-  })
-    .mapFailure(error => res.status(401).json({ error }))
-    .mapSuccess(result => res.status(200).json(result))
-  ))
+  router.postWithValidation(
+    "/region",
+    { bodySchema: EventsRequestSchema },
+    (req, res) =>
+      getEventsByRegion(conn, {
+        userId: res.locals.selfId,
+        userLatitude: req.body.userLatitude,
+        userLongitude: req.body.userLongitude,
+        radius: req.body.radius
+      })
+        .mapFailure((error) => res.status(401).json({ error }))
+        .mapSuccess((result) => res.status(200).json(result))
+  )
 }

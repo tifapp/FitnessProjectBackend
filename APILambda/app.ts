@@ -54,8 +54,8 @@ const addEventRoutes = (environment: ServerEnvironment) => {
   createEventRouter(environment, router)
   getChatTokenRouter(environment, router)
   getEventByIdRouter(environment, router)
-  getEventsByRegionRouter(environment, router)
   joinEventRouter(environment, router)
+  getEventsByRegionRouter(environment, router)
   return router
 }
 
