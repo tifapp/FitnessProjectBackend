@@ -4,7 +4,7 @@ import { createUserAndUpdateAuth } from "../test/helpers/users.js"
 
 describe("GetSingleEvent tests", () => {
   it("should return 404 if the event doesnt exist", async () => {
-    const token = await createUserAndUpdateAuth(global.defaultUser.auth)
+    const token = await createUserAndUpdateAuth(global.defaultUser)
     const eventId = randomInt(1000)
     const resp = await callGetEvent(token, eventId)
 

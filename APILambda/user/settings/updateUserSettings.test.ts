@@ -18,7 +18,7 @@ describe("Update Settings tests", () => {
   })
 
   it("should update the user's settings", async () => {
-    const token = await createUserAndUpdateAuth(global.defaultUser.auth)
+    const token = await createUserAndUpdateAuth(global.defaultUser)
     const updateResp = await callPatchSettings(token, {
       isChatNotificationsEnabled: false
     })
@@ -51,7 +51,7 @@ describe("Update Settings tests", () => {
   })
 
   it("should 400 invalid settings body when updating settings", async () => {
-    const token = await createUserAndUpdateAuth(global.defaultUser.auth)
+    const token = await createUserAndUpdateAuth(global.defaultUser)
     await callPostUser(token)
     const resp = await callPatchSettings(token, {
       isAnalyticsEnabled: 69,

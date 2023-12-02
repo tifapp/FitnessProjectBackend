@@ -6,11 +6,11 @@ describe("AutocompleteUsers tests", () => {
 
   test("autocomplete endpoint basic request", async () => {
     const user1 = await global.registerUser({ name: "Bitchell Dickle" })
-    const user1Token = await createUserAndUpdateAuth(user1.auth)
+    const user1Token = await createUserAndUpdateAuth(user1)
     const user1Profile = (await callGetSelf(user1Token)).body
 
     const user2 = await global.registerUser({ name: "Big Chungus" })
-    const user2Token = await createUserAndUpdateAuth(user2.auth)
+    const user2Token = await createUserAndUpdateAuth(user2)
     const user2Profile = (await callGetSelf(user2Token)).body
 
     const resp = await callAutocompleteUsers(user1Token, "bi", 50)
@@ -33,10 +33,10 @@ describe("AutocompleteUsers tests", () => {
 
   it("should only query up to the limit", async () => {
     const user1 = await global.registerUser({ name: "Bitchell Dickle" })
-    const user1Token = await createUserAndUpdateAuth(user1.auth)
+    const user1Token = await createUserAndUpdateAuth(user1)
 
     const user2 = await global.registerUser({ name: "Big Chungus" })
-    await createUserAndUpdateAuth(user2.auth)
+    await createUserAndUpdateAuth(user2)
 
     const resp = await callAutocompleteUsers(user1Token, "bi", 1)
     expect(resp.status).toEqual(200)

@@ -18,10 +18,10 @@ describe("GetUser tests", () => {
   })
 
   it("should retrieve a user that exists", async () => {
-    const user1Token = await createUserAndUpdateAuth(global.defaultUser.auth)
+    const user1Token = await createUserAndUpdateAuth(global.defaultUser)
 
     const user2 = await global.registerUser({ name: "John Doe" })
-    const user2Token = await createUserAndUpdateAuth(user2.auth)
+    const user2Token = await createUserAndUpdateAuth(user2)
     const user2Profile = (await callGetSelf(user2Token)).body
     const resp = await callGetUser(user1Token, user2.id)
 

@@ -9,7 +9,7 @@ describe("DeleteSelf tests", () => {
   })
 
   it("should give a 204 when you sucessfully delete the user", async () => {
-    const token = await createUserAndUpdateAuth(global.defaultUser.auth)
+    const token = await createUserAndUpdateAuth(global.defaultUser)
     const resp = await callDeleteSelf(token)
     expect(resp.status).toEqual(204)
   })
