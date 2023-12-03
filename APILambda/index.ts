@@ -4,7 +4,6 @@ import awsServerlessExpress, {
 import express, { Express } from "express"
 import { addBenchmarking, addRoutes, createApp } from "./app.js"
 import { addCognitoTokenVerification } from "./auth.js"
-import { conn } from "./dbconnection.js"
 import { ServerEnvironment } from "./env.js"
 
 const addEventToRequest = (app: Express) => {
@@ -34,7 +33,7 @@ const addEventToRequest = (app: Express) => {
   app.use(express.urlencoded({ extended: true }))
 }
 
-const env: ServerEnvironment = { conn, environment: "prod" }
+const env: ServerEnvironment = { environment: "prod" }
 
 const app = createApp()
 addEventToRequest(app)
