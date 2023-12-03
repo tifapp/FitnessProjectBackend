@@ -9,14 +9,14 @@ describe("FriendRequest tests", () => {
   resetDatabaseBeforeEach()
 
   it("should have a pending status when no prior relation between users", async () => {
-    const token1 = await createUserAndUpdateAuth(global.defaultUser.auth)
+    const token1 = await createUserAndUpdateAuth(global.defaultUser)
     const resp = await callPostFriendRequest(token1, global.defaultUser2.id)
     expect(resp.status).toEqual(201)
     expect(resp.body).toMatchObject({ status: "friend-request-pending" })
   })
 
   it("should return the same status when already existing pending friend request", async () => {
-    const token1 = await createUserAndUpdateAuth(global.defaultUser.auth)
+    const token1 = await createUserAndUpdateAuth(global.defaultUser)
     await callPostFriendRequest(token1, global.defaultUser2.id)
     const resp = await callPostFriendRequest(token1, global.defaultUser2.id)
     expect(resp.status).toEqual(200)
@@ -24,8 +24,8 @@ describe("FriendRequest tests", () => {
   })
 
   it("should return the same status when already friends", async () => {
-    const token1 = await createUserAndUpdateAuth(global.defaultUser.auth)
-    const token2 = await createUserAndUpdateAuth(global.defaultUser2.auth)
+    const token1 = await createUserAndUpdateAuth(global.defaultUser)
+    const token2 = await createUserAndUpdateAuth(global.defaultUser2)
     await callPostFriendRequest(token1, global.defaultUser2.id)
     await callPostFriendRequest(token2, global.defaultUser.id)
 
@@ -35,8 +35,8 @@ describe("FriendRequest tests", () => {
   })
 
   it("should have a friend status when the receiver sends a friend request to someone who sent them a pending friend request", async () => {
-    const token1 = await createUserAndUpdateAuth(global.defaultUser.auth)
-    const token2 = await createUserAndUpdateAuth(global.defaultUser2.auth)
+    const token1 = await createUserAndUpdateAuth(global.defaultUser)
+    const token2 = await createUserAndUpdateAuth(global.defaultUser2)
     await callPostFriendRequest(token1, global.defaultUser2.id)
 
     const resp = await callPostFriendRequest(token2, global.defaultUser.id)
@@ -45,8 +45,8 @@ describe("FriendRequest tests", () => {
   })
 
   it("should not allow a user to send friend requests to users who have blocked them", async () => {
-    const token1 = await createUserAndUpdateAuth(global.defaultUser.auth)
-    const token2 = await createUserAndUpdateAuth(global.defaultUser2.auth)
+    const token1 = await createUserAndUpdateAuth(global.defaultUser)
+    const token2 = await createUserAndUpdateAuth(global.defaultUser2)
     await callBlockUser(token1, global.defaultUser2.id)
 
     const resp = await callPostFriendRequest(token2, global.defaultUser.id)
@@ -55,8 +55,8 @@ describe("FriendRequest tests", () => {
   })
 
   it("should unblock the user when trying to send friend request to blocked user", async () => {
-    const token1 = await createUserAndUpdateAuth(global.defaultUser.auth)
-    await createUserAndUpdateAuth(global.defaultUser2.auth)
+    const token1 = await createUserAndUpdateAuth(global.defaultUser)
+    await createUserAndUpdateAuth(global.defaultUser2)
     await callBlockUser(token1, global.defaultUser2.id)
 
     const resp = await callPostFriendRequest(token1, global.defaultUser2.id)

@@ -68,10 +68,31 @@ export const createCognitoAuthToken = async (
 
   const authResult = await cognito.initiateAuth(signInParams).promise()
   const idToken = authResult.AuthenticationResult?.IdToken
+  const refreshToken = authResult.AuthenticationResult?.RefreshToken
 
-  if (!idToken) {
-    throw new Error("Failed to authenticate and obtain idToken")
+  if (!idToken || !refreshToken) {
+    throw new Error("Failed to authenticate and obtain tokens")
   }
 
-  return { auth: `Bearer ${idToken}`, id: signUpResult.UserSub }
+  // try a testUser class to update the state
+  const refreshAuth = async () => {
+    const refreshParams: AWS.CognitoIdentityServiceProvider.InitiateAuthRequest = {
+      AuthFlow: "REFRESH_TOKEN_AUTH",
+      ClientId: process.env.COGNITO_CLIENT_APP_ID ?? "",
+      AuthParameters: {
+        REFRESH_TOKEN: refreshToken
+      }
+    }
+
+    const newAuthResult = await cognito.initiateAuth(refreshParams).promise()
+    const newIdToken = newAuthResult.AuthenticationResult?.IdToken
+
+    if (!newIdToken) {
+      throw new Error("Failed to refresh token and obtain new idToken")
+    }
+
+    return `Bearer ${newIdToken}`
+  }
+
+  return { auth: `Bearer ${idToken}`, id: signUpResult.UserSub, refreshAuth }
 }

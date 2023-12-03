@@ -16,7 +16,7 @@ describe("GetSelf tests", () => {
   })
 
   it("should be able to fetch your private account info", async () => {
-    const token = await createUserAndUpdateAuth(global.defaultUser.auth)
+    const token = await createUserAndUpdateAuth(global.defaultUser)
     const resp = await callGetSelf(token)
 
     expect(resp.body).toMatchObject(

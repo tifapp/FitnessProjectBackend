@@ -7,7 +7,7 @@ describe("CreateEvent tests", () => {
   resetDatabaseBeforeEach()
 
   it("should allow a user to create an event if the user exists", async () => {
-    const userToken = await createUserAndUpdateAuth(global.defaultUser.auth)
+    const userToken = await createUserAndUpdateAuth(global.defaultUser)
     const resp = await callCreateEvent(userToken, testEvents[0])
     expect(resp.status).toEqual(201)
     expect(parseInt(resp.body.id)).not.toBeNaN()

@@ -33,5 +33,16 @@ export const createMockAuthToken = async (
 
   const token = jwt.sign(tokenPayload, secret, { algorithm: "HS256" })
 
-  return { auth: `Bearer ${token}`, id }
+  const updateClaimsAndRefreshAuth = async () => {
+    const claims = JSON.parse(
+      Buffer.from(token.split(".")[1], "base64").toString()
+    )
+    claims.profile_created = true
+
+    const newToken = jwt.sign(claims, "supersecret", { algorithm: "HS256" })
+
+    return `Bearer ${newToken}`
+  }
+
+  return { auth: `Bearer ${token}`, id, refreshAuth: updateClaimsAndRefreshAuth }
 }

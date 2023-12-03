@@ -19,7 +19,7 @@ describe("GetTokenRequest tests", () => {
   // })
 
   it("should return 404 if the event doesnt exist", async () => {
-    const userToken = await createUserAndUpdateAuth(global.defaultUser.auth)
+    const userToken = await createUserAndUpdateAuth(global.defaultUser)
     const resp = await callGetEventChatToken(
       userToken,
       randomInt(1000)
@@ -30,10 +30,10 @@ describe("GetTokenRequest tests", () => {
   })
 
   it("should return 404 if the user is not part of the event", async () => {
-    const userToken = await createUserAndUpdateAuth(global.defaultUser.auth)
+    const userToken = await createUserAndUpdateAuth(global.defaultUser)
     const event = await callCreateEvent(userToken, testEvents[0])
 
-    const user2Token = await createUserAndUpdateAuth(global.defaultUser2.auth)
+    const user2Token = await createUserAndUpdateAuth(global.defaultUser2)
     const resp = await callGetEventChatToken(user2Token, event.body.id)
 
     expect(resp.status).toEqual(403)

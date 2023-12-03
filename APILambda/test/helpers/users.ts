@@ -1,8 +1,8 @@
-import jwt from "jsonwebtoken"
 import request from "supertest"
+import { TestUser } from "../../global.js"
+import { PushTokenPlatformName } from "../../user/registerPushToken.js"
 import { UserSettings } from "../../user/settings/models.js"
 import { testApp } from "../testApp.js"
-import { PushTokenPlatformName } from "../../user/registerPushToken.js"
 
 export const callPatchSettings = async (
   bearerToken: string,
@@ -50,18 +50,10 @@ export const callPostUser = async (bearerToken?: string) => {
 
 // database is reset for each test so we need to create a new auth for each test
 export const createUserAndUpdateAuth = async (
-  bearerToken: string
+  testUser: TestUser
 ): Promise<string> => {
-  await callPostUser(bearerToken)
-
-  const claims = JSON.parse(
-    Buffer.from(bearerToken.split(".")[1], "base64").toString()
-  )
-  claims.profile_created = true
-
-  const token = jwt.sign(claims, "supersecret", { algorithm: "HS256" })
-
-  return `Bearer ${token}`
+  await callPostUser(testUser.auth)
+  return await testUser.refreshAuth()
 }
 
 export const callGetUser = async (bearerToken: string, userId: string) => {

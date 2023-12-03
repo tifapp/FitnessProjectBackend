@@ -14,7 +14,7 @@ describe("Get Settings tests", () => {
   })
 
   it("should return the default settings when settings not edited", async () => {
-    const token = await createUserAndUpdateAuth(global.defaultUser.auth)
+    const token = await createUserAndUpdateAuth(global.defaultUser)
     const resp = await callGetSettings(token)
     expect(resp.body).toEqual({
       isAnalyticsEnabled: true,
