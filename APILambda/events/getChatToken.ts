@@ -74,7 +74,7 @@ export const checkChatPermissionsTransaction = (
         eventId
       )
 
-      const tokenRequest = createTokenRequest(permissions, userId)
+      const tokenRequest = await createTokenRequest(permissions, userId)
 
       return success({ id: userId, tokenRequest })
     })

@@ -8,7 +8,7 @@ describe("GetSelf tests", () => {
     const resp = await callGetSelf(global.unregisteredUser.auth)
     expect(resp).toMatchObject({
       status: 500,
-      body: {}
+      body: { error: "user-not-found" }
     })
   })
 

@@ -25,7 +25,7 @@ describe("Join the event by id tests", () => {
     const resp = await callJoinEvent(attendeeToken, parseInt(event.body.id))
     expect(resp).toMatchObject({
       status: 201,
-      body: {}
+      body: { id: global.defaultUser2.id, token: expect.anything() }
     })
   })
 
@@ -44,7 +44,7 @@ describe("Join the event by id tests", () => {
     const resp = await callJoinEvent(attendeeToken, parseInt(event.body.id))
     expect(resp).toMatchObject({
       status: 403,
-      body: {}
+      body: { error: "user-is-blocked" }
     })
   })
 
@@ -56,7 +56,7 @@ describe("Join the event by id tests", () => {
     const resp = await callJoinEvent(attendeeToken, eventId)
     expect(resp).toMatchObject({
       status: 404,
-      body: {}
+      body: { error: "event-not-found" } // will need to add some middleware similar to auth middleware to assert event exists
     })
   })
 
@@ -77,7 +77,7 @@ describe("Join the event by id tests", () => {
     const resp = await callJoinEvent(attendeeToken, parseInt(event.body.id))
     expect(resp).toMatchObject({
       status: 403,
-      body: {}
+      body: { error: "event-has-ended" }
     })
 
     jest.useRealTimers()
@@ -98,7 +98,7 @@ describe("Join the event by id tests", () => {
     const resp = await callJoinEvent(attendeeToken, parseInt(event.body.id))
     expect(resp).toMatchObject({
       status: 200,
-      body: {}
+      body: { id: global.defaultUser2.id, token: expect.anything() } // should be event id?
     })
   })
 })

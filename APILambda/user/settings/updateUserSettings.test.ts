@@ -29,6 +29,7 @@ describe("Update Settings tests", () => {
       status: 204,
       body: {}
     })
+    expect(updateResp.body).toEqual({})
 
     const settings1LastUpdatedAt = await callGetSettings(token).then(
       (resp) => new Date(resp.body.lastUpdatedAt)
@@ -41,6 +42,7 @@ describe("Update Settings tests", () => {
       status: 204,
       body: {}
     })
+    expect(updateResp2.body).toEqual({})
 
     const settings2Resp = await callGetSettings(token)
     expect(settings2Resp).toMatchObject({
@@ -61,7 +63,7 @@ describe("Update Settings tests", () => {
     )
   })
 
-  it("should 400 invalid settings body when updating settings", async () => {
+  it("should 400 for an invalid settings body", async () => {
     const token = await createUserAndUpdateAuth(global.defaultUser)
     await callPostUser(token)
     const resp = await callPatchSettings(token, {
@@ -72,7 +74,7 @@ describe("Update Settings tests", () => {
 
     expect(resp).toMatchObject({
       status: 400,
-      body: {}
+      body: { error: "invalid-request" }
     })
   })
 })

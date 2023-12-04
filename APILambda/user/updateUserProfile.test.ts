@@ -19,6 +19,7 @@ describe("Update user profile tests", () => {
         status: 204,
         body: {}
       })
+      expect(resp.body).toEqual({})
     })
 
     it("should 400 for an invalid handle", async () => {
