@@ -10,7 +10,7 @@ const createTestEvent = (): CreateEventInput => {
   const startDate = Math.floor(Math.random() * 1000)
   const endDate = startDate + 10000
   return {
-    title: faker.word.noun(),
+    title: faker.word.noun({ length: { min: 5, max: 50 } }),
     description: faker.animal.rodent(),
     startTimestamp: new Date(startDate),
     endTimestamp: new Date(endDate),

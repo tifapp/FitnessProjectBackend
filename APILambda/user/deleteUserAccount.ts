@@ -17,8 +17,8 @@ export const deleteUserAccountRouter = (
    */
   router.deleteWithValidation("/self", {}, (_, res) =>
     userWithIdExists(conn, res.locals.selfId)
-      .mapSuccess(() => res.status(204).send("No Content"))
-      .mapFailure(() => res.status(400).send("user-does-not-exist"))
+      .mapSuccess(() => res.status(204).send())
+      .mapFailure(() => res.status(400).send({ error: "user-does-not-exist" }))
   )
 
   return router

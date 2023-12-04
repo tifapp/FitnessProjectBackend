@@ -13,8 +13,11 @@ describe("Update Settings tests", () => {
     const resp = await callPatchSettings(global.defaultUser.auth, {
       isAnalyticsEnabled: false
     })
-    expect(resp.status).toEqual(401)
-    expect(resp.body).toMatchObject({ error: "user-does-not-exist" })
+
+    expect(resp).toMatchObject({
+      status: 401,
+      body: { error: "user-does-not-exist" }
+    })
   })
 
   it("should update the user's settings", async () => {
@@ -22,7 +25,11 @@ describe("Update Settings tests", () => {
     const updateResp = await callPatchSettings(token, {
       isChatNotificationsEnabled: false
     })
-    expect(updateResp.status).toEqual(204)
+    expect(updateResp).toMatchObject({
+      status: 204,
+      body: {}
+    })
+    expect(updateResp.body).toEqual({})
 
     const settings1LastUpdatedAt = await callGetSettings(token).then(
       (resp) => new Date(resp.body.lastUpdatedAt)
@@ -31,26 +38,32 @@ describe("Update Settings tests", () => {
     const updateResp2 = await callPatchSettings(token, {
       isCrashReportingEnabled: false
     })
-    expect(updateResp2.status).toEqual(204)
+    expect(updateResp2).toMatchObject({
+      status: 204,
+      body: {}
+    })
+    expect(updateResp2.body).toEqual({})
 
-    const settings2 = await callGetSettings(token).then((resp) => resp.body)
-    expect(settings2).toMatchObject(
-      expect.objectContaining({
+    const settings2Resp = await callGetSettings(token)
+    expect(settings2Resp).toMatchObject({
+      status: 200,
+      body: expect.objectContaining({
         isAnalyticsEnabled: true,
         isCrashReportingEnabled: false,
         isEventNotificationsEnabled: true,
         isMentionsNotificationsEnabled: true,
         isChatNotificationsEnabled: false,
-        isFriendRequestNotificationsEnabled: true
+        isFriendRequestNotificationsEnabled: true,
+        lastUpdatedAt: expect.anything()
       })
-    )
-    const settings2LastUpdatedAt = new Date(settings2.lastUpdatedAt)
+    })
+    const settings2LastUpdatedAt = new Date(settings2Resp.body.lastUpdatedAt)
     expect(settings2LastUpdatedAt.getTime()).toBeGreaterThanOrEqual(
       settings1LastUpdatedAt.getTime()
     )
   })
 
-  it("should 400 invalid settings body when updating settings", async () => {
+  it("should 400 for an invalid settings body", async () => {
     const token = await createUserAndUpdateAuth(global.defaultUser)
     await callPostUser(token)
     const resp = await callPatchSettings(token, {
@@ -58,6 +71,10 @@ describe("Update Settings tests", () => {
       hello: "world"
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any)
-    expect(resp.status).toEqual(400)
+
+    expect(resp).toMatchObject({
+      status: 400,
+      body: { error: "invalid-request" }
+    })
   })
 })

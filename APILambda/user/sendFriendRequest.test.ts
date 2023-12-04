@@ -11,16 +11,20 @@ describe("FriendRequest tests", () => {
   it("should have a pending status when no prior relation between users", async () => {
     const token1 = await createUserAndUpdateAuth(global.defaultUser)
     const resp = await callPostFriendRequest(token1, global.defaultUser2.id)
-    expect(resp.status).toEqual(201)
-    expect(resp.body).toMatchObject({ status: "friend-request-pending" })
+    expect(resp).toMatchObject({
+      status: 201,
+      body: { status: "friend-request-pending" }
+    })
   })
 
   it("should return the same status when already existing pending friend request", async () => {
     const token1 = await createUserAndUpdateAuth(global.defaultUser)
     await callPostFriendRequest(token1, global.defaultUser2.id)
     const resp = await callPostFriendRequest(token1, global.defaultUser2.id)
-    expect(resp.status).toEqual(200)
-    expect(resp.body).toMatchObject({ status: "friend-request-pending" })
+    expect(resp).toMatchObject({
+      status: 200,
+      body: { status: "friend-request-pending" }
+    })
   })
 
   it("should return the same status when already friends", async () => {
@@ -30,8 +34,10 @@ describe("FriendRequest tests", () => {
     await callPostFriendRequest(token2, global.defaultUser.id)
 
     const resp = await callPostFriendRequest(token1, global.defaultUser2.id)
-    expect(resp.status).toEqual(200)
-    expect(resp.body).toMatchObject({ status: "friends" })
+    expect(resp).toMatchObject({
+      status: 200,
+      body: { status: "friends" }
+    })
   })
 
   it("should have a friend status when the receiver sends a friend request to someone who sent them a pending friend request", async () => {
@@ -40,8 +46,10 @@ describe("FriendRequest tests", () => {
     await callPostFriendRequest(token1, global.defaultUser2.id)
 
     const resp = await callPostFriendRequest(token2, global.defaultUser.id)
-    expect(resp.status).toEqual(201)
-    expect(resp.body).toMatchObject({ status: "friends" })
+    expect(resp).toMatchObject({
+      status: 201,
+      body: { status: "friends" }
+    })
   })
 
   it("should not allow a user to send friend requests to users who have blocked them", async () => {
@@ -50,8 +58,10 @@ describe("FriendRequest tests", () => {
     await callBlockUser(token1, global.defaultUser2.id)
 
     const resp = await callPostFriendRequest(token2, global.defaultUser.id)
-    expect(resp.status).toEqual(403)
-    expect(resp.body).toMatchObject({ status: "blocked" })
+    expect(resp).toMatchObject({
+      status: 403,
+      body: { status: "blocked" }
+    })
   })
 
   it("should unblock the user when trying to send friend request to blocked user", async () => {
@@ -60,7 +70,9 @@ describe("FriendRequest tests", () => {
     await callBlockUser(token1, global.defaultUser2.id)
 
     const resp = await callPostFriendRequest(token1, global.defaultUser2.id)
-    expect(resp.status).toEqual(201)
-    expect(resp.body).toMatchObject({ status: "friend-request-pending" })
+    expect(resp).toMatchObject({
+      status: 201,
+      body: { status: "friend-request-pending" }
+    })
   })
 })

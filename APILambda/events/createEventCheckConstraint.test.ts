@@ -1,11 +1,11 @@
 import { conn } from "TiFBackendUtils"
 import { randomUUID } from "crypto"
-import { createEvent } from "../events/createEvent.js"
 import {
   expectFailsCheckConstraint,
   resetDatabaseBeforeEach
-} from "./database.js"
-import { testEvents } from "./testEvents.js"
+} from "../test/database.js"
+import { testEvents } from "../test/testEvents.js"
+import { createEvent } from "./createEvent.js"
 
 describe("Insert event CheckConstraint test", () => {
   resetDatabaseBeforeEach()

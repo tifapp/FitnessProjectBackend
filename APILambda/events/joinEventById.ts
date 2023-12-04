@@ -22,14 +22,15 @@ const joinEvent = (conn: SQLExecutable, userId: string, eventId: number) => {
             ({ rowsAffected }) =>
               rowsAffected > 0 ? success(201) : success(200)
           )
-          : failure("event-has-ended")
+          : failure("event-has-ended" as const)
       )
-      .flatMapSuccess((status) => {
-        return success({
-          ...checkChatPermissionsTransaction(eventId, userId),
-          status
-        })
-      })
+      .flatMapSuccess((status) =>
+        checkChatPermissionsTransaction(eventId, userId)
+          .mapSuccess(chatPermissions => (
+            { ...chatPermissions, status }
+          )
+          )
+      )
   )
 }
 
@@ -71,6 +72,6 @@ export const joinEventRouter = (
             )
             .json({ error })
         )
-        .mapSuccess((event) => res.status(event.status).json(event))
+        .mapSuccess((event) => res.status(event.status).json({ id: event.id, token: event.tokenRequest }))
   )
 }

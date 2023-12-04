@@ -15,7 +15,11 @@ describe("RegisterPushToken tests", () => {
       userToken,
       registerPushTokenBody(randomUUID())
     )
-    expect(resp.status).toEqual(201)
+    expect(resp).toMatchObject({
+      status: 201,
+      body: {}
+    })
+    expect(resp.body).toEqual({})
   })
 
   it("should 400 when registering an existing push token on the same platform", async () => {
@@ -27,7 +31,10 @@ describe("RegisterPushToken tests", () => {
       userToken,
       registerPushTokenBody(pushToken)
     )
-    expect(resp.status).toEqual(400)
+    expect(resp).toMatchObject({
+      status: 400,
+      body: { error: "token-already-registered" }
+    })
   })
 
   it("should be able to insert multiple tokens with 201s", async () => {
@@ -38,7 +45,11 @@ describe("RegisterPushToken tests", () => {
       userToken,
       registerPushTokenBody(randomUUID())
     )
-    expect(resp.status).toEqual(201)
+    expect(resp).toMatchObject({
+      status: 201,
+      body: {}
+    })
+    expect(resp.body).toEqual({})
   })
 
   const registerPushTokenBody = (pushToken: string) => ({

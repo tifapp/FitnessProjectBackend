@@ -14,20 +14,23 @@ describe("AutocompleteUsers tests", () => {
     const user2Profile = (await callGetSelf(user2Token)).body
 
     const resp = await callAutocompleteUsers(user1Token, "bi", 50)
-    expect(resp.status).toEqual(200)
-    expect(resp.body).toMatchObject({
-      users: [
-        {
-          id: user2Profile.id,
-          name: "Big Chungus",
-          handle: user2Profile.handle
-        },
-        {
-          id: user1Profile.id,
-          name: "Bitchell Dickle",
-          handle: user1Profile.handle
-        }
-      ]
+
+    expect(resp).toMatchObject({
+      status: 200,
+      body: {
+        users: [
+          {
+            id: user2Profile.id,
+            name: "Big Chungus",
+            handle: user2Profile.handle
+          },
+          {
+            id: user1Profile.id,
+            name: "Bitchell Dickle",
+            handle: user1Profile.handle
+          }
+        ]
+      }
     })
   })
 
@@ -39,7 +42,13 @@ describe("AutocompleteUsers tests", () => {
     await createUserAndUpdateAuth(user2)
 
     const resp = await callAutocompleteUsers(user1Token, "bi", 1)
-    expect(resp.status).toEqual(200)
+
+    expect(resp).toMatchObject({
+      status: 200,
+      body: {
+        users: expect.arrayContaining([expect.anything()])
+      }
+    })
     expect(resp.body.users).toHaveLength(1)
   })
 })
