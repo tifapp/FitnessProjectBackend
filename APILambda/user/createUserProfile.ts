@@ -79,7 +79,9 @@ const setProfileCreatedAttribute = (username: string) => {
       ]
     }
 
-  return promiseResult(success(cognito.adminUpdateUserAttributes(verifyEmailParams).promise())).withFailure("cannot-set-cognito-attribute" as const)
+  return promiseResult(
+    success(cognito.adminUpdateUserAttributes(verifyEmailParams))
+  )
 }
 
 export const createUserProfileRouter = (
@@ -95,7 +97,7 @@ export const createUserProfileRouter = (
         )
           .mapSuccess(handle => Object.assign(registerReq, { handle })))
       .flatMapSuccess(profile => createUserProfileTransaction(profile))
-      .flatMapSuccess(profile => environment.environment === "dev" ? success(profile) : setProfileCreatedAttribute(res.locals.username).withSuccess(profile))
-      .mapFailure(error => res.status(error === "user-exists" ? 400 : error === "missing-handle" || error === "cannot-set-cognito-attribute" ? 500 : 401).json({ error }))
+      .flatMapSuccess(profile => environment.environment === "dev" ? success(profile) : setProfileCreatedAttribute(res.locals.username).mapSuccess(() => profile))
+      .mapFailure(error => res.status(error === "user-exists" ? 400 : 401).json({ error }))
       .mapSuccess(profile => res.status(201).json(profile))
   )
