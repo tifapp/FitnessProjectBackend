@@ -8,7 +8,9 @@ describe("GetSingleEvent tests", () => {
     const eventId = randomInt(1000)
     const resp = await callGetEvent(token, eventId)
 
-    expect(resp.status).toEqual(404)
-    expect(resp.body).toMatchObject({ error: "event-not-found" })
+    expect(resp).toMatchObject({
+      status: 404,
+      body: { error: "event-not-found" }
+    })
   })
 })

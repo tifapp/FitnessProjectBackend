@@ -16,7 +16,8 @@ describe("Update user profile tests", () => {
       )
 
       expect(resp).toMatchObject({
-        status: 204
+        status: 204,
+        body: {}
       })
     })
 

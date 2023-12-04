@@ -114,6 +114,6 @@ export const updateUserSettingsRouter = (
     (req, res) =>
       overwriteUserSettings(conn, res.locals.selfId, req.body)
         .mapFailure((error) => res.status(500).json({ error }))
-        .mapSuccess(() => res.status(204).send("No Content"))
+        .mapSuccess(() => res.status(204).send())
   )
 }

@@ -26,7 +26,8 @@ describe("Update Settings tests", () => {
       isChatNotificationsEnabled: false
     })
     expect(updateResp).toMatchObject({
-      status: 204
+      status: 204,
+      body: {}
     })
 
     const settings1LastUpdatedAt = await callGetSettings(token).then(
@@ -37,12 +38,13 @@ describe("Update Settings tests", () => {
       isCrashReportingEnabled: false
     })
     expect(updateResp2).toMatchObject({
-      status: 204
+      status: 204,
+      body: {}
     })
 
     const settings2Resp = await callGetSettings(token)
     expect(settings2Resp).toMatchObject({
-      status: 204,
+      status: 200,
       body: expect.objectContaining({
         isAnalyticsEnabled: true,
         isCrashReportingEnabled: false,
@@ -69,7 +71,8 @@ describe("Update Settings tests", () => {
     } as any)
 
     expect(resp).toMatchObject({
-      status: 400
+      status: 400,
+      body: {}
     })
   })
 })

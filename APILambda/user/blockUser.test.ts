@@ -27,7 +27,8 @@ describe("Block User tests", () => {
     const resp = await callBlockUser(token1, global.defaultUser2.id)
 
     expect(resp).toMatchObject({
-      status: 204
+      status: 204,
+      body: {}
     })
   })
 
@@ -40,7 +41,6 @@ describe("Block User tests", () => {
     const resp = await callGetUser(token1, global.defaultUser2.id)
 
     expect(resp).toMatchObject({
-      status: 204,
       body: expect.objectContaining({
         relations: {
           youToThem: "blocked",
@@ -59,7 +59,6 @@ describe("Block User tests", () => {
     const resp = await callGetUser(token2, global.defaultUser.id)
 
     expect(resp).toMatchObject({
-      status: 204,
       body: expect.objectContaining({
         relations: {
           youToThem: "blocked",

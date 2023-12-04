@@ -26,8 +26,7 @@ describe("Get Settings tests", () => {
         isEventNotificationsEnabled: true,
         isMentionsNotificationsEnabled: true,
         isChatNotificationsEnabled: true,
-        isFriendRequestNotificationsEnabled: true,
-        lastUpdatedAt: undefined
+        isFriendRequestNotificationsEnabled: true
       }
     })
   })

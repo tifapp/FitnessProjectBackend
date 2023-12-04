@@ -15,7 +15,8 @@ describe("DeleteSelf tests", () => {
     const resp = await callDeleteSelf(token)
 
     expect(resp).toMatchObject({
-      status: 204
+      status: 204,
+      body: {}
     })
   })
 })

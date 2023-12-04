@@ -16,7 +16,8 @@ describe("RegisterPushToken tests", () => {
       registerPushTokenBody(randomUUID())
     )
     expect(resp).toMatchObject({
-      status: 201
+      status: 201,
+      body: {}
     })
   })
 
@@ -30,7 +31,8 @@ describe("RegisterPushToken tests", () => {
       registerPushTokenBody(pushToken)
     )
     expect(resp).toMatchObject({
-      status: 400
+      status: 400,
+      body: { error: "token-already-registered" }
     })
   })
 
@@ -43,7 +45,8 @@ describe("RegisterPushToken tests", () => {
       registerPushTokenBody(randomUUID())
     )
     expect(resp).toMatchObject({
-      status: 201
+      status: 201,
+      body: {}
     })
   })
 

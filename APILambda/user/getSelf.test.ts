@@ -7,7 +7,8 @@ describe("GetSelf tests", () => {
   it("should return 500 when we can't retrieve a user's profile", async () => {
     const resp = await callGetSelf(global.unregisteredUser.auth)
     expect(resp).toMatchObject({
-      status: 500
+      status: 500,
+      body: {}
     })
   })
 

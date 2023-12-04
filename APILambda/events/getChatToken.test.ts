@@ -25,8 +25,10 @@ describe("GetTokenRequest tests", () => {
       randomInt(1000)
     )
 
-    expect(resp.status).toEqual(404)
-    expect(resp.body).toMatchObject({ error: "event-not-found" })
+    expect(resp).toMatchObject({
+      status: 404,
+      body: { error: "event-not-found" }
+    })
   })
 
   it("should return 404 if the user is not part of the event", async () => {
@@ -36,8 +38,10 @@ describe("GetTokenRequest tests", () => {
     const user2Token = await createUserAndUpdateAuth(global.defaultUser2)
     const resp = await callGetEventChatToken(user2Token, event.body.id)
 
-    expect(resp.status).toEqual(403)
-    expect(resp.body).toMatchObject({ error: "user-not-attendee" })
+    expect(resp).toMatchObject({
+      status: 403,
+      body: { error: "user-not-attendee" }
+    })
   })
 
   // test all error cases

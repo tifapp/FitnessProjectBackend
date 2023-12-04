@@ -23,7 +23,10 @@ describe("Join the event by id tests", () => {
     const testEvent = { ...testEvents[0], endTimestamp: futureDate }
     const event = await callCreateEvent(eventOwnerToken, testEvent)
     const resp = await callJoinEvent(attendeeToken, parseInt(event.body.id))
-    expect(resp.status).toEqual(201)
+    expect(resp).toMatchObject({
+      status: 201,
+      body: {}
+    })
   })
 
   it("should return 403 when the user is blocked by the event host", async () => {
@@ -39,7 +42,10 @@ describe("Join the event by id tests", () => {
     const event = await callCreateEvent(eventOwnerToken, testEvent)
     await callBlockUser(eventOwnerToken, global.defaultUser2.id)
     const resp = await callJoinEvent(attendeeToken, parseInt(event.body.id))
-    expect(resp.status).toEqual(403)
+    expect(resp).toMatchObject({
+      status: 403,
+      body: {}
+    })
   })
 
   it("should return 404 if the event doesn't exist", async () => {
@@ -48,7 +54,10 @@ describe("Join the event by id tests", () => {
     )
     const eventId = randomInt(1000)
     const resp = await callJoinEvent(attendeeToken, eventId)
-    expect(resp.status).toEqual(404)
+    expect(resp).toMatchObject({
+      status: 404,
+      body: {}
+    })
   })
 
   it("should return 403 when the event has ended", async () => {
@@ -66,7 +75,10 @@ describe("Join the event by id tests", () => {
     const testEvent = { ...testEvents[0], endTimestamp: currentDate }
     const event = await callCreateEvent(eventOwnerToken, testEvent)
     const resp = await callJoinEvent(attendeeToken, parseInt(event.body.id))
-    expect(resp.status).toEqual(403)
+    expect(resp).toMatchObject({
+      status: 403,
+      body: {}
+    })
 
     jest.useRealTimers()
   })
@@ -84,6 +96,9 @@ describe("Join the event by id tests", () => {
     const event = await callCreateEvent(eventOwnerToken, testEvent)
     await callJoinEvent(attendeeToken, parseInt(event.body.id))
     const resp = await callJoinEvent(attendeeToken, parseInt(event.body.id))
-    expect(resp.status).toEqual(200)
+    expect(resp).toMatchObject({
+      status: 200,
+      body: {}
+    })
   })
 })
