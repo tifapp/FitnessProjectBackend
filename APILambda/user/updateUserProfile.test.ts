@@ -4,8 +4,9 @@ import { callPostUser, callUpdateUserHandle, createUserAndUpdateAuth } from "../
 describe("Update user profile tests", () => {
   resetDatabaseBeforeEach()
 
+  // add auth middleware tests for profile_exists
   describe("Update user handle tests", () => {
-    it("should 200 when updating the handle to a unique handle for a user that exists", async () => {
+    it("should 200 when updating the handle to a unique handle", async () => {
       const userToken = await createUserAndUpdateAuth(global.defaultUser)
       await callPostUser(userToken)
       const userHandle = "handle"
@@ -14,22 +15,27 @@ describe("Update user profile tests", () => {
         userHandle
       )
 
-      expect(resp.status).toEqual(204)
+      expect(resp).toMatchObject({
+        status: 204
+      })
     })
 
     it("should 400 for an invalid handle", async () => {
       const userToken = await createUserAndUpdateAuth(global.defaultUser)
+      await callPostUser(userToken)
       const userHandle = "@#($@(#$R%U*@#("
       const resp = await callUpdateUserHandle(
         userToken,
         userHandle
-      ) // Needs to use method from the update user endpoint
+      )
 
-      expect(resp.status).toEqual(400)
-      expect(resp.body).toMatchObject({ error: "invalid-request" })
+      expect(resp).toMatchObject({
+        status: 400,
+        body: { error: "invalid-request" }
+      })
     })
 
-    it("should 400 when user tries to update user handle but it already exists", async () => {
+    it("should 400 when user tries to update user handle but another user has already taken it", async () => {
       const userToken = await createUserAndUpdateAuth(global.defaultUser)
       await callPostUser(userToken)
       const user2 = await global.registerUser()
@@ -40,8 +46,10 @@ describe("Update user profile tests", () => {
         user2Profile.body.handle
       )
 
-      expect(resp.status).toEqual(400)
-      expect(resp.body).toMatchObject({ error: "duplicate-handle" })
+      expect(resp).toMatchObject({
+        status: 400,
+        body: { error: "duplicate-handle" }
+      })
     })
   })
 })

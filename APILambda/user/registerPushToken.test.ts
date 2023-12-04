@@ -15,7 +15,9 @@ describe("RegisterPushToken tests", () => {
       userToken,
       registerPushTokenBody(randomUUID())
     )
-    expect(resp.status).toEqual(201)
+    expect(resp).toMatchObject({
+      status: 201
+    })
   })
 
   it("should 400 when registering an existing push token on the same platform", async () => {
@@ -27,7 +29,9 @@ describe("RegisterPushToken tests", () => {
       userToken,
       registerPushTokenBody(pushToken)
     )
-    expect(resp.status).toEqual(400)
+    expect(resp).toMatchObject({
+      status: 400
+    })
   })
 
   it("should be able to insert multiple tokens with 201s", async () => {
@@ -38,7 +42,9 @@ describe("RegisterPushToken tests", () => {
       userToken,
       registerPushTokenBody(randomUUID())
     )
-    expect(resp.status).toEqual(201)
+    expect(resp).toMatchObject({
+      status: 201
+    })
   })
 
   const registerPushTokenBody = (pushToken: string) => ({

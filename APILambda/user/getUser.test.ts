@@ -13,8 +13,10 @@ describe("GetUser tests", () => {
     const userId = randomUUID()
     const resp = await callGetUser(global.defaultUser.auth, userId)
 
-    expect(resp.status).toEqual(401)
-    expect(resp.body).toMatchObject({ error: "user-does-not-exist" })
+    expect(resp).toMatchObject({
+      status: 401,
+      body: { error: "user-does-not-exist" }
+    })
   })
 
   it("should retrieve a user that exists", async () => {
@@ -25,13 +27,13 @@ describe("GetUser tests", () => {
     const user2Profile = (await callGetSelf(user2Token)).body
     const resp = await callGetUser(user1Token, user2.id)
 
-    expect(resp.status).toEqual(200)
-    expect(resp.body).toMatchObject(
-      expect.objectContaining({
+    expect(resp).toMatchObject({
+      status: 200,
+      body: expect.objectContaining({
         id: user2.id,
         name: "John Doe",
         handle: user2Profile.handle
       })
-    )
+    })
   })
 })

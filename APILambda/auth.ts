@@ -54,7 +54,7 @@ export const addCognitoTokenVerification = (
     }
 
     if (!auth || Array.isArray(auth)) {
-      // TODO: Change error message before release
+      // TODO: Change error message to generic message for prod api
       return res.status(401).json({ error: "invalid-headers" })
     }
     // TODO: perform JWT verification if envType !== dev
@@ -75,7 +75,7 @@ export const addCognitoTokenVerification = (
       res.locals.doesProfileExist = doesProfileExist
 
       if (!res.locals.isContactInfoVerified) {
-        // TODO: Change error message before release
+        // TODO: Change error message to generic message for prod api
         return res.status(401).json({ error: "unverified-user" })
       }
 
@@ -84,19 +84,19 @@ export const addCognitoTokenVerification = (
 
       if (res.locals.doesProfileExist) {
         if (isCreatingProfile) {
-          // TODO: Change error message before release
+          // TODO: Change error message to generic message for prod api
           return res.status(400).json({ error: "user-already-exists" })
         }
       } else {
         if (!isCreatingProfile) {
-          // TODO: Change error message before release
+          // TODO: Change error message to generic message for prod api
           return res.status(401).json({ error: "user-does-not-exist" })
         }
       }
 
       next()
     } catch (err) {
-      // TODO: Change error message before release
+      // TODO: Change error message to generic message for prod api
       return res.status(401).json({ error: "invalid-claims" })
     }
   })
