@@ -1,5 +1,6 @@
 import { SQLExecutable, conn, failure, success } from "TiFBackendUtils"
 import { ValidatedRouter } from "../validation.js"
+import { userWithIdExists } from "./SQL.js"
 
 /**
  * Creates an endpoint to unblock the user.
@@ -32,10 +33,7 @@ const unblockUser = (
     )
     .flatMapSuccess((result) => {
       if (result.rowsAffected === 1) return success()
-      return conn
-        .queryHasResults("SELECT TRUE FROM user WHERE id = :toUserId", {
-          toUserId
-        })
+      return userWithIdExists(conn, toUserId)
         .withFailure("user-not-found" as const)
         .flatMapSuccess(() => failure("user-not-blocked" as const))
     })
