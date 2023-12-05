@@ -103,6 +103,16 @@ export const callBlockUser = async (
     .send()
 }
 
+export const callUnblockUser = async (
+  userToken: string,
+  unblockedUserId: string
+) => {
+  return await request(testApp)
+    .delete(`/user/block/${unblockedUserId}`)
+    .set("Authorization", userToken)
+    .send()
+}
+
 export const callRegisterPushToken = async (
   userToken: string,
   body: { pushToken: string; platformName: PushTokenPlatformName }
