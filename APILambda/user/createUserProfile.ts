@@ -80,7 +80,9 @@ const setProfileCreatedAttribute = (username: string) => {
     }
 
   return promiseResult(
-    success(cognito.adminUpdateUserAttributes(verifyEmailParams))
+    cognito.adminUpdateUserAttributes(verifyEmailParams).promise().then((val) =>
+      success(val)
+    )
   )
 }
 
