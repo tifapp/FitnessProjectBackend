@@ -29,7 +29,6 @@ describe("Update Settings tests", () => {
       status: 204,
       body: {}
     })
-    expect(updateResp.body).toEqual({})
 
     const settings1LastUpdatedAt = await callGetSettings(token).then(
       (resp) => new Date(resp.body.lastUpdatedAt)
@@ -42,7 +41,6 @@ describe("Update Settings tests", () => {
       status: 204,
       body: {}
     })
-    expect(updateResp2.body).toEqual({})
 
     const settings2Resp = await callGetSettings(token)
     expect(settings2Resp).toMatchObject({

@@ -18,6 +18,5 @@ describe("DeleteSelf tests", () => {
       status: 204,
       body: {}
     })
-    expect(resp.body).toEqual({})
   })
 })

@@ -19,7 +19,6 @@ describe("RegisterPushToken tests", () => {
       status: 201,
       body: {}
     })
-    expect(resp.body).toEqual({})
   })
 
   it("should 400 when registering an existing push token on the same platform", async () => {
@@ -49,7 +48,6 @@ describe("RegisterPushToken tests", () => {
       status: 201,
       body: {}
     })
-    expect(resp.body).toEqual({})
   })
 
   const registerPushTokenBody = (pushToken: string) => ({

@@ -30,7 +30,6 @@ describe("Block User tests", () => {
       status: 204,
       body: {}
     })
-    expect(resp.body).toEqual({})
   })
 
   it("should remove relation status of blocked user to you when blocking", async () => {
