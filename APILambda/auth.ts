@@ -7,7 +7,7 @@ const AuthClaimsSchema = z
     sub: z.string(),
     name: z.string(),
     username: z.string(),
-    profile_created: z.boolean().optional()
+    "custom:profile_created": z.string()
   })
   .and(
     z
@@ -36,7 +36,7 @@ const TransformedAuthClaimsSchema = AuthClaimsSchema.transform((res) => ({
   // cognito claims encode them as strings
   // @ts-expect-error email or phone number may be missing from claims
   isContactInfoVerfied: res.email_verified || res.phone_number_verified,
-  doesProfileExist: res.profile_created ?? undefined
+  doesProfileExist: res["custom:profile_created"] === "true"
 }))
 
 /**

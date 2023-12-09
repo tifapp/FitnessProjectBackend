@@ -73,7 +73,7 @@ const setProfileCreatedAttribute = (username: string) => {
       Username: username,
       UserAttributes: [
         {
-          Name: "profile_created",
+          Name: "custom:profile_created",
           Value: "true"
         }
       ]

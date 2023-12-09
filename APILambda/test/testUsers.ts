@@ -28,7 +28,7 @@ export const createMockAuthToken = async (
     phone_number_verified: user?.isVerified ?? true,
     // Comes from Cognito
     // eslint-disable-next-line @typescript-eslint/naming-convention
-    profile_created: user?.profileExists ?? false
+    "custom:profile_created": user?.profileExists ?? false
   }
 
   const token = jwt.sign(tokenPayload, secret, { algorithm: "HS256" })
@@ -37,7 +37,7 @@ export const createMockAuthToken = async (
     const claims = JSON.parse(
       Buffer.from(token.split(".")[1], "base64").toString()
     )
-    claims.profile_created = true
+    claims["custom:profile_created"] = true
 
     const newToken = jwt.sign(claims, "supersecret", { algorithm: "HS256" })
 
