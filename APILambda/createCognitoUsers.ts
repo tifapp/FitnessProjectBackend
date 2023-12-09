@@ -28,7 +28,7 @@ export const createCognitoAuthToken = async (
       },
       {
         Name: "profile_created",
-        Value: undefined
+        Value: "false"
       }
     ]
   }
