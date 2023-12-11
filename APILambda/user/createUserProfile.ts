@@ -64,13 +64,13 @@ AWS.config.update({
 
 const cognito = new AWS.CognitoIdentityServiceProvider()
 
-const setProfileCreatedAttribute = (username: string) => {
-  console.log("about to set the user's profile_created attribute to true for the user ", username)
+const setProfileCreatedAttribute = (userId: string) => {
+  console.log("about to set the user's profile_created attribute to true for the user ", userId)
 
   const verifyEmailParams: AWS.CognitoIdentityServiceProvider.AdminUpdateUserAttributesRequest =
     {
       UserPoolId: process.env.COGNITO_USER_POOL_ID!,
-      Username: username,
+      Username: userId,
       UserAttributes: [
         {
           Name: "custom:profile_created",
@@ -101,7 +101,7 @@ export const createUserProfileRouter = (
         )
           .mapSuccess(handle => Object.assign(registerReq, { handle })))
       .flatMapSuccess(profile => createUserProfileTransaction(profile))
-      .flatMapSuccess(profile => environment.environment === "dev" ? success(profile) : setProfileCreatedAttribute(res.locals.username).mapSuccess(() => profile))
+      .flatMapSuccess(profile => environment.environment === "dev" ? success(profile) : setProfileCreatedAttribute(res.locals.selfId).mapSuccess(() => profile))
       .mapFailure(error => res.status(error === "user-exists" ? 400 : 401).json({ error }))
       .mapSuccess(profile => res.status(201).json(profile))
   )

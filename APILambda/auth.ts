@@ -65,11 +65,10 @@ export const addCognitoTokenVerification = (
 
     try {
       // eslint-disable-next-line camelcase
-      const { selfId, name, username, isContactInfoVerfied, doesProfileExist } =
+      const { selfId, name, isContactInfoVerfied, doesProfileExist } =
         TransformedAuthClaimsSchema.parse(
           JSON.parse(Buffer.from(token.split(".")[1], "base64").toString())
         )
-      res.locals.username = username
       res.locals.selfId = selfId
       res.locals.name = name
       // eslint-disable-next-line camelcase
