@@ -10,7 +10,7 @@ Our backend API is designed with a structured layered architecture to streamline
 
 ## Step 1: Create or Use an Existing Data Type Folder
 
-The main API is found in the `APILambda` folder. This folder contains different subfolders for each type of data (e.g., `users`, `events`). If you're introducing a new data type that does not yet have a corresponding folder, create a new one. 
+The main API is found in the `APILambda` folder. This folder contains different subfolders for each type of data (e.g., `users`, `events`). If you're introducing a new data type that does not yet have a corresponding folder, create a new one.
 
 ```plaintext
 .
@@ -24,7 +24,7 @@ The main API is found in the `APILambda` folder. This folder contains different 
 
 In order to operate on the database you'll need to write SQL statements.
 
-Navigate to your specific data type folder, and locate the `SQLStatements.ts` file. 
+Navigate to your specific data type folder, and locate the `SQLStatements.ts` file.
 
 ```plaintext
 APILambda
@@ -40,7 +40,7 @@ For example, if you're adding a new "products" route, you might add a SQL statem
 
 ```typescript
 // SQLStatements.ts in 'products' folder
-export const getNewProduct = `SELECT * FROM products WHERE id = $1`;
+export const getNewProduct = `SELECT * FROM products WHERE id = $1`
 ```
 
 ## Transactions
@@ -61,15 +61,15 @@ For example, if you're working on the "products" route, and you have a SQL state
 
 ```typescript
 // transactions.ts in 'products' folder
-import { getNewProduct } from './SQLStatements.ts';
-import { db } from '<path_to_db_connection>';
+import { getNewProduct } from "./SQLStatements.ts"
+import { db } from "<path_to_db_connection>"
 
 export async function getNewProductTransaction(id) {
   try {
-    const result = await db.query(getNewProduct, [id]);
-    return { status: "success", data: result.rows[0] };
+    const result = await db.query(getNewProduct, [id])
+    return { status: "success", data: result.rows[0] }
   } catch (error) {
-    return { status: "error", message: error.message };
+    return { status: "error", message: error.message }
   }
 }
 ```
@@ -94,23 +94,23 @@ For example, if you're adding a "products" route to get a product by its ID, you
 
 ```typescript
 // routes.ts in 'products' folder
-import express from 'express';
-import { getNewProductTransaction } from './transactions.ts';
+import express from "express"
+import { getNewProductTransaction } from "./transactions.ts"
 
-const router = express.Router();
+const router = express.Router()
 
 router.get("/new-product/:id", async (req, res) => {
-  const { id } = req.params;
-  const result = await getNewProductTransaction(id);
-  
-  if (result.status === "success") {
-    return res.status(200).json(result.data);
-  } else {
-    return res.status(500).json({ error: result.message });
-  }
-});
+  const { id } = req.params
+  const result = await getNewProductTransaction(id)
 
-export default router;
+  if (result.status === "success") {
+    return res.status(200).json(result.data)
+  } else {
+    return res.status(500).json({ error: result.message })
+  }
+})
+
+export default router
 ```
 
 This route listens to GET requests at the /new-product/:id endpoint, calls the getNewProductTransaction function, and returns the appropriate HTTP status code and data based on the transaction's result.
@@ -132,28 +132,28 @@ For example, if you're testing the "products" route you've added, the tests coul
 
 ```typescript
 // products.test.ts in 'tests' folder
-import request from 'supertest';
-import app from '<path_to_your_express_app>';
+import request from "supertest"
+import app from "<path_to_your_express_app>"
 
 describe("GET /new-product/:id", () => {
   it("returns data for a valid id", async () => {
-    const id = 1; // assuming 1 is a valid ID
-    const res = await request(app).get(`/new-product/${id}`);
+    const id = 1 // assuming 1 is a valid ID
+    const res = await request(app).get(`/new-product/${id}`)
 
-    expect(res.statusCode).toEqual(200);
-    expect(res.body).toHaveProperty("id");
-    expect(res.body.id).toEqual(id);
+    expect(res.statusCode).toEqual(200)
+    expect(res.body).toHaveProperty("id")
+    expect(res.body.id).toEqual(id)
     // ...other expectations...
-  });
+  })
 
   it("returns an error for an invalid id", async () => {
-    const id = 9999; // assuming 9999 is an invalid ID
-    const res = await request(app).get(`/new-product/${id}`);
+    const id = 9999 // assuming 9999 is an invalid ID
+    const res = await request(app).get(`/new-product/${id}`)
 
-    expect(res.statusCode).toEqual(500);
+    expect(res.statusCode).toEqual(500)
     // ...other expectations...
-  });
-});
+  })
+})
 ```
 
 These tests make HTTP requests to the new "products" route and assert that the response is as expected. The first test is for a successful transaction with a valid ID, while the second test is for an error scenario where an invalid ID is provided.

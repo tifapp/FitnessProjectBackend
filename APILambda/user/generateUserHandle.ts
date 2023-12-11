@@ -1,6 +1,6 @@
+import { PromiseResult, SQLExecutable, failure, promiseResult } from "TiFBackendUtils"
 import crypto from "crypto"
-import { SQLExecutable } from "../dbconnection.js"
-import { userWithHandleExists } from "./SQL.js"
+import { userWithHandleDoesNotExist } from "./SQL.js"
 
 const generateNumericHash = (input: string) => {
   const hash = crypto.createHash("sha1").update(input).digest("hex")
@@ -9,22 +9,26 @@ const generateNumericHash = (input: string) => {
   return numericHash.toString().padStart(4, "0")
 }
 
-export const generateUniqueUsername = async (conn: SQLExecutable, name: string, maxRetries = 3): Promise<string> => {
+// make retry function util?
+const generateUniqueUsernameAttempt = (conn: SQLExecutable, name: string, retries: number): PromiseResult<string, "could-not-generate-username"> => {
+  const potentialUsername = `${name}${generateNumericHash(
+    `${name}${Date.now()}`
+  )}`
+  return userWithHandleDoesNotExist(conn, potentialUsername)
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore Retry function
+    .mapSuccess(() => potentialUsername)
+    .flatMapFailure(() => retries > 0 ? generateUniqueUsernameAttempt(conn, name, retries - 1) : promiseResult(failure("could-not-generate-username" as const)))
+}
+
+export const generateUniqueUsername = (
+  conn: SQLExecutable,
+  name: string,
+  retries = 3
+) => {
   let cleanedName = name.replace(/[^a-zA-Z0-9]/g, "").toLowerCase()
   cleanedName = cleanedName.length ? cleanedName : "idk"
   const baseName = cleanedName.substr(0, 11)
 
-  let retries = 0
-  let potentialUsername = `${baseName}${generateNumericHash(`${cleanedName}${Date.now()}`)}`
-
-  while (await userWithHandleExists(conn, potentialUsername)) {
-    if (retries >= maxRetries) {
-      throw new Error("Max retries reached while generating a unique username.")
-    }
-
-    retries++
-    potentialUsername = `${baseName}${generateNumericHash(`${cleanedName}${Date.now() + retries}`)}`
-  }
-
-  return potentialUsername
+  return generateUniqueUsernameAttempt(conn, baseName, retries)
 }

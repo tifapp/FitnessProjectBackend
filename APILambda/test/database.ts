@@ -1,8 +1,13 @@
+import { conn } from "TiFBackendUtils"
 import { fail } from "assert"
-import { conn } from "../dbconnection.js"
 
 const resetDB = async () => {
-  await Promise.all([conn.execute("DELETE FROM user"), conn.execute("DELETE FROM event"), conn.execute("DELETE FROM userRelations"), conn.execute("DELETE FROM userSettings")])
+  await Promise.all([
+    conn.queryResults("DELETE FROM user"),
+    conn.queryResults("DELETE FROM event"),
+    conn.queryResults("DELETE FROM userRelations"),
+    conn.queryResults("DELETE FROM userSettings")
+  ])
 }
 
 /**
@@ -19,7 +24,7 @@ export const expectFailsCheckConstraint = async (fn: () => Promise<void>) => {
   try {
     await fn()
     fail("This function should throw a check constraint error.")
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (err: any) {
     expect(err.body.message.includes("(errno 3819)"))
   }

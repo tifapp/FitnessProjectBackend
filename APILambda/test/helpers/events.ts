@@ -1,10 +1,11 @@
 import request from "supertest"
-import { CreateEventInput } from "../../events/index.js"
-import { testApp } from "../testVariables.js"
+// import { CreateEventInput } from "../../events/index.js"
+import { testApp } from "../testApp.js"
 
 export const callCreateEvent = async (
   bearerToken: string,
-  req: CreateEventInput
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  req: any
 ) => {
   return await request(testApp)
     .post("/event")
@@ -12,10 +13,18 @@ export const callCreateEvent = async (
     .send(req)
 }
 
-export const callGetEvent = async (
+export const callJoinEvent = async (
   bearerToken: string,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   eventId: number
 ) => {
+  return await request(testApp)
+    .post(`/event/join/${eventId}`)
+    .set("Authorization", bearerToken)
+    .send()
+}
+
+export const callGetEvent = async (bearerToken: string, eventId: number) => {
   return await request(testApp)
     .get(`/event/${eventId}`)
     .set("Authorization", bearerToken)

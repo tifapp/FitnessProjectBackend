@@ -22,7 +22,10 @@ const region = process.env.AWS_REGION
 const accountId = process.env.AWS_ACCOUNT_ID
 const lambdaArn = `arn:aws:lambda:${region}:${accountId}:function:${functionName}`
 
-export const scheduleAWSLambda = async (dateString: string, targetLambdaParams?: unknown) => {
+export const scheduleAWSLambda = async (
+  dateString: string,
+  targetLambdaParams?: unknown
+) => {
   const cronExpression = createCronExpressions(dateString)
   const ruleName = `${functionName}_${dateString}`.replace(/[: ]/g, "_")
   const ruleParams = {
@@ -43,7 +46,10 @@ export const scheduleAWSLambda = async (dateString: string, targetLambdaParams?:
   return await eventbridge.putTargets(targetParams).promise()
 }
 
-export const invokeAWSLambda = async (lambdaName: string, targetLambdaParams?: unknown) => {
+export const invokeAWSLambda = async (
+  lambdaName: string,
+  targetLambdaParams?: unknown
+) => {
   const params = {
     FunctionName: lambdaName,
     InvocationType: "Event",

@@ -13,15 +13,15 @@ export const LocationCoordinates2DSchema = z.object({
  */
 export type LocationCoordinate2D = Readonly<
   z.infer<typeof LocationCoordinates2DSchema>
->;
+>
 
 export interface Placemark {
-  lat: number;
-  lon: number;
-  name: string;
-  city: string;
-  country: string;
-  street: string;
-  street_num: string; // camelCase
-  unit_number: string; // camelCase
+  lat: number
+  lon: number
+  name: string
+  city: string
+  country: string
+  street: string
+  street_num: string // camelCase
+  unit_number: string // camelCase
 }

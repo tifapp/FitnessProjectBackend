@@ -1,29 +1,25 @@
 /* eslint-disable no-multi-str */
 // address formatting
 
-import { conn } from "TiFBackendUtils"
+import { conn, failure, success } from "TiFBackendUtils"
 import { handler } from "./index.js"
 
 describe("Geocoding lambda tests", () => {
   it("Should insert a placemark with the proper address with the given lat/lon", async () => {
-    await conn.execute("DELETE FROM location")
+    await conn.queryResults("DELETE FROM location")
 
-    const result = await handler({ location: { latitude: 36.99813840222285, longitude: -122.05564377465653 } })
+    const result = await handler({
+      location: { latitude: 36.99813840222285, longitude: -122.05564377465653 }
+    })
 
-    expect(result).toEqual("Placemark at {\"latitude\":36.99813840222285,\"longitude\":-122.05564377465653} successfully inserted. Address is \
-{\"lat\":36.99813840222285,\
-\"lon\":-122.05564377465653,\
-\"name\":\"420 Hagar Dr, Santa Cruz, CA 95064, United States\",\
-\"city\":\"Westside\",\
-\"country\":\"USA\",\
-\"street\":\"Hagar Dr\",\
-\"street_num\":\"420\",\
-\"unit_number\":\"\"}")
+    expect(result).toMatchObject(success("placemark-successfully-inserted"))
   })
 
   it("Should return when a placemark already exists", async () => {
-    const result = await handler({ location: { latitude: 36.99813840222285, longitude: -122.05564377465653 } })
+    const result = await handler({
+      location: { latitude: 36.99813840222285, longitude: -122.05564377465653 }
+    })
 
-    expect(result).toEqual("Placemark at {\"latitude\":36.99813840222285,\"longitude\":-122.05564377465653} already exists")
+    expect(result).toMatchObject(failure("placemark-already-exists"))
   })
 })

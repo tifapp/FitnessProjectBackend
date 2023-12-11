@@ -67,9 +67,13 @@ describe("validateRequest", () => {
       id: z.string()
     })
 
-    app.post("/test", validateRequest({ bodySchema, querySchema }), (req, res) => {
-      res.status(200).send({ body: req.body, query: req.query })
-    })
+    app.post(
+      "/test",
+      validateRequest({ bodySchema, querySchema }),
+      (req, res) => {
+        res.status(200).send({ body: req.body, query: req.query })
+      }
+    )
 
     const response = await request(app).post("/test?id=30").send({
       name: "John"
@@ -95,9 +99,13 @@ describe("validateRequest", () => {
       age: z.number()
     })
 
-    app.post("/test", validateRequest({ bodySchema, querySchema }), (req, res) => {
-      res.sendStatus(200)
-    })
+    app.post(
+      "/test",
+      validateRequest({ bodySchema, querySchema }),
+      (req, res) => {
+        res.sendStatus(200)
+      }
+    )
 
     const response = await request(app).post("/test?age=thirty").send({
       name: "John"
