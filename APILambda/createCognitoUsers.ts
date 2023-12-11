@@ -59,6 +59,8 @@ export const createCognitoAuthToken = async (
       ]
     }
 
+  console.log("creating the user and about to set the user's profile_created attribute to true for the user ", email)
+
   await cognito.adminUpdateUserAttributes(verifyEmailParams).promise()
 
   const signInParams: AWS.CognitoIdentityServiceProvider.InitiateAuthRequest = {
