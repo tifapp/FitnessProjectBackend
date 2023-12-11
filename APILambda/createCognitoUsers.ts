@@ -54,7 +54,7 @@ export const createCognitoAuthToken = async (
         },
         {
           Name: "custom:profile_created",
-          Value: `${user?.profileExists ?? true}`
+          Value: user?.profileExists === true ? "true" : undefined
         }
       ]
     }
