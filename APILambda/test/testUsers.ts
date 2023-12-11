@@ -28,7 +28,7 @@ export const createMockAuthToken = async (
     phone_number_verified: user?.isVerified ?? true,
     // Comes from Cognito
     // eslint-disable-next-line @typescript-eslint/naming-convention
-    "custom:profile_created": `${user?.profileExists ?? "false"}`
+    "custom:profile_created": user?.profileExists === true ? "true" : undefined
   }
 
   const token = jwt.sign(tokenPayload, secret, { algorithm: "HS256" })

@@ -7,7 +7,7 @@ const AuthClaimsSchema = z
     sub: z.string(),
     name: z.string(),
     username: z.string(),
-    "custom:profile_created": z.string()
+    "custom:profile_created": z.string().optional()
   })
   .and(
     z
