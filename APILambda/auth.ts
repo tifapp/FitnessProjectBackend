@@ -2,6 +2,13 @@ import { Application } from "express"
 import { z } from "zod"
 import { ServerEnvironment } from "./env.js"
 
+export type ResponseContext = {
+  selfId: string,
+  name: string,
+  isContactInfoVerified: boolean,
+  doesProfileExist: boolean
+}
+
 const AuthClaimsSchema = z
   .object({
     sub: z.string(),
@@ -35,7 +42,7 @@ const TransformedAuthClaimsSchema = AuthClaimsSchema.transform((res) => ({
   phoneNumber: res.phone_number ?? undefined,
   // cognito claims encode them as strings
   // @ts-expect-error email or phone number may be missing from claims
-  isContactInfoVerfied: res.email_verified || res.phone_number_verified,
+  isContactInfoVerified: res.email_verified === true || res.phone_number_verified === true,
   doesProfileExist: res["custom:profile_created"] === "true"
 }))
 
@@ -65,15 +72,14 @@ export const addCognitoTokenVerification = (
 
     try {
       // eslint-disable-next-line camelcase
-      const { selfId, name, isContactInfoVerfied, doesProfileExist } =
+      const { selfId, name, isContactInfoVerified, doesProfileExist } =
         TransformedAuthClaimsSchema.parse(
           JSON.parse(Buffer.from(token.split(".")[1], "base64").toString())
         )
-      res.locals.selfId = selfId
-      res.locals.name = name
-      // eslint-disable-next-line camelcase
-      res.locals.isContactInfoVerified = isContactInfoVerfied
-      res.locals.doesProfileExist = doesProfileExist
+
+      const locals: ResponseContext = { selfId, name, isContactInfoVerified, doesProfileExist }
+
+      res.locals = locals
 
       if (!res.locals.isContactInfoVerified) {
         // TODO: Change error message to generic message for prod api

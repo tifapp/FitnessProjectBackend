@@ -8,6 +8,7 @@ import express, {
   Router
 } from "express"
 import { AnyZodObject, ZodSchema, z } from "zod"
+import { ResponseContext } from "./auth.js"
 
 interface ValidationSchemas {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -91,7 +92,7 @@ type ValidatedRequestHandler<S extends ValidationSchemas> = (
     query: InferRequestSchemaType<S["querySchema"]>
     params: InferRequestSchemaType<S["pathParamsSchema"]>
   },
-  res: Response,
+  res: Omit<Response, "locals"> & {locals: ResponseContext},
   next: NextFunction
 ) => Promise<Result<Response, Response>>
 
