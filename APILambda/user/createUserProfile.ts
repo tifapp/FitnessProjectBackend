@@ -59,15 +59,13 @@ const createUserProfileTransaction = (
   )
 
 AWS.config.update({
-  region: process.env.AWS_REGION,
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+  region: process.env.AWS_REGION
 })
 
-const setProfileCreatedAttribute = (username: string) => {
-  console.log("about to set the user's profile_created attribute to true")
+const cognito = new AWS.CognitoIdentityServiceProvider()
 
-  const cognito = new AWS.CognitoIdentityServiceProvider()
+const setProfileCreatedAttribute = (username: string) => {
+  console.log("about to set the user's profile_created attribute to true for the user ", username)
 
   const verifyEmailParams: AWS.CognitoIdentityServiceProvider.AdminUpdateUserAttributesRequest =
     {
