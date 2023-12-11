@@ -33,7 +33,7 @@ export const createCognitoAuthToken = async (
     ]
   }
 
-  const signUpResult = await cognito.signUp(signUpParams).promise()
+  const signUpResult = await cognito.signUp(signUpParams).promise().then(() => console.log("successfully made user ", email)).catch(err => console.error(err))
 
   const adminConfirmSignUpParams: AWS.CognitoIdentityServiceProvider.AdminConfirmSignUpRequest =
     {
@@ -61,7 +61,7 @@ export const createCognitoAuthToken = async (
 
   console.log("creating the user and about to set the user's profile_created attribute to true for the user ", email)
 
-  await cognito.adminUpdateUserAttributes(verifyEmailParams).promise()
+  await cognito.adminUpdateUserAttributes(verifyEmailParams).promise().catch(err => console.error(err))
 
   const signInParams: AWS.CognitoIdentityServiceProvider.InitiateAuthRequest = {
     AuthFlow: "USER_PASSWORD_AUTH",
