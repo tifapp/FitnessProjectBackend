@@ -99,7 +99,7 @@ export const getChatTokenRouter = (
     "/chat/:eventId",
     { pathParamsSchema: eventRequestSchema },
     (req, res) =>
-      checkChatPermissionsTransaction(Number(req.params.eventId), res.locals.userId)
+      checkChatPermissionsTransaction(Number(req.params.eventId), res.locals.selfId)
         .mapFailure(error => res.status(error === "event-not-found" ? 404 : error === "user-not-attendee" || error === "user-is-blocked" ? 403 : 500).json({ error }))
         .mapSuccess(event => res.status(200).json(event))
   )
