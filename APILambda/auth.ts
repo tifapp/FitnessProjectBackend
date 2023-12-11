@@ -61,6 +61,8 @@ export const addCognitoTokenVerification = (
 
     const token = auth.split(" ")[1] // TODO: ensure correct format of auth header ("Bearer {token}")
 
+    console.log("claims look like ", JSON.parse(Buffer.from(token.split(".")[1], "base64").toString()))
+
     try {
       // eslint-disable-next-line camelcase
       const { selfId, name, username, isContactInfoVerfied, doesProfileExist } =
