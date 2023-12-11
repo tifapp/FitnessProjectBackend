@@ -153,4 +153,4 @@ jobs:
         run: |
           cd APILambda
           export NODE_OPTIONS="--max_old_space_size=4096"
-          TEST_ENV=staging npm run test:ci -- ".\user\createUserProfile.test.ts"
+          TEST_ENV=staging npm run test:ci
