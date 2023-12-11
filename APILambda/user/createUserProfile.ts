@@ -58,12 +58,14 @@ const createUserProfileTransaction = (
       .flatMapSuccess(() => insertUser(tx, request)).mapSuccess(() => ({ id: request.id, handle: request.handle }))
   )
 
+AWS.config.update({
+  region: process.env.AWS_REGION,
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+})
+
 const setProfileCreatedAttribute = (username: string) => {
-  AWS.config.update({
-    region: process.env.AWS_REGION,
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
-  })
+  console.log("about to set the user's profile_created attribute to true")
 
   const cognito = new AWS.CognitoIdentityServiceProvider()
 
@@ -80,9 +82,11 @@ const setProfileCreatedAttribute = (username: string) => {
     }
 
   return promiseResult(
-    cognito.adminUpdateUserAttributes(verifyEmailParams).promise().then((val) =>
-      success(val)
-    )
+    cognito.adminUpdateUserAttributes(verifyEmailParams).promise()
+      .then((val) =>
+        success(val)
+      )
+      .catch(err => { console.error(err); return failure(err) })
   )
 }
 
