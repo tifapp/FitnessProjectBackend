@@ -69,7 +69,7 @@ const setProfileCreatedAttribute = (username: string) => {
 
   const verifyEmailParams: AWS.CognitoIdentityServiceProvider.AdminUpdateUserAttributesRequest =
     {
-      UserPoolId: process.env.COGNITO_USER_POOL_ID ?? "",
+      UserPoolId: process.env.COGNITO_USER_POOL_ID!,
       Username: username,
       UserAttributes: [
         {
