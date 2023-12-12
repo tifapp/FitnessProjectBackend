@@ -6,7 +6,7 @@ import { userWithIdExists } from "./SQL.js"
  * Creates an endpoint to unblock the user.
  */
 export const createUnblockUserRouter = (router: ValidatedRouter) => {
-  router.delete("/block/:userId", async (req, res) => {
+  router.deleteWithValidation("/block/:userId", {}, async (req, res) => {
     return unblockUser(conn, res.locals.selfId, req.params.userId)
       .mapFailure((error) => {
         return res

@@ -650,8 +650,8 @@
         }
       }
     },
-    "/user/blocked/{userId}" : {
-      "post" : {
+    "/user/block/{userId}" : {
+      "patch" : {
         "produces" : [ "application/json" ],
         "parameters" : [ {
           "name" : "userId",
