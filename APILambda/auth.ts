@@ -13,7 +13,6 @@ const AuthClaimsSchema = z
   .object({
     sub: z.string(),
     name: z.string(),
-    username: z.string(),
     "custom:profile_created": z.string().optional()
   })
   .and(
@@ -35,7 +34,6 @@ export type AuthClaims = z.infer<typeof AuthClaimsSchema>
 const TransformedAuthClaimsSchema = AuthClaimsSchema.transform((res) => ({
   selfId: res.sub,
   name: res.name,
-  username: res.username,
   // @ts-expect-error email may be missing from claims
   email: res.email ?? undefined,
   // @ts-expect-error phone number may be missing from claims
