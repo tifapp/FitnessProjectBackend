@@ -5,6 +5,7 @@ import express, { Express } from "express"
 import { addBenchmarking, addRoutes, createApp } from "./app.js"
 import { addCognitoTokenVerification } from "./auth.js"
 import { ServerEnvironment } from "./env.js"
+import { addErrorReporting } from "./errorReporting.js"
 
 const addEventToRequest = (app: Express) => {
   app.use((req, res, next) => {
@@ -40,5 +41,6 @@ addEventToRequest(app)
 addBenchmarking(app)
 addCognitoTokenVerification(app, env) // only apply to specific routes
 addRoutes(app, env)
+addErrorReporting(app)
 
 export const handler = awsServerlessExpress({ app })

@@ -90,6 +90,7 @@ jobs:
               DATABASE_USERNAME=$DB_USERNAME,\
               DATABASE_PASSWORD=$DB_PASSWORD,\
               ABLY_KEY=${{ secrets.ABLY_KEY }},\
+              SLACK_APP_ID=${{ secrets.SLACK_APP_ID }},\
               COGNITO_USER_POOL_ID=${{ secrets.COGNITO_USER_POOL_ID }}\
             }"
 
@@ -125,6 +126,7 @@ jobs:
       COGNITO_CLIENT_APP_ID: ${{ secrets.COGNITO_CLIENT_APP_ID }}
       COGNITO_USER_POOL_ID: ${{ secrets.COGNITO_USER_POOL_ID }}
       API_ENDPOINT: 'https://623qsegfb9.execute-api.us-west-2.amazonaws.com/staging'
+      SLACK_APP_ID: ${{ secrets.SLACK_APP_ID }}
     
     steps:
       - name: Checkout code
