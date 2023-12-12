@@ -63,7 +63,6 @@ INSERT INTO event (
         hostId
       }
     )
-    .withFailure("internal-server-error" as const)
 
 /**
  * Creates routes related to event operations.

@@ -62,7 +62,7 @@ export const checkChatPermissionsTransaction = (
   userId: string
 ) =>
   conn.transaction((tx) =>
-    getEventById(tx, eventId)
+    getEventById(tx, eventId, userId)
       .flatMapSuccess(event => isUserInEvent(tx, userId, eventId).mapSuccess(() => event))
       .flatMapSuccess(event => isUserNotBlocked(tx, event.hostId, userId).mapSuccess(() => event))
   )

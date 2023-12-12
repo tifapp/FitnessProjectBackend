@@ -1,0 +1,85 @@
+import { SQLExecutable, conn } from "TiFBackendUtils"
+import { ServerEnvironment } from "../../env.js"
+import { DatabaseEvent } from "../../shared/SQL.js"
+import { ValidatedRouter } from "../../validation.js"
+
+type EventRegion = {
+  eventIds: number[];
+  location: {
+    latitude: number;
+    longitude: number;
+  };
+  arrivalRadiusMeters: number;
+  arrivalStatus: string;
+}
+
+const mapEventsToRegions = (events: DatabaseEvent[]): EventRegion[] => {
+  const eventRegions: Record<string, EventRegion> = {}
+
+  events.forEach(event => {
+    const key = `${event.arrivalStatus}-${event.latitude}-${event.longitude}`
+
+    if (!eventRegions[key]) {
+      eventRegions[key] = {
+        eventIds: [],
+        location: { latitude: event.latitude, longitude: event.longitude },
+        arrivalStatus: event.arrivalStatus,
+        arrivalRadiusMeters: 500 // TODO: Parameterize
+      }
+    }
+
+    eventRegions[key].eventIds.push(parseInt(event.id))
+  })
+
+  return Object.values(eventRegions)
+}
+
+const getUpcomingEventsByRegion = (conn: SQLExecutable, userId: string) => conn.queryResults<DatabaseEvent>(
+  `
+  SELECT 
+    e.*, 
+    ua.arrivedAt,
+    CASE 
+      WHEN ua.userId IS NOT NULL THEN "arrived"
+      ELSE "not-arrived"
+    END AS arrivalStatus
+  FROM 
+    event e
+  LEFT JOIN 
+    userArrivals ua ON e.latitude = ua.latitude 
+                    AND e.longitude = ua.longitude 
+                    AND ua.userId = :userId
+  JOIN 
+    eventAttendance ea ON e.id = ea.eventId AND ea.userId = :userId
+  WHERE 
+    (
+      TIMESTAMPDIFF(HOUR, NOW(), e.startTimestamp) BETWEEN 0 AND 24
+      OR 
+      (e.startTimestamp <= NOW() AND NOW() <= e.endTimestamp)
+    )
+  ORDER BY 
+    e.startTimestamp ASC
+  LIMIT 100;
+  `,
+  { userId }
+).mapSuccess(mapEventsToRegions)
+
+/**
+ * Creates routes related to event operations.
+ *
+ * @param environment see {@link ServerEnvironment}.
+ */
+export const getUpcomingEventsByRegionRouter = (
+  environment: ServerEnvironment,
+  router: ValidatedRouter
+) => {
+  router.getWithValidation(
+    "/upcoming",
+    {},
+    (req, res) => getUpcomingEventsByRegion(
+      conn,
+      res.locals.selfId
+    )
+      .mapSuccess((events) => res.status(events.length > 0 ? 200 : 204).send({ upcomingEvents: events }))
+  )
+}

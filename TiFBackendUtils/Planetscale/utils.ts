@@ -1,28 +1,20 @@
 import { Field, cast, connect } from "@planetscale/database"
-import { envVars } from "./env.js"
 import fetch from "node-fetch"
+import { envVars } from "./env.js"
 
-/**
- * A cast function that turns all INT8 types into booleans.
- * This exists solely because of the tinyint type in MySQL.
- */
-export const int8ToBoolCast = (field: Field, value: string | null) => {
-  if (field.type === "INT8") {
-    return parseInt(value ?? "0") > 0
-  }
-  return cast(field, value)
+const tiFCasts: Record<string, (value: string | null) => unknown> = {
+  INT64: (value) => parseInt(value ?? "0"), // TODO: Use BigInt primitive and find a way to serialize
+  INT8: (value) => parseInt(value ?? "0") > 0,
+  DATETIME: (value) => { return value ? new Date(value) : value },
+  DECIMAL: (value) => { return value ? parseFloat(value) : value }
 }
 
 /**
  * Blessed
  */
 export const tiFCast = (field: Field, value: string | null) => {
-  if (field.type === "INT8") {
-    return parseInt(value ?? "0") > 0
-  } else if (field.type === "DATETIME" && value) {
-    return new Date(value)
-  } else if (field.type === "DECIMAL" && value) {
-    return parseFloat(value)
+  if (Object.keys(tiFCasts).includes(field.type)) {
+    return tiFCasts[field.type](value)
   } else {
     return cast(field, value)
   }
