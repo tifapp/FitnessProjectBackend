@@ -1,4 +1,3 @@
-import { Placemark } from "TiFBackendUtils"
 import { EventColor } from "../events/models.js"
 
 export type DatabaseEvent = {
@@ -42,8 +41,7 @@ export type GetEventByRegionEvent = {
   country: string
   street: string
   street_num: number
-  lat: number
-  lon: number
+  totalAttendees: number
   attendeesPreview: EventAttendee[]
 }
 

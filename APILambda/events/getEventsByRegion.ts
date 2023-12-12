@@ -1,4 +1,4 @@
-import { SQLExecutable, conn, success } from "TiFBackendUtils"
+import { SQLExecutable, conn } from "TiFBackendUtils"
 import { z } from "zod"
 import { ServerEnvironment } from "../env.js"
 import { EventAttendee, GetEventByRegionEvent } from "../shared/SQL.js"
@@ -17,13 +17,59 @@ type EventsRequestByRegion = {
   radius: number
 }
 
-const getEventsByRegion = (
+/**
+ * Converts an AWS location search result into placemark format.
+ *
+ * @param {LatLng} location The latitude and longitude of the search result.
+ * @param {Place | undefined} place The location search result from AWS.
+ * @returns {Placemark} The location search result in placemark format.
+ */
+export const convertEventsByRegionResult = (event: GetEventByRegionEvent) => {
+  return {
+    id: event.id,
+    hostId: event.hostId,
+    title: event.title,
+    description: event.description,
+    color: event.color,
+    eventRelations: {
+      relationUserToHost: event.relationHostToUser,
+      relationHostToUser: event.relationHostToUser
+    },
+    eventLocation: {
+      city: event.city ?? "Unknown City",
+      country: event.country ?? "Unknown Country",
+      street: event.street ?? "Unknown Address",
+      street_num: event.street_num ?? "",
+      latitude: event.latitude,
+      longitude: event.longitude
+    },
+    eventDuration: {
+      startTimestamp: event.startTimestamp,
+      endTimestamp: event.endTimestamp
+    },
+    eventPreferences: {
+      shouldHideAfterStartDate: event.shouldHideAfterStartDate,
+      isChatEnabled: event.isChatEnabled
+    },
+    eventAttendeeInformation: {
+      totalAttendees: event.totalAttendees,
+      attendeesPreview: event.attendeesPreview
+    }
+  }
+}
+
+export const getEventsByRegion = (
   conn: SQLExecutable,
   eventsRequest: EventsRequestByRegion
 ) =>
   conn.queryResults<GetEventByRegionEvent>(
     `
-    SELECT E.*, L.*, 
+    SELECT E.*, 
+    L.name,
+    L.city, 
+    L.country, 
+    L.street, 
+    L.street_num,
     UserRelationOfHostToUser.status AS relationHostToUser, 
     UserRelationOfUserToHost.status AS relationUserToHost
     FROM event E
@@ -39,25 +85,56 @@ const getEventsByRegion = (
     { ...eventsRequest }
   )
 
-const getAttendees = (event: GetEventByRegionEvent) => {
+export const getAttendees = (eventIds: string) => {
   return conn.queryResults<EventAttendee>(
     `
   SELECT A.*
-  FROM eventAttendance A
-  WHERE A.eventId = :id
+  FROM event E
+  JOIN eventAttendance A ON E.id = A.eventId
+  WHERE E.id IN (:eventIds)
+  AND E.hostId <> A.userId
   `,
-    { ...event }
+    { eventIds }
   )
+}
+
+const setTotalAttendeesForEvent = (
+  events: GetEventByRegionEvent[],
+  attendees: EventAttendee[]
+) => {
+  const eventAttendeesMap = new Map()
+
+  attendees.forEach((attendee) => {
+    if (eventAttendeesMap.has(attendee.eventId)) {
+      eventAttendeesMap.get(attendee.eventId).push(attendee)
+    } else {
+      // If the event is not in the map, add it with the attendee in a new array
+      eventAttendeesMap.set(attendee.eventId, [attendee])
+    }
+  })
+
+  return events.map((event) => {
+    event.totalAttendees = eventAttendeesMap.get(event.id).length
+    event.attendeesPreview = eventAttendeesMap.get(event.id).slice(0, 3)
+    return event
+  })
 }
 
 // Utilize the event to join with the attendees table to get the attendees
 const getEventAttendeesPreview = (events: GetEventByRegionEvent[]) => {
-  events.forEach((event) =>
-    getAttendees(event).mapSuccess((eventAttendees) => {
-      event.attendeesPreview = eventAttendees
-    })
+  // Create a parameterized query string with placeholders for event IDs
+  const eventIds = events.map((event) => event.id)
+  // Create a parameterized query string with placeholders for event IDs
+  const eventIdQueryString = eventIds
+    .map((_, index) => eventIds[index])
+    .join(", ")
+  const eventsByRegion = getAttendees(eventIdQueryString).mapSuccess(
+    (attendees) => setTotalAttendeesForEvent(events, attendees)
   )
-  return success(events)
+  const refactoredEventsByRegion = eventsByRegion.mapSuccess((events) =>
+    events.map((event) => convertEventsByRegionResult(event))
+  )
+  return refactoredEventsByRegion
 }
 
 /**

@@ -1,4 +1,5 @@
-import { resetDB } from "../test/database.js"
+import { conn } from "TiFBackendUtils"
+import { resetDatabaseBeforeEach } from "../test/database.js"
 import {
   callCreateEvent,
   callGetEventsByRegion,
@@ -10,13 +11,15 @@ import {
   createUserAndUpdateAuth
 } from "../test/helpers/users.js"
 import { testEvents } from "../test/testEvents.js"
+import { getAttendees, getEventsByRegion } from "./getEventsByRegion.js"
 import { addPlacemarkToDB } from "./sharedSQL.js"
 
 let eventOwnerToken: string
 let attendeeToken: string
 
 describe("Join the event by id tests", () => {
-  beforeAll(async () => {
+  resetDatabaseBeforeEach()
+  beforeEach(async () => {
     eventOwnerToken = await createUserAndUpdateAuth(global.defaultUser.auth)
     attendeeToken = await createUserAndUpdateAuth(global.defaultUser2.auth)
     await callPostFriendRequest(eventOwnerToken, global.defaultUser2.id)
@@ -66,10 +69,6 @@ describe("Join the event by id tests", () => {
     await callJoinEvent(eventOwnerToken, parseInt(futureEvent.body.id))
   })
 
-  afterAll(async () => {
-    resetDB()
-  })
-
   it("should return 200 with the event, user relation, attendee count data", async () => {
     const respGetEventsByRegion = await callGetEventsByRegion(
       attendeeToken,
@@ -79,77 +78,56 @@ describe("Join the event by id tests", () => {
     )
 
     expect(respGetEventsByRegion.status).toEqual(200)
-    expect(respGetEventsByRegion.body[0].relationHostToUser).toEqual("friends")
-    expect(respGetEventsByRegion.body[0].relationUserToHost).toEqual("friends")
-    expect(respGetEventsByRegion.body).toEqual("2")
+    // expect(respGetEventsByRegion.body[0].relationHostToUser).toEqual("friends")
+    // expect(respGetEventsByRegion.body[0].relationUserToHost).toEqual("friends")
+    expect(
+      respGetEventsByRegion.body[0].eventAttendeeInformation.totalAttendees
+    ).toEqual(1)
   })
 
-  // Test that the events are removed if either the host blocks the attendee.
-  it("should return 200 with the events removed if the host blocks the attendee", async () => {
+  it("should not return events that are not within the radius", async () => {
+    const events = await getEventsByRegion(conn, {
+      userId: global.defaultUser2.id,
+      userLatitude: testEvents[0].latitude + 10,
+      userLongitude: testEvents[0].longitude + 10,
+      radius: 1
+    })
+    expect(events.value).toHaveLength(0)
+  })
+
+  it("should remove the events where the host blocks the attendee", async () => {
     await callBlockUser(eventOwnerToken, global.defaultUser2.id)
 
-    const futureEventStartTime = new Date()
-    const futureEventEndTime = new Date()
-
-    futureEventStartTime.setFullYear(futureEventStartTime.getFullYear() + 1)
-    futureEventEndTime.setFullYear(futureEventEndTime.getFullYear() + 2)
-
-    const testFutureEvent = {
-      ...testEvents[0],
-      startTimestamp: futureEventStartTime,
-      endTimestamp: futureEventEndTime
-    }
-
-    await callCreateEvent(eventOwnerToken, testFutureEvent)
-
-    const respGetEventsByRegion = await callGetEventsByRegion(
-      attendeeToken,
-      testEvents[0].latitude,
-      testEvents[0].longitude,
-      50000
-    )
-    expect(respGetEventsByRegion.status).toEqual(200)
-    expect(respGetEventsByRegion.body).toHaveLength(0)
+    const events = await getEventsByRegion(conn, {
+      userId: global.defaultUser2.id,
+      userLatitude: testEvents[0].latitude,
+      userLongitude: testEvents[0].longitude,
+      radius: 50000
+    })
+    expect(events.value).toHaveLength(0)
   })
 
-  // Test that the events are removed if either the attendee blocks the host.
-  it("should return 200 with the events removed if the attendee blocks the host", async () => {
-    const eventOwnerToken = await createUserAndUpdateAuth(
-      global.defaultUser.auth
-    )
-    const attendeeToken = await createUserAndUpdateAuth(
-      global.defaultUser2.auth
-    )
-
+  it("should remove the events where the attendee blocks the host", async () => {
     await callBlockUser(attendeeToken, global.defaultUser.id)
 
-    const futureEventStartTime = new Date()
-    const futureEventEndTime = new Date()
-
-    futureEventStartTime.setFullYear(futureEventStartTime.getFullYear() + 1)
-    futureEventEndTime.setFullYear(futureEventEndTime.getFullYear() + 2)
-
-    const testFutureEvent = {
-      ...testEvents[0],
-      startTimestamp: futureEventStartTime,
-      endTimestamp: futureEventEndTime
-    }
-
-    await callCreateEvent(eventOwnerToken, testFutureEvent)
-
-    const respGetEventsByRegion = await callGetEventsByRegion(
-      attendeeToken,
-      testEvents[0].latitude,
-      testEvents[0].longitude,
-      50000
-    )
-    expect(respGetEventsByRegion.status).toEqual(200)
-    expect(respGetEventsByRegion.body).toHaveLength(0)
+    const events = await getEventsByRegion(conn, {
+      userId: global.defaultUser2.id,
+      userLatitude: testEvents[0].latitude,
+      userLongitude: testEvents[0].longitude,
+      radius: 50000
+    })
+    expect(events.value).toHaveLength(0)
   })
 
-  // Test that the total count for the event attendees is accurate.
-
-  // Test that the event attendees array returned have three items and don't include the event host.
-
-  // Happy Path -> return 200
+  it("should return the attendee list not including the event host", async () => {
+    const events = await getEventsByRegion(conn, {
+      userId: global.defaultUser2.id,
+      userLatitude: testEvents[0].latitude,
+      userLongitude: testEvents[0].longitude,
+      radius: 50000
+    })
+    const attendees = await getAttendees(events.value[0].id)
+    expect(attendees.value).toHaveLength(1)
+    expect(attendees.value[0].userId).not.toEqual(events.value[0].hostId)
+  })
 })

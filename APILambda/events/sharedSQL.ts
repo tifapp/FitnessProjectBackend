@@ -33,3 +33,12 @@ export const addPlacemarkToDB = (place: Placemark) =>
     `,
     place
   )
+
+export const addUserToEventAttendance = (userId: string, eventId: number) =>
+  conn.queryResults(
+    `
+    INSERT INTO eventAttendance (userId, eventId)
+    VALUES (:userId, :eventId)
+    `,
+    { userId, eventId }
+  )
