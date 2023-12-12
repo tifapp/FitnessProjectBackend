@@ -1,4 +1,5 @@
 import { randomUUID } from "crypto"
+import { withEmptyResponseBody } from "../test/assertions.js"
 import { resetDatabaseBeforeEach } from "../test/database.js"
 import {
   callBlockUser,
@@ -26,9 +27,9 @@ describe("Block User tests", () => {
     await createUserAndUpdateAuth(global.defaultUser2)
     const resp = await callBlockUser(token1, global.defaultUser2.id)
 
-    expect(resp).toMatchObject({
+    expect(withEmptyResponseBody(resp)).toMatchObject({
       status: 204,
-      body: {}
+      body: ""
     })
   })
 
