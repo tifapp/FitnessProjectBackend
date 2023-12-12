@@ -1,3 +1,4 @@
+import { withEmptyResponseBody } from "../test/assertions.js"
 import { resetDatabaseBeforeEach } from "../test/database.js"
 import { callPostUser, callUpdateUserHandle, createUserAndUpdateAuth } from "../test/helpers/users.js"
 
@@ -14,9 +15,9 @@ describe("Update user profile tests", () => {
         userHandle
       )
 
-      expect(resp).toMatchObject({
+      expect(withEmptyResponseBody(resp)).toMatchObject({
         status: 204,
-        body: {}
+        body: ""
       })
     })
 
