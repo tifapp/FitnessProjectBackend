@@ -1,4 +1,5 @@
 import { randomUUID } from "crypto"
+import { withEmptyResponseBody } from "../test/assertions.js"
 import { resetDatabaseBeforeEach } from "../test/database.js"
 import {
   callRegisterPushToken,
@@ -15,9 +16,9 @@ describe("RegisterPushToken tests", () => {
       userToken,
       registerPushTokenBody(randomUUID())
     )
-    expect(resp).toMatchObject({
+    expect(withEmptyResponseBody(resp)).toMatchObject({
       status: 201,
-      body: {}
+      body: ""
     })
   })
 
@@ -44,9 +45,9 @@ describe("RegisterPushToken tests", () => {
       userToken,
       registerPushTokenBody(randomUUID())
     )
-    expect(resp).toMatchObject({
+    expect(withEmptyResponseBody(resp)).toMatchObject({
       status: 201,
-      body: {}
+      body: ""
     })
   })
 

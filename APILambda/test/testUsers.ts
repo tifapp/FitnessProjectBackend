@@ -16,7 +16,6 @@ export const createMockAuthToken = async (
     sub: id,
     name: user?.name ?? faker.name.fullName(),
     email,
-    username: email,
     // Comes from Cognito
     // eslint-disable-next-line @typescript-eslint/naming-convention
     phone_number: faker.phone.imei(),

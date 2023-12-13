@@ -1,3 +1,4 @@
+import { withEmptyResponseBody } from "../test/assertions.js"
 import { resetDatabaseBeforeEach } from "../test/database.js"
 import {
   callBlockUser,
@@ -48,7 +49,7 @@ describe("UnblockUser tests", () => {
     await createUserAndUpdateAuth(global.defaultUser2)
     await callBlockUser(token1, global.defaultUser2.id)
     const resp = await callUnblockUser(token1, global.defaultUser2.id)
-    expect(resp).toMatchObject({ status: 204, body: {} })
+    expect(withEmptyResponseBody(resp)).toMatchObject({ status: 204, body: "" })
   })
 
   it("should remove blocked status when unblocking user", async () => {

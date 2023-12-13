@@ -1,20 +1,27 @@
 import { SQLExecutable, conn, failure, success } from "TiFBackendUtils"
+import { z } from "zod"
 import { ValidatedRouter } from "../validation.js"
 import { userWithIdExists } from "./SQL.js"
+
+const UnblockUserRequestSchema = z.object({
+  userId: z.string().uuid()
+})
 
 /**
  * Creates an endpoint to unblock the user.
  */
 export const createUnblockUserRouter = (router: ValidatedRouter) => {
-  router.delete("/block/:userId", async (req, res) => {
-    return unblockUser(conn, res.locals.selfId, req.params.userId)
-      .mapFailure((error) => {
-        return res
-          .status(error === "user-not-found" ? 404 : 403)
-          .json({ error, userId: req.params.userId })
-      })
-      .mapSuccess(() => res.status(204).send())
-  })
+  router.deleteWithValidation("/block/:userId",
+    { pathParamsSchema: UnblockUserRequestSchema },
+    async (req, res) => {
+      return unblockUser(conn, res.locals.selfId, req.params.userId)
+        .mapFailure((error) => {
+          return res
+            .status(error === "user-not-found" ? 404 : 403)
+            .json({ error, userId: req.params.userId })
+        })
+        .mapSuccess(() => res.status(204).send())
+    })
 }
 
 const unblockUser = (

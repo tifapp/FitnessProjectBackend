@@ -1,3 +1,4 @@
+import { withEmptyResponseBody } from "../test/assertions.js"
 import { callDeleteSelf, createUserAndUpdateAuth } from "../test/helpers/users.js"
 
 describe("DeleteSelf tests", () => {
@@ -14,9 +15,9 @@ describe("DeleteSelf tests", () => {
     const token = await createUserAndUpdateAuth(global.defaultUser)
     const resp = await callDeleteSelf(token)
 
-    expect(resp).toMatchObject({
+    expect(withEmptyResponseBody(resp)).toMatchObject({
       status: 204,
-      body: {}
+      body: ""
     })
   })
 })

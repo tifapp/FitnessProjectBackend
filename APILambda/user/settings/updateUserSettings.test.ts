@@ -1,3 +1,4 @@
+import { withEmptyResponseBody } from "../../test/assertions.js"
 import { resetDatabaseBeforeEach } from "../../test/database.js"
 import {
   callGetSettings,
@@ -25,9 +26,9 @@ describe("Update Settings tests", () => {
     const updateResp = await callPatchSettings(token, {
       isChatNotificationsEnabled: false
     })
-    expect(updateResp).toMatchObject({
+    expect(withEmptyResponseBody(updateResp)).toMatchObject({
       status: 204,
-      body: {}
+      body: ""
     })
 
     const settings1LastUpdatedAt = await callGetSettings(token).then(
@@ -37,9 +38,9 @@ describe("Update Settings tests", () => {
     const updateResp2 = await callPatchSettings(token, {
       isCrashReportingEnabled: false
     })
-    expect(updateResp2).toMatchObject({
+    expect(withEmptyResponseBody(updateResp2)).toMatchObject({
       status: 204,
-      body: {}
+      body: ""
     })
 
     const settings2Resp = await callGetSettings(token)
