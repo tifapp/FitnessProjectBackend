@@ -96,16 +96,30 @@ jobs:
 
       - name: Deploy to AWS Lambda
         run: |
-          aws apigateway put-rest-api --rest-api-id 623qsegfb9 --mode merge --parameters basepath=prepend --body fileb://APILambda/swagger.json
           aws lambda update-function-code --function-name lambdaSQLRoute --zip-file fileb://APILambda/dist.zip
+          while true; do
+              update_status=$(aws lambda get-function --function-name lambdaSQLRoute | jq -r '.Configuration.LastUpdateStatus')
+
+              if [[ "$update_status" == "Successful" ]]; then
+                  echo "Update completed successfully."
+                  break
+              elif [[ "$update_status" == "Failed" ]]; then
+                  echo "Update failed."
+                  exit 1
+              else
+                  echo "Update in progress. Waiting..."
+                  sleep 10
+              fi
+          done
           if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
-            sed -i 's/:dev/:prod/g' APILambda/swagger.json
             stageName="prod"
             VERSION_NUMBER=$(aws lambda publish-version --function-name lambdaSQLRoute | jq -r '.Version')
             aws lambda update-alias --function-name lambdaSQLRoute --name prod --function-version $VERSION_NUMBER
+            sed -i 's/:dev/:prod/g' APILambda/swagger.json
           else
             stageName="staging"
           fi
+          aws apigateway put-rest-api --rest-api-id 623qsegfb9 --mode merge --parameters basepath=prepend --body fileb://APILambda/swagger.json
           aws apigateway create-deployment --rest-api-id 623qsegfb9 --stage-name $stageName --description 'Deployed'
 
   staging_tests:
