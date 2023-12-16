@@ -122,6 +122,7 @@ jobs:
           aws apigateway create-deployment --rest-api-id 623qsegfb9 --stage-name $stageName --description 'Deployed'
 
   staging_tests:
+    if: github.ref == 'refs/heads/development'
     needs: deploy
     runs-on: ubuntu-latest
     timeout-minutes: 10
