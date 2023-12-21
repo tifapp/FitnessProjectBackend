@@ -51,7 +51,28 @@ const toUserWithRelationResponse = (user: DatabaseUserWithRelation) => ({
   }
 })
 
-const userAndRelationsWithId = (
+export const getProfileNameWithBlockStatus = (
+  userId: string,
+  fromUserId: string
+) => {
+  return conn.queryFirstResult<DatabaseUserWithRelation>(
+    `
+    SELECT u.name
+    FROM user u
+    LEFT JOIN userRelations ur1 ON ur1.fromUserId = u.id
+    AND ur1.fromUserId = :userId
+    AND ur1.toUserId = :fromUserId
+    LEFT JOIN userRelations ur2 ON ur2.toUserId = u.id
+    AND ur2.fromUserId = :fromUserId
+    AND ur2.toUserId = :userId
+    WHERE u.id = :userId
+    AND ur1.status = 'blocked';
+  `,
+    { userId, fromUserId }
+  )
+}
+
+export const userAndRelationsWithId = (
   conn: SQLExecutable,
   userId: string,
   fromUserId: string
