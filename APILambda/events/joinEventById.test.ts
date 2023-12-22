@@ -68,12 +68,10 @@ describe("Join the event by id tests", () => {
       global.defaultUser2
     )
 
-    const currentDate = new Date()
+    const event = await callCreateEvent(eventOwnerToken, testEvents[0])
     jest.useFakeTimers()
     jest.setSystemTime(new Date("2050-01-01"))
 
-    const testEvent = { ...testEvents[0], endTimestamp: currentDate }
-    const event = await callCreateEvent(eventOwnerToken, testEvent)
     const resp = await callJoinEvent(attendeeToken, parseInt(event.body.id))
     expect(resp).toMatchObject({
       status: 403,
