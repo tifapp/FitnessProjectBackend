@@ -1,4 +1,4 @@
-import { SQLExecutable, conn } from "TiFBackendUtils"
+import { SQLExecutable, conn, failure, promiseResult } from "TiFBackendUtils"
 import { z } from "zod"
 import { ServerEnvironment } from "../env.js"
 import { ValidatedRouter } from "../validation.js"
@@ -51,13 +51,16 @@ const toUserWithRelationResponse = (user: DatabaseUserWithRelation) => ({
   }
 })
 
-export const getProfileNameWithBlockStatus = (
+const getProfileNameWithBlockStatus = (
+  conn: SQLExecutable,
   userId: string,
   fromUserId: string
 ) => {
   return conn.queryFirstResult<DatabaseUserWithRelation>(
     `
-    SELECT u.name
+    SELECT u.name, 
+    ur1.status AS themToYouStatus,
+    ur2.status AS youToThemStatus
     FROM user u
     LEFT JOIN userRelations ur1 ON ur1.fromUserId = u.id
     AND ur1.fromUserId = :userId
@@ -72,25 +75,37 @@ export const getProfileNameWithBlockStatus = (
   )
 }
 
-export const userAndRelationsWithId = (
+const userAndRelationsWithId = (
   conn: SQLExecutable,
   userId: string,
   fromUserId: string
-) => {
-  return conn.queryFirstResult<DatabaseUserWithRelation>(
-    `
-    SELECT *, 
-    ur1.status AS themToYouStatus, 
-    ur2.status AS youToThemStatus 
-    FROM user u 
-    LEFT JOIN userRelations ur1 ON ur1.fromUserId = u.id
-    AND ur1.fromUserId = :userId
-    AND ur1.toUserId = :fromUserId
-    LEFT JOIN userRelations ur2 ON ur2.toUserId = u.id
-    AND ur2.fromUserId = :fromUserId
-    AND ur2.toUserId = :userId
-    WHERE u.id = :userId;
-  `,
-    { userId, fromUserId }
-  )
-}
+) =>
+  getProfileNameWithBlockStatus(conn, userId, fromUserId)
+    .flatMapSuccess((result) => {
+      if (
+        result &&
+        Object.keys(result).length !== 0 &&
+        result.themToYouStatus === "blocked"
+      ) {
+        return getProfileNameWithBlockStatus(conn, userId, fromUserId)
+      }
+      return promiseResult(failure("no result found" as const))
+    })
+    .flatMapFailure(() => {
+      return conn.queryFirstResult<DatabaseUserWithRelation>(
+        `
+      SELECT *, 
+      ur1.status AS themToYouStatus, 
+      ur2.status AS youToThemStatus 
+      FROM user u 
+      LEFT JOIN userRelations ur1 ON ur1.fromUserId = u.id
+      AND ur1.fromUserId = :userId
+      AND ur1.toUserId = :fromUserId
+      LEFT JOIN userRelations ur2 ON ur2.toUserId = u.id
+      AND ur2.fromUserId = :fromUserId
+      AND ur2.toUserId = :userId
+      WHERE u.id = :userId;
+      `,
+        { userId, fromUserId }
+      )
+    })

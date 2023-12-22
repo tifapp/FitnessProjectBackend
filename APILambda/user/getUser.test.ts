@@ -44,7 +44,7 @@ describe("Get blocked user's profile name only", () => {
       status: 200,
       body: {
         name,
-        relations: expect.objectContaining({ themToYou: "blocked" })
+        relations: { themToYou: "blocked", youToThem: "not-friends" }
       }
     })
   })
