@@ -1,4 +1,4 @@
-import { SQLExecutable, conn, failure, promiseResult } from "TiFBackendUtils"
+import { SQLExecutable, conn, failure, promiseResult, success } from "TiFBackendUtils"
 import { z } from "zod"
 import { ServerEnvironment } from "../env.js"
 import { ValidatedRouter } from "../validation.js"
@@ -87,7 +87,7 @@ const userAndRelationsWithId = (
         Object.keys(result).length !== 0 &&
         result.themToYouStatus === "blocked"
       ) {
-        return getProfileNameWithBlockStatus(conn, userId, fromUserId)
+        return promiseResult(success(result))
       }
       return promiseResult(failure("no result found" as const))
     })
