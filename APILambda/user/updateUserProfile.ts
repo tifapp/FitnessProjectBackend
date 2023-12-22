@@ -8,7 +8,7 @@ import { DatabaseUser } from "./models.js"
 const UpdateUserRequestSchema = z.object({
   name: z.string().optional(),
   bio: z.string().max(250).optional(),
-  handle: UserHandle.schema.optional()
+  handle: UserHandle.schema.optional().transform(userHandle => userHandle?.rawValue)
 })
 
 export type UpdateUserRequest = z.infer<typeof UpdateUserRequestSchema>
@@ -44,10 +44,10 @@ const updateProfile = (
   userId: string,
   request: UpdateUserRequest
 ) =>
-  (request.handle ? userWithHandleDoesNotExist(conn, request.handle?.rawValue) : success())
+  (request.handle ? userWithHandleDoesNotExist(conn, request.handle) : success())
     .flatMapSuccess(() => getProfile(conn, userId))
     .flatMapSuccess((profile) => {
-      const handle = request.handle?.rawValue ?? profile.handle
+      const handle = request.handle ?? profile.handle
       const name = request.name ?? profile.name
       const updatedProfile = { ...profile, ...request, handle, name }
       return overwriteProfile(conn, userId, updatedProfile)
