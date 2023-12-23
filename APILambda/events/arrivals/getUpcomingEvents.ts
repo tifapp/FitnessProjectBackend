@@ -81,6 +81,6 @@ export const getUpcomingEventsByRegionRouter = (
       conn,
       res.locals.selfId
     )
-      .mapSuccess((events) => res.status(events.length > 0 ? 200 : 204).send({ upcomingRegions: events }))
+      .mapSuccess((events) => res.status(200).send({ upcomingRegions: events }))
   )
 }

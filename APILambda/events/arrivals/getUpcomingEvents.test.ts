@@ -1,6 +1,5 @@
 import { conn } from "TiFBackendUtils"
 import { randomUUID } from "crypto"
-import { withEmptyResponseBody } from "../../test/assertions.js"
 import { resetDatabaseBeforeEach } from "../../test/database.js"
 import { callGetUpcomingEvents, callJoinEvent, callSetArrival } from "../../test/helpers/events.js"
 import { createUserAndUpdateAuth } from "../../test/helpers/users.js"
@@ -10,14 +9,14 @@ import { createEvent } from "../createEvent.js"
 describe("getUpcomingEvents tests", () => {
   resetDatabaseBeforeEach()
 
-  it("should return 204 with an empty array if the user has no upcoming events", async () => {
+  it("should return 200 with an empty array if the user has no upcoming events", async () => {
     const attendeeToken = await createUserAndUpdateAuth(
       global.defaultUser
     )
 
-    expect(withEmptyResponseBody(await callGetUpcomingEvents(attendeeToken))).toMatchObject({
-      status: 204,
-      body: ""
+    expect(await callGetUpcomingEvents(attendeeToken)).toMatchObject({
+      status: 200,
+      body: { upcomingRegions: [] }
     })
   })
 
