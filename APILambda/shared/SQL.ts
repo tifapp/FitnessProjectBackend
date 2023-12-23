@@ -12,6 +12,7 @@ export type DatabaseEvent = {
   longitude: number
   shouldHideAfterStartDate: boolean
   isChatEnabled: boolean
+  arrivalStatus: string
 }
 
 // add withvalidatedrequest middleware to all

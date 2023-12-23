@@ -6,7 +6,8 @@ const resetDB = async () => {
     conn.queryResults("DELETE FROM user"),
     conn.queryResults("DELETE FROM event"),
     conn.queryResults("DELETE FROM userRelations"),
-    conn.queryResults("DELETE FROM userSettings")
+    conn.queryResults("DELETE FROM userSettings"),
+    conn.queryResults("DELETE FROM userArrivals")
   ])
 }
 
