@@ -21,7 +21,7 @@ describe("SetArrivalStatus tests", () => {
       location: eventLocation
     })).toMatchObject({
       body: {
-        upcomingEvents: [{
+        upcomingRegions: [{
           eventIds: [
             parseInt(eventResp.body.id)
           ],
@@ -34,7 +34,7 @@ describe("SetArrivalStatus tests", () => {
       location: eventLocation
     })).toMatchObject({
       body: {
-        upcomingEvents: [{
+        upcomingRegions: [{
           eventIds: [
             parseInt(eventResp.body.id)
           ],

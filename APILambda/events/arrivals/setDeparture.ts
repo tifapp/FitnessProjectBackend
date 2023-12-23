@@ -6,7 +6,8 @@ import { getUpcomingEventsByRegion } from "./getUpcomingEvents.js"
 
 const SetDepartureSchema = z
   .object({
-    location: LocationCoordinates2DSchema
+    location: LocationCoordinates2DSchema,
+    arrivalRadiusMeters: z.number().optional() // may use in the future
   })
 
 export type SetDepartureInput = z.infer<typeof SetDepartureSchema>
@@ -24,7 +25,7 @@ const setDepartureTransaction = (
     )
       .flatMapSuccess(() => getUpcomingEventsByRegion(tx, userId))
   )
-    .mapSuccess((eventRegions) => ({ status: 200, upcomingEvents: eventRegions }))
+    .mapSuccess((eventRegions) => ({ status: 200, upcomingRegions: eventRegions }))
 
 export const deleteArrival = (
   conn: SQLExecutable,
@@ -51,7 +52,7 @@ export const setDepartureRouter = (
     { bodySchema: SetDepartureSchema },
     (req, res) => {
       return setDepartureTransaction(environment, res.locals.selfId, req.body)
-        .mapSuccess(({ status, upcomingEvents }) => res.status(status).json({ upcomingEvents }))
+        .mapSuccess(({ status, upcomingRegions }) => res.status(status).json({ upcomingRegions }))
     }
   )
 }

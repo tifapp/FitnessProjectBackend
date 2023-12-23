@@ -70,7 +70,7 @@ describe("getUpcomingEvents tests", () => {
     expect(await callGetUpcomingEvents(attendeeToken)).toMatchObject({
       status: 200,
       body: {
-        upcomingEvents: [{
+        upcomingRegions: [{
           arrivalRadiusMeters: 500,
           isArrived: true,
           eventIds: [

@@ -8,7 +8,8 @@ import { getUpcomingEventsByRegion } from "./getUpcomingEvents.js"
 
 const SetArrivalStatusSchema = z
   .object({
-    location: LocationCoordinates2DSchema
+    location: LocationCoordinates2DSchema,
+    arrivalRadiusMeters: z.number().optional() // may use in the future
   })
 
 export type SetArrivalStatusInput = z.infer<typeof SetArrivalStatusSchema>
@@ -97,7 +98,7 @@ const setArrivalStatusTransaction = (
       ))
     .flatMapSuccess(() => getUpcomingEventsByRegion(tx, userId))
   )
-    .mapSuccess((eventRegions) => ({ status: 200, upcomingEvents: eventRegions }))
+    .mapSuccess((eventRegions) => ({ status: 200, upcomingRegions: eventRegions }))
 
 export const setArrivalStatusRouter = (
   environment: ServerEnvironment,
@@ -108,7 +109,7 @@ export const setArrivalStatusRouter = (
     { bodySchema: SetArrivalStatusSchema },
     (req, res) => {
       return setArrivalStatusTransaction(environment, res.locals.selfId, req.body)
-        .mapSuccess(({ status, upcomingEvents }) => res.status(status).json({ upcomingEvents }))
+        .mapSuccess(({ status, upcomingRegions }) => res.status(status).json({ upcomingRegions }))
     }
   )
 }
