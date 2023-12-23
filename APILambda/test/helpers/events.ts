@@ -31,6 +31,18 @@ export const callGetEvent = async (bearerToken: string, eventId: number) => {
     .send()
 }
 
+export const callGetEventsByRegion = async (
+  bearerToken: string,
+  userLatitude: number,
+  userLongitude: number,
+  radius: number
+) => {
+  return await request(testApp)
+    .post("/event/region")
+    .set("Authorization", bearerToken)
+    .send({ userLatitude, userLongitude, radius })
+}
+
 export const callGetEventChatToken = async (
   bearerToken: string,
   eventId: number

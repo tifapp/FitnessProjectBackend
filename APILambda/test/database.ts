@@ -1,12 +1,13 @@
 import { conn } from "TiFBackendUtils"
 import { fail } from "assert"
 
-const resetDB = async () => {
+export const resetDB = async () => {
   await Promise.all([
     conn.queryResults("DELETE FROM user"),
     conn.queryResults("DELETE FROM event"),
     conn.queryResults("DELETE FROM userRelations"),
-    conn.queryResults("DELETE FROM userSettings")
+    conn.queryResults("DELETE FROM userSettings"),
+    conn.queryResults("DELETE FROM location")
   ])
 }
 
