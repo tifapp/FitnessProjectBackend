@@ -29,7 +29,7 @@ describe("getUpcomingEvents tests", () => {
     const eventLocation = { latitude: 50, longitude: 50 }
 
     await callSetArrival(attendeeToken, {
-      location: eventLocation
+      coordinate: eventLocation
     })
 
     const { value: { insertId: farTestEventId } } = await createEvent(
@@ -77,7 +77,7 @@ describe("getUpcomingEvents tests", () => {
             parseInt(ongoingTestEventId),
             parseInt(arrivedTestEventId)
           ],
-          location: {
+          coordinate: {
             latitude: 50,
             longitude: 50
           }
@@ -88,7 +88,7 @@ describe("getUpcomingEvents tests", () => {
           eventIds: [
             parseInt(notArrivedTestEventId)
           ],
-          location: {
+          coordinate: {
             latitude: 25,
             longitude: 25
           }

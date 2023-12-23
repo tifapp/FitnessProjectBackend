@@ -5,7 +5,7 @@ import { ValidatedRouter } from "../../validation.js"
 
 type EventRegion = {
   eventIds: number[];
-  location: {
+  coordinate: {
     latitude: number;
     longitude: number;
   };
@@ -22,7 +22,7 @@ const mapEventsToRegions = (events: DatabaseEvent[]): EventRegion[] => {
     if (!eventRegions[key]) {
       eventRegions[key] = {
         eventIds: [],
-        location: { latitude: event.latitude, longitude: event.longitude },
+        coordinate: { latitude: event.latitude, longitude: event.longitude },
         isArrived: event.arrivalStatus === "arrived",
         arrivalRadiusMeters: 500 // TODO: Parameterize
       }
