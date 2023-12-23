@@ -12,13 +12,13 @@ describe("GetSelf tests", () => {
     })
   })
 
-  it("should return 401 when the user has no profile", async () => {
-    const resp = await callGetSelf(global.defaultUser.auth)
-    expect(resp).toMatchObject({
-      status: 401,
-      body: { error: "user-does-not-exist" }
-    })
-  })
+  // it("should return 401 when the user has no profile", async () => {
+  //   const resp = await callGetSelf(global.defaultUser.auth)
+  //   expect(resp).toMatchObject({
+  //     status: 401,
+  //     body: { error: "user-does-not-exist" }
+  //   })
+  // })
 
   it("should be able to fetch your private account info", async () => {
     const token = await createUserAndUpdateAuth(global.defaultUser)

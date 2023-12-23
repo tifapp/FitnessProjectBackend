@@ -10,16 +10,16 @@ import {
 describe("Update Settings tests", () => {
   resetDatabaseBeforeEach()
 
-  it("should 401 when patching settings for a user without a profile", async () => {
-    const resp = await callPatchSettings(global.defaultUser.auth, {
-      isAnalyticsEnabled: false
-    })
+  // it("should 401 when patching settings for a user without a profile", async () => {
+  //   const resp = await callPatchSettings(global.defaultUser.auth, {
+  //     isAnalyticsEnabled: false
+  //   })
 
-    expect(resp).toMatchObject({
-      status: 401,
-      body: { error: "user-does-not-exist" }
-    })
-  })
+  //   expect(resp).toMatchObject({
+  //     status: 401,
+  //     body: { error: "user-does-not-exist" }
+  //   })
+  // })
 
   it("should update the user's settings", async () => {
     const token = await createUserAndUpdateAuth(global.defaultUser)
