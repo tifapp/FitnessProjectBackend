@@ -1,4 +1,4 @@
-import { SQLExecutable, conn, failure, promiseResult, success } from "TiFBackendUtils"
+import { SQLExecutable, conn } from "TiFBackendUtils"
 import { z } from "zod"
 import { ServerEnvironment } from "../env.js"
 import { ValidatedRouter } from "../validation.js"
@@ -81,15 +81,15 @@ const userAndRelationsWithId = (
   fromUserId: string
 ) =>
   getProfileNameWithBlockStatus(conn, userId, fromUserId)
-    .flatMapSuccess((result) => {
+    .mapSuccess((result) => {
       if (
         result &&
         Object.keys(result).length !== 0 &&
         result.themToYouStatus === "blocked"
       ) {
-        return promiseResult(success(result))
+        return result
       }
-      return promiseResult(failure("no result found" as const))
+      return result
     })
     .flatMapFailure(() => {
       return conn.queryFirstResult<DatabaseUserWithRelation>(
