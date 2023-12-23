@@ -6,7 +6,7 @@ import { getUpcomingEventsByRegion } from "./getUpcomingEvents.js"
 
 const SetDepartureSchema = z
   .object({
-    location: LocationCoordinates2DSchema,
+    coordinate: LocationCoordinates2DSchema,
     arrivalRadiusMeters: z.number().optional() // may use in the future
   })
 
@@ -21,7 +21,7 @@ const setDepartureTransaction = (
     deleteArrival(
       tx,
       userId,
-      request.location
+      request.coordinate
     )
       .flatMapSuccess(() => getUpcomingEventsByRegion(tx, userId))
   )
@@ -30,7 +30,7 @@ const setDepartureTransaction = (
 export const deleteArrival = (
   conn: SQLExecutable,
   userId: string,
-  location: LocationCoordinate2D
+  coordinate: LocationCoordinate2D
 ) =>
   conn
     .queryResults( // TO DECIDE: if event length limit or limit in how far in advance event can be scheduled, then we can also delete outdated arrivals
@@ -40,7 +40,7 @@ export const deleteArrival = (
         AND latitude = :latitude
         AND longitude = :longitude         
       `,
-      { userId, latitude: location.latitude, longitude: location.longitude }
+      { userId, latitude: coordinate.latitude, longitude: coordinate.longitude }
     )
 
 export const setDepartureRouter = (

@@ -18,7 +18,7 @@ describe("SetArrivalStatus tests", () => {
     await callJoinEvent(attendeeToken, parseInt(eventResp.body.id))
 
     expect(await callSetArrival(attendeeToken, {
-      location: eventLocation
+      coordinate: eventLocation
     })).toMatchObject({
       body: {
         upcomingRegions: [{
@@ -31,7 +31,7 @@ describe("SetArrivalStatus tests", () => {
     })
 
     expect(await callSetDeparture(attendeeToken, {
-      location: eventLocation
+      coordinate: eventLocation
     })).toMatchObject({
       body: {
         upcomingRegions: [{
@@ -52,7 +52,7 @@ describe("SetArrivalStatus tests", () => {
     const eventResp = await callCreateEvent(attendeeToken, { ...testEvents[0], ...eventLocation })
 
     await callSetArrival(attendeeToken, {
-      location: eventLocation
+      coordinate: eventLocation
     })
 
     expect(await callGetEvent(attendeeToken, parseInt(eventResp.body.id))).toMatchObject({
@@ -62,7 +62,7 @@ describe("SetArrivalStatus tests", () => {
     })
 
     await callSetDeparture(attendeeToken, {
-      location: eventLocation
+      coordinate: eventLocation
     })
 
     expect(await callGetEvent(attendeeToken, parseInt(eventResp.body.id))).toMatchObject({

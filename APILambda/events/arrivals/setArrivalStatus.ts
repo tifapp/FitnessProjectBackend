@@ -8,7 +8,7 @@ import { getUpcomingEventsByRegion } from "./getUpcomingEvents.js"
 
 const SetArrivalStatusSchema = z
   .object({
-    location: LocationCoordinates2DSchema,
+    coordinate: LocationCoordinates2DSchema,
     arrivalRadiusMeters: z.number().optional() // may use in the future
   })
 
@@ -17,7 +17,7 @@ export type SetArrivalStatusInput = z.infer<typeof SetArrivalStatusSchema>
 export const deleteOldArrivals = (
   conn: SQLExecutable,
   userId: string,
-  location: LocationCoordinate2D
+  coordinate: LocationCoordinate2D
 ) =>
   conn
     .queryResults( // TO DECIDE: if event length limit or limit in how far in advance event can be scheduled, then we can also delete outdated arrivals
@@ -31,7 +31,7 @@ export const deleteOldArrivals = (
           ) > 1000
         );          
       `,
-      { userId, latitude: location.latitude, longitude: location.longitude }
+      { userId, latitude: coordinate.latitude, longitude: coordinate.longitude }
     )
 
 export const deleteMaxArrivals = (
@@ -71,7 +71,7 @@ export const deleteMaxArrivals = (
 export const insertArrival = (
   conn: SQLExecutable,
   userId: string,
-  location: LocationCoordinate2D
+  coordinate: LocationCoordinate2D
 ) =>
   conn
     .queryResult(
@@ -80,7 +80,7 @@ export const insertArrival = (
         VALUES (:userId, :latitude, :longitude)
         ON DUPLICATE KEY UPDATE arrivedAt = CURRENT_TIMESTAMP;    
       `,
-      { userId, latitude: location.latitude, longitude: location.longitude }
+      { userId, latitude: coordinate.latitude, longitude: coordinate.longitude }
     )
 
 const setArrivalStatusTransaction = (
@@ -88,13 +88,13 @@ const setArrivalStatusTransaction = (
   userId: string,
   request: SetArrivalStatusInput
 ) =>
-  conn.transaction((tx) => deleteOldArrivals(tx, userId, request.location)
+  conn.transaction((tx) => deleteOldArrivals(tx, userId, request.coordinate)
     .flatMapSuccess(() => deleteMaxArrivals(tx, userId, environment.maxArrivals))
     .flatMapSuccess(() =>
       insertArrival(
         tx,
         userId,
-        request.location
+        request.coordinate
       ))
     .flatMapSuccess(() => getUpcomingEventsByRegion(tx, userId))
   )
