@@ -1,7 +1,8 @@
-import { LocationCoordinate2D, LocationCoordinates2DSchema, conn } from "TiFBackendUtils"
+import { LocationCoordinate2D, LocationCoordinates2DSchema, SQLExecutable, conn } from "TiFBackendUtils"
 import { z } from "zod"
 import { ServerEnvironment } from "../../env.js"
 import { ValidatedRouter } from "../../validation.js"
+import { getUpcomingEventsByRegion } from "./getUpcomingEvents.js"
 
 const SetDepartureSchema = z
   .object({
@@ -10,7 +11,23 @@ const SetDepartureSchema = z
 
 export type SetDepartureInput = z.infer<typeof SetDepartureSchema>
 
+const setDepartureTransaction = (
+  environment: ServerEnvironment,
+  userId: string,
+  request: SetDepartureInput
+) =>
+  conn.transaction((tx) =>
+    deleteArrival(
+      tx,
+      userId,
+      request.location
+    )
+      .flatMapSuccess(() => getUpcomingEventsByRegion(tx, userId))
+  )
+    .mapSuccess((eventRegions) => ({ status: 200, upcomingEvents: eventRegions }))
+
 export const deleteArrival = (
+  conn: SQLExecutable,
   userId: string,
   location: LocationCoordinate2D
 ) =>
@@ -33,8 +50,8 @@ export const setDepartureRouter = (
     "/departed",
     { bodySchema: SetDepartureSchema },
     (req, res) => {
-      return deleteArrival(res.locals.selfId, req.body.location)
-        .mapSuccess(() => res.status(200).json())
+      return setDepartureTransaction(environment, res.locals.selfId, req.body)
+        .mapSuccess(({ status, upcomingEvents }) => res.status(status).json({ upcomingEvents }))
     }
   )
 }

@@ -72,7 +72,7 @@ describe("getUpcomingEvents tests", () => {
       body: {
         upcomingEvents: [{
           arrivalRadiusMeters: 500,
-          arrivalStatus: "arrived",
+          isArrived: true,
           eventIds: [
             parseInt(ongoingTestEventId),
             parseInt(arrivedTestEventId)
@@ -84,7 +84,7 @@ describe("getUpcomingEvents tests", () => {
         },
         {
           arrivalRadiusMeters: 500,
-          arrivalStatus: "not-arrived",
+          isArrived: false,
           eventIds: [
             parseInt(notArrivedTestEventId)
           ],

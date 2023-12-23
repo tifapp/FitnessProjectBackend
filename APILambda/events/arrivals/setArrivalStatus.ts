@@ -2,74 +2,16 @@ import { LocationCoordinate2D, LocationCoordinates2DSchema, SQLExecutable, conn,
 import { z } from "zod"
 import { ServerEnvironment } from "../../env.js"
 import { ValidatedRouter } from "../../validation.js"
+import { getUpcomingEventsByRegion } from "./getUpcomingEvents.js"
 
 // type ArrivalStatusEnum = "invalid" | "early" | "on-time" | "late" | "ended" // so far, unused
-type ArrivalStatusEnum = "success" | "outdated-coordinate" | "remove-from-tracking"
-type ArrivalStatus = { id: number, latitude?: number, longitude?: number, arrivalStatus: ArrivalStatusEnum }
-
-// 24 hour window should be parameterized based on env variable
-// ArrivalStatus = "success" | "outdated/moved" (only here do we give new location) | "removeFromTracking" (moved out of 24 hour window OR event doesnt exist) | null
-// put array in an object with field "arrivalStatuses"
 
 const SetArrivalStatusSchema = z
   .object({
-    location: LocationCoordinates2DSchema,
-    events: z.array(
-      z.number()
-    ).min(1).max(50).optional()
+    location: LocationCoordinates2DSchema
   })
 
 export type SetArrivalStatusInput = z.infer<typeof SetArrivalStatusSchema>
-
-const addNullResults = (events: number[]) =>
-  (arrivalStatuses: ArrivalStatus[]) => {
-    let resultIndex = 0
-    const resultArray: (ArrivalStatus | null)[] = []
-
-    events.forEach((event) => {
-      const currentArrivalStatus = arrivalStatuses[resultIndex]
-      if (resultIndex >= arrivalStatuses.length || event !== currentArrivalStatus.id) {
-        resultArray.push({ id: event, arrivalStatus: "remove-from-tracking" })
-      } else if (resultIndex < arrivalStatuses.length && event === currentArrivalStatus.id) {
-        if (currentArrivalStatus.arrivalStatus !== "outdated-coordinate") {
-          currentArrivalStatus.latitude = undefined
-          currentArrivalStatus.longitude = undefined
-        }
-        resultArray.push(currentArrivalStatus)
-        resultIndex++
-      }
-    })
-
-    return resultArray
-  }
-
-export const getAttendingEvents = (
-  conn: SQLExecutable,
-  userId: string,
-  latitude: number,
-  longitude: number,
-  events: number[],
-  hoursBeforeEventStart: number
-) =>
-  conn
-    .queryResults<ArrivalStatus>(
-      `
-
-      SELECT e.id, e.latitude, e.longitude,
-      CASE
-        WHEN NOW() > e.endTimestamp THEN "remove-from-tracking"
-        WHEN TIMESTAMPDIFF(HOUR, NOW(), e.startTimestamp) > 24 THEN "remove-from-tracking"
-        WHEN e.latitude != :latitude OR e.longitude != :longitude THEN "outdated-coordinate"
-        WHEN TIMESTAMPDIFF(HOUR, NOW(), e.startTimestamp) > :hoursBeforeEventStart THEN "success"
-        WHEN TIMESTAMPDIFF(HOUR, NOW(), e.startTimestamp) <= :hoursBeforeEventStart THEN "success"
-        ELSE "success"
-      END as arrivalStatus
-      FROM event e
-      WHERE e.id IN (${events.join(",")});      
-     
-      `,
-      { latitude, longitude, userId, hoursBeforeEventStart, events: events.join(",") } // TODO: prepared statement not working with lists
-    ).mapSuccess(addNullResults(events))
 
 export const deleteOldArrivals = (
   conn: SQLExecutable,
@@ -147,14 +89,15 @@ const setArrivalStatusTransaction = (
 ) =>
   conn.transaction((tx) => deleteOldArrivals(tx, userId, request.location)
     .flatMapSuccess(() => deleteMaxArrivals(tx, userId, environment.maxArrivals))
-    .flatMapSuccess(() => request.events && request.events.length > 0 ? getAttendingEvents(tx, userId, request.location.latitude, request.location.longitude, request.events, environment.eventStartWindowInHours) : success())
-    .flatMapSuccess(arrivalStatuses =>
-      (insertArrival(
+    .flatMapSuccess(() =>
+      insertArrival(
         tx,
         userId,
         request.location
-      )).mapSuccess(() => ({ status: 200, arrivalStatuses })))
+      ))
+    .flatMapSuccess(() => getUpcomingEventsByRegion(tx, userId))
   )
+    .mapSuccess((eventRegions) => ({ status: 200, upcomingEvents: eventRegions }))
 
 export const setArrivalStatusRouter = (
   environment: ServerEnvironment,
@@ -165,7 +108,7 @@ export const setArrivalStatusRouter = (
     { bodySchema: SetArrivalStatusSchema },
     (req, res) => {
       return setArrivalStatusTransaction(environment, res.locals.selfId, req.body)
-        .mapSuccess((result) => res.status(result.status).json({ arrivalStatuses: result.arrivalStatuses }))
+        .mapSuccess(({ status, upcomingEvents }) => res.status(status).json({ upcomingEvents }))
     }
   )
 }

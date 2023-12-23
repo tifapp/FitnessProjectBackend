@@ -10,7 +10,7 @@ type EventRegion = {
     longitude: number;
   };
   arrivalRadiusMeters: number;
-  arrivalStatus: string;
+  isArrived: boolean;
 }
 
 const mapEventsToRegions = (events: DatabaseEvent[]): EventRegion[] => {
@@ -23,7 +23,7 @@ const mapEventsToRegions = (events: DatabaseEvent[]): EventRegion[] => {
       eventRegions[key] = {
         eventIds: [],
         location: { latitude: event.latitude, longitude: event.longitude },
-        arrivalStatus: event.arrivalStatus,
+        isArrived: event.arrivalStatus === "arrived",
         arrivalRadiusMeters: 500 // TODO: Parameterize
       }
     }
@@ -34,7 +34,8 @@ const mapEventsToRegions = (events: DatabaseEvent[]): EventRegion[] => {
   return Object.values(eventRegions)
 }
 
-const getUpcomingEventsByRegion = (conn: SQLExecutable, userId: string) => conn.queryResults<DatabaseEvent>(
+// TODO: 24 hour window should be parameterized based on env variable
+export const getUpcomingEventsByRegion = (conn: SQLExecutable, userId: string) => conn.queryResults<DatabaseEvent>(
   `
   SELECT 
     e.*, 
