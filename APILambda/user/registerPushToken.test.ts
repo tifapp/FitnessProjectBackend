@@ -1,14 +1,11 @@
 import { randomUUID } from "crypto"
 import { withEmptyResponseBody } from "../test/assertions.js"
-import { resetDatabaseBeforeEach } from "../test/database.js"
 import {
   callRegisterPushToken,
   createUserAndUpdateAuth
 } from "../test/helpers/users.js"
 
 describe("RegisterPushToken tests", () => {
-  resetDatabaseBeforeEach()
-
   it("should 201 when registering a new push token", async () => {
     const user = await global.registerUser({ name: "Bitchell Dickle" })
     const userToken = await createUserAndUpdateAuth(user)

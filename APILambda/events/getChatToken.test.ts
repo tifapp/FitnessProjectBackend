@@ -1,5 +1,4 @@
 import { randomInt } from "crypto"
-import { resetDatabaseBeforeEach } from "../test/database.js"
 import {
   callCreateEvent,
   callGetEventChatToken
@@ -8,8 +7,6 @@ import { createUserAndUpdateAuth } from "../test/helpers/users.js"
 import { testEvents } from "../test/testEvents.js"
 
 describe("GetTokenRequest tests", () => {
-  resetDatabaseBeforeEach()
-
   // TODO: Make shared util for this
   // it("should return 401 if user does not exist", async () => {
   //   const resp = await callGetEventChatToken(global.defaultUser.auth, randomInt(1000))

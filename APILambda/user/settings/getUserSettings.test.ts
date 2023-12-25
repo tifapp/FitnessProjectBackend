@@ -1,11 +1,10 @@
-import { resetDatabaseBeforeEach } from "../../test/database.js"
 import {
   callGetSettings,
   createUserAndUpdateAuth
 } from "../../test/helpers/users.js"
 
 describe("Get Settings tests", () => {
-  resetDatabaseBeforeEach()
+  
 
   // it("should return 401 when the user has no profile", async () => {
   //   const resp = await callGetSettings(global.defaultUser.auth)

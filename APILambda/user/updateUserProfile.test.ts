@@ -1,10 +1,7 @@
 import { withEmptyResponseBody } from "../test/assertions.js"
-import { resetDatabaseBeforeEach } from "../test/database.js"
 import { callPostUser, callUpdateUserHandle, createUserAndUpdateAuth } from "../test/helpers/users.js"
 
 describe("Update user profile tests", () => {
-  resetDatabaseBeforeEach()
-
   // add auth middleware tests for profile_exists
   describe("Update user handle tests", () => {
     it("should 200 when updating the handle to a unique handle", async () => {

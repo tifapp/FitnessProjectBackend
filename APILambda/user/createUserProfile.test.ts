@@ -1,9 +1,6 @@
-import { resetDatabaseBeforeEach } from "../test/database.js"
 import { callPostUser } from "../test/helpers/users.js"
 
 describe("Create User Profile tests", () => {
-  resetDatabaseBeforeEach()
-
   // TODO: Move to separate unit test file for auth middleware
   it("should 401 when no token is passed", async () => {
     const resp = await callPostUser()

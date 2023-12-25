@@ -1,4 +1,3 @@
-import { resetDatabaseBeforeEach } from "../test/database.js"
 import {
   callBlockUser,
   callPostFriendRequest,
@@ -6,10 +5,9 @@ import {
 } from "../test/helpers/users.js"
 
 describe("FriendRequest tests", () => {
-  resetDatabaseBeforeEach()
-
   it("should have a pending status when no prior relation between users", async () => {
     const token1 = await createUserAndUpdateAuth(global.defaultUser)
+    await createUserAndUpdateAuth(global.defaultUser2)
     const resp = await callPostFriendRequest(token1, global.defaultUser2.id)
     expect(resp).toMatchObject({
       status: 201,
@@ -19,6 +17,7 @@ describe("FriendRequest tests", () => {
 
   it("should return the same status when already existing pending friend request", async () => {
     const token1 = await createUserAndUpdateAuth(global.defaultUser)
+    await createUserAndUpdateAuth(global.defaultUser2)
     await callPostFriendRequest(token1, global.defaultUser2.id)
     const resp = await callPostFriendRequest(token1, global.defaultUser2.id)
     expect(resp).toMatchObject({

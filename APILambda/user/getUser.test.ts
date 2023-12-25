@@ -1,4 +1,3 @@
-import { resetDatabaseBeforeEach } from "../test/database.js"
 import {
   callGetSelf,
   callGetUser,
@@ -6,8 +5,6 @@ import {
 } from "../test/helpers/users.js"
 
 describe("GetUser tests", () => {
-  resetDatabaseBeforeEach()
-
   // it("should 401 on non existing user", async () => {
   //   const userId = randomUUID()
   //   const resp = await callGetUser(global.defaultUser.auth, userId)

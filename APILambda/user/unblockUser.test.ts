@@ -1,5 +1,4 @@
 import { withEmptyResponseBody } from "../test/assertions.js"
-import { resetDatabaseBeforeEach } from "../test/database.js"
 import {
   callBlockUser,
   callGetUser,
@@ -9,8 +8,6 @@ import {
 } from "../test/helpers/users.js"
 
 describe("UnblockUser tests", () => {
-  resetDatabaseBeforeEach()
-
   it("should 403 when the unblocked user exists, but has no prior relation to user", async () => {
     const token1 = await createUserAndUpdateAuth(global.defaultUser)
     await createUserAndUpdateAuth(global.defaultUser2)

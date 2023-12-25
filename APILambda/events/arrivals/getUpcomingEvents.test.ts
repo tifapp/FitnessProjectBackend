@@ -1,14 +1,10 @@
 import { conn } from "TiFBackendUtils"
-import { randomUUID } from "crypto"
-import { resetDatabaseBeforeEach } from "../../test/database.js"
 import { callGetUpcomingEvents, callJoinEvent, callSetArrival } from "../../test/helpers/events.js"
 import { createUserAndUpdateAuth } from "../../test/helpers/users.js"
 import { testEvents } from "../../test/testEvents.js"
 import { createEvent } from "../createEvent.js"
 
 describe("getUpcomingEvents tests", () => {
-  resetDatabaseBeforeEach()
-
   it("should return 200 with an empty array if the user has no upcoming events", async () => {
     const attendeeToken = await createUserAndUpdateAuth(
       global.defaultUser
@@ -21,8 +17,11 @@ describe("getUpcomingEvents tests", () => {
   })
 
   it("should return 200 with an array of events if the user has upcoming events", async () => {
-    const attendeeToken = await createUserAndUpdateAuth(
+    await createUserAndUpdateAuth(
       global.defaultUser
+    )
+    const attendeeToken = await createUserAndUpdateAuth(
+      global.defaultUser2
     )
 
     const eventLocation = { latitude: 50, longitude: 50 }
@@ -34,31 +33,31 @@ describe("getUpcomingEvents tests", () => {
     const { value: { insertId: farTestEventId } } = await createEvent(
       conn,
       { ...testEvents[0], ...eventLocation, startTimestamp: new Date(new Date().setMonth(new Date().getMonth() + 1)), endTimestamp: new Date(new Date().setFullYear(new Date().getFullYear() + 1)) },
-      randomUUID()
+      global.defaultUser.id
     )
 
     const { value: { insertId: arrivedTestEventId } } = await createEvent(
       conn,
       { ...testEvents[0], ...eventLocation, startTimestamp: new Date(new Date().setHours(new Date().getHours() + 12)), endTimestamp: new Date(new Date().setFullYear(new Date().getFullYear() + 1)) },
-      randomUUID()
+      global.defaultUser.id
     )
 
     const { value: { insertId: ongoingTestEventId } } = await createEvent(
       conn,
       { ...testEvents[0], ...eventLocation, startTimestamp: new Date(new Date().setHours(new Date().getHours() - 12)), endTimestamp: new Date(new Date().setFullYear(new Date().getFullYear() + 1)) },
-      randomUUID()
+      global.defaultUser.id
     )
 
     const { value: { insertId: notArrivedTestEventId } } = await createEvent(
       conn,
       { ...testEvents[0], latitude: 25, longitude: 25, startTimestamp: new Date(new Date().setHours(new Date().getHours() + 12)), endTimestamp: new Date(new Date().setFullYear(new Date().getFullYear() + 1)) },
-      randomUUID()
+      global.defaultUser.id
     )
 
     await createEvent(
       conn,
       { ...testEvents[0], ...eventLocation, startTimestamp: new Date(new Date().setHours(new Date().getHours() + 12)), endTimestamp: new Date(new Date().setFullYear(new Date().getFullYear() + 1)) },
-      randomUUID()
+      global.defaultUser.id
     )
 
     await callJoinEvent(attendeeToken, parseInt(farTestEventId))

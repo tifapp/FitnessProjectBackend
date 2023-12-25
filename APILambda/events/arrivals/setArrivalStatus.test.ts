@@ -1,4 +1,3 @@
-import { resetDatabaseBeforeEach } from "../../test/database.js"
 import { callCreateEvent, callGetEvent, callJoinEvent, callSetArrival, callSetDeparture } from "../../test/helpers/events.js"
 import { createUserAndUpdateAuth } from "../../test/helpers/users.js"
 import { testEvents } from "../../test/testEvents.js"
@@ -6,8 +5,6 @@ import { testEvents } from "../../test/testEvents.js"
 const eventLocation = { latitude: 50, longitude: 50 }
 
 describe("SetArrivalStatus tests", () => {
-  resetDatabaseBeforeEach()
-
   it("should return upcoming events from the arrived and departed endpoints", async () => {
     const attendeeToken = await createUserAndUpdateAuth(
       global.defaultUser2

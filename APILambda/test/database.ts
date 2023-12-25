@@ -1,7 +1,7 @@
 import { conn } from "TiFBackendUtils"
 import { fail } from "assert"
 
-const resetDB = async () => {
+export const resetDB = async () => {
   await Promise.all([
     conn.queryResults("DELETE FROM eventAttendance"),
     conn.queryResults("DELETE FROM pushTokens"),
@@ -11,13 +11,6 @@ const resetDB = async () => {
   ])
   await conn.queryResults("DELETE FROM event")
   conn.queryResults("DELETE FROM user")
-}
-
-/**
- * Resets the database in-between each test.
- */
-export const resetDatabaseBeforeEach = () => {
-  beforeEach(async () => await resetDB())
 }
 
 /**

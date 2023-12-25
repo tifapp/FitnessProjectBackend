@@ -1,5 +1,4 @@
 import { withEmptyResponseBody } from "../../test/assertions.js"
-import { resetDatabaseBeforeEach } from "../../test/database.js"
 import {
   callGetSettings,
   callPatchSettings,
@@ -8,7 +7,7 @@ import {
 } from "../../test/helpers/users.js"
 
 describe("Update Settings tests", () => {
-  resetDatabaseBeforeEach()
+  
 
   // it("should 401 when patching settings for a user without a profile", async () => {
   //   const resp = await callPatchSettings(global.defaultUser.auth, {

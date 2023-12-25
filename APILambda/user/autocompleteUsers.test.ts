@@ -1,9 +1,6 @@
-import { resetDatabaseBeforeEach } from "../test/database.js"
 import { callAutocompleteUsers, callGetSelf, createUserAndUpdateAuth } from "../test/helpers/users.js"
 
 describe("AutocompleteUsers tests", () => {
-  resetDatabaseBeforeEach()
-
   test("autocomplete endpoint basic request", async () => {
     const user1 = await global.registerUser({ name: "Bitchell Dickle" })
     const user1Token = await createUserAndUpdateAuth(user1)

@@ -16,5 +16,6 @@ export default {
   },
   globalSetup: "./setupTestUsers.ts",
   globalTeardown: "./deleteTestUsers.ts",
-  testTimeout: 30000
+  testTimeout: 30000,
+  setupFilesAfterEnv: ["./setupHooks.ts"]
 }

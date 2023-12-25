@@ -1,9 +1,6 @@
-import { resetDatabaseBeforeEach } from "../test/database.js"
 import { callGetSelf, createUserAndUpdateAuth } from "../test/helpers/users.js"
 
 describe("GetSelf tests", () => {
-  resetDatabaseBeforeEach()
-
   it("should return 500 when we can't retrieve a user's profile", async () => {
     const resp = await callGetSelf(global.unregisteredUser.auth)
     expect(resp).toMatchObject({

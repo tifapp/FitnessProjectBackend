@@ -1,6 +1,5 @@
 import { randomUUID } from "crypto"
 import { withEmptyResponseBody } from "../test/assertions.js"
-import { resetDatabaseBeforeEach } from "../test/database.js"
 import {
   callBlockUser,
   callGetUser,
@@ -9,8 +8,6 @@ import {
 } from "../test/helpers/users.js"
 
 describe("Block User tests", () => {
-  resetDatabaseBeforeEach()
-
   it("should 404 when trying to block a non-existent user", async () => {
     const userId = randomUUID()
     const token1 = await createUserAndUpdateAuth(global.defaultUser)

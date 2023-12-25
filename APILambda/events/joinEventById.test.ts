@@ -1,5 +1,4 @@
 import { randomInt } from "crypto"
-import { resetDatabaseBeforeEach } from "../test/database.js"
 import { callCreateEvent, callJoinEvent } from "../test/helpers/events.js"
 import {
   callBlockUser,
@@ -8,8 +7,6 @@ import {
 import { testEvents } from "../test/testEvents.js"
 
 describe("Join the event by id tests", () => {
-  resetDatabaseBeforeEach()
-
   // Happy Path
   it("should return 201 when the user is able to successfully join the event", async () => {
     const eventOwnerToken = await createUserAndUpdateAuth(
