@@ -1,14 +1,12 @@
-import { withEmptyResponseBody } from "../../test/assertions.js"
 import {
   callGetSettings,
   callPatchSettings,
-  callPostUser,
-  createUserAndUpdateAuth
-} from "../../test/helpers/users.js"
+  callPostUser
+} from "../../test/apiCallers/users.js"
+import { withEmptyResponseBody } from "../../test/assertions.js"
+import { createUserFlow } from "../../test/userFlows/users.js"
 
 describe("Update Settings tests", () => {
-  
-
   // it("should 401 when patching settings for a user without a profile", async () => {
   //   const resp = await callPatchSettings(global.defaultUser.auth, {
   //     isAnalyticsEnabled: false
@@ -21,7 +19,7 @@ describe("Update Settings tests", () => {
   // })
 
   it("should update the user's settings", async () => {
-    const token = await createUserAndUpdateAuth(global.defaultUser)
+    const { token } = await createUserFlow()
     const updateResp = await callPatchSettings(token, {
       isChatNotificationsEnabled: false
     })
@@ -62,7 +60,7 @@ describe("Update Settings tests", () => {
   })
 
   it("should 400 for an invalid settings body", async () => {
-    const token = await createUserAndUpdateAuth(global.defaultUser)
+    const { token } = await createUserFlow()
     await callPostUser(token)
     const resp = await callPatchSettings(token, {
       isAnalyticsEnabled: 69,

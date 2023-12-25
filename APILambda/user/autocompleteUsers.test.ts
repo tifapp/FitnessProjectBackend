@@ -1,14 +1,13 @@
-import { callAutocompleteUsers, callGetSelf, createUserAndUpdateAuth } from "../test/helpers/users.js"
+import { callAutocompleteUsers, callUpdateUserHandle } from "../test/apiCallers/users.js"
+import { createUserFlow } from "../test/userFlows/users.js"
 
 describe("AutocompleteUsers tests", () => {
   test("autocomplete endpoint basic request", async () => {
-    const user1 = await global.registerUser({ name: "Bitchell Dickle" })
-    const user1Token = await createUserAndUpdateAuth(user1)
-    const user1Profile = (await callGetSelf(user1Token)).body
+    const { token: user1Token, name: user1Name, userId: user1Id } = await createUserFlow()
+    await callUpdateUserHandle(user1Token, "BitchellDickle")
 
-    const user2 = await global.registerUser({ name: "Big Chungus" })
-    const user2Token = await createUserAndUpdateAuth(user2)
-    const user2Profile = (await callGetSelf(user2Token)).body
+    const { name: user2Name, userId: user2Id, token: user2Token } = await createUserFlow()
+    await callUpdateUserHandle(user2Token, "BigChungus")
 
     const resp = await callAutocompleteUsers(user1Token, "bi", 50)
 
@@ -17,14 +16,14 @@ describe("AutocompleteUsers tests", () => {
       body: {
         users: [
           {
-            id: user2Profile.id,
-            name: "Big Chungus",
-            handle: user2Profile.handle
+            id: user2Id,
+            name: user2Name,
+            handle: "BigChungus"
           },
           {
-            id: user1Profile.id,
-            name: "Bitchell Dickle",
-            handle: user1Profile.handle
+            id: user1Id,
+            name: user1Name,
+            handle: "BitchellDickle"
           }
         ]
       }
@@ -32,11 +31,11 @@ describe("AutocompleteUsers tests", () => {
   })
 
   it("should only query up to the limit", async () => {
-    const user1 = await global.registerUser({ name: "Bitchell Dickle" })
-    const user1Token = await createUserAndUpdateAuth(user1)
+    const { token: user1Token } = await createUserFlow()
+    await callUpdateUserHandle(user1Token, "BitchellDickle")
 
-    const user2 = await global.registerUser({ name: "Big Chungus" })
-    await createUserAndUpdateAuth(user2)
+    const { token: user2Token } = await createUserFlow()
+    await callUpdateUserHandle(user2Token, "BigChungus")
 
     const resp = await callAutocompleteUsers(user1Token, "bi", 1)
 

@@ -21,14 +21,4 @@ const createTestEvent = (): CreateEventInput => {
   }
 }
 
-const createTestEvents = (events: number) => {
-  const result = []
-
-  for (let i = 0; i < events; i++) {
-    result.push(createTestEvent())
-  }
-
-  return result
-}
-
-export const testEvents: CreateEventInput[] = createTestEvents(10)
+export const testEvent: CreateEventInput = createTestEvent()

@@ -2,9 +2,9 @@ import { randomInt } from "crypto"
 import {
   callCreateEvent,
   callGetEventChatToken
-} from "../test/helpers/events.js"
-import { createUserAndUpdateAuth } from "../test/helpers/users.js"
-import { testEvents } from "../test/testEvents.js"
+} from "../test/apiCallers/events.js"
+import { testEvent } from "../test/testEvents.js"
+import { createUserFlow } from "../test/userFlows/users.js"
 
 describe("GetTokenRequest tests", () => {
   // TODO: Make shared util for this
@@ -16,7 +16,7 @@ describe("GetTokenRequest tests", () => {
   // })
 
   it("should return 404 if the event doesnt exist", async () => {
-    const userToken = await createUserAndUpdateAuth(global.defaultUser)
+    const { token: userToken } = await createUserFlow()
     const resp = await callGetEventChatToken(
       userToken,
       randomInt(1000)
@@ -29,10 +29,10 @@ describe("GetTokenRequest tests", () => {
   })
 
   it("should return 404 if the user is not part of the event", async () => {
-    const userToken = await createUserAndUpdateAuth(global.defaultUser)
-    const event = await callCreateEvent(userToken, testEvents[0])
+    const { token: userToken } = await createUserFlow()
+    const event = await callCreateEvent(userToken, testEvent)
 
-    const user2Token = await createUserAndUpdateAuth(global.defaultUser2)
+    const { token: user2Token } = await createUserFlow()
     const resp = await callGetEventChatToken(user2Token, event.body.id)
 
     expect(resp).toMatchObject({

@@ -1,8 +1,7 @@
 import {
-  callGetSelf,
-  callGetUser,
-  createUserAndUpdateAuth
-} from "../test/helpers/users.js"
+  callGetUser
+} from "../test/apiCallers/users.js"
+import { createUserFlow } from "../test/userFlows/users.js"
 
 describe("GetUser tests", () => {
   // it("should 401 on non existing user", async () => {
@@ -16,19 +15,17 @@ describe("GetUser tests", () => {
   // })
 
   it("should retrieve a user that exists", async () => {
-    const user1Token = await createUserAndUpdateAuth(global.defaultUser)
+    const { token: searchingUserToken } = await createUserFlow()
 
-    const user2 = await global.registerUser({ name: "John Doe" })
-    const user2Token = await createUserAndUpdateAuth(user2)
-    const user2Profile = (await callGetSelf(user2Token)).body
-    const resp = await callGetUser(user1Token, user2.id)
+    const { userId: searchedUserId, name: searchedUserName, handle: searchedUserHandle } = await createUserFlow()
+    const resp = await callGetUser(searchingUserToken, searchedUserId)
 
     expect(resp).toMatchObject({
       status: 200,
       body: expect.objectContaining({
-        id: user2.id,
-        name: "John Doe",
-        handle: user2Profile.handle
+        id: searchedUserId,
+        name: searchedUserName,
+        handle: searchedUserHandle
       })
     })
   })

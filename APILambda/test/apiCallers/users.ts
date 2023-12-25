@@ -1,5 +1,4 @@
 import request from "supertest"
-import { TestUser } from "../../global.js"
 import { PushTokenPlatformName } from "../../user/registerPushToken.js"
 import { UserSettings } from "../../user/settings/models.js"
 import { testApp } from "../testApp.js"
@@ -48,14 +47,6 @@ export const callPostUser = async (bearerToken?: string) => {
     .send()
 }
 
-// database is reset for each test so we need to create a new auth for each test
-export const createUserAndUpdateAuth = async (
-  testUser: TestUser
-): Promise<string> => {
-  await callPostUser(testUser.auth)
-  return await testUser.refreshAuth()
-}
-
 export const callGetUser = async (bearerToken: string, userId: string) => {
   return await request(testApp)
     .get(`/user/${userId}`)
@@ -91,6 +82,16 @@ export const callUpdateUserHandle = async (
     .patch("/user/self")
     .set("Authorization", userId)
     .send({ handle: userHandle })
+}
+
+export const callUpdateUserName = async (
+  userId: string,
+  name: string
+) => {
+  return await request(testApp)
+    .patch("/user/self")
+    .set("Authorization", userId)
+    .send({ name })
 }
 
 export const callBlockUser = async (
