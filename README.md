@@ -106,7 +106,7 @@ To add a new route, follow these steps:
 
 3. Define your route in the newly created file, specifying the necessary logic and functionality. This route should return an HTTP status code signifying success and the query result for successful transactions. If the transaction results in an error, the route should return an "error" status code and an error message.
 
-4. Update `app.ts` file to include the reference to your new route file.
+4. Update `app.ts` file to include reference to your newly created route from `<your_data_type>.ts` file.
 
 5. Add the newly created route to `swagger.json` file.
 
@@ -135,8 +135,8 @@ export const getNewProductRouter = (
    */
   router.getWithValidation("/new-product/:id", {}, (req, res) =>
     getNewProductTransaction(conn, req.params.id)
-      .mapSuccess(() => res.status(200).send())
-      .mapFailure(() => res.status(404).send({ error: "product-does-not-exist" }))
+      .mapSuccess((result) => res.status(200).json(result))
+      .mapFailure((error) => res.status(404).json({ error }))
   )
 ```
 
@@ -157,7 +157,7 @@ APILambda
 
 ```
 
-For example, if you're testing the "products" route you've added, the tests could be written in a file named products.test.ts in the 'tests' folder. The file might contain tests similar to the following:
+For example, if you're testing the "products" route you've added, the tests could be written in a file named `getNewProduct.test.ts` in the "products" folder. The file might contain tests similar to the following:
 
 ```typescript
 // getNewProduct.test.ts in 'products' folder
