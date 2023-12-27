@@ -26,6 +26,18 @@ export const getUserRouter = (
     (req, res) =>
       userAndRelationsWithId(conn, req.params.userId, res.locals.selfId)
         .mapSuccess((dbUser) => {
+          if (dbUser.themToYouStatus === "blocked") {
+            const blockerDbUser = {
+              name: dbUser.name,
+              profileImageURL: dbUser.profileImageURL,
+              handle: dbUser.handle,
+              relations: {
+                youToThem: dbUser.youToThemStatus,
+                themToYou: dbUser.themToYouStatus
+              }
+            }
+            return res.status(200).json(blockerDbUser)
+          }
           return res.status(200).json(toUserWithRelationResponse(dbUser))
         })
         .mapFailure((error) => res.status(404).json({ error }))
@@ -51,49 +63,13 @@ const toUserWithRelationResponse = (user: DatabaseUserWithRelation) => ({
   }
 })
 
-const getProfileNameWithBlockStatus = (
-  conn: SQLExecutable,
-  userId: string,
-  fromUserId: string
-) => {
-  return conn.queryFirstResult<DatabaseUserWithRelation>(
-    `
-    SELECT u.name, 
-    ur1.status AS themToYouStatus,
-    ur2.status AS youToThemStatus
-    FROM user u
-    LEFT JOIN userRelations ur1 ON ur1.fromUserId = u.id
-    AND ur1.fromUserId = :userId
-    AND ur1.toUserId = :fromUserId
-    LEFT JOIN userRelations ur2 ON ur2.toUserId = u.id
-    AND ur2.fromUserId = :fromUserId
-    AND ur2.toUserId = :userId
-    WHERE u.id = :userId
-    AND ur1.status = 'blocked';
-  `,
-    { userId, fromUserId }
-  )
-}
-
 const userAndRelationsWithId = (
   conn: SQLExecutable,
   userId: string,
   fromUserId: string
 ) =>
-  getProfileNameWithBlockStatus(conn, userId, fromUserId)
-    .mapSuccess((result) => {
-      if (
-        result &&
-        Object.keys(result).length !== 0 &&
-        result.themToYouStatus === "blocked"
-      ) {
-        return result
-      }
-      return result
-    })
-    .flatMapFailure(() => {
-      return conn.queryFirstResult<DatabaseUserWithRelation>(
-        `
+  conn.queryFirstResult<DatabaseUserWithRelation>(
+    `
       SELECT *, 
       ur1.status AS themToYouStatus, 
       ur2.status AS youToThemStatus 
@@ -106,6 +82,5 @@ const userAndRelationsWithId = (
       AND ur2.toUserId = :userId
       WHERE u.id = :userId;
       `,
-        { userId, fromUserId }
-      )
-    })
+    { userId, fromUserId }
+  )
