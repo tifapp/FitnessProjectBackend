@@ -48,14 +48,14 @@ describe("Create User Profile tests", () => {
   //   // how to test this?
   // })
 
-  it("should 400 when trying to create a user with an already existing profile", async () => {
-    const resp = await callPostUser(global.unregisteredUser.auth)
+  // it("should 400 when trying to create a user with an already existing profile", async () => {
+  //   const resp = await callPostUser(global.unregisteredUser.auth)
 
-    expect(resp).toMatchObject({
-      status: 400,
-      body: { error: "user-already-exists" }
-    })
-  })
+  //   expect(resp).toMatchObject({
+  //     status: 400,
+  //     body: { error: "user-already-exists" }
+  //   })
+  // })
 
   it("should 201 when creating a user with a unique id and handle", async () => {
     const resp = await callPostUser(global.defaultUser.auth)

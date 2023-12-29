@@ -6,6 +6,8 @@ import { createMockAuthToken } from "./test/testUsers"
 dotenv.config()
 
 export default async (): Promise<void> => {
+  process.env.TZ = "UTC"
+
   if (process.env.TEST_ENV === "staging") {
     global.registerUser = createCognitoAuthToken
     global.unregisteredUser = await createCognitoAuthToken({ profileExists: true })

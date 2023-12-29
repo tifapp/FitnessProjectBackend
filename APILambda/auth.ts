@@ -83,19 +83,19 @@ export const addCognitoTokenVerification = (
       }
 
       // separate attribute checker to a middleware, apply to other endpints
-      const isCreatingProfile = req.url === "/user" && req.method === "POST"
+      // const isCreatingProfile = req.url === "/user" && req.method === "POST"
 
-      if (res.locals.doesProfileExist) {
-        if (isCreatingProfile) {
-          // TODO: Change error message to generic message for prod api
-          return res.status(400).json({ error: "user-already-exists" })
-        }
-      } else {
-        if (!isCreatingProfile) {
-          // TODO: Change error message to generic message for prod api
-          return res.status(401).json({ error: "user-does-not-exist" })
-        }
-      }
+      // if (res.locals.doesProfileExist) {
+      //   // if (isCreatingProfile && env.environment === "prod") {
+      //   //   // TODO: Change error message to generic message for prod api
+      //   //   return res.status(400).json({ error: "user-already-exists" })
+      //   // }
+      // } else {
+      //   // if (!isCreatingProfile) {
+      //   //   // TODO: Change error message to generic message for prod api
+      //   //   return res.status(401).json({ error: "user-does-not-exist" })
+      //   // }
+      // }
 
       next()
     } catch (err) {

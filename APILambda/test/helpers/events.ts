@@ -1,11 +1,12 @@
 import request from "supertest"
-// import { CreateEventInput } from "../../events/index.js"
+import { SetArrivalStatusInput } from "../../events/arrivals/setArrivalStatus.js"
+import { SetDepartureInput } from "../../events/arrivals/setDeparture.js"
+import { CreateEventInput } from "../../events/createEvent.js"
 import { testApp } from "../testApp.js"
 
 export const callCreateEvent = async (
   bearerToken: string,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  req: any
+  req: CreateEventInput
 ) => {
   return await request(testApp)
     .post("/event")
@@ -15,7 +16,6 @@ export const callCreateEvent = async (
 
 export const callJoinEvent = async (
   bearerToken: string,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   eventId: number
 ) => {
   return await request(testApp)
@@ -24,9 +24,38 @@ export const callJoinEvent = async (
     .send()
 }
 
+export const callSetArrival = async (
+  bearerToken: string,
+  req: SetArrivalStatusInput
+) => {
+  return await request(testApp)
+    .post("/event/arrived")
+    .set("Authorization", bearerToken)
+    .send(req)
+}
+
+export const callSetDeparture = async (
+  bearerToken: string,
+  req: SetDepartureInput
+) => {
+  return await request(testApp)
+    .post("/event/departed")
+    .set("Authorization", bearerToken)
+    .send(req)
+}
+
+export const callGetUpcomingEvents = async (
+  bearerToken: string
+) => {
+  return await request(testApp)
+    .get("/event/upcoming")
+    .set("Authorization", bearerToken)
+    .send()
+}
+
 export const callGetEvent = async (bearerToken: string, eventId: number) => {
   return await request(testApp)
-    .get(`/event/${eventId}`)
+    .get(`/event/details/${eventId}`)
     .set("Authorization", bearerToken)
     .send()
 }

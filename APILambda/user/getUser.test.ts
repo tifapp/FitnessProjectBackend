@@ -1,4 +1,3 @@
-import { randomUUID } from "crypto"
 import { resetDatabaseBeforeEach } from "../test/database.js"
 import {
   callGetSelf,
@@ -9,15 +8,15 @@ import {
 describe("GetUser tests", () => {
   resetDatabaseBeforeEach()
 
-  it("should 401 on non existing user", async () => {
-    const userId = randomUUID()
-    const resp = await callGetUser(global.defaultUser.auth, userId)
+  // it("should 401 on non existing user", async () => {
+  //   const userId = randomUUID()
+  //   const resp = await callGetUser(global.defaultUser.auth, userId)
 
-    expect(resp).toMatchObject({
-      status: 401,
-      body: { error: "user-does-not-exist" }
-    })
-  })
+  //   expect(resp).toMatchObject({
+  //     status: 401,
+  //     body: { error: "user-does-not-exist" }
+  //   })
+  // })
 
   it("should retrieve a user that exists", async () => {
     const user1Token = await createUserAndUpdateAuth(global.defaultUser)
