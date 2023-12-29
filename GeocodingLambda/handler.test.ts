@@ -9,7 +9,7 @@ describe("Geocoding lambda tests", () => {
     await conn.queryResults("DELETE FROM location")
 
     const result = await handler({
-      location: { latitude: 36.99813840222285, longitude: -122.05564377465653 }
+      coordinate: { latitude: 36.99813840222285, longitude: -122.05564377465653 }
     })
 
     expect(result).toMatchObject(success("placemark-successfully-inserted"))
@@ -17,7 +17,7 @@ describe("Geocoding lambda tests", () => {
 
   it("Should return when a placemark already exists", async () => {
     const result = await handler({
-      location: { latitude: 36.99813840222285, longitude: -122.05564377465653 }
+      coordinate: { latitude: 36.99813840222285, longitude: -122.05564377465653 }
     })
 
     expect(result).toMatchObject(failure("placemark-already-exists"))

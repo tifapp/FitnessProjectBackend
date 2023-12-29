@@ -4,7 +4,9 @@ import { ServerEnvironment } from "../env.js"
 
 export const testEnv: ServerEnvironment = {
   // use env vars
-  environment: process.env.TEST_ENV === "staging" ? "staging" : "dev"
+  environment: process.env.TEST_ENV === "staging" ? "staging" : "dev",
+  eventStartWindowInHours: 1,
+  maxArrivals: 4
 }
 
 /**

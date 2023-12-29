@@ -8,7 +8,12 @@ const CreateEventSchema = z
   .object({
     description: z.string().max(500),
     startTimestamp: z.string().datetime(),
-    endTimestamp: z.string().datetime(),
+    endTimestamp: z.string().datetime().refine((date) => {
+      return new Date(date) > new Date()
+    }, {
+      message: "endTimestamp must be in the future"
+      // TODO: add minimum duration check
+    }),
     color: EventColorSchema,
     title: z.string().max(50),
     shouldHideAfterStartDate: z.boolean(),
@@ -63,7 +68,6 @@ INSERT INTO event (
         hostId
       }
     )
-    .withFailure("internal-server-error" as const)
 
 /**
  * Creates routes related to event operations.
