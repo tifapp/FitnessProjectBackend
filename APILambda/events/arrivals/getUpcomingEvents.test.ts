@@ -1,18 +1,12 @@
-import { conn } from "TiFBackendUtils"
-import { randomUUID } from "crypto"
-import { resetDatabaseBeforeEach } from "../../test/database.js"
-import { callGetUpcomingEvents, callJoinEvent, callSetArrival } from "../../test/helpers/events.js"
-import { createUserAndUpdateAuth } from "../../test/helpers/users.js"
-import { testEvents } from "../../test/testEvents.js"
-import { createEvent } from "../createEvent.js"
+import dayjs from "dayjs"
+import { callCreateEvent, callGetUpcomingEvents, callSetArrival } from "../../test/apiCallers/events.js"
+import { testEvent } from "../../test/testEvents.js"
+import { createEventFlow } from "../../test/userFlows/events.js"
+import { createUserFlow } from "../../test/userFlows/users.js"
 
 describe("getUpcomingEvents tests", () => {
-  resetDatabaseBeforeEach()
-
   it("should return 200 with an empty array if the user has no upcoming events", async () => {
-    const attendeeToken = await createUserAndUpdateAuth(
-      global.defaultUser
-    )
+    const { token: attendeeToken } = await createUserFlow()
 
     expect(await callGetUpcomingEvents(attendeeToken)).toMatchObject({
       status: 200,
@@ -21,50 +15,45 @@ describe("getUpcomingEvents tests", () => {
   })
 
   it("should return 200 with an array of events if the user has upcoming events", async () => {
-    const attendeeToken = await createUserAndUpdateAuth(
-      global.defaultUser
-    )
-
     const eventLocation = { latitude: 50, longitude: 50 }
+
+    const { attendeeToken, hostToken, eventIds: [, arrivedTestEventId, ongoingTestEventId, notArrivedTestEventId] } = await createEventFlow([
+      {
+        ...eventLocation,
+        startTimestamp: dayjs().add(1, "month").toDate(),
+        endTimestamp: dayjs().add(1, "year").toDate()
+      },
+      {
+        ...eventLocation,
+        startTimestamp: dayjs().add(12, "hour").toDate(),
+        endTimestamp: dayjs().add(1, "year").toDate()
+      },
+      {
+        ...eventLocation,
+        startTimestamp: dayjs().subtract(12, "hour").toDate(),
+        endTimestamp: dayjs().add(1, "year").toDate()
+      },
+      {
+        latitude: 25,
+        longitude: 25,
+        startTimestamp: dayjs().add(12, "hour").toDate(),
+        endTimestamp: dayjs().add(1, "year").toDate()
+      }
+    ])
+
+    // unrelated event should not appear in upcoming list
+    await callCreateEvent(hostToken,
+      {
+        ...testEvent,
+        ...eventLocation,
+        startTimestamp: dayjs().add(12, "hour").toDate(),
+        endTimestamp: dayjs().add(1, "year").toDate()
+      }
+    )
 
     await callSetArrival(attendeeToken, {
       coordinate: eventLocation
     })
-
-    const { value: { insertId: farTestEventId } } = await createEvent(
-      conn,
-      { ...testEvents[0], ...eventLocation, startTimestamp: new Date(new Date().setMonth(new Date().getMonth() + 1)), endTimestamp: new Date(new Date().setFullYear(new Date().getFullYear() + 1)) },
-      randomUUID()
-    )
-
-    const { value: { insertId: arrivedTestEventId } } = await createEvent(
-      conn,
-      { ...testEvents[0], ...eventLocation, startTimestamp: new Date(new Date().setHours(new Date().getHours() + 12)), endTimestamp: new Date(new Date().setFullYear(new Date().getFullYear() + 1)) },
-      randomUUID()
-    )
-
-    const { value: { insertId: ongoingTestEventId } } = await createEvent(
-      conn,
-      { ...testEvents[0], ...eventLocation, startTimestamp: new Date(new Date().setHours(new Date().getHours() - 12)), endTimestamp: new Date(new Date().setFullYear(new Date().getFullYear() + 1)) },
-      randomUUID()
-    )
-
-    const { value: { insertId: notArrivedTestEventId } } = await createEvent(
-      conn,
-      { ...testEvents[0], latitude: 25, longitude: 25, startTimestamp: new Date(new Date().setHours(new Date().getHours() + 12)), endTimestamp: new Date(new Date().setFullYear(new Date().getFullYear() + 1)) },
-      randomUUID()
-    )
-
-    await createEvent(
-      conn,
-      { ...testEvents[0], ...eventLocation, startTimestamp: new Date(new Date().setHours(new Date().getHours() + 12)), endTimestamp: new Date(new Date().setFullYear(new Date().getFullYear() + 1)) },
-      randomUUID()
-    )
-
-    await callJoinEvent(attendeeToken, parseInt(farTestEventId))
-    await callJoinEvent(attendeeToken, parseInt(arrivedTestEventId))
-    await callJoinEvent(attendeeToken, parseInt(ongoingTestEventId))
-    await callJoinEvent(attendeeToken, parseInt(notArrivedTestEventId))
 
     expect(await callGetUpcomingEvents(attendeeToken)).toMatchObject({
       status: 200,
@@ -73,8 +62,8 @@ describe("getUpcomingEvents tests", () => {
           arrivalRadiusMeters: 500,
           isArrived: true,
           eventIds: [
-            parseInt(ongoingTestEventId),
-            parseInt(arrivedTestEventId)
+            ongoingTestEventId,
+            arrivedTestEventId
           ],
           coordinate: {
             latitude: 50,
@@ -85,7 +74,7 @@ describe("getUpcomingEvents tests", () => {
           arrivalRadiusMeters: 500,
           isArrived: false,
           eventIds: [
-            parseInt(notArrivedTestEventId)
+            notArrivedTestEventId
           ],
           coordinate: {
             latitude: 25,

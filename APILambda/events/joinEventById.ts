@@ -34,7 +34,9 @@ const joinEvent = (conn: SQLExecutable, userId: string, eventId: number) => {
   )
 }
 
-const addUserToAttendeeList = (
+// ADD CHECK IF HOST TRIES JOINING THEIR OWN EVENT
+// AUTO MAKE HOST AN ATTENDEE
+export const addUserToAttendeeList = (
   conn: SQLExecutable,
   userId: string,
   eventId: number

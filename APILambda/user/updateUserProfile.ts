@@ -48,7 +48,8 @@ const updateProfile = (
     .flatMapSuccess(() => getProfile(conn, userId))
     .flatMapSuccess((profile) => {
       const handle = request.handle?.rawValue ?? profile.handle
-      const updatedProfile = { ...profile, ...request, handle }
+      const name = request.name ?? profile.name
+      const updatedProfile = { ...profile, ...request, handle, name }
       return overwriteProfile(conn, userId, updatedProfile)
     })
 
