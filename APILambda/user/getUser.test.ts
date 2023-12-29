@@ -1,4 +1,5 @@
 import {
+  callBlockUser,
   callGetUser
 } from "../test/apiCallers/users.js"
 import { createUserFlow } from "../test/userFlows/users.js"
@@ -27,6 +28,25 @@ describe("GetUser tests", () => {
         name: searchedUserName,
         handle: searchedUserHandle
       })
+    })
+  })
+})
+
+describe("Get blocked user's profile name only", () => {
+  it("should return blocked user's profile name and themToYou status of blocked", async () => {
+    const { token, userId, name, handle } = await createUserFlow()
+    const { token: blockedToken, userId: blockedUserId } = await createUserFlow()
+
+    await callBlockUser(token, blockedUserId)
+    const resp = await callGetUser(blockedToken, userId)
+
+    expect(resp).toMatchObject({
+      status: 200,
+      body: {
+        name,
+        handle,
+        relations: { themToYou: "blocked" }
+      }
     })
   })
 })
