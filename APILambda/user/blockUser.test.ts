@@ -47,7 +47,7 @@ describe("Block User tests", () => {
       })
     })
 
-    expect(await callGetUser(token2, global.defaultUser.id)).toMatchObject({
+    expect(await callGetUser(toUserToken, fromUserId)).toMatchObject({
       body: expect.objectContaining({
         relations: {
           youToThem: "not-friends",
