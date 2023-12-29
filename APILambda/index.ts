@@ -34,7 +34,7 @@ const addEventToRequest = (app: Express) => {
   app.use(express.urlencoded({ extended: true }))
 }
 
-const env: ServerEnvironment = { environment: "prod" }
+const env: ServerEnvironment = { environment: "prod", eventStartWindowInHours: 1, maxArrivals: 100 }
 
 const app = createApp()
 addEventToRequest(app)

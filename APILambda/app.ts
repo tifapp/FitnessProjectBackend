@@ -1,23 +1,26 @@
 import express, { Application } from "express"
 import { ServerEnvironment } from "./env.js"
+import { getUpcomingEventsByRegionRouter } from "./events/arrivals/getUpcomingEvents.js"
+import { setArrivalStatusRouter } from "./events/arrivals/setArrivalStatus.js"
+import { setDepartureRouter } from "./events/arrivals/setDeparture.js"
 import { createEventRouter } from "./events/createEvent.js"
 import { getChatTokenRouter } from "./events/getChatToken.js"
 import { getEventByIdRouter } from "./events/getEventById.js"
 import { getEventsByRegionRouter } from "./events/getEventsByRegion.js"
+import { joinEventRouter } from "./events/joinEventById.js"
 import { autocompleteUsersRouter } from "./user/autocompleteUsers.js"
+import { createBlockUserRouter } from "./user/blockUser.js"
 import { createUserProfileRouter } from "./user/createUserProfile.js"
 import { deleteUserAccountRouter } from "./user/deleteUserAccount.js"
 import { getSelfRouter } from "./user/getSelf.js"
 import { getUserRouter } from "./user/getUser.js"
+import { createRegisterPushTokenRouter } from "./user/registerPushToken.js"
 import { sendFriendRequestsRouter } from "./user/sendFriendRequest.js"
 import { getUserSettingsRouter } from "./user/settings/getUserSettings.js"
 import { updateUserSettingsRouter } from "./user/settings/updateUserSettings.js"
+import { createUnblockUserRouter } from "./user/unblockUser.js"
 import { updateUserProfileRouter } from "./user/updateUserProfile.js"
 import { createValidatedRouter } from "./validation.js"
-import { createBlockUserRouter } from "./user/blockUser.js"
-import { joinEventRouter } from "./events/joinEventById.js"
-import { createRegisterPushTokenRouter } from "./user/registerPushToken.js"
-import { createUnblockUserRouter } from "./user/unblockUser.js"
 
 /**
  * Creates an application instance.
@@ -58,6 +61,9 @@ const addEventRoutes = (environment: ServerEnvironment) => {
   getEventByIdRouter(environment, router)
   getEventsByRegionRouter(environment, router)
   joinEventRouter(environment, router)
+  setArrivalStatusRouter(environment, router)
+  setDepartureRouter(environment, router)
+  getUpcomingEventsByRegionRouter(environment, router)
   return router
 }
 

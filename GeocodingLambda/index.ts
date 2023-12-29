@@ -13,7 +13,7 @@ import {
 import { addPlacemarkToDB, checkExistingPlacemarkInDB } from "./utils.js"
 
 interface LocationSearchRequest extends Retryable {
-  location: LocationCoordinate2D
+  coordinate: LocationCoordinate2D
 }
 
 // TODO: Fix handler type, fix util dependencies
@@ -24,10 +24,10 @@ export const handler: any = exponentialFunctionBackoff<
 >(
   async (event: LocationSearchRequest) =>
     checkExistingPlacemarkInDB({
-      latitude: parseFloat(event.location.latitude.toFixed(10)),
-      longitude: parseFloat(event.location.longitude.toFixed(10))
+      latitude: parseFloat(event.coordinate.latitude.toFixed(10)),
+      longitude: parseFloat(event.coordinate.longitude.toFixed(10))
     })
-      .flatMapSuccess(async () => success(await SearchClosestAddressToCoordinates(event.location)))
+      .flatMapSuccess(async () => success(await SearchClosestAddressToCoordinates(event.coordinate)))
       .flatMapSuccess((placemark) => addPlacemarkToDB(placemark))
       .mapSuccess(() => "placemark-successfully-inserted" as const)
 )

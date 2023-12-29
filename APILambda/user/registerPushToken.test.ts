@@ -1,17 +1,13 @@
 import { randomUUID } from "crypto"
-import { withEmptyResponseBody } from "../test/assertions.js"
-import { resetDatabaseBeforeEach } from "../test/database.js"
 import {
-  callRegisterPushToken,
-  createUserAndUpdateAuth
-} from "../test/helpers/users.js"
+  callRegisterPushToken
+} from "../test/apiCallers/users.js"
+import { withEmptyResponseBody } from "../test/assertions.js"
+import { createUserFlow } from "../test/userFlows/users.js"
 
 describe("RegisterPushToken tests", () => {
-  resetDatabaseBeforeEach()
-
   it("should 201 when registering a new push token", async () => {
-    const user = await global.registerUser({ name: "Bitchell Dickle" })
-    const userToken = await createUserAndUpdateAuth(user)
+    const { token: userToken } = await createUserFlow()
     const resp = await callRegisterPushToken(
       userToken,
       registerPushTokenBody(randomUUID())
@@ -23,12 +19,11 @@ describe("RegisterPushToken tests", () => {
   })
 
   it("should 400 when registering an existing push token on the same platform", async () => {
-    const user = await global.registerUser({ name: "Bitchell Dickle" })
-    const userToken = await createUserAndUpdateAuth(user)
+    const { token } = await createUserFlow()
     const pushToken = randomUUID()
-    await callRegisterPushToken(userToken, registerPushTokenBody(pushToken))
+    await callRegisterPushToken(token, registerPushTokenBody(pushToken))
     const resp = await callRegisterPushToken(
-      userToken,
+      token,
       registerPushTokenBody(pushToken)
     )
     expect(resp).toMatchObject({
@@ -38,11 +33,10 @@ describe("RegisterPushToken tests", () => {
   })
 
   it("should be able to insert multiple tokens with 201s", async () => {
-    const user = await global.registerUser({ name: "Bitchell Dickle" })
-    const userToken = await createUserAndUpdateAuth(user)
-    await callRegisterPushToken(userToken, registerPushTokenBody(randomUUID()))
+    const { token } = await createUserFlow()
+    await callRegisterPushToken(token, registerPushTokenBody(randomUUID()))
     const resp = await callRegisterPushToken(
-      userToken,
+      token,
       registerPushTokenBody(randomUUID())
     )
     expect(withEmptyResponseBody(resp)).toMatchObject({
