@@ -44,11 +44,10 @@ describe("Join the event by id tests", () => {
     const { token: eventOwnerToken } = await createUserFlow()
     const { token: attendeeToken } = await createUserFlow()
 
-    const currentDate = new Date()
+    const event = await callCreateEvent(eventOwnerToken, testEvent)
     jest.useFakeTimers()
     jest.setSystemTime(new Date("2050-01-01"))
 
-    const event = await callCreateEvent(eventOwnerToken, { ...testEvent, endTimestamp: currentDate })
     const resp = await callJoinEvent(attendeeToken, parseInt(event.body.id))
     expect(resp).toMatchObject({
       status: 403,

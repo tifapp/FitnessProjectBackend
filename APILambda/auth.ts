@@ -37,7 +37,7 @@ const TransformedAuthClaimsSchema = AuthClaimsSchema.transform((res) => ({
   // @ts-expect-error email may be missing from claims
   email: res.email ?? undefined,
   // @ts-expect-error phone number may be missing from claims
-  phoneNumber: res.phone_number ?? undefined,
+  phoneNumber: res.phone_number ?? undefined, // try json parse
   // cognito claims encode them as strings
   // @ts-expect-error email or phone number may be missing from claims
   isContactInfoVerified: res.email_verified === true || res.phone_number_verified === true,
@@ -65,8 +65,6 @@ export const addCognitoTokenVerification = (
     // TODO: perform JWT verification if envType !== dev
 
     const token = auth.split(" ")[1] // TODO: ensure correct format of auth header ("Bearer {token}")
-
-    console.log("claims look like ", JSON.parse(Buffer.from(token.split(".")[1], "base64").toString()))
 
     try {
       // eslint-disable-next-line camelcase
