@@ -1,30 +1,25 @@
-import { resetDatabaseBeforeEach } from "../../test/database.js"
-import { callCreateEvent, callGetEvent, callJoinEvent, callSetArrival, callSetDeparture } from "../../test/helpers/events.js"
-import { createUserAndUpdateAuth } from "../../test/helpers/users.js"
-import { testEvents } from "../../test/testEvents.js"
+import dayjs from "dayjs"
+import { callGetEvent, callJoinEvent, callSetArrival, callSetDeparture } from "../../test/apiCallers/events.js"
+import { createEventFlow } from "../../test/userFlows/events.js"
 
 const eventLocation = { latitude: 50, longitude: 50 }
 
 describe("SetArrivalStatus tests", () => {
-  resetDatabaseBeforeEach()
-
   it("should return upcoming events from the arrived and departed endpoints", async () => {
-    const attendeeToken = await createUserAndUpdateAuth(
-      global.defaultUser2
-    )
-
     // cant mock planetscale time
-    const eventResp = await callCreateEvent(attendeeToken, { ...testEvents[0], ...eventLocation, startTimestamp: new Date(new Date().setHours(new Date().getHours() + 12)), endTimestamp: new Date(new Date().setFullYear(new Date().getFullYear() + 1)) })
-    await callJoinEvent(attendeeToken, parseInt(eventResp.body.id))
+    const { attendeeToken, eventIds } = await createEventFlow([{
+      ...eventLocation,
+      startTimestamp: dayjs().add(12, "hour").toDate(),
+      endTimestamp: dayjs().add(1, "year").toDate()
+    }])
+    await callJoinEvent(attendeeToken, eventIds[0])
 
     expect(await callSetArrival(attendeeToken, {
       coordinate: eventLocation
     })).toMatchObject({
       body: {
         upcomingRegions: [{
-          eventIds: [
-            parseInt(eventResp.body.id)
-          ],
+          eventIds,
           isArrived: true
         }]
       }
@@ -35,9 +30,7 @@ describe("SetArrivalStatus tests", () => {
     })).toMatchObject({
       body: {
         upcomingRegions: [{
-          eventIds: [
-            parseInt(eventResp.body.id)
-          ],
+          eventIds,
           isArrived: false
         }]
       }
@@ -45,17 +38,13 @@ describe("SetArrivalStatus tests", () => {
   })
 
   it("should persist arrival when checking events", async () => {
-    const attendeeToken = await createUserAndUpdateAuth(
-      global.defaultUser2
-    )
-
-    const eventResp = await callCreateEvent(attendeeToken, { ...testEvents[0], ...eventLocation })
+    const { attendeeToken, eventIds } = await createEventFlow([{ ...eventLocation }])
 
     await callSetArrival(attendeeToken, {
       coordinate: eventLocation
     })
 
-    expect(await callGetEvent(attendeeToken, parseInt(eventResp.body.id))).toMatchObject({
+    expect(await callGetEvent(attendeeToken, eventIds[0])).toMatchObject({
       body: {
         arrivalStatus: "arrived"
       }
@@ -65,7 +54,7 @@ describe("SetArrivalStatus tests", () => {
       coordinate: eventLocation
     })
 
-    expect(await callGetEvent(attendeeToken, parseInt(eventResp.body.id))).toMatchObject({
+    expect(await callGetEvent(attendeeToken, eventIds[0])).toMatchObject({
       body: {
         arrivalStatus: "not-arrived"
       }

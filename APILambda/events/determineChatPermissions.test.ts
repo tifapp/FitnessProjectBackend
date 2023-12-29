@@ -1,8 +1,6 @@
 import { determineChatPermissions } from "./getChatToken.js"
-import { resetDatabaseBeforeEach } from "../test/database.js"
 
 describe("determineChatPermissions", () => {
-  resetDatabaseBeforeEach()
   it("should return admin permissions for a host user", () => {
     const hostId = "1234"
     const userId = "1234"

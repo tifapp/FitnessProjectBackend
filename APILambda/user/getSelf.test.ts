@@ -1,9 +1,7 @@
-import { resetDatabaseBeforeEach } from "../test/database.js"
-import { callGetSelf, createUserAndUpdateAuth } from "../test/helpers/users.js"
+import { callGetSelf } from "../test/apiCallers/users.js"
+import { createUserFlow } from "../test/userFlows/users.js"
 
 describe("GetSelf tests", () => {
-  resetDatabaseBeforeEach()
-
   it("should return 500 when we can't retrieve a user's profile", async () => {
     const resp = await callGetSelf(global.unregisteredUser.auth)
     expect(resp).toMatchObject({
@@ -21,13 +19,13 @@ describe("GetSelf tests", () => {
   // })
 
   it("should be able to fetch your private account info", async () => {
-    const token = await createUserAndUpdateAuth(global.defaultUser)
+    const { token, userId } = await createUserFlow()
     const resp = await callGetSelf(token)
 
     expect(resp).toMatchObject({
       status: 200,
       body: expect.objectContaining({
-        id: global.defaultUser.id,
+        id: userId,
         bio: null,
         updatedAt: null,
         profileImageURL: null
