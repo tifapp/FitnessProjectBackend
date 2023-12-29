@@ -7,16 +7,15 @@ const joinEventSchema = z.object({
   eventId: z.string()
 })
 
-// debug remove export
-export const leaveEvent = (conn: SQLExecutable, userId: string, eventId: number) => {
+const leaveEvent = (conn: SQLExecutable, userId: string, eventId: number) => {
   return conn.transaction((tx) =>
-    removeUserToAttendeeList(tx, userId, eventId).flatMapSuccess(
+    removeUserFromAttendeeList(tx, userId, eventId).flatMapSuccess(
       ({ rowsAffected }) => (rowsAffected > 0 ? success(204) : failure(404))
     )
   )
 }
 
-const removeUserToAttendeeList = (
+const removeUserFromAttendeeList = (
   conn: SQLExecutable,
   userId: string,
   eventId: number
@@ -27,11 +26,11 @@ const removeUserToAttendeeList = (
   )
 
 /**
- * Join an event given an event id.
+ * Leave an event.
  *
  * @param environment see {@link ServerEnvironment}.
  */
-export const joinEventRouter = (
+export const leaveEventRouter = (
   environment: ServerEnvironment,
   router: ValidatedRouter
 ) => {
@@ -43,7 +42,9 @@ export const joinEventRouter = (
     { pathParamsSchema: joinEventSchema },
     (req, res) =>
       leaveEvent(conn, res.locals.selfId, Number(req.params.eventId))
-        .mapSuccess(() => res.status(204).json("user-left-event"))
-        .mapFailure((error) => res.status(500).json({ error }))
+        .mapSuccess(() => res.status(204).json())
+        .mapFailure((error) =>
+          res.status(404).json({ error: "event-does-not-exist" })
+        )
   )
 }

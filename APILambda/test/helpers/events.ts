@@ -24,6 +24,16 @@ export const callJoinEvent = async (
     .send()
 }
 
+export const callLeaveEvent = async (
+  bearerToken: string,
+  eventId: number
+) => {
+  return await request(testApp)
+    .post(`/event/leave/${eventId}`)
+    .set("Authorization", bearerToken)
+    .send()
+}
+
 export const callSetArrival = async (
   bearerToken: string,
   req: SetArrivalStatusInput
