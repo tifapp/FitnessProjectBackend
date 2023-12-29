@@ -2,6 +2,7 @@ import { SQLExecutable, conn } from "TiFBackendUtils"
 import { z } from "zod"
 import { ServerEnvironment } from "../env.js"
 import { ValidatedRouter } from "../validation.js"
+import { addUserToAttendeeList } from "./joinEventById.js"
 import { EventColorSchema } from "./models.js"
 
 const CreateEventSchema = z
@@ -85,7 +86,10 @@ export const createEventRouter = (
     "/",
     { bodySchema: CreateEventSchema },
     (req, res) => {
-      return createEvent(conn, req.body, res.locals.selfId)
+      return conn.transaction(tx =>
+        createEvent(tx, req.body, res.locals.selfId)
+          .flatMapSuccess(({ insertId }) => addUserToAttendeeList(tx, res.locals.selfId, parseInt(insertId)).mapSuccess(() => ({ insertId })))
+      )
         .mapFailure((error) => res.status(500).json({ error }))
         .mapSuccess(({ insertId }) => res.status(201).json({ id: insertId }))
     }
