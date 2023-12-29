@@ -38,13 +38,20 @@ describe("Block User tests", () => {
     await callPostFriendRequest(toUserToken, fromUserId)
     await callBlockUser(fromUserToken, toUserId)
 
-    const resp = await callGetUser(fromUserToken, toUserId)
-
-    expect(resp).toMatchObject({
+    expect(await callGetUser(fromUserToken, toUserId)).toMatchObject({
       body: expect.objectContaining({
         relations: {
           youToThem: "blocked",
           themToYou: "not-friends"
+        }
+      })
+    })
+
+    expect(await callGetUser(toUserToken, fromUserId)).toMatchObject({
+      body: expect.objectContaining({
+        relations: {
+          youToThem: "not-friends",
+          themToYou: "blocked"
         }
       })
     })
@@ -56,9 +63,16 @@ describe("Block User tests", () => {
     await callBlockUser(fromUserToken, toUserId)
     await callBlockUser(toUserToken, fromUserId)
 
-    const resp = await callGetUser(toUserToken, fromUserId)
+    expect(await callGetUser(fromUserToken, toUserId)).toMatchObject({
+      body: expect.objectContaining({
+        relations: {
+          youToThem: "blocked",
+          themToYou: "blocked"
+        }
+      })
+    })
 
-    expect(resp).toMatchObject({
+    expect(await callGetUser(toUserToken, fromUserId)).toMatchObject({
       body: expect.objectContaining({
         relations: {
           youToThem: "blocked",
