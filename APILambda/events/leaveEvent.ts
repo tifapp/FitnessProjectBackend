@@ -10,7 +10,7 @@ const joinEventSchema = z.object({
 const leaveEvent = (conn: SQLExecutable, userId: string, eventId: number) => {
   return conn.transaction((tx) =>
     removeUserFromAttendeeList(tx, userId, eventId).flatMapSuccess(
-      ({ rowsAffected }) => (rowsAffected > 0 ? success(204) : failure(404))
+      ({ rowsAffected }) => (rowsAffected > 0 ? success(204) : failure(400))
     )
   )
 }
@@ -43,8 +43,8 @@ export const leaveEventRouter = (
     (req, res) =>
       leaveEvent(conn, res.locals.selfId, Number(req.params.eventId))
         .mapSuccess(() => res.status(204).json())
-        .mapFailure((error) =>
-          res.status(404).json({ error: "event-does-not-exist" })
+        .mapFailure(() =>
+          res.status(400).json({ error: "no-event-found-or-have-not-joined" })
         )
   )
 }
