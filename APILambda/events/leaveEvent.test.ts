@@ -22,29 +22,17 @@ describe("Leave event tests", () => {
     })
   })
 
-  it("should return 400 if user leaves an event that wasn't created", async () => {
-    const { token: attendeeToken } = await createUserFlow()
-    const nonExistingEventId = 1
-    const resp = await callLeaveEvent(attendeeToken, nonExistingEventId)
-
-    expect(resp).toMatchObject({
-      status: 400,
-      body: { error: "no-event-found-or-have-not-joined" }
-    })
-  })
-
-  it("should return 400 if user leaves an event that they are not in", async () => {
+  it("should return 400 if host leaves own event and co-host does not exist", async () => {
     const { token: eventOwnerToken } = await createUserFlow()
-    const { token: attendeeToken } = await createUserFlow()
 
     const futureDate = new Date()
     futureDate.setFullYear(futureDate.getFullYear() + 1)
     const event = await callCreateEvent(eventOwnerToken, testEvent)
-    const resp = await callLeaveEvent(attendeeToken, event.body.id)
+    const resp = await callLeaveEvent(eventOwnerToken, event.body.id)
 
     expect(resp).toMatchObject({
       status: 400,
-      body: { error: "no-event-found-or-have-not-joined" }
+      body: { error: "co-host-not-found" }
     })
   })
 })

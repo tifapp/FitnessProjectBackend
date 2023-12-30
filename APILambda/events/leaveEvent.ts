@@ -7,11 +7,30 @@ const joinEventSchema = z.object({
   eventId: z.string()
 })
 
+const isHostUserFromOwnEvent = (
+  conn: SQLExecutable,
+  userId: string,
+  eventId: number
+) =>
+  conn.queryFirstResult(
+    "SELECT hostId FROM event WHERE id = :eventId AND hostId = :userId",
+    {
+      userId,
+      eventId
+    }
+  )
+
+// TODO: Handle adding co-host to event if main host decides to leave
 const leaveEvent = (conn: SQLExecutable, userId: string, eventId: number) => {
   return conn.transaction((tx) =>
-    removeUserFromAttendeeList(tx, userId, eventId).flatMapSuccess(
-      ({ rowsAffected }) => (rowsAffected > 0 ? success(204) : failure(400))
-    )
+    isHostUserFromOwnEvent(tx, userId, eventId)
+      .inverted()
+      .flatMapSuccess(() =>
+        removeUserFromAttendeeList(tx, userId, eventId).flatMapSuccess(
+          ({ rowsAffected }) => (rowsAffected > 0 ? success(204) : success(200))
+        )
+      )
+      .flatMapFailure(() => failure(400))
   )
 }
 
@@ -21,7 +40,8 @@ const removeUserFromAttendeeList = (
   eventId: number
 ) =>
   conn.queryResult(
-    "DELETE FROM eventAttendance WHERE userId = :userId and eventId = :eventId",
+    `DELETE FROM eventAttendance 
+    WHERE userId = :userId and eventId = :eventId`,
     { userId, eventId }
   )
 
@@ -43,8 +63,6 @@ export const leaveEventRouter = (
     (req, res) =>
       leaveEvent(conn, res.locals.selfId, Number(req.params.eventId))
         .mapSuccess(() => res.status(204).json())
-        .mapFailure(() =>
-          res.status(400).json({ error: "no-event-found-or-have-not-joined" })
-        )
+        .mapFailure(() => res.status(400).json({ error: "co-host-not-found" }))
   )
 }
