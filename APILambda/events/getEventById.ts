@@ -1,15 +1,31 @@
-import { SQLExecutable, conn } from "TiFBackendUtils"
+import { SQLExecutable, conn, success } from "TiFBackendUtils"
 import { z } from "zod"
 import { ServerEnvironment } from "../env.js"
 import { DatabaseEvent } from "../shared/SQL.js"
 import { ValidatedRouter } from "../validation.js"
+import { userAndRelationsWithId } from "../user/getUser.js"
 
 const eventRequestSchema = z.object({
   eventId: z.string()
 })
 
-export const getEventById = (conn: SQLExecutable, eventId: number, userId: string) => conn.queryFirstResult<DatabaseEvent>(
-  `
+const getUserRelationWithId = (
+  conn: SQLExecutable,
+  hostId: string,
+  userId: string
+) =>
+  userAndRelationsWithId(conn, hostId, userId).flatMapSuccess((dbUser) =>
+    success(dbUser)
+  )
+
+export const getEventById = (
+  conn: SQLExecutable,
+  eventId: number,
+  userId: string
+) =>
+  conn
+    .queryFirstResult<DatabaseEvent>(
+      `
     SELECT 
       e.*, 
       ua.arrivedAt,
@@ -26,9 +42,9 @@ export const getEventById = (conn: SQLExecutable, eventId: number, userId: strin
     WHERE 
         e.id = :eventId;
   `,
-  { eventId, userId }
-)
-  .withFailure("event-not-found" as const)
+      { eventId, userId }
+    )
+    .withFailure("event-not-found" as const)
 
 /**
  * Creates routes related to event operations.
@@ -42,12 +58,26 @@ export const getEventByIdRouter = (
   router.getWithValidation(
     "/details/:eventId",
     { pathParamsSchema: eventRequestSchema },
-    (req, res) => getEventById(
-      conn,
-      Number(req.params.eventId),
-      res.locals.selfId
-    )
-      .mapFailure((error) => res.status(404).json({ error }))
-      .mapSuccess((event) => res.status(200).send(event))
+    (req, res) =>
+      getEventById(conn, Number(req.params.eventId), res.locals.selfId)
+        .flatMapSuccess((event) => {
+          const hostId = event.hostId
+          return getUserRelationWithId(
+            conn,
+            hostId,
+            res.locals.selfId
+          ).mapSuccess((dbUser) => {
+            if (dbUser.themToYouStatus === "blocked") {
+              const blockedEventInfo = {
+                name: dbUser.name,
+                title: event.title
+              }
+              return blockedEventInfo
+            }
+            return event
+          })
+        })
+        .mapFailure((error) => res.status(404).json({ error }))
+        .mapSuccess((event) => res.status(200).send(event))
   )
 }
