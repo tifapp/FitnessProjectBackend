@@ -1,3 +1,4 @@
+import { PromiseResult } from "TiFBackendUtils"
 import dotenv from "dotenv"
 import { z } from "zod"
 
@@ -30,4 +31,5 @@ export type ServerEnvironment = {
   environment: EnvironmentType,
   eventStartWindowInHours: number,
   maxArrivals: number,
+  setProfileCreatedAttribute: (userId: string) => PromiseResult<unknown, unknown>
 }
