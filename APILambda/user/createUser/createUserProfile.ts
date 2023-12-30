@@ -1,10 +1,10 @@
 import { SQLExecutable, conn, failure, promiseResult, success } from "TiFBackendUtils"
 import AWS from "aws-sdk"
-import { ServerEnvironment } from "../env.js"
-import { ValidatedRouter } from "../validation.js"
-import { RegisterUserRequest } from "./SQL.js"
-import { generateUniqueUsername } from "./generateUserHandle.js"
-import { DatabaseUser } from "./models.js"
+import { ServerEnvironment } from "../../env.js"
+import { ValidatedRouter } from "../../validation.js"
+import { RegisterUserRequest } from "../SQL.js"
+import { generateUniqueUsername } from "../generateUserHandle.js"
+import { DatabaseUser } from "../models.js"
 
 const checkValidName = (name: string, id: string) => {
   if (name === "") {
@@ -62,32 +62,6 @@ AWS.config.update({
   region: process.env.AWS_REGION
 })
 
-const cognito = new AWS.CognitoIdentityServiceProvider()
-
-const setProfileCreatedAttribute = (userId: string) => {
-  console.log("about to set the user's profile_created attribute to true for the user ", userId)
-
-  const verifyEmailParams: AWS.CognitoIdentityServiceProvider.AdminUpdateUserAttributesRequest =
-    {
-      UserPoolId: process.env.COGNITO_USER_POOL_ID!,
-      Username: userId,
-      UserAttributes: [
-        {
-          Name: "custom:profile_created",
-          Value: "true"
-        }
-      ]
-    }
-
-  return promiseResult(
-    cognito.adminUpdateUserAttributes(verifyEmailParams).promise()
-      .then((val) =>
-        success(val)
-      )
-      .catch(err => { console.error(err); return failure(err) })
-  )
-}
-
 export const createUserProfileRouter = (
   environment: ServerEnvironment,
   router: ValidatedRouter
@@ -101,7 +75,7 @@ export const createUserProfileRouter = (
         )
           .mapSuccess(handle => Object.assign(registerReq, { handle })))
       .flatMapSuccess(profile => createUserProfileTransaction(profile))
-      .flatMapSuccess(profile => environment.environment === "dev" ? success(profile) : setProfileCreatedAttribute(res.locals.selfId).mapSuccess(() => profile))
+      .flatMapSuccess(profile => environment.setProfileCreatedAttribute(res.locals.selfId).mapSuccess(() => profile))
       .mapFailure(error => res.status(error === "user-exists" ? 400 : 401).json({ error }))
       .mapSuccess(profile => res.status(201).json(profile))
   )
