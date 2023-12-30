@@ -17,57 +17,56 @@ import { addPlacemarkToDB } from "./sharedSQL.js"
 let eventOwnerToken: string
 let attendeeToken: string
 
-describe("Join the event by id tests", () => {
-  resetDatabaseBeforeEach()
-  beforeEach(async () => {
-    eventOwnerToken = await createUserAndUpdateAuth(global.defaultUser.auth)
-    attendeeToken = await createUserAndUpdateAuth(global.defaultUser2.auth)
-    await callPostFriendRequest(eventOwnerToken, global.defaultUser2.id)
-    await callPostFriendRequest(attendeeToken, global.defaultUser.id)
+const setupDB = async () => {
+  eventOwnerToken = await createUserAndUpdateAuth(global.defaultUser)
+  attendeeToken = await createUserAndUpdateAuth(global.defaultUser2)
+  await callPostFriendRequest(eventOwnerToken, global.defaultUser2.id)
+  await callPostFriendRequest(attendeeToken, global.defaultUser.id)
 
-    addPlacemarkToDB({
-      lat: testEvents[0].latitude,
-      lon: testEvents[0].longitude,
-      name: "Sample Location",
-      city: "Sample Neighborhood",
-      country: "Sample Country",
-      street: "Sample Street",
-      street_num: "1234",
-      unit_number: "5678"
-    })
-
-    const ongoingEventStartTime = new Date()
-    const ongoingEventEndTime = new Date()
-    const futureEventStartTime = new Date()
-    const futureEventEndTime = new Date()
-    futureEventStartTime.setFullYear(futureEventStartTime.getFullYear() + 1)
-    futureEventEndTime.setFullYear(futureEventEndTime.getFullYear() + 2)
-
-    const testFutureEvent = {
-      ...testEvents[0],
-      startTimestamp: futureEventStartTime,
-      endTimestamp: futureEventEndTime
-    }
-
-    const testOngoingEvent = {
-      ...testEvents[0],
-      startTimestamp: ongoingEventStartTime,
-      endTimestamp: ongoingEventEndTime
-    }
-
-    const ongoingEvent = await callCreateEvent(
-      eventOwnerToken,
-      testOngoingEvent
-    )
-
-    const futureEvent = await callCreateEvent(eventOwnerToken, testFutureEvent)
-
-    await callJoinEvent(attendeeToken, parseInt(ongoingEvent.body.id))
-    await callJoinEvent(eventOwnerToken, parseInt(ongoingEvent.body.id))
-
-    await callJoinEvent(attendeeToken, parseInt(futureEvent.body.id))
-    await callJoinEvent(eventOwnerToken, parseInt(futureEvent.body.id))
+  addPlacemarkToDB({
+    lat: testEvents[0].latitude,
+    lon: testEvents[0].longitude,
+    name: "Sample Location",
+    city: "Sample Neighborhood",
+    country: "Sample Country",
+    street: "Sample Street",
+    street_num: "1234",
+    unit_number: "5678"
   })
+
+  const ongoingEventStartTime = new Date()
+  const ongoingEventEndTime = new Date()
+  const futureEventStartTime = new Date()
+  const futureEventEndTime = new Date()
+  futureEventStartTime.setFullYear(futureEventStartTime.getFullYear() + 1)
+  futureEventEndTime.setFullYear(futureEventEndTime.getFullYear() + 2)
+
+  const testFutureEvent = {
+    ...testEvents[0],
+    startTimestamp: futureEventStartTime,
+    endTimestamp: futureEventEndTime
+  }
+
+  const testOngoingEvent = {
+    ...testEvents[0],
+    startTimestamp: ongoingEventStartTime,
+    endTimestamp: ongoingEventEndTime
+  }
+
+  const ongoingEvent = await callCreateEvent(eventOwnerToken, testOngoingEvent)
+
+  const futureEvent = await callCreateEvent(eventOwnerToken, testFutureEvent)
+
+  await callJoinEvent(attendeeToken, parseInt(ongoingEvent.body.id))
+  await callJoinEvent(eventOwnerToken, parseInt(ongoingEvent.body.id))
+
+  await callJoinEvent(attendeeToken, parseInt(futureEvent.body.id))
+  await callJoinEvent(eventOwnerToken, parseInt(futureEvent.body.id))
+}
+
+describe("Testing the getEventsByRegion endpoint", () => {
+  resetDatabaseBeforeEach()
+  beforeEach(setupDB)
 
   it("should return 200 with the event, user relation, attendee count data", async () => {
     const respGetEventsByRegion = await callGetEventsByRegion(
@@ -80,10 +79,13 @@ describe("Join the event by id tests", () => {
     expect(respGetEventsByRegion.status).toEqual(200)
     // expect(respGetEventsByRegion.body[0].relationHostToUser).toEqual("friends")
     // expect(respGetEventsByRegion.body[0].relationUserToHost).toEqual("friends")
-    expect(
-      respGetEventsByRegion.body[0].eventAttendeeInformation.totalAttendees
-    ).toEqual(1)
+    expect(respGetEventsByRegion.body[0].attendees.count).toEqual(1)
   })
+})
+
+describe("Testing the individual queries from the getEventsByRegion endpoint", () => {
+  resetDatabaseBeforeEach()
+  beforeEach(setupDB)
 
   it("should not return events that are not within the radius", async () => {
     const events = await getEventsByRegion(conn, {
@@ -126,7 +128,7 @@ describe("Join the event by id tests", () => {
       userLongitude: testEvents[0].longitude,
       radius: 50000
     })
-    const attendees = await getAttendees(events.value[0].id)
+    const attendees = await getAttendees(`${events.value[0].id}`)
     expect(attendees.value).toHaveLength(1)
     expect(attendees.value[0].userId).not.toEqual(events.value[0].hostId)
   })

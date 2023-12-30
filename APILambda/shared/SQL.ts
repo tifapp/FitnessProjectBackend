@@ -17,13 +17,17 @@ export type DatabaseEvent = {
 }
 
 export type EventAttendee = {
-  userId: string
+  userIds: string
   eventId: number
-  joinDate: Date
+}
+
+export type EventAttendeeCount = {
+  eventId: number
+  attendeeCount: number
 }
 
 export type GetEventByRegionEvent = {
-  id: string
+  id: number
   hostId: string
   title: string
   description: string
@@ -43,6 +47,9 @@ export type GetEventByRegionEvent = {
   street_num: number
   totalAttendees: number
   attendeesPreview: EventAttendee[]
+  hostName: string
+  hostHandle: string
+  hostProfileImageURL: string
 }
 
 // add withvalidatedrequest middleware to all
