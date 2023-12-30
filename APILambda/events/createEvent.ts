@@ -1,8 +1,16 @@
-import { SQLExecutable, conn } from "TiFBackendUtils"
+import {
+  SQLExecutable,
+  SearchClosestAddressToCoordinates,
+  conn,
+  success
+} from "TiFBackendUtils"
 import { z } from "zod"
 import { ServerEnvironment } from "../env.js"
 import { ValidatedRouter } from "../validation.js"
 import { EventColorSchema } from "./models.js"
+import { addPlacemarkToDB, checkExistingPlacemarkInDB } from "./sharedSQL.js"
+
+const eventId
 
 const CreateEventSchema = z
   .object({
@@ -82,6 +90,16 @@ export const createEventRouter = (
     { bodySchema: CreateEventSchema },
     (req, res) => {
       return createEvent(conn, req.body, res.locals.selfId)
+        .mapSuccess(async (event) =>
+          checkExistingPlacemarkInDB({
+            latitude: parseFloat(event.location.latitude.toFixed(10)),
+            longitude: parseFloat(event.location.longitude.toFixed(10))
+          })
+        )
+        .flatMapSuccess(async (event) =>
+          success(await SearchClosestAddressToCoordinates(event.location))
+        )
+        .flatMapSuccess((placemark) => addPlacemarkToDB(placemark))
         .mapFailure((error) => res.status(500).json({ error }))
         .mapSuccess(({ insertId }) => res.status(201).json({ id: insertId }))
     }
