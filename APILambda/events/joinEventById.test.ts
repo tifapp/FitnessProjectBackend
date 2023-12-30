@@ -10,6 +10,39 @@ import { createUserFlow } from "../test/userFlows/users.js"
 import { createEvent } from "./createEvent.js"
 
 describe("Join the event by id tests", () => {
+  it("should not save arrival when the user passes a location but they aren't eligible to join the event", async () => {
+    const { token: eventOwnerToken } = await createUserFlow()
+    const { token: attendeeToken, userId: attendeeId } = await createUserFlow()
+    const event = await callCreateEvent(eventOwnerToken, testEvent)
+    const resp = await callJoinEvent(attendeeToken, parseInt(event.body.id))
+    expect(resp).toMatchObject({
+      status: 201,
+      body: { id: attendeeId, token: expect.anything(), isArrived: false }
+    })
+  })
+
+  it("should not save arrival when the user passes a location and its outdated", async () => {
+    const { token: eventOwnerToken } = await createUserFlow()
+    const { token: attendeeToken, userId: attendeeId } = await createUserFlow()
+    const event = await callCreateEvent(eventOwnerToken, testEvent)
+    const resp = await callJoinEvent(attendeeToken, parseInt(event.body.id))
+    expect(resp).toMatchObject({
+      status: 201,
+      body: { id: attendeeId, token: expect.anything(), isArrived: false }
+    })
+  })
+
+  it("should save arrival when the user passes a location", async () => {
+    const { token: eventOwnerToken } = await createUserFlow()
+    const { token: attendeeToken, userId: attendeeId } = await createUserFlow()
+    const event = await callCreateEvent(eventOwnerToken, { ...testEvent })
+    const resp = await callJoinEvent(attendeeToken, parseInt(event.body.id))
+    expect(resp).toMatchObject({
+      status: 201,
+      body: { id: attendeeId, token: expect.anything(), isArrived: true }
+    })
+  })
+
   it("should return 201 when the user is able to successfully join the event", async () => {
     const { token: eventOwnerToken } = await createUserFlow()
     const { token: attendeeToken, userId: attendeeId } = await createUserFlow()
