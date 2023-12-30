@@ -5,7 +5,7 @@ describe("UserHandle tests", () => {
     const result = UserHandle.schema.safeParse("bitchell_dickle")
     expect(result.success).toEqual(true)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    expect((result as any).data.toString()).toEqual("@bitchell_dickle")
+    expect((result as any).data.toString()).toEqual("bitchell_dickle")
   })
 
   it("should be undefined for parsing invalid user handle", () => {

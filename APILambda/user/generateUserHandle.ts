@@ -1,4 +1,4 @@
-import { PromiseResult, SQLExecutable, failure, promiseResult } from "TiFBackendUtils"
+import { PromiseResult, SQLExecutable, UserHandle, failure, promiseResult } from "TiFBackendUtils"
 import crypto from "crypto"
 import { userWithHandleDoesNotExist } from "./SQL.js"
 
@@ -10,10 +10,10 @@ const generateNumericHash = (input: string) => {
 }
 
 // make retry function util?
-const generateUniqueUsernameAttempt = (conn: SQLExecutable, name: string, retries: number): PromiseResult<string, "could-not-generate-username"> => {
-  const potentialUsername = `${name}${generateNumericHash(
+const generateUniqueUsernameAttempt = (conn: SQLExecutable, name: string, retries: number): PromiseResult<UserHandle, "could-not-generate-username"> => {
+  const potentialUsername = UserHandle.parse(`${name}${generateNumericHash(
     `${name}${Date.now()}`
-  )}`
+  )}`)!
   return userWithHandleDoesNotExist(conn, potentialUsername)
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore Retry function

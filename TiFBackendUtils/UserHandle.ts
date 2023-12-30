@@ -14,7 +14,7 @@ export class UserHandle {
    * Formats this handle by prefixing the string with an "@".
    */
   toString () {
-    return `@${this.rawValue}`
+    return `${this.rawValue}`
   }
 
   /**

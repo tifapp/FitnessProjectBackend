@@ -8,7 +8,7 @@ import { DatabaseUser } from "./models.js"
 const UpdateUserRequestSchema = z.object({
   name: z.string().optional(),
   bio: z.string().max(250).optional(),
-  handle: UserHandle.schema.optional().transform(userHandle => userHandle?.rawValue)
+  handle: UserHandle.schema.optional()
 })
 
 export type UpdateUserRequest = z.infer<typeof UpdateUserRequestSchema>
@@ -55,7 +55,7 @@ const updateProfile = (
 
 type DatabaseUserProfile = {
   name: string
-  handle: string
+  handle: UserHandle
   bio?: string
 }
 

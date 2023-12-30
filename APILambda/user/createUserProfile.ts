@@ -1,10 +1,14 @@
-import { SQLExecutable, conn, failure, promiseResult, success } from "TiFBackendUtils"
+import { SQLExecutable, UserHandle, conn, failure, promiseResult, success } from "TiFBackendUtils"
 import AWS from "aws-sdk"
 import { ServerEnvironment } from "../env.js"
 import { ValidatedRouter } from "../validation.js"
-import { RegisterUserRequest } from "./SQL.js"
 import { generateUniqueUsername } from "./generateUserHandle.js"
 import { DatabaseUser } from "./models.js"
+
+type RegisterUserRequest = {
+  id: string
+  name: string
+}
 
 const checkValidName = (name: string, id: string) => {
   if (name === "") {
@@ -17,7 +21,7 @@ const checkValidName = (name: string, id: string) => {
   })
 }
 
-const userWithHandleOrIdExists = (conn: SQLExecutable, id: string, handle?: string) => {
+const userWithHandleOrIdExists = (conn: SQLExecutable, id: string, handle?: UserHandle) => {
   return promiseResult(handle ? success() : failure("missing-handle" as const))
     .flatMapSuccess(() => conn
       .queryFirstResult<DatabaseUser>("SELECT TRUE FROM user WHERE handle = :handle OR id = :id", {
@@ -51,7 +55,7 @@ export const insertUser = (
  * @returns an object containing the id of the newly registered user
  */
 const createUserProfileTransaction = (
-  request: RegisterUserRequest
+  request: RegisterUserRequest & {handle?: UserHandle}
 ) =>
   conn.transaction((tx) =>
     userWithHandleOrIdExists(tx, request.id, request.handle)

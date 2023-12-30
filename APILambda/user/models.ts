@@ -1,10 +1,12 @@
+import { UserHandle } from "TiFBackendUtils"
+
 /**
  * A type representing the main user fields.
  */ // use zod schema for validation then transformation
 export type DatabaseUser = {
   id: string // assign to a type for clarity
   name: string
-  handle: string // userhandle class
+  handle: UserHandle
   bio?: string
   profileImageURL?: string // url type
   creationDate: Date

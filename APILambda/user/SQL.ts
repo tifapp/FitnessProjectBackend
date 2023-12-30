@@ -1,15 +1,9 @@
-import { SQLExecutable } from "TiFBackendUtils"
+import { SQLExecutable, UserHandle } from "TiFBackendUtils"
 import { DatabaseUser } from "./models.js"
-
-export type RegisterUserRequest = {
-  id: string
-  name: string
-  handle: string
-}
 
 export const userWithHandleDoesNotExist = (
   conn: SQLExecutable,
-  handle: string
+  handle: UserHandle
 ) =>
   conn
     .queryHasResults("SELECT TRUE FROM user WHERE handle = :handle", {

@@ -6,7 +6,7 @@ import { DatabaseUser } from "./models.js"
 
 const AutocompleteUsersRequestSchema = z.object({
   query: z.object({
-    handle: UserHandle.schema.transform(userHandle => userHandle.rawValue),
+    handle: UserHandle.schema,
     limit: z
       .string()
       .transform((arg) => parseInt(arg))
@@ -35,7 +35,7 @@ export const autocompleteUsersRouter = (
 
 const autocompleteUsers = (
   conn: SQLExecutable,
-  baseHandle: string,
+  baseHandle: UserHandle,
   limit: number
 ) => conn.queryResults<Pick<DatabaseUser, "id" | "name" | "handle">>(
   `
