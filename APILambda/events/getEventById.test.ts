@@ -42,7 +42,7 @@ describe("GetSingleEvent tests", () => {
 })
 
 describe("Get blocked event's host and title only", () => {
-  it("should return host name and event title when blocked by host", async () => {
+  it("should return host name and event title only when blocked by host", async () => {
     const { token, name } = await createUserFlow()
     const { token: blockedToken, userId: blockedUserId } =
       await createUserFlow()
@@ -57,6 +57,35 @@ describe("Get blocked event's host and title only", () => {
       endTimestamp
     })
     const resp = await callGetEvent(blockedToken, createEventResponse.body.id)
+
+    expect(resp).toMatchObject({
+      status: 200
+    })
+
+    expect(resp.body).toEqual({
+      name,
+      title: testEvent.title
+    })
+  })
+
+  it("should return host name and event title only when attendee blocked host", async () => {
+    const {
+      token: hostToken,
+      name,
+      userId: hostUserId
+    } = await createUserFlow()
+    const { token: attendeeToken } = await createUserFlow()
+
+    await callBlockUser(attendeeToken, hostUserId)
+
+    const startTimestamp = new Date("2050-01-01")
+    const endTimestamp = new Date("2050-01-02")
+    const createEventResponse = await callCreateEvent(hostToken, {
+      ...testEvent,
+      startTimestamp,
+      endTimestamp
+    })
+    const resp = await callGetEvent(attendeeToken, createEventResponse.body.id)
 
     expect(resp).toMatchObject({
       status: 200

@@ -67,7 +67,10 @@ export const getEventByIdRouter = (
             hostId,
             res.locals.selfId
           ).mapSuccess((dbUser) => {
-            if (dbUser.themToYouStatus === "blocked") {
+            if (
+              dbUser.themToYouStatus === "blocked" ||
+              dbUser.youToThemStatus === "blocked"
+            ) {
               const blockedEventInfo = {
                 name: dbUser.name,
                 title: event.title
