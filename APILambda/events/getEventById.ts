@@ -4,19 +4,38 @@ import { ServerEnvironment } from "../env.js"
 import { DatabaseEvent } from "../shared/SQL.js"
 import { ValidatedRouter } from "../validation.js"
 import { userAndRelationsWithId } from "../user/getUser.js"
+import { DatabaseUser, UserToProfileRelationStatus } from "../user/models.js"
 
 const eventRequestSchema = z.object({
   eventId: z.string()
 })
 
-const getUserRelationWithId = (
-  conn: SQLExecutable,
-  hostId: string,
-  userId: string
-) =>
-  userAndRelationsWithId(conn, hostId, userId).flatMapSuccess((dbUser) =>
-    success(dbUser)
-  )
+type BlockedEvent = {
+  name: string
+  title: string
+}
+
+type DatabaseUserWithRelation = DatabaseUser & {
+  themToYouStatus: UserToProfileRelationStatus | null
+  youToThemStatus: UserToProfileRelationStatus | null
+}
+
+const getEventInfo = (
+  dbUser: DatabaseUserWithRelation,
+  event: DatabaseEvent
+): DatabaseEvent | BlockedEvent => {
+  if (
+    dbUser.themToYouStatus === "blocked" ||
+    dbUser.youToThemStatus === "blocked"
+  ) {
+    const blockedEvent: BlockedEvent = {
+      name: dbUser.name,
+      title: event.title
+    }
+    return blockedEvent
+  }
+  return event
+}
 
 export const getEventById = (
   conn: SQLExecutable,
@@ -62,22 +81,12 @@ export const getEventByIdRouter = (
       getEventById(conn, Number(req.params.eventId), res.locals.selfId)
         .flatMapSuccess((event) => {
           const hostId = event.hostId
-          return getUserRelationWithId(
+          return userAndRelationsWithId(
             conn,
             hostId,
             res.locals.selfId
           ).mapSuccess((dbUser) => {
-            if (
-              dbUser.themToYouStatus === "blocked" ||
-              dbUser.youToThemStatus === "blocked"
-            ) {
-              const blockedEventInfo = {
-                name: dbUser.name,
-                title: event.title
-              }
-              return blockedEventInfo
-            }
-            return event
+            return getEventInfo(dbUser, event)
           })
         })
         .mapFailure((error) => res.status(404).json({ error }))
