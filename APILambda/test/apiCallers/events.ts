@@ -29,7 +29,7 @@ export const callLeaveEvent = async (
   eventId: number
 ) => {
   return await request(testApp)
-    .post(`/event/leave/${eventId}`)
+    .delete(`/event/leave/${eventId}`)
     .set("Authorization", bearerToken)
     .send()
 }

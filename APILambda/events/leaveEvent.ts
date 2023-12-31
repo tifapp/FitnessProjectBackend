@@ -3,9 +3,25 @@ import { z } from "zod"
 import { ServerEnvironment } from "../env.js"
 import { ValidatedRouter } from "../validation.js"
 
-const joinEventSchema = z.object({
+const leaveEventSchema = z.object({
   eventId: z.string()
 })
+
+// TODO: Handle adding co-host to event if main host decides to leave
+const leaveEvent = (conn: SQLExecutable, userId: string, eventId: number) => {
+  return conn.transaction((tx) =>
+    isHostUserFromOwnEvent(tx, userId, eventId)
+      .inverted()
+      .flatMapSuccess(() =>
+        removeUserFromAttendeeList(tx, userId, eventId).flatMapSuccess(
+          ({ rowsAffected }) => {
+            return rowsAffected > 0 ? success(204) : success(200)
+          }
+        )
+      )
+      .flatMapFailure(() => failure(400))
+  )
+}
 
 const isHostUserFromOwnEvent = (
   conn: SQLExecutable,
@@ -20,20 +36,6 @@ const isHostUserFromOwnEvent = (
     }
   )
 
-// TODO: Handle adding co-host to event if main host decides to leave
-const leaveEvent = (conn: SQLExecutable, userId: string, eventId: number) => {
-  return conn.transaction((tx) =>
-    isHostUserFromOwnEvent(tx, userId, eventId)
-      .inverted()
-      .flatMapSuccess(() =>
-        removeUserFromAttendeeList(tx, userId, eventId).flatMapSuccess(
-          ({ rowsAffected }) => (rowsAffected > 0 ? success(204) : success(200))
-        )
-      )
-      .flatMapFailure(() => failure(400))
-  )
-}
-
 const removeUserFromAttendeeList = (
   conn: SQLExecutable,
   userId: string,
@@ -46,7 +48,7 @@ const removeUserFromAttendeeList = (
   )
 
 /**
- * Leave an event.
+ * Leave an event given an event id.
  *
  * @param environment see {@link ServerEnvironment}.
  */
@@ -55,14 +57,16 @@ export const leaveEventRouter = (
   router: ValidatedRouter
 ) => {
   /**
-   * Join an event
+   * Leave an event
    */
-  router.postWithValidation(
+  router.deleteWithValidation(
     "/leave/:eventId",
-    { pathParamsSchema: joinEventSchema },
+    { pathParamsSchema: leaveEventSchema },
     (req, res) =>
       leaveEvent(conn, res.locals.selfId, Number(req.params.eventId))
-        .mapSuccess(() => res.status(204).json())
-        .mapFailure(() => res.status(400).json({ error: "co-host-not-found" }))
+        .mapSuccess((result) => res.status(result).json())
+        .mapFailure((error) =>
+          res.status(error).json({ error: "co-host-not-found" })
+        )
   )
 }
