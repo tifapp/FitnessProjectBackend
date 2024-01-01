@@ -1,4 +1,3 @@
-/* eslint-disable no-use-before-define */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
@@ -174,7 +173,9 @@ export class FailureResult<Success, Failure> {
 /**
  * A result that handles a promise to a {@link Result} in a way such that it can be used like a normal synchronous result.
  */
-export class PromiseResult<Success, Failure> extends Promise<Result<Success, Failure>> {
+export class PromiseResult<Success, Failure> extends Promise<
+  Result<Success, Failure>
+> {
   constructor (executor) {
     if (typeof executor !== "function") {
       throw new TypeError("Promise resolver " + executor + " is not a function")
