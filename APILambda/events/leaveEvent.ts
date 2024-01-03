@@ -1,4 +1,4 @@
-import { SQLExecutable, conn, failure, success } from "TiFBackendUtils"
+import { SQLExecutable, conn } from "TiFBackendUtils"
 import { z } from "zod"
 import { ServerEnvironment } from "../env.js"
 import { ValidatedRouter } from "../validation.js"
@@ -12,14 +12,9 @@ const leaveEvent = (conn: SQLExecutable, userId: string, eventId: number) => {
   return conn.transaction((tx) =>
     isHostUserFromOwnEvent(tx, userId, eventId)
       .inverted()
-      .flatMapSuccess(() =>
-        removeUserFromAttendeeList(tx, userId, eventId).flatMapSuccess(
-          ({ rowsAffected }) => {
-            return rowsAffected > 0 ? success(204) : success(200)
-          }
-        )
-      )
-      .flatMapFailure(() => failure(400))
+      .flatMapSuccess(() => removeUserFromAttendeeList(tx, userId, eventId))
+      .mapSuccess(({ rowsAffected }) => (rowsAffected > 0 ? 204 : 200))
+      .mapFailure(() => 400)
   )
 }
 
