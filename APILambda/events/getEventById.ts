@@ -3,21 +3,11 @@ import { z } from "zod"
 import { ServerEnvironment } from "../env.js"
 import { DatabaseEvent } from "../shared/SQL.js"
 import { ValidatedRouter } from "../validation.js"
+import { DatabaseUserToHostRelation, BlockedEvent } from "./models.js"
 
 const eventRequestSchema = z.object({
   eventId: z.string()
 })
-
-type BlockedEvent = {
-  name: string
-  title: string
-}
-
-type DatabaseUserToHostRelation = {
-  name: string
-  themToYouStatus: string
-  youToThemStatus: string
-}
 
 const getEventInfo = (
   dbUser: DatabaseUserToHostRelation,
