@@ -1,10 +1,8 @@
-import { SQLExecutable, conn, success } from "TiFBackendUtils"
+import { SQLExecutable, conn } from "TiFBackendUtils"
 import { z } from "zod"
 import { ServerEnvironment } from "../env.js"
 import { DatabaseEvent } from "../shared/SQL.js"
 import { ValidatedRouter } from "../validation.js"
-import { userAndRelationsWithId } from "../user/getUser.js"
-import { DatabaseUser, UserToProfileRelationStatus } from "../user/models.js"
 
 const eventRequestSchema = z.object({
   eventId: z.string()
@@ -15,15 +13,16 @@ type BlockedEvent = {
   title: string
 }
 
-type DatabaseUserWithRelation = DatabaseUser & {
-  themToYouStatus: UserToProfileRelationStatus | null
-  youToThemStatus: UserToProfileRelationStatus | null
+type DatabaseUserToHostRelation = {
+  name: string
+  themToYouStatus: string
+  youToThemStatus: string
 }
 
 const getEventInfo = (
-  dbUser: DatabaseUserWithRelation,
+  dbUser: DatabaseUserToHostRelation,
   event: DatabaseEvent
-): DatabaseEvent | BlockedEvent => {
+) => {
   if (
     dbUser.themToYouStatus === "blocked" ||
     dbUser.youToThemStatus === "blocked"
@@ -35,6 +34,29 @@ const getEventInfo = (
     return blockedEvent
   }
   return event
+}
+
+const getUserToHostRelationWithId = (
+  conn: SQLExecutable,
+  userId: string,
+  fromUserId: string
+) => {
+  return conn.queryFirstResult<DatabaseUserToHostRelation>(
+    `
+    SELECT u.name, 
+    ur1.status AS themToYouStatus, 
+    ur2.status AS youToThemStatus 
+    FROM user u 
+    LEFT JOIN userRelations ur1 ON ur1.fromUserId = u.id
+    AND ur1.fromUserId = :userId
+    AND ur1.toUserId = :fromUserId
+    LEFT JOIN userRelations ur2 ON ur2.toUserId = u.id
+    AND ur2.fromUserId = :fromUserId
+    AND ur2.toUserId = :userId
+    WHERE u.id = :userId;
+  `,
+    { userId, fromUserId }
+  )
 }
 
 export const getEventById = (
@@ -80,10 +102,9 @@ export const getEventByIdRouter = (
     (req, res) =>
       getEventById(conn, Number(req.params.eventId), res.locals.selfId)
         .flatMapSuccess((event) => {
-          const hostId = event.hostId
-          return userAndRelationsWithId(
+          return getUserToHostRelationWithId(
             conn,
-            hostId,
+            event.hostId,
             res.locals.selfId
           ).mapSuccess((dbUser) => {
             return getEventInfo(dbUser, event)

@@ -41,8 +41,8 @@ describe("GetSingleEvent tests", () => {
   })
 })
 
-describe("Get blocked event's host and title only", () => {
-  it("should return host name and event title only when blocked by host", async () => {
+describe("Get event's host and title only", () => {
+  it("should return host name and event title if blocked by host", async () => {
     const { token, name } = await createUserFlow()
     const { token: blockedToken, userId: blockedUserId } =
       await createUserFlow()
@@ -68,7 +68,7 @@ describe("Get blocked event's host and title only", () => {
     })
   })
 
-  it("should return host name and event title only when attendee blocked host", async () => {
+  it("should return host name and event title if attendee blocked host", async () => {
     const {
       token: hostToken,
       name,

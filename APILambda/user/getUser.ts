@@ -63,7 +63,7 @@ const toUserWithRelationResponse = (user: DatabaseUserWithRelation) => ({
   }
 })
 
-export const userAndRelationsWithId = (
+const userAndRelationsWithId = (
   conn: SQLExecutable,
   userId: string,
   fromUserId: string
