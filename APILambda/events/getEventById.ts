@@ -91,15 +91,13 @@ export const getEventByIdRouter = (
     { pathParamsSchema: eventRequestSchema },
     (req, res) =>
       getEventById(conn, Number(req.params.eventId), res.locals.selfId)
-        .flatMapSuccess((event) => {
-          return getUserToHostRelationWithId(
+        .flatMapSuccess((event) =>
+          getUserToHostRelationWithId(
             conn,
             event.hostId,
             res.locals.selfId
-          ).mapSuccess((dbUser) => {
-            return getEventInfo(dbUser, event)
-          })
-        })
+          ).mapSuccess((dbUser) => getEventInfo(dbUser, event))
+        )
         .mapFailure((error) => res.status(404).json({ error }))
         .mapSuccess((event) => res.status(200).send(event))
   )
