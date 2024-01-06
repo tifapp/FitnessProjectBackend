@@ -27,34 +27,43 @@ type EventsRequestByRegion = {
 export const convertEventsByRegionResult = (event: GetEventByRegionEvent) => {
   return {
     id: event.id,
-    hostId: event.hostId,
     title: event.title,
     description: event.description,
     color: event.color,
-    eventRelations: {
-      relationUserToHost: event.relationHostToUser,
-      relationHostToUser: event.relationHostToUser
+    // Add the event arrival status
+    host: {
+      id: event.hostId,
+      name: event.hostName,
+      handle: event.hostHandle,
+      profileImageURL: event.hostProfileImageURL,
+      haveRelations: {
+        userToHost: event.relationHostToUser,
+        hostToUser: event.relationHostToUser
+      }
     },
-    eventLocation: {
-      city: event.city ?? "Unknown City",
-      country: event.country ?? "Unknown Country",
-      street: event.street ?? "Unknown Address",
-      street_num: event.street_num ?? "",
+    coordinates: {
       latitude: event.latitude,
       longitude: event.longitude
     },
-    eventDuration: {
+    placemark: {
+      name: event.name,
+      country: event.country,
+      street: event.street,
+      streetNumber: event.street_num,
+      city: event.city
+    },
+    duration: {
       startTimestamp: event.startTimestamp,
       endTimestamp: event.endTimestamp
     },
-    eventPreferences: {
+    settings: {
       shouldHideAfterStartDate: event.shouldHideAfterStartDate,
       isChatEnabled: event.isChatEnabled
-    },
-    eventAttendeeInformation: {
-      totalAttendees: event.totalAttendees,
-      attendeesPreview: event.attendeesPreview
     }
+    // attendees: {
+    //   count: event.totalAttendees,
+    //   preview: event.attendeesPreview
+    // }
   }
 }
 
@@ -64,7 +73,7 @@ export const getEventsByRegion = (
 ) =>
   conn.queryResults<GetEventByRegionEvent>(
     `
-    SELECT E.*, 
+    SELECT E.*,
     L.name,
     L.city, 
     L.country, 
@@ -88,15 +97,46 @@ export const getEventsByRegion = (
 export const getAttendees = (eventIds: string) => {
   return conn.queryResults<EventAttendee>(
     `
-  SELECT A.*
-  FROM event E
-  JOIN eventAttendance A ON E.id = A.eventId
-  WHERE E.id IN (:eventIds)
-  AND E.hostId <> A.userId
-  `,
+    SELECT A.*
+    FROM event E
+    JOIN eventAttendance A ON E.id = A.eventId
+    WHERE E.id IN (:eventIds)
+    AND E.hostId <> A.userId
+    `,
     { eventIds }
   )
 }
+
+// export const getAttendees = (eventIds: string) => {
+//   return conn.queryResults<EventAttendee>(
+//     `
+//     WITH EventAttendees AS (
+//       SELECT
+//           A.*,
+//           ROW_NUMBER() OVER (PARTITION BY A.eventId ORDER BY A.joinDate) as rn
+//           COUNT(A.eventId) AS attendeeCount
+//       FROM
+//           eventAttendance A
+//       JOIN
+//           event E ON E.id = A.eventId
+//       WHERE
+//           E.id IN (:eventIds)
+//           AND E.hostId <> A.userId
+//       GROUP BY A.eventId
+//   )
+//   SELECT
+//       userId,
+//       eventId,
+//       joinDate,
+//       attendeeCount
+//   FROM
+//       EventAttendees
+//   WHERE
+//       rn <= 3;
+//   `,
+//     { eventIds }
+//   )
+// }
 
 const setTotalAttendeesForEvent = (
   events: GetEventByRegionEvent[],
@@ -114,8 +154,14 @@ const setTotalAttendeesForEvent = (
   })
 
   return events.map((event) => {
-    event.totalAttendees = eventAttendeesMap.get(event.id).length
-    event.attendeesPreview = eventAttendeesMap.get(event.id).slice(0, 3)
+    event.attendeesPreview = eventAttendeesMap.get(event.id)
+
+    // for (const attendee of attendees) {
+    //   if (attendee.eventId === event.id) {
+    //     event.attendeesPreview = eventAttendeesMap.get(event.id)
+    //   }
+    // }
+    // event.attendeesPreview = eventAttendeesMap.get(event.id).slice(0, 3)
     return event
   })
 }
@@ -123,11 +169,7 @@ const setTotalAttendeesForEvent = (
 // Utilize the event to join with the attendees table to get the attendees
 const getEventAttendeesPreview = (events: GetEventByRegionEvent[]) => {
   // Create a parameterized query string with placeholders for event IDs
-  const eventIds = events.map((event) => event.id)
-  // Create a parameterized query string with placeholders for event IDs
-  const eventIdQueryString = eventIds
-    .map((_, index) => eventIds[index])
-    .join(", ")
+  const eventIdQueryString = events.map((event) => event.id).join(",")
   const eventsByRegion = getAttendees(eventIdQueryString).mapSuccess(
     (attendees) => setTotalAttendeesForEvent(events, attendees)
   )

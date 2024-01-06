@@ -18,13 +18,16 @@ export type DatabaseEvent = {
 
 export type EventAttendee = {
   userId: string
-  eventId: number
+  eventId: string
   joinDate: Date
 }
 
 export type GetEventByRegionEvent = {
   id: string
   hostId: string
+  hostHandle: string
+  hostName: string
+  hostProfileImageURL: string
   title: string
   description: string
   startTimestamp: Date

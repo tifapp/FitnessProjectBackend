@@ -1,4 +1,9 @@
-import { Placemark, SQLExecutable, conn } from "TiFBackendUtils"
+import {
+  LocationCoordinate2D,
+  Placemark,
+  SQLExecutable,
+  conn
+} from "TiFBackendUtils"
 
 export const isUserInEvent = (
   conn: SQLExecutable,
@@ -53,3 +58,14 @@ export const addUserToEventAttendance = (userId: string, eventId: number) =>
     `,
     { userId, eventId }
   )
+
+export const checkExistingPlacemarkInDB = (location: LocationCoordinate2D) =>
+  conn
+    .queryHasResults(
+      `
+      SELECT TRUE FROM location WHERE lat = :latitude AND lon = :longitude LIMIT 1
+      `,
+      location
+    )
+    .inverted()
+    .withFailure("placemark-already-exists" as const)
