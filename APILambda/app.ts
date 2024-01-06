@@ -22,6 +22,7 @@ import { updateUserSettingsRouter } from "./user/settings/updateUserSettings.js"
 import { createUnblockUserRouter } from "./user/unblockUser.js"
 import { updateUserProfileRouter } from "./user/updateUserProfile.js"
 import { createValidatedRouter } from "./validation.js"
+import { getAttendeesByEventIdRouter } from "./events/getAttendees.js"
 
 /**
  * Creates an application instance.
@@ -66,6 +67,7 @@ const addEventRoutes = (environment: ServerEnvironment) => {
   setArrivalStatusRouter(environment, router)
   setDepartureRouter(environment, router)
   getUpcomingEventsByRegionRouter(environment, router)
+  getAttendeesByEventIdRouter(environment, router)
   return router
 }
 

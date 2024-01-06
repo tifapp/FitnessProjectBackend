@@ -15,5 +15,20 @@ export type DatabaseEvent = {
   arrivalStatus: string
 }
 
+export type DatabaseAttendee = {
+  id: string
+  profileImageUrl: string
+  name: string
+  handle: string
+  joinTimestamp: string
+  youToThemStatus: string,
+  themToYouStatus: string
+}
+
+export type Cursor = {
+  userId: string
+  joinDate: string
+}
+
 // add withvalidatedrequest middleware to all
 // add with valid user check to some
