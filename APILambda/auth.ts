@@ -13,7 +13,6 @@ const AuthClaimsSchema = z
   .object({
     sub: z.string(),
     name: z.string(),
-    username: z.string(),
     "custom:profile_created": z.string().optional()
   })
   .and(
@@ -35,11 +34,10 @@ export type AuthClaims = z.infer<typeof AuthClaimsSchema>
 const TransformedAuthClaimsSchema = AuthClaimsSchema.transform((res) => ({
   selfId: res.sub,
   name: res.name,
-  username: res.username,
   // @ts-expect-error email may be missing from claims
   email: res.email ?? undefined,
   // @ts-expect-error phone number may be missing from claims
-  phoneNumber: res.phone_number ?? undefined,
+  phoneNumber: res.phone_number ?? undefined, // try json parse
   // cognito claims encode them as strings
   // @ts-expect-error email or phone number may be missing from claims
   isContactInfoVerified: res.email_verified === true || res.phone_number_verified === true,
@@ -68,8 +66,6 @@ export const addCognitoTokenVerification = (
 
     const token = auth.split(" ")[1] // TODO: ensure correct format of auth header ("Bearer {token}")
 
-    console.log("claims look like ", JSON.parse(Buffer.from(token.split(".")[1], "base64").toString()))
-
     try {
       // eslint-disable-next-line camelcase
       const { selfId, name, isContactInfoVerified, doesProfileExist } =
@@ -87,19 +83,19 @@ export const addCognitoTokenVerification = (
       }
 
       // separate attribute checker to a middleware, apply to other endpints
-      const isCreatingProfile = req.url === "/user" && req.method === "POST"
+      // const isCreatingProfile = req.url === "/user" && req.method === "POST"
 
-      if (res.locals.doesProfileExist) {
-        if (isCreatingProfile) {
-          // TODO: Change error message to generic message for prod api
-          return res.status(400).json({ error: "user-already-exists" })
-        }
-      } else {
-        if (!isCreatingProfile) {
-          // TODO: Change error message to generic message for prod api
-          return res.status(401).json({ error: "user-does-not-exist" })
-        }
-      }
+      // if (res.locals.doesProfileExist) {
+      //   // if (isCreatingProfile && env.environment === "prod") {
+      //   //   // TODO: Change error message to generic message for prod api
+      //   //   return res.status(400).json({ error: "user-already-exists" })
+      //   // }
+      // } else {
+      //   // if (!isCreatingProfile) {
+      //   //   // TODO: Change error message to generic message for prod api
+      //   //   return res.status(401).json({ error: "user-does-not-exist" })
+      //   // }
+      // }
 
       next()
     } catch (err) {

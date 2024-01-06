@@ -24,54 +24,69 @@ The main API is found in the `APILambda` folder. This folder contains different 
 
 In order to operate on the database you'll need to write SQL statements.
 
-Navigate to your specific data type folder, and locate the `SQLStatements.ts` file.
+Navigate to your specific data type folder, and locate the `<your_data_type>.ts` to add queries specific to that data type file or `SQL.ts` file for adding queries that will be used in multiple files.
 
 ```plaintext
 APILambda
 └── <your_data_type_folder> (e.g., users, products, etc.)
-    ├── routes.ts
-    ├── transactions.ts
-    └── SQL.ts (This is where you add your SQL statements)
+    ├── <your_data_type>.ts (This is where you add your SQL statements)
+    ├── <your_data_type>.test.ts
+    └── SQL.ts (This is where you add your SQL statements to be used in multiple files)
 ```
 
 In this file, write your SQL statements for the new route. This SQL statement should return the desired query result for your route.
 
-For example, if you're adding a new "products" route, you might add a SQL statement like the following in the `SQLStatements.ts` file under the `products` folder:
+For example, if you're adding a new "products" route, you might add a SQL statement like the following in the `getNewProduct.ts` or `SQL.ts` file under the `products` folder:
 
 ```typescript
-// SQLStatements.ts in 'products' folder
-export const getNewProduct = `SELECT * FROM products WHERE id = $1`
+// getNewProduct.ts or SQL.ts in 'products' folder
+import { SQLExecutable, conn, failure, success } from "TiFBackendUtils"
+import { ServerEnvironment } from "../env.js"
+import { ValidatedRouter } from "../validation.js"
+
+const getNewProduct = (
+  conn: SQLExecutable,
+  productId: string,
+) => {
+  return conn.queryResults(
+    `SELECT * FROM products WHERE id = :productId`,
+    { productId }
+  )
+}
 ```
 
 ## Transactions
 
-Transactions ensure the integrity of the database by treating a set of SQL operations as a single unit. The transactions will use the SQL statements to perform atomic operationss on the database and return a "success" or "error" result to the route.
+Transactions ensure the integrity of the database by treating a set of SQL operations as a single unit. The transactions will use the SQL statements to perform atomic operations on the database and return a "success" or "error" result to the route.
 
-Your transaction function will be placed in the `transactions.ts` file within your specific data type folder. The transaction should return a "success" status and the query result upon successful execution. If there's an error during the transaction, it should return an "error" status and a descriptive error message.
+Your transaction function will be placed in the `getNewProduct.ts` file within your specific data type folder. The transaction should return a "success" status and the query result upon successful execution. If there's an error during the transaction, it should return an "error" status and a descriptive error message.
 
 ```plaintext
 APILambda
 └── <your_data_type_folder> (e.g., users, products, etc.)
-    ├── routes.ts
-    ├── transactions.ts (This is where you add your transactions)
+    ├── <your_data_type>.ts (This is where you add your transactions)
+    ├── <your_data_type>.test.ts
     └── SQL.ts
 ```
 
-For example, if you're working on the "products" route, and you have a SQL statement to retrieve a product by ID, your transaction in the transactions.ts file might look like this:
+For example, if you're working on the "products" route, and you have a SQL statement to retrieve a product by ID, your transaction in the `getNewProduct.ts` file might look like this:
 
 ```typescript
-// transactions.ts in 'products' folder
-import { getNewProduct } from "./SQLStatements.ts"
-import { db } from "<path_to_db_connection>"
+// getNewProduct.ts in 'products' folder
+import { SQLExecutable, conn, failure, success } from "TiFBackendUtils"
+import { ServerEnvironment } from "../env.js"
+import { ValidatedRouter } from "../validation.js"
 
-export async function getNewProductTransaction(id) {
-  try {
-    const result = await db.query(getNewProduct, [id])
-    return { status: "success", data: result.rows[0] }
-  } catch (error) {
-    return { status: "error", message: error.message }
-  }
-}
+const getNewProductTransaction = (conn: SQLExecutable, id: string) =>
+  conn.transaction((tx) =>
+    getNewProduct(tx, id)
+      .flatMapSuccess((result) => {
+        return success(result)
+      })
+      .flatMapFailure((error) => {
+        return failure(error)
+      })
+  );
 ```
 
 This transaction uses the getNewProduct SQL statement to retrieve data from the database, and handles any potential errors to maintain the stability of the backend API.
@@ -80,58 +95,72 @@ This transaction uses the getNewProduct SQL statement to retrieve data from the 
 
 Routes determine the way your API responds to the client at specific URI endpoints. Routes are composed of transactions and will consume the "success" or "error" results from transactions and convert them into proper HTTP status codes for the client.
 
-This new route will be defined in the `routes.ts` file inside your data type folder. This route should return an HTTP status code signifying success and the query result for successful transactions. If the transaction results in an error, the route should return an "error" status code and an error message.
+Each route is defined in a specific file within its corresponding data type folder. This allows for better code organization and maintainability.
+
+
+To add a new route, follow these steps:
+
+1. Navigate to the relevant data type folder, e.g., `user`, `product`, etc.
+
+2. Create a new file for your route, `<your_data_type>.ts`, inside the data type folder.
+
+3. Define your route in the newly created file, specifying the necessary logic and functionality. This route should return an HTTP status code signifying success and the query result for successful transactions. If the transaction results in an error, the route should return an "error" status code and an error message.
+
+4. Update `app.ts` file to include reference to your newly created route from `<your_data_type>.ts` file.
+
+5. Add the newly created route to `swagger.json` file.
 
 ```plaintext
 APILambda
 └── <your_data_type_folder> (e.g., users, products, etc.)
-    ├── routes.ts (This is where you define your route)
-    ├── transactions.ts
+    ├── <your_data_type>.ts (This is where you define your route)
+    ├── <your_data_type>.test.ts
     └── SQL.ts
 ```
 
-For example, if you're adding a "products" route to get a product by its ID, your route in the routes.ts file might look like this:
+For example, if you're adding a "products" route to get a product by its ID, your route in the `getNewProduct.ts` file might look like this:
 
 ```typescript
-// routes.ts in 'products' folder
-import express from "express"
-import { getNewProductTransaction } from "./transactions.ts"
+// getNewProduct.ts in 'products' folder
+import { SQLExecutable, conn, failure, success } from "TiFBackendUtils"
+import { ServerEnvironment } from "../env.js"
+import { ValidatedRouter } from "../validation.js"
 
-const router = express.Router()
-
-router.get("/new-product/:id", async (req, res) => {
-  const { id } = req.params
-  const result = await getNewProductTransaction(id)
-
-  if (result.status === "success") {
-    return res.status(200).json(result.data)
-  } else {
-    return res.status(500).json({ error: result.message })
-  }
-})
-
-export default router
+export const getNewProductRouter = (
+  environment: ServerEnvironment,
+  router: ValidatedRouter
+) => {
+  /**
+   * get new product by id
+   */
+  router.getWithValidation("/new-product/:id", {}, (req, res) =>
+    getNewProductTransaction(conn, req.params.id)
+      .mapSuccess((result) => res.status(200).json(result))
+      .mapFailure((error) => res.status(404).json({ error }))
+  )
 ```
 
 This route listens to GET requests at the /new-product/:id endpoint, calls the getNewProductTransaction function, and returns the appropriate HTTP status code and data based on the transaction's result.
 
 ## Tests
 
-Tests are cruitcal to ensure the integrity and stability of your SQL route. Tests should be written for every new route or modification to an existing route. Tests are located in the 'tests' folder at the root of the project. Your tests should cover both successful transactions and potential error conditions.
+Tests are critical to ensure the integrity and stability of your SQL route. Tests should be written for every new route or modification to an existing route. Tests are located in the same directory where you create your route in the data type directory. Your tests should cover both successful transactions and potential error conditions.
 
 The directory structure for your tests would be:
 
 ```plaintext
 APILambda
-├── <your_data_type_folder> (e.g., users, products, etc.)
-└── tests
-    └── <your_data_type>.test.ts (This is where you write your tests)
+└── <your_data_type_folder> (e.g., users, products, etc.)
+    ├── <your_data_type>.ts 
+    ├── <your_data_type>.test.ts (This is where you write your tests)
+    └── SQL.ts
+
 ```
 
-For example, if you're testing the "products" route you've added, the tests could be written in a file named products.test.ts in the 'tests' folder. The file might contain tests similar to the following:
+For example, if you're testing the "products" route you've added, the tests could be written in a file named `getNewProduct.test.ts` in the "products" folder. The file might contain tests similar to the following:
 
 ```typescript
-// products.test.ts in 'tests' folder
+// getNewProduct.test.ts in 'products' folder
 import request from "supertest"
 import app from "<path_to_your_express_app>"
 

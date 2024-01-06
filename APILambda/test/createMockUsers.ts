@@ -3,7 +3,7 @@ import { faker } from "@faker-js/faker"
 import { randomUUID } from "crypto"
 import jwt from "jsonwebtoken"
 import { AuthClaims } from "../auth"
-import { TestUser, TestUserInput } from "../global.d"
+import { TestUser, TestUserInput } from "../global"
 
 export const createMockAuthToken = async (
   user?: Partial<TestUserInput>
@@ -11,12 +11,12 @@ export const createMockAuthToken = async (
   const secret = "supersecret"
   const id = randomUUID()
   const email = faker.internet.email()
+  const name = faker.name.fullName()
 
   const tokenPayload: AuthClaims = {
     sub: id,
-    name: user?.name ?? faker.name.fullName(),
+    name: user?.name ?? name,
     email,
-    username: email,
     // Comes from Cognito
     // eslint-disable-next-line @typescript-eslint/naming-convention
     phone_number: faker.phone.imei(),
@@ -44,5 +44,5 @@ export const createMockAuthToken = async (
     return `Bearer ${newToken}`
   }
 
-  return { auth: `Bearer ${token}`, id, refreshAuth: updateClaimsAndRefreshAuth }
+  return { auth: `Bearer ${token}`, id, name, refreshAuth: updateClaimsAndRefreshAuth }
 }

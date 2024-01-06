@@ -14,7 +14,8 @@ export default {
   moduleNameMapper: {
     "^(\\.{1,2}/.*)\\.js$": "$1"
   },
-  globalSetup: "./setupTestUsers.ts",
-  globalTeardown: "./deleteTestUsers.ts",
-  testTimeout: 30000
+  globalSetup: "./test/jestSetup.ts",
+  globalTeardown: "./test/jestTeardown.ts",
+  testTimeout: 30000,
+  setupFilesAfterEnv: ["./test/setupHooks.ts"]
 }

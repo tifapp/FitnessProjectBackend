@@ -14,6 +14,7 @@ export type DatabaseEvent = {
   longitude: number
   shouldHideAfterStartDate: boolean
   isChatEnabled: boolean
+  arrivalStatus: string
 }
 
 export type EventAttendee = {

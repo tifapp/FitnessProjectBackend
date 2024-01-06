@@ -12,12 +12,12 @@ const joinEventSchema = z.object({
 
 const joinEvent = (conn: SQLExecutable, userId: string, eventId: number) => {
   return conn.transaction((tx) =>
-    getEventById(conn, eventId)
+    getEventById(conn, eventId, userId)
       .flatMapSuccess((event) =>
         isUserNotBlocked(tx, event.hostId, userId).withSuccess(event)
       )
       .flatMapSuccess((event) =>
-        new Date() < event.endTimestamp
+        new Date() < event.endTimestamp // perform in sql?
           ? addUserToAttendeeList(tx, userId, eventId).flatMapSuccess(
             ({ rowsAffected }) =>
               rowsAffected > 0 ? success(201) : success(200)
@@ -34,7 +34,9 @@ const joinEvent = (conn: SQLExecutable, userId: string, eventId: number) => {
   )
 }
 
-const addUserToAttendeeList = (
+// ADD CHECK IF HOST TRIES JOINING THEIR OWN EVENT
+// AUTO MAKE HOST AN ATTENDEE
+export const addUserToAttendeeList = (
   conn: SQLExecutable,
   userId: string,
   eventId: number

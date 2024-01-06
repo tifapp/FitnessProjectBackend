@@ -9,9 +9,8 @@ on:
 jobs:
   deploy:
     if: github.event_name == 'push'
-
     runs-on: ubuntu-latest
-
+    timeout-minutes: 10
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -88,6 +87,20 @@ jobs:
       - name: Deploy to AWS Lambda
         run: |
           aws lambda update-function-code --function-name geocodingPipeline --zip-file fileb://GeocodingLambda/dist.zip
+          while true; do
+              update_status=$(aws lambda get-function --function-name geocodingPipeline | jq -r '.Configuration.LastUpdateStatus')
+
+              if [[ "$update_status" == "Successful" ]]; then
+                  echo "Update completed successfully."
+                  break
+              elif [[ "$update_status" == "Failed" ]]; then
+                  echo "Update failed."
+                  exit 1
+              else
+                  echo "Update in progress. Waiting..."
+                  sleep 10
+              fi
+          done
           if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
             stageName="prod"
             VERSION_NUMBER=$(aws lambda publish-version --function-name geocodingPipeline | jq -r '.Version')
