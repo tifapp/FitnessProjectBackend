@@ -3,7 +3,7 @@ import { z } from "zod"
 import { ServerEnvironment } from "../env.js"
 import {
   EventAttendee,
-  EventAttendeeCount,
+  EventWithAttendeeCount,
   GetEventByRegionEvent
 } from "../shared/SQL.js"
 import { ValidatedRouter } from "../validation.js"
@@ -129,15 +129,13 @@ GROUP BY
     ea1.eventId
 HAVING 
     COUNT(DISTINCT ea1.userId) <= 3
-ORDER BY 
-    ea1.eventId;
   `,
     { eventIds }
   )
 }
 
 const getAttendeeCount = (eventIds: string) => {
-  return conn.queryResults<EventAttendeeCount>(
+  return conn.queryResults<EventWithAttendeeCount>(
     ` SELECT
           E.eventId,
           COUNT(A.eventId) AS attendeeCount
@@ -147,8 +145,7 @@ const getAttendeeCount = (eventIds: string) => {
           event E ON E.id = A.eventId
       WHERE
           E.id IN (:eventIds)
-          AND E.hostId <> A.userId
-      GROUP BY A.eventId `,
+      GROUP BY A.eventId`,
     { eventIds }
   )
 }
@@ -156,47 +153,31 @@ const getAttendeeCount = (eventIds: string) => {
 // Modify this method so that it takes in the string array of event Attendees and
 const setAttendeesPreviewForEvent = (
   events: GetEventByRegionEvent[],
-  attendees: EventAttendee[],
-  eventIdQueryString: string
+  attendeesPreviews: EventAttendee[],
+  eventsWithAttendeeCount: EventWithAttendeeCount[]
 ) => {
-  const eventAttendeesMap = new Map()
-  const eventIdToCountArray = new Map()
+  for (let i = 0; i < events.length; i++) {
+    events[i].attendeesPreview = attendeesPreviews[i]
+    events[i].totalAttendees = eventsWithAttendeeCount[i].attendeeCount
+  }
 
-  getAttendeeCount(eventIdQueryString).mapSuccess((attendees) => {
-    attendees.forEach((attendee) => {
-      if (eventIdToCountArray.has(attendee.eventId)) {
-        eventIdToCountArray.get(attendee.eventId).push(attendee.attendeeCount)
-      } else {
-        // If the event is not in the map, add it with the attendee in a new array
-        eventIdToCountArray.set(attendee.eventId, [attendee.attendeeCount])
-      }
-    })
-  })
-
-  attendees.forEach((attendee) => {
-    const attendeeArray = attendee.userIds.split(",")
-    if (eventAttendeesMap.has(attendee.eventId)) {
-      eventAttendeesMap.get(attendee.eventId).push(attendeeArray)
-    } else {
-      // If the event is not in the map, add it with the attendee in a new array
-      eventAttendeesMap.set(attendee.eventId, [attendeeArray])
-    }
-  })
-
-  return events.map((event) => {
-    event.attendeesPreview = eventAttendeesMap.get(event.id)
-    event.totalAttendees = eventIdToCountArray.get(event.id)
-    return event
-  })
+  return events
 }
 
 // Utilize the event to join with the attendees table to get the attendees
 const getEventAttendeesPreview = (events: GetEventByRegionEvent[]) => {
   // Create a parameterized query string with placeholders for event IDs
   const eventIdQueryString = events.map((event) => event.id).join(",")
-  const eventsByRegion = getAttendees(eventIdQueryString).mapSuccess(
-    (attendees) =>
-      setAttendeesPreviewForEvent(events, attendees, eventIdQueryString)
+  const eventsByRegion = getAttendees(eventIdQueryString).flatMapSuccess(
+    (attendeesPreviews) =>
+      getAttendeeCount(eventIdQueryString).mapSuccess(
+        (eventsWithAttendeeCount) =>
+          setAttendeesPreviewForEvent(
+            events,
+            attendeesPreviews,
+            eventsWithAttendeeCount
+          )
+      )
   )
   const refactoredEventsByRegion = eventsByRegion.mapSuccess((events) =>
     events.map((event) => convertEventsByRegionResult(event))

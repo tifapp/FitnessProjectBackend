@@ -21,7 +21,7 @@ export type EventAttendee = {
   eventId: number
 }
 
-export type EventAttendeeCount = {
+export type EventWithAttendeeCount = {
   eventId: number
   attendeeCount: number
 }
@@ -46,7 +46,7 @@ export type GetEventByRegionEvent = {
   street: string
   street_num: number
   totalAttendees: number
-  attendeesPreview: EventAttendee[]
+  attendeesPreview: EventAttendee
   hostName: string
   hostHandle: string
   hostProfileImageURL: string
