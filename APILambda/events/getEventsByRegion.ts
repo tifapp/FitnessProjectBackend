@@ -1,4 +1,4 @@
-import { SQLExecutable, conn } from "TiFBackendUtils"
+import { SQLExecutable, conn, success } from "TiFBackendUtils"
 import { z } from "zod"
 import { ServerEnvironment } from "../env.js"
 import {
@@ -102,20 +102,7 @@ export const getEventsByRegion = (
     { ...eventsRequest }
   )
 
-// export const getAttendees = (eventIds: string) => {
-//   return conn.queryResults<EventAttendee>(
-//     `
-//     SELECT A.*
-//     FROM event E
-//     JOIN eventAttendance A ON E.id = A.eventId
-//     WHERE E.id IN (:eventIds)
-//     AND E.hostId <> A.userId
-//     `,
-//     { eventIds }
-//   )
-// }
-
-export const getAttendees = (eventIds: string) => {
+export const getAttendees = (eventIds: string[]) => {
   return conn.queryResults<EventAttendee>(
     `
     SELECT 
@@ -134,10 +121,10 @@ HAVING
   )
 }
 
-const getAttendeeCount = (eventIds: string) => {
+export const getAttendeeCount = (eventIds: string[]) => {
   return conn.queryResults<EventWithAttendeeCount>(
     ` SELECT
-          E.eventId,
+          E.id,
           COUNT(A.eventId) AS attendeeCount
       FROM
           eventAttendance A
@@ -150,38 +137,43 @@ const getAttendeeCount = (eventIds: string) => {
   )
 }
 
-// Modify this method so that it takes in the string array of event Attendees and
 const setAttendeesPreviewForEvent = (
   events: GetEventByRegionEvent[],
   attendeesPreviews: EventAttendee[],
   eventsWithAttendeeCount: EventWithAttendeeCount[]
 ) => {
   for (let i = 0; i < events.length; i++) {
-    events[i].attendeesPreview = attendeesPreviews[i]
-    events[i].totalAttendees = eventsWithAttendeeCount[i].attendeeCount
+    events[i].attendeesPreview = attendeesPreviews[i] ?? []
+    events[i].totalAttendees = eventsWithAttendeeCount[i]
+      ? eventsWithAttendeeCount[i].attendeeCount
+      : 0
   }
-
   return events
 }
 
 // Utilize the event to join with the attendees table to get the attendees
 const getEventAttendeesPreview = (events: GetEventByRegionEvent[]) => {
-  // Create a parameterized query string with placeholders for event IDs
-  const eventIdQueryString = events.map((event) => event.id).join(",")
-  const eventsByRegion = getAttendees(eventIdQueryString).flatMapSuccess(
+  const eventIds = events.map((event) => event.id.toString())
+
+  if (!eventIds.length) {
+    return success([])
+  }
+
+  const eventsByRegion = getAttendees(eventIds).flatMapSuccess(
     (attendeesPreviews) =>
-      getAttendeeCount(eventIdQueryString).mapSuccess(
-        (eventsWithAttendeeCount) =>
-          setAttendeesPreviewForEvent(
-            events,
-            attendeesPreviews,
-            eventsWithAttendeeCount
-          )
-      )
+      getAttendeeCount(eventIds).mapSuccess((eventsWithAttendeeCount) => {
+        return setAttendeesPreviewForEvent(
+          events,
+          attendeesPreviews,
+          eventsWithAttendeeCount
+        )
+      })
   )
+
   const refactoredEventsByRegion = eventsByRegion.mapSuccess((events) =>
     events.map((event) => convertEventsByRegionResult(event))
   )
+
   return refactoredEventsByRegion
 }
 

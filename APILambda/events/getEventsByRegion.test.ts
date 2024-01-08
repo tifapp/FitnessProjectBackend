@@ -1,27 +1,23 @@
-import { conn } from "TiFBackendUtils"
-import { resetDatabaseBeforeEach } from "../test/database.js"
-import { callCreateEvent, callJoinEvent } from "../test/helpers/events.js"
+import dayjs from "dayjs"
 import {
   callBlockUser,
-  callPostFriendRequest,
-  createUserAndUpdateAuth
-} from "../test/helpers/users.js"
-import { testEvents } from "../test/testEvents.js"
-import { getEventsByRegion } from "./getEventsByRegion.js"
+  callPostFriendRequest
+} from "../test/apiCallers/users.js"
+import { callGetEventsByRegion, callJoinEvent } from "../test/helpers/events.js"
+import { testEvent } from "../test/testEvents.js"
+import { createEventFlow } from "../test/userFlows/events.js"
+import { getAttendeeCount, getAttendees } from "./getEventsByRegion.js"
 import { addPlacemarkToDB } from "./sharedSQL.js"
 
-let eventOwnerToken: string
-let attendeeToken: string
+let eventOwnerTestToken: string
+let attendeeTestToken: string
+let eventOwnerTestId: string
+let attendeeTestId: string
 
 const setupDB = async () => {
-  eventOwnerToken = await createUserAndUpdateAuth(global.defaultUser)
-  attendeeToken = await createUserAndUpdateAuth(global.defaultUser2)
-  await callPostFriendRequest(eventOwnerToken, global.defaultUser2.id)
-  await callPostFriendRequest(attendeeToken, global.defaultUser.id)
-
   addPlacemarkToDB({
-    lat: testEvents[0].latitude,
-    lon: testEvents[0].longitude,
+    lat: testEvent.latitude,
+    lon: testEvent.longitude,
     name: "Sample Location",
     city: "Sample Neighborhood",
     country: "Sample Country",
@@ -30,102 +26,118 @@ const setupDB = async () => {
     unit_number: "5678"
   })
 
-  const ongoingEventStartTime = new Date()
-  const ongoingEventEndTime = new Date()
-  const futureEventStartTime = new Date()
-  const futureEventEndTime = new Date()
-  futureEventStartTime.setFullYear(futureEventStartTime.getFullYear() + 1)
-  futureEventEndTime.setFullYear(futureEventEndTime.getFullYear() + 2)
-
-  const testFutureEvent = {
-    ...testEvents[0],
-    startTimestamp: futureEventStartTime,
-    endTimestamp: futureEventEndTime
+  const eventLocation = {
+    latitude: testEvent.latitude,
+    longitude: testEvent.longitude
   }
 
-  const testOngoingEvent = {
-    ...testEvents[0],
-    startTimestamp: ongoingEventStartTime,
-    endTimestamp: ongoingEventEndTime
-  }
+  const {
+    attendeeToken,
+    attendeeId,
+    hostId,
+    hostToken,
+    eventIds: [futureEventId, ongoingEventId]
+  } = await createEventFlow([
+    {
+      ...eventLocation,
+      startTimestamp: dayjs().add(12, "hour").toDate(),
+      endTimestamp: dayjs().add(1, "year").toDate()
+    },
+    {
+      ...eventLocation,
+      startTimestamp: dayjs().subtract(12, "hour").toDate(),
+      endTimestamp: dayjs().add(1, "year").toDate()
+    }
+  ])
 
-  const ongoingEvent = await callCreateEvent(eventOwnerToken, testOngoingEvent)
+  attendeeTestToken = attendeeToken
+  eventOwnerTestToken = hostToken
+  attendeeTestId = attendeeId
+  eventOwnerTestId = hostId
 
-  const futureEvent = await callCreateEvent(eventOwnerToken, testFutureEvent)
+  await callPostFriendRequest(hostToken, attendeeId)
+  await callPostFriendRequest(attendeeToken, hostId)
 
-  await callJoinEvent(attendeeToken, parseInt(ongoingEvent.body.id))
-  await callJoinEvent(eventOwnerToken, parseInt(ongoingEvent.body.id))
+  await callJoinEvent(attendeeToken, ongoingEventId)
+  await callJoinEvent(hostToken, ongoingEventId)
 
-  await callJoinEvent(attendeeToken, parseInt(futureEvent.body.id))
-  await callJoinEvent(eventOwnerToken, parseInt(futureEvent.body.id))
+  await callJoinEvent(attendeeToken, futureEventId)
+  await callJoinEvent(hostToken, futureEventId)
 }
 
-// describe("Testing the getEventsByRegion endpoint", () => {
-//   resetDatabaseBeforeEach()
-//   beforeEach(setupDB)
+describe("Testing the getEventsByRegion endpoint", () => {
+  beforeEach(setupDB)
 
-//   it("should return 200 with the event, user relation, attendee count data", async () => {
-//     const respGetEventsByRegion = await callGetEventsByRegion(
-//       attendeeToken,
-//       testEvents[0].latitude,
-//       testEvents[0].longitude,
-//       50000
-//     )
+  it("should return 200 with the event, user relation, attendee count data", async () => {
+    const respGetEventsByRegion = await callGetEventsByRegion(
+      attendeeTestToken,
+      testEvent.latitude,
+      testEvent.longitude,
+      50000
+    )
 
-//     expect(respGetEventsByRegion.status).toEqual(200)
-//     // expect(respGetEventsByRegion.body[0].relationHostToUser).toEqual("friends")
-//     // expect(respGetEventsByRegion.body[0].relationUserToHost).toEqual("friends")
-//     expect(respGetEventsByRegion.body[0].attendees.count).toEqual(1)
-//   })
-// })
+    expect(respGetEventsByRegion.status).toEqual(200)
+    expect(respGetEventsByRegion.body).toHaveLength(2)
+  })
+})
 
 describe("Testing the individual queries from the getEventsByRegion endpoint", () => {
-  resetDatabaseBeforeEach()
   beforeEach(setupDB)
 
   it("should not return events that are not within the radius", async () => {
-    const events = await getEventsByRegion(conn, {
-      userId: global.defaultUser2.id,
-      userLatitude: testEvents[0].latitude + 10,
-      userLongitude: testEvents[0].longitude + 10,
-      radius: 1
-    })
-    expect(events.value).toHaveLength(0)
+    const events = await callGetEventsByRegion(
+      attendeeTestToken,
+      testEvent.latitude + 10,
+      testEvent.longitude + 10,
+      1
+    )
+    expect(events.body).toHaveLength(0)
   })
 
   it("should remove the events where the host blocks the attendee", async () => {
-    await callBlockUser(eventOwnerToken, global.defaultUser2.id)
+    await callBlockUser(eventOwnerTestToken, attendeeTestId)
 
-    const events = await getEventsByRegion(conn, {
-      userId: global.defaultUser2.id,
-      userLatitude: testEvents[0].latitude,
-      userLongitude: testEvents[0].longitude,
-      radius: 50000
-    })
-    expect(events.value).toHaveLength(0)
+    const events = await callGetEventsByRegion(
+      attendeeTestToken,
+      testEvent.latitude,
+      testEvent.longitude,
+      50000
+    )
+    expect(events.body).toHaveLength(0)
   })
 
-  // it("should remove the events where the attendee blocks the host", async () => {
-  //   await callBlockUser(attendeeToken, global.defaultUser.id)
+  it("should remove the events where the attendee blocks the host", async () => {
+    await callBlockUser(attendeeTestToken, eventOwnerTestId)
 
-  //   const events = await getEventsByRegion(conn, {
-  //     userId: global.defaultUser2.id,
-  //     userLatitude: testEvents[0].latitude,
-  //     userLongitude: testEvents[0].longitude,
-  //     radius: 50000
-  //   })
-  //   expect(events.value).toHaveLength(0)
-  // })
+    const events = await callGetEventsByRegion(
+      attendeeTestToken,
+      testEvent.latitude,
+      testEvent.longitude,
+      50000
+    )
+    expect(events.body).toHaveLength(0)
+  })
 
-  // it("should return the attendee list not including the event host", async () => {
-  //   const events = await getEventsByRegion(conn, {
-  //     userId: global.defaultUser2.id,
-  //     userLatitude: testEvents[0].latitude,
-  //     userLongitude: testEvents[0].longitude,
-  //     radius: 50000
-  //   })
-  //   const attendees = await getAttendees(`${events.value[0].id}`)
-  //   expect(attendees.value).toHaveLength(1)
-  //   expect(attendees.value[0].userIds).not.toEqual(events.value[0].hostId)
-  // })
+  it("should return the attendee list not including the event host", async () => {
+    const events = await callGetEventsByRegion(
+      attendeeTestToken,
+      testEvent.latitude,
+      testEvent.longitude,
+      50000
+    )
+    const attendees = await getAttendees([`${events.body[0].id}`])
+    expect(attendees.value).toHaveLength(1)
+    expect(attendees.value[0].userIds).not.toEqual(events.body[0].hostId)
+  })
+
+  it("should return the attendee count including the event host", async () => {
+    const events = await callGetEventsByRegion(
+      attendeeTestToken,
+      testEvent.latitude,
+      testEvent.longitude,
+      50000
+    )
+    const attendees = await getAttendeeCount([`${events.body[0].id}`])
+    expect(attendees.value[0].attendeeCount).toEqual(2)
+  })
 })

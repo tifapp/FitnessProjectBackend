@@ -65,6 +65,7 @@ const addEventRoutes = (environment: ServerEnvironment) => {
   setArrivalStatusRouter(environment, router)
   setDepartureRouter(environment, router)
   getUpcomingEventsByRegionRouter(environment, router)
+  getEventsByRegionRouter(environment, router)
   return router
 }
 
