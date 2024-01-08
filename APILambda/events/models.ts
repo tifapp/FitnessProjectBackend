@@ -10,11 +10,6 @@ export const EventColorSchema = z.union([
   z.literal("#F6BD60")
 ])
 
-export type BlockedEvent = {
-  name: string
-  title: string
-}
-
 export type DatabaseUserToHostRelation = {
   name: string
   themToYouStatus: string

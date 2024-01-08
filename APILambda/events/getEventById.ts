@@ -3,28 +3,19 @@ import { z } from "zod"
 import { ServerEnvironment } from "../env.js"
 import { DatabaseEvent } from "../shared/SQL.js"
 import { ValidatedRouter } from "../validation.js"
-import { DatabaseUserToHostRelation, BlockedEvent } from "./models.js"
+import { DatabaseUserToHostRelation } from "./models.js"
 
 const eventRequestSchema = z.object({
   eventId: z.string()
 })
 
-const getEventInfo = (
+const BlockedEventResponse = (
   dbUser: DatabaseUserToHostRelation,
-  event: DatabaseEvent
-) => {
-  if (
-    dbUser.themToYouStatus === "blocked" ||
-    dbUser.youToThemStatus === "blocked"
-  ) {
-    const blockedEvent: BlockedEvent = {
-      name: dbUser.name,
-      title: event.title
-    }
-    return blockedEvent
-  }
-  return event
-}
+  eventTitle: string
+) => ({
+  name: dbUser.name,
+  title: eventTitle
+})
 
 const getUserToHostRelationWithId = (
   conn: SQLExecutable,
@@ -96,9 +87,13 @@ export const getEventByIdRouter = (
             conn,
             event.hostId,
             res.locals.selfId
-          ).mapSuccess((dbUser) => getEventInfo(dbUser, event))
+          ).mapSuccess((dbUser) =>
+            dbUser.themToYouStatus === "blocked" ||
+            dbUser.youToThemStatus === "blocked"
+              ? res.status(403).json(BlockedEventResponse(dbUser, event.title))
+              : res.status(200).json(event)
+          )
         )
         .mapFailure((error) => res.status(404).json({ error }))
-        .mapSuccess((event) => res.status(200).send(event))
   )
 }
