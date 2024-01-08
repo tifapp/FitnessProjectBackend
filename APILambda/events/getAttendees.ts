@@ -3,9 +3,15 @@ import { z } from "zod"
 import { ServerEnvironment } from "../env.js"
 import { DatabaseAttendee } from "../shared/SQL.js"
 import { ValidatedRouter } from "../validation.js"
+import { decodeCursor } from "../shared/Cursor.js"
 
 const AttendeesRequestSchema = z.object({
   eventId: z.string()
+})
+
+const DecodedCursorRequestSchema = z.object({
+  userId: z.string().nullable(),
+  joinDate: z.date()
 })
 
 const CursorRequestSchema = z.object({
@@ -28,8 +34,8 @@ const getAttendeesByEventId = (
   conn: SQLExecutable,
   eventId: number,
   userId: string,
-  nextPageuserId: string,
-  nextPageJoinDate: string,
+  nextPageUserId: string | null,
+  nextPageJoinDate: Date,
   limit: number
 ) =>
   conn
@@ -49,14 +55,14 @@ const getAttendeesByEventId = (
         LEFT JOIN userRelations AS UR ON (UR.fromUserId = U.id AND UR.toUserId = :userId)
                                     OR (UR.fromUserId = :userId AND UR.toUserId = U.id)
         WHERE E.id = :eventId
-        AND (:nextPageuserId, :nextPageJoinDate) < (U.id, EA.joinTimestamp) 
+        AND (:nextPageUserId IS NULL OR (:nextPageUserId, :nextPageJoinDate) < (U.id, EA.joinTimestamp))
         AND (UA.longitude = E.longitude AND UA.latitude = E.latitude
             OR UA.arrivedAt IS NULL)
         GROUP BY U.id
         ORDER BY U.id ASC, EA.joinTimestamp ASC
         LIMIT :limit;
   `,
-      { eventId, userId, nextPageuserId, nextPageJoinDate, limit }
+      { eventId, userId, nextPageUserId, nextPageJoinDate, limit }
     )
     .withFailure("attendees-not-found" as const)
 
@@ -75,18 +81,31 @@ export const getAttendeesByEventIdRouter = (
       pathParamsSchema: AttendeesRequestSchema,
       querySchema: CursorRequestSchema
     },
-    (req, res) =>
-      getAttendeesByEventId(
+    (req, res) => {
+      const { userId, joinDate } = decodeCursor(req.query.nextPage)
+
+      const decodedValues = DecodedCursorRequestSchema.parse({
+        userId,
+        joinDate: joinDate
+      })
+
+      const { userId: validatedUserId, joinDate: validatedJoinDate } =
+        decodedValues
+      const validatedUserIdNullCheck =
+        userId === "null" ? null : validatedUserId
+
+      return getAttendeesByEventId(
         conn,
         Number(req.params.eventId),
         res.locals.selfId,
-        req.query.nextPage.split("_")[1],
-        req.query.nextPage.split("_")[3],
+        validatedUserIdNullCheck,
+        validatedJoinDate,
         req.query.limit
       )
         .mapFailure((error) => res.status(404).json({ error }))
         .mapSuccess((attendees) => {
           return res.status(200).send(attendeesPaginatedResponse(attendees))
         })
+    }
   )
 }
