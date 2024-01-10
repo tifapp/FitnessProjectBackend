@@ -22,13 +22,25 @@ const CursorRequestSchema = z.object({
     .refine((arg) => arg >= 1 && arg <= 50)
 })
 
-const attendeesPaginatedResponse = (attendees: DatabaseAttendee[]) => ({
-  nextPageUserId:
-    attendees.length > 0 ? attendees[attendees.length - 1].id : null,
-  nextPageJoinDate:
-    attendees.length > 0 ? attendees[attendees.length - 1].joinTimestamp : null,
-  attendees: attendees
-})
+const attendeesPaginatedResponse = (
+  attendees: DatabaseAttendee[],
+  limit: number
+) => {
+  const hasMoreAttendees = attendees.length > limit
+
+  const nextPageUserId = hasMoreAttendees ? attendees[limit - 1].id : null
+  const nextPageJoinDate = hasMoreAttendees
+    ? attendees[limit - 1].joinTimestamp
+    : null
+
+  const paginatedAttendees = attendees.slice(0, limit)
+
+  return {
+    nextPageUserId,
+    nextPageJoinDate,
+    attendees: paginatedAttendees
+  }
+}
 
 const getAttendeesByEventId = (
   conn: SQLExecutable,
@@ -100,11 +112,13 @@ export const getAttendeesByEventIdRouter = (
         res.locals.selfId,
         validatedUserIdNullCheck,
         validatedJoinDate,
-        req.query.limit
+        req.query.limit + 1 // Add 1 to handle checking last page
       )
         .mapFailure((error) => res.status(404).json({ error }))
         .mapSuccess((attendees) => {
-          return res.status(200).send(attendeesPaginatedResponse(attendees))
+          return res
+            .status(200)
+            .send(attendeesPaginatedResponse(attendees, req.query.limit))
         })
     }
   )
