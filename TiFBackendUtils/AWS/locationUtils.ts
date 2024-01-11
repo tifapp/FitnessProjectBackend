@@ -30,7 +30,7 @@ export const SearchForPositionResultToPlacemark = (
       "Unknown Place",
     country: place?.Country ?? place?.Region ?? "Unknown Country",
     street: place?.Street ?? "Unknown Address",
-    street_num: place?.AddressNumber ?? "",
+    street_num: place?.AddressNumber ?? 0,
     unit_number: place?.UnitNumber ?? ""
   }
 }
@@ -56,19 +56,17 @@ export const checkExistingPlacemarkInDB = (
   conn: SQLExecutable,
   location: LocationCoordinate2D
 ) =>
-  conn.queryHasResults(
-    `
+  conn
+    .queryHasResults(
+      `
     SELECT TRUE FROM location WHERE lat = :latitude AND lon = :longitude LIMIT 1
     `,
-    location
-  )
+      location
+    )
     .inverted()
     .withFailure("placemark-already-exists" as const)
 
-export const addPlacemarkToDB = (
-  conn: SQLExecutable,
-  place: Placemark
-) =>
+export const addPlacemarkToDB = (conn: SQLExecutable, place: Placemark) =>
   conn.queryResults(
     `
     INSERT INTO location (name, city, country, street, street_num, lat, lon)

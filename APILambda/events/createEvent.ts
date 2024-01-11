@@ -1,20 +1,34 @@
-import { SQLExecutable, conn } from "TiFBackendUtils"
+import {
+  SQLExecutable,
+  SearchForPositionResultToPlacemark,
+  addPlacemarkToDB,
+  checkExistingPlacemarkInDB,
+  conn
+} from "TiFBackendUtils"
 import { z } from "zod"
 import { ServerEnvironment } from "../env.js"
 import { ValidatedRouter } from "../validation.js"
 import { addUserToAttendeeList } from "./joinEventById.js"
 import { EventColorSchema } from "./models.js"
 
+let insertIdForEvent: string
+
 const CreateEventSchema = z
   .object({
     description: z.string().max(500),
     startTimestamp: z.string().datetime(),
-    endTimestamp: z.string().datetime().refine((date) => {
-      return new Date(date) > new Date()
-    }, {
-      message: "endTimestamp must be in the future"
-      // TODO: add minimum duration check
-    }),
+    endTimestamp: z
+      .string()
+      .datetime()
+      .refine(
+        (date) => {
+          return new Date(date) > new Date()
+        },
+        {
+          message: "endTimestamp must be in the future"
+          // TODO: add minimum duration check
+        }
+      ),
     color: EventColorSchema,
     title: z.string().max(50),
     shouldHideAfterStartDate: z.boolean(),
@@ -35,9 +49,8 @@ export const createEvent = (
   input: CreateEventInput,
   hostId: string
 ) =>
-  conn
-    .queryResult(
-      `
+  conn.queryResult(
+    `
 INSERT INTO event (
   hostId,
   title, 
@@ -62,13 +75,31 @@ INSERT INTO event (
   :longitude
 )
 `,
-      {
-        ...input,
-        startTimestamp: input.startTimestamp.getTime() / 1000,
-        endTimestamp: input.endTimestamp.getTime() / 1000,
-        hostId
-      }
-    )
+    {
+      ...input,
+      startTimestamp: input.startTimestamp.getTime() / 1000,
+      endTimestamp: input.endTimestamp.getTime() / 1000,
+      hostId
+    }
+  )
+
+const addPlacemarkForEvent = (
+  insertId: string,
+  eventLatitude: number,
+  eventLongitude: number
+) => {
+  insertIdForEvent = insertId
+  return checkExistingPlacemarkInDB(conn, {
+    longitude: eventLongitude,
+    latitude: eventLatitude
+  }).flatMapSuccess(() => {
+    const placemark = SearchForPositionResultToPlacemark({
+      latitude: eventLatitude,
+      longitude: eventLongitude
+    })
+    return addPlacemarkToDB(conn, placemark)
+  })
+}
 
 /**
  * Creates routes related to event operations.
@@ -86,12 +117,26 @@ export const createEventRouter = (
     "/",
     { bodySchema: CreateEventSchema },
     (req, res) => {
-      return conn.transaction(tx =>
-        createEvent(tx, req.body, res.locals.selfId)
-          .flatMapSuccess(({ insertId }) => addUserToAttendeeList(tx, res.locals.selfId, parseInt(insertId)).mapSuccess(() => ({ insertId })))
-      )
+      return conn
+        .transaction((tx) =>
+          createEvent(tx, req.body, res.locals.selfId)
+            .flatMapSuccess(({ insertId }) => {
+              return addPlacemarkForEvent(
+                insertId,
+                req.body.latitude,
+                req.body.longitude
+              )
+            })
+            .flatMapSuccess(() =>
+              addUserToAttendeeList(
+                tx,
+                res.locals.selfId,
+                parseInt(insertIdForEvent)
+              )
+            )
+        )
         .mapFailure((error) => res.status(500).json({ error }))
-        .mapSuccess(({ insertId }) => res.status(201).json({ id: insertId }))
+        .mapSuccess(() => res.status(201).json({ id: insertIdForEvent }))
     }
   )
 }
