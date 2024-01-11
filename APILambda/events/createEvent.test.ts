@@ -13,7 +13,10 @@ describe("CreateEvent tests", () => {
     })
     expect(parseInt(createEventResponse.body.id)).not.toBeNaN()
 
-    const { value: attendee } = await conn.queryFirstResult<{userId: string, eventId: string}>(
+    const { value: attendee } = await conn.queryFirstResult<{
+      userId: string
+      eventId: string
+    }>(
       `
       SELECT *
       FROM eventAttendance
@@ -22,7 +25,10 @@ describe("CreateEvent tests", () => {
       `,
       { eventId: parseInt(createEventResponse.body.id), userId }
     )
-    expect(attendee).toMatchObject({ eventId: parseInt(createEventResponse.body.id), userId })
+    expect(attendee).toMatchObject({
+      eventId: parseInt(createEventResponse.body.id),
+      userId
+    })
   })
 
   it("should not allow a user to create an event that ends in the past", async () => {
@@ -33,4 +39,8 @@ describe("CreateEvent tests", () => {
       body: { error: "invalid-request" }
     })
   })
+
+  // Should return a failure if the placemark exists in the db
+
+  // Should return a success when adding a placemark in the db that didn't exist prior
 })
