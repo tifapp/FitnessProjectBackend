@@ -50,9 +50,8 @@ const getAttendeesByEventId = (
   nextPageJoinDate: Date,
   limit: number
 ) =>
-  conn
-    .queryResults<DatabaseAttendee>(
-      `SELECT 
+  conn.queryResults<DatabaseAttendee>(
+    `SELECT 
         U.id, 
         U.profileImageURL, 
         U.name, 
@@ -74,10 +73,8 @@ const getAttendeesByEventId = (
         ORDER BY U.id ASC, EA.joinTimestamp ASC
         LIMIT :limit;
   `,
-      { eventId, userId, nextPageUserId, nextPageJoinDate, limit }
-    )
-    .withFailure("attendees-not-found" as const)
-
+    { eventId, userId, nextPageUserId, nextPageJoinDate, limit }
+  )
 /**
  * Creates routes related to attendees list.
  *
@@ -113,13 +110,13 @@ export const getAttendeesByEventIdRouter = (
         validatedUserIdNullCheck,
         validatedJoinDate,
         req.query.limit + 1 // Add 1 to handle checking last page
+      ).mapSuccess((attendees) =>
+        attendees.length === 0
+          ? res.status(404).send(attendees)
+          : res
+              .status(200)
+              .send(attendeesPaginatedResponse(attendees, req.query.limit))
       )
-        .mapFailure((error) => res.status(404).json({ error }))
-        .mapSuccess((attendees) => {
-          return res
-            .status(200)
-            .send(attendeesPaginatedResponse(attendees, req.query.limit))
-        })
     }
   )
 }
