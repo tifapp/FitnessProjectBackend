@@ -81,19 +81,23 @@ export const getEventByIdRouter = (
     "/details/:eventId",
     { pathParamsSchema: eventRequestSchema },
     (req, res) =>
-      getEventById(conn, Number(req.params.eventId), res.locals.selfId)
-        .flatMapSuccess((event) =>
-          getUserToHostRelationWithId(
-            conn,
-            event.hostId,
-            res.locals.selfId
-          ).mapSuccess((dbUser) =>
-            dbUser.themToYouStatus === "blocked" ||
-            dbUser.youToThemStatus === "blocked"
-              ? res.status(403).json(BlockedEventResponse(dbUser, event.title))
-              : res.status(200).json(event)
+      conn.transaction((tx) =>
+        getEventById(conn, Number(req.params.eventId), res.locals.selfId)
+          .flatMapSuccess((event) =>
+            getUserToHostRelationWithId(
+              tx,
+              event.hostId,
+              res.locals.selfId
+            ).mapSuccess((dbUser) =>
+              dbUser.themToYouStatus === "blocked" ||
+              dbUser.youToThemStatus === "blocked"
+                ? res
+                    .status(403)
+                    .json(BlockedEventResponse(dbUser, event.title))
+                : res.status(200).json(event)
+            )
           )
-        )
-        .mapFailure((error) => res.status(404).json({ error }))
+          .mapFailure((error) => res.status(404).json({ error }))
+      )
   )
 }
