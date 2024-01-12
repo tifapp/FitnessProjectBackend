@@ -52,25 +52,25 @@ const getAttendeesByEventId = (
 ) =>
   conn.queryResults<DatabaseAttendee>(
     `SELECT 
-        U.id, 
-        U.profileImageURL, 
-        U.name, 
-        U.handle, 
-        EA.joinTimestamp,
-        MAX(CASE WHEN UR.fromUserId = :userId THEN UR.status END) AS youToThemStatus,
-        MAX(CASE WHEN UR.toUserId = :userId THEN UR.status END) AS themToYouStatus
-        FROM user AS U 
-        INNER JOIN eventAttendance AS EA ON U.id = EA.userId 
-        INNER JOIN event AS E ON EA.eventId = E.id
-        LEFT JOIN userArrivals AS UA ON UA.userId = U.id
-        LEFT JOIN userRelations AS UR ON (UR.fromUserId = U.id AND UR.toUserId = :userId)
-                                    OR (UR.fromUserId = :userId AND UR.toUserId = U.id)
-        WHERE E.id = :eventId
-        AND (:nextPageUserId IS NULL OR (:nextPageUserId, :nextPageJoinDate) < (U.id, EA.joinTimestamp))
-        AND (UA.longitude = E.longitude AND UA.latitude = E.latitude
-            OR UA.arrivedAt IS NULL)
-        GROUP BY U.id
-        ORDER BY U.id ASC, EA.joinTimestamp ASC
+        u.id, 
+        u.profileImageURL, 
+        u.name, 
+        u.handle, 
+        ea.joinTimestamp,
+        MAX(CASE WHEN ur.fromUserId = :userId THEN ur.status END) AS youToThemStatus,
+        MAX(CASE WHEN ur.toUserId = :userId THEN ur.status END) AS themToYouStatus
+        FROM user AS u 
+        INNER JOIN eventAttendance AS ea ON u.id = ea.userId 
+        INNER JOIN event AS e ON ea.eventId = e.id
+        LEFT JOIN userArrivals AS ua ON ua.userId = u.id
+        LEFT JOIN userRelations AS ur ON (ur.fromUserId = u.id AND ur.toUserId = :userId)
+                                    OR (ur.fromUserId = :userId AND ur.toUserId = u.id)
+        WHERE e.id = :eventId
+        AND (:nextPageUserId IS NULL OR (:nextPageUserId, :nextPageJoinDate) < (u.id, ea.joinTimestamp))
+        AND (ua.longitude = e.longitude AND ua.latitude = e.latitude
+            OR ua.arrivedAt IS NULL)
+        GROUP BY u.id
+        ORDER BY u.id ASC, ea.joinTimestamp ASC
         LIMIT :limit;
   `,
     { eventId, userId, nextPageUserId, nextPageJoinDate, limit }
