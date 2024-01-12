@@ -25,21 +25,11 @@ export const getUserRouter = (
     { pathParamsSchema: userIdSchema },
     (req, res) =>
       userAndRelationsWithId(conn, req.params.userId, res.locals.selfId)
-        .mapSuccess((dbUser) => {
-          if (dbUser.themToYouStatus === "blocked") {
-            const blockerDbUser = {
-              name: dbUser.name,
-              profileImageURL: dbUser.profileImageURL,
-              handle: dbUser.handle,
-              relations: {
-                youToThem: dbUser.youToThemStatus,
-                themToYou: dbUser.themToYouStatus
-              }
-            }
-            return res.status(200).json(blockerDbUser)
-          }
-          return res.status(200).json(toUserWithRelationResponse(dbUser))
-        })
+        .mapSuccess((dbUser) =>
+          dbUser.themToYouStatus === "blocked"
+            ? res.status(403).json(blockedUserProfileResponse(dbUser))
+            : res.status(200).json(toUserWithRelationResponse(dbUser))
+        )
         .mapFailure((error) => res.status(404).json({ error }))
   )
 }
@@ -60,6 +50,16 @@ const toUserWithRelationResponse = (user: DatabaseUserWithRelation) => ({
   relations: {
     themToYou: user.themToYouStatus,
     youToThem: user.youToThemStatus
+  }
+})
+
+const blockedUserProfileResponse = (user: DatabaseUserWithRelation) => ({
+  name: user.name,
+  profileImageURL: user.profileImageURL,
+  handle: user.handle,
+  relations: {
+    youToThem: user.youToThemStatus,
+    themToYou: user.themToYouStatus
   }
 })
 
