@@ -8,6 +8,7 @@ import { getChatTokenRouter } from "./events/getChatToken.js"
 import { getEventByIdRouter } from "./events/getEventById.js"
 import { getEventsByRegionRouter } from "./events/getEventsByRegion.js"
 import { joinEventRouter } from "./events/joinEventById.js"
+import { leaveEventRouter } from "./events/leaveEvent.js"
 import { autocompleteUsersRouter } from "./user/autocompleteUsers.js"
 import { createBlockUserRouter } from "./user/blockUser.js"
 import { createUserProfileRouter } from "./user/createUserProfile.js"
@@ -59,11 +60,12 @@ const addEventRoutes = (environment: ServerEnvironment) => {
   createEventRouter(environment, router)
   getChatTokenRouter(environment, router)
   getEventByIdRouter(environment, router)
-  getEventsByRegionRouter(environment, router)
   joinEventRouter(environment, router)
+  leaveEventRouter(environment, router)
   setArrivalStatusRouter(environment, router)
   setDepartureRouter(environment, router)
   getUpcomingEventsByRegionRouter(environment, router)
+  getEventsByRegionRouter(environment, router)
   return router
 }
 
