@@ -41,7 +41,7 @@ export const convertEventsByRegionResult = (event: GetEventByRegionEvent) => {
       handle: event.hostHandle,
       profileImageURL: event.hostProfileImageURL,
       haveRelations: {
-        userToHost: event.relationHostToUser,
+        userToHost: event.relationUserToHost,
         hostToUser: event.relationHostToUser
       }
     },
@@ -193,13 +193,15 @@ export const getEventsByRegionRouter = (
     "/region",
     { bodySchema: EventsRequestSchema },
     (req, res) =>
-      getEventsByRegion(conn, {
-        userId: res.locals.selfId,
-        userLatitude: req.body.userLatitude,
-        userLongitude: req.body.userLongitude,
-        radius: req.body.radius
-      })
-        .flatMapSuccess((result) => getEventAttendeesPreview(result))
+      conn
+        .transaction(() =>
+          getEventsByRegion(conn, {
+            userId: res.locals.selfId,
+            userLatitude: req.body.userLatitude,
+            userLongitude: req.body.userLongitude,
+            radius: req.body.radius
+          }).flatMapSuccess((result) => getEventAttendeesPreview(result))
+        )
         .mapFailure((error) => res.status(401).json({ error }))
         .mapSuccess((result) => {
           return res.status(200).json(result)
