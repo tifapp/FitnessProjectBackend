@@ -4,6 +4,7 @@ import { fail } from "assert"
 export const resetDB = async () => {
   await Promise.all([
     conn.queryResults("DELETE FROM eventAttendance"),
+    conn.queryResults("DELETE FROM location"),
     conn.queryResults("DELETE FROM pushTokens"),
     conn.queryResults("DELETE FROM userRelations"),
     conn.queryResults("DELETE FROM userSettings"),
