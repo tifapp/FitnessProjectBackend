@@ -3,42 +3,25 @@ import { z } from "zod"
 import { ServerEnvironment } from "../env.js"
 import { DatabaseEvent } from "../shared/SQL.js"
 import { ValidatedRouter } from "../validation.js"
-import { DatabaseUserToHostRelation } from "./models.js"
+import {
+  userAndRelationsWithId,
+  DatabaseUserWithRelation
+} from "../user/getUser.js"
+import { GetEventWhenBlockedResponse } from "./models.js"
 
 const eventRequestSchema = z.object({
   eventId: z.string()
 })
 
-const BlockedEventResponse = (
-  dbUser: DatabaseUserToHostRelation,
+const getEventWhenBlockedResponse = (
+  dbUser: DatabaseUserWithRelation,
   eventTitle: string
-) => ({
+): GetEventWhenBlockedResponse => ({
   name: dbUser.name,
+  handle: dbUser.handle,
+  profileImageURL: dbUser.profileImageURL,
   title: eventTitle
 })
-
-const getUserToHostRelationWithId = (
-  conn: SQLExecutable,
-  userId: string,
-  fromUserId: string
-) => {
-  return conn.queryFirstResult<DatabaseUserToHostRelation>(
-    `
-    SELECT u.name, 
-    ur1.status AS themToYouStatus, 
-    ur2.status AS youToThemStatus 
-    FROM user u 
-    LEFT JOIN userRelations ur1 ON ur1.fromUserId = u.id
-    AND ur1.fromUserId = :userId
-    AND ur1.toUserId = :fromUserId
-    LEFT JOIN userRelations ur2 ON ur2.toUserId = u.id
-    AND ur2.fromUserId = :fromUserId
-    AND ur2.toUserId = :userId
-    WHERE u.id = :userId;
-  `,
-    { userId, fromUserId }
-  )
-}
 
 export const getEventById = (
   conn: SQLExecutable,
@@ -84,7 +67,7 @@ export const getEventByIdRouter = (
       conn.transaction((tx) =>
         getEventById(conn, Number(req.params.eventId), res.locals.selfId)
           .flatMapSuccess((event) =>
-            getUserToHostRelationWithId(
+            userAndRelationsWithId(
               tx,
               event.hostId,
               res.locals.selfId
@@ -93,7 +76,7 @@ export const getEventByIdRouter = (
               dbUser.youToThemStatus === "blocked"
                 ? res
                     .status(403)
-                    .json(BlockedEventResponse(dbUser, event.title))
+                    .json(getEventWhenBlockedResponse(dbUser, event.title))
                 : res.status(200).json(event)
             )
           )

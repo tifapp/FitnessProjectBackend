@@ -3,6 +3,8 @@ import { callCreateEvent, callGetEvent } from "../test/apiCallers/events.js"
 import { createUserFlow } from "../test/userFlows/users.js"
 import { testEvent } from "../test/testEvents.js"
 import { callBlockUser } from "../test/apiCallers/users.js"
+import { createEventFlow } from "../test/userFlows/events.js"
+import dayjs from "dayjs"
 
 describe("GetSingleEvent tests", () => {
   it("should return 404 if the event doesnt exist", async () => {
@@ -42,58 +44,59 @@ describe("GetSingleEvent tests", () => {
 })
 
 describe("Get event's host and title only", () => {
+  const eventLocation = { latitude: 50, longitude: 50 }
+
   it("should return host name and event title if blocked by host", async () => {
-    const { token: hostToken, name: hostName } = await createUserFlow()
-    const { token: blockedToken, userId: blockedUserId } =
-      await createUserFlow()
+    const {
+      attendeeToken,
+      attendeeId,
+      hostToken,
+      hostHandle,
+      hostName,
+      eventIds
+    } = await createEventFlow([
+      {
+        ...eventLocation,
+        startTimestamp: dayjs().add(12, "hour").toDate(),
+        endTimestamp: dayjs().add(1, "year").toDate()
+      }
+    ])
 
-    await callBlockUser(hostToken, blockedUserId)
-
-    const startTimestamp = new Date("2050-01-01")
-    const endTimestamp = new Date("2050-01-02")
-    const createEventResponse = await callCreateEvent(hostToken, {
-      ...testEvent,
-      startTimestamp,
-      endTimestamp
-    })
-    const resp = await callGetEvent(blockedToken, createEventResponse.body.id)
+    await callBlockUser(hostToken, attendeeId)
+    const resp = await callGetEvent(attendeeToken, eventIds[0])
 
     expect(resp).toMatchObject({
-      status: 403
-    })
-
-    expect(resp.body).toEqual({
-      name: hostName,
-      title: testEvent.title
+      status: 403,
+      body: expect.objectContaining({
+        handle: hostHandle,
+        name: hostName,
+        profileImageURL: null,
+        title: testEvent.title
+      })
     })
   })
 
   it("should return host name and event title if attendee blocked host", async () => {
-    const {
-      token: hostToken,
-      name: hostName,
-      userId: hostUserId
-    } = await createUserFlow()
-    const { token: attendeeToken } = await createUserFlow()
+    const { attendeeToken, hostId, hostHandle, hostName, eventIds } =
+      await createEventFlow([
+        {
+          ...eventLocation,
+          startTimestamp: dayjs().add(12, "hour").toDate(),
+          endTimestamp: dayjs().add(1, "year").toDate()
+        }
+      ])
 
-    await callBlockUser(attendeeToken, hostUserId)
-
-    const startTimestamp = new Date("2050-01-01")
-    const endTimestamp = new Date("2050-01-02")
-    const createEventResponse = await callCreateEvent(hostToken, {
-      ...testEvent,
-      startTimestamp,
-      endTimestamp
-    })
-    const resp = await callGetEvent(attendeeToken, createEventResponse.body.id)
+    await callBlockUser(attendeeToken, hostId)
+    const resp = await callGetEvent(attendeeToken, eventIds[0])
 
     expect(resp).toMatchObject({
-      status: 403
-    })
-
-    expect(resp.body).toEqual({
-      name: hostName,
-      title: testEvent.title
+      status: 403,
+      body: expect.objectContaining({
+        handle: hostHandle,
+        name: hostName,
+        profileImageURL: null,
+        title: testEvent.title
+      })
     })
   })
 })

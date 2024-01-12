@@ -34,7 +34,7 @@ export const getUserRouter = (
   )
 }
 
-type DatabaseUserWithRelation = DatabaseUser & {
+export type DatabaseUserWithRelation = DatabaseUser & {
   themToYouStatus: UserToProfileRelationStatus | null
   youToThemStatus: UserToProfileRelationStatus | null
 }
@@ -63,7 +63,7 @@ const blockedUserProfileResponse = (user: DatabaseUserWithRelation) => ({
   }
 })
 
-const userAndRelationsWithId = (
+export const userAndRelationsWithId = (
   conn: SQLExecutable,
   userId: string,
   fromUserId: string
