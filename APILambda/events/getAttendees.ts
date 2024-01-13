@@ -62,13 +62,10 @@ const getAttendeesByEventId = (
         FROM user AS u 
         INNER JOIN eventAttendance AS ea ON u.id = ea.userId 
         INNER JOIN event AS e ON ea.eventId = e.id
-        LEFT JOIN userArrivals AS ua ON ua.userId = u.id
         LEFT JOIN userRelations AS ur ON (ur.fromUserId = u.id AND ur.toUserId = :userId)
                                     OR (ur.fromUserId = :userId AND ur.toUserId = u.id)
         WHERE e.id = :eventId
         AND (:nextPageUserId IS NULL OR (:nextPageUserId, :nextPageJoinDate) < (u.id, ea.joinTimestamp))
-        AND (ua.longitude = e.longitude AND ua.latitude = e.latitude
-            OR ua.arrivedAt IS NULL)
         GROUP BY u.id
         ORDER BY u.id ASC, ea.joinTimestamp ASC
         LIMIT :limit;
