@@ -41,7 +41,7 @@ describe("Get blocked user's profile name only", () => {
     const resp = await callGetUser(blockedToken, userId)
 
     expect(resp).toMatchObject({
-      status: 200,
+      status: 403,
       body: {
         name,
         handle,
