@@ -9,7 +9,7 @@ const AttendeesRequestSchema = z.object({
   eventId: z.string()
 })
 
-const DecodedCursorRequestSchema = z.object({
+const DecodedCursorValidationSchema = z.object({
   userId: z.string().nullable(),
   joinDate: z.date()
 })
@@ -90,22 +90,20 @@ export const getAttendeesByEventIdRouter = (
     (req, res) => {
       const { userId, joinDate } = decodeCursor(req.query.nextPage)
 
-      const decodedValues = DecodedCursorRequestSchema.parse({
+      const decodedValues = DecodedCursorValidationSchema.parse({
         userId,
         joinDate: joinDate
       })
 
-      const { userId: validatedUserId, joinDate: validatedJoinDate } =
-        decodedValues
-      const validatedUserIdNullCheck =
-        userId === "null" ? null : validatedUserId
+      const validatedUserId =
+        userId === "null" ? null : decodedValues.userId
 
       return getAttendeesByEventId(
         conn,
         Number(req.params.eventId),
         res.locals.selfId,
-        validatedUserIdNullCheck,
-        validatedJoinDate,
+        validatedUserId,
+        decodedValues.joinDate,
         req.query.limit + 1 // Add 1 to handle checking last page
       ).mapSuccess((attendees) =>
         attendees.length === 0
