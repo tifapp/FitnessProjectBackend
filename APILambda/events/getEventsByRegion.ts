@@ -91,7 +91,7 @@ export const getEventsByRegion = (
     FROM event E
     LEFT JOIN location L ON E.latitude = L.lat AND E.longitude = L.lon
     LEFT JOIN userRelations UserRelationOfHostToUser ON E.hostId = UserRelationOfHostToUser.fromUserId AND UserRelationOfHostToUser.toUserId = :userId
-    LEFT JOIN userRelations UserRelationOfUserToHost ON UserRelationOfHostToUser.toUserId = UserRelationOfUserToHost.fromUserId AND UserRelationOfUserToHost.toUserId = UserRelationOfHostToUser.fromUserId
+    LEFT JOIN userRelations UserRelationOfUserToHost ON UserRelationOfUserToHost.fromUserId = :userId AND UserRelationOfUserToHost.toUserId = E.hostId
     LEFT JOIN user U ON E.hostId = U.id
     WHERE ST_Distance_Sphere(POINT(:userLongitude, :userLatitude), POINT(E.longitude, E.latitude)) < :radius
       AND E.endTimestamp > NOW()
@@ -202,7 +202,6 @@ export const getEventsByRegionRouter = (
             radius: req.body.radius
           }).flatMapSuccess((result) => getEventAttendeesPreview(result))
         )
-        .mapFailure((error) => res.status(401).json({ error }))
         .mapSuccess((result) => {
           return res.status(200).json(result)
         })

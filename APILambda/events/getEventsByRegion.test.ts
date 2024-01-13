@@ -1,8 +1,5 @@
 import dayjs from "dayjs"
-import {
-  callBlockUser,
-  callPostFriendRequest
-} from "../test/apiCallers/users.js"
+import { callBlockUser } from "../test/apiCallers/users.js"
 import { callGetEventsByRegion } from "../test/helpers/events.js"
 import { testEvent } from "../test/testEvents.js"
 import { createEventFlow } from "../test/userFlows/events.js"
@@ -58,9 +55,6 @@ const setupDB = async () => {
   eventOwnerTestId = hostId
   ongoingEventTestId = ongoingEventId
   futureEventTestId = futureEventId
-
-  await callPostFriendRequest(hostToken, attendeeId)
-  await callPostFriendRequest(attendeeToken, hostId)
 }
 
 describe("Testing the getEventsByRegion endpoint", () => {
@@ -98,8 +92,8 @@ describe("Testing the individual queries from the getEventsByRegion endpoint", (
     expect(events.body).toHaveLength(0)
   })
 
-  it("should remove the events where the host blocks the attendee", async () => {
-    await callBlockUser(eventOwnerTestToken, attendeeTestId)
+  it("should remove the events where the attendee blocks the host", async () => {
+    await callBlockUser(attendeeTestToken, eventOwnerTestId)
 
     const events = await callGetEventsByRegion(
       attendeeTestToken,
@@ -110,8 +104,8 @@ describe("Testing the individual queries from the getEventsByRegion endpoint", (
     expect(events.body).toHaveLength(0)
   })
 
-  it("should remove the events where the attendee blocks the host", async () => {
-    await callBlockUser(attendeeTestToken, eventOwnerTestId)
+  it("should remove the events where the host blocks the attendee", async () => {
+    await callBlockUser(eventOwnerTestToken, attendeeTestId)
 
     const events = await callGetEventsByRegion(
       attendeeTestToken,
