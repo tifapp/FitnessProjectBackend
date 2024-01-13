@@ -4,13 +4,14 @@ import { ServerEnvironment } from "../env.js"
 import { DatabaseAttendee } from "../shared/SQL.js"
 import { ValidatedRouter } from "../validation.js"
 import { decodeCursor } from "../shared/Cursor.js"
+import { UserToProfileRelationStatus } from "../user/models.js"
 
 const AttendeesRequestSchema = z.object({
   eventId: z.string()
 })
 
 const DecodedCursorValidationSchema = z.object({
-  userId: z.string().nullable(),
+  userId: z.string(),
   joinDate: z.date()
 })
 
@@ -22,22 +23,53 @@ const CursorRequestSchema = z.object({
     .refine((arg) => arg >= 1 && arg <= 50)
 })
 
-const attendeesPaginatedResponse = (
-  attendees: DatabaseAttendee[],
-  limit: number
-) => {
-  const hasMoreAttendees = attendees.length > limit
+type PaginatedAttendeesResponse = {
+  nextPageUserIdCursor: string
+  nextPageJoinDateCursor: Date | null
+  attendeesCount: number
+  attendees: DatabaseAttendee[]
+}
 
-  const nextPageUserId = hasMoreAttendees ? attendees[limit - 1].id : null
-  const nextPageJoinDate = hasMoreAttendees
-    ? attendees[limit - 1].joinTimestamp
+type DatabaseAttendeeWithRelation = DatabaseAttendee & {
+  themToYou: UserToProfileRelationStatus | null
+  youToThem: UserToProfileRelationStatus | null
+}
+
+const mapDatabaseAttendee = (sqlResult: DatabaseAttendeeWithRelation) => {
+  return {
+    id: sqlResult.id,
+    name: sqlResult.name,
+    joinTimestamp: sqlResult.joinTimestamp,
+    profileImageURL: sqlResult.profileImageURL,
+    handle: sqlResult.handle,
+    relations: {
+      youToThem: sqlResult.youToThem,
+      themToYou: sqlResult.themToYou
+    }
+  }
+}
+
+const attendeesPaginatedResponse = (
+  attendees: DatabaseAttendeeWithRelation[],
+  limit: number
+): PaginatedAttendeesResponse => {
+  const mappedAttendees = attendees.map(mapDatabaseAttendee)
+
+  const hasMoreAttendees = mappedAttendees.length > limit
+
+  const nextPageUserIdCursor = hasMoreAttendees
+    ? mappedAttendees[limit - 1].id
+    : "lastPage"
+  const nextPageJoinDateCursor = hasMoreAttendees
+    ? mappedAttendees[limit - 1].joinTimestamp
     : null
 
-  const paginatedAttendees = attendees.slice(0, limit)
+  const paginatedAttendees = mappedAttendees.slice(0, limit)
 
   return {
-    nextPageUserId,
-    nextPageJoinDate,
+    nextPageUserIdCursor,
+    nextPageJoinDateCursor,
+    attendeesCount: paginatedAttendees.length,
     attendees: paginatedAttendees
   }
 }
@@ -46,31 +78,31 @@ const getAttendeesByEventId = (
   conn: SQLExecutable,
   eventId: number,
   userId: string,
-  nextPageUserId: string | null,
-  nextPageJoinDate: Date,
+  nextPageUserIdCursor: string,
+  nextPageJoinDateCursor: Date,
   limit: number
 ) =>
-  conn.queryResults<DatabaseAttendee>(
+  conn.queryResults<DatabaseAttendeeWithRelation>(
     `SELECT 
         u.id, 
         u.profileImageURL, 
         u.name, 
         u.handle, 
         ea.joinTimestamp,
-        MAX(CASE WHEN ur.fromUserId = :userId THEN ur.status END) AS youToThemStatus,
-        MAX(CASE WHEN ur.toUserId = :userId THEN ur.status END) AS themToYouStatus
+        MAX(CASE WHEN ur.fromUserId = :userId THEN ur.status END) AS youToThem,
+        MAX(CASE WHEN ur.toUserId = :userId THEN ur.status END) AS themToYou
         FROM user AS u 
         INNER JOIN eventAttendance AS ea ON u.id = ea.userId 
         INNER JOIN event AS e ON ea.eventId = e.id
         LEFT JOIN userRelations AS ur ON (ur.fromUserId = u.id AND ur.toUserId = :userId)
                                     OR (ur.fromUserId = :userId AND ur.toUserId = u.id)
         WHERE e.id = :eventId
-        AND (:nextPageUserId IS NULL OR (:nextPageUserId, :nextPageJoinDate) < (u.id, ea.joinTimestamp))
+        AND (:nextPageUserIdCursor = 'firstPage' OR (:nextPageUserIdCursor, :nextPageJoinDateCursor) < (u.id, ea.joinTimestamp))
         GROUP BY u.id
         ORDER BY u.id ASC, ea.joinTimestamp ASC
         LIMIT :limit;
   `,
-    { eventId, userId, nextPageUserId, nextPageJoinDate, limit }
+    { eventId, userId, nextPageUserIdCursor, nextPageJoinDateCursor, limit }
   )
 /**
  * Creates routes related to attendees list.
@@ -95,19 +127,18 @@ export const getAttendeesByEventIdRouter = (
         joinDate: joinDate
       })
 
-      const validatedUserId =
-        userId === "null" ? null : decodedValues.userId
-
       return getAttendeesByEventId(
         conn,
         Number(req.params.eventId),
         res.locals.selfId,
-        validatedUserId,
+        decodedValues.userId,
         decodedValues.joinDate,
         req.query.limit + 1 // Add 1 to handle checking last page
       ).mapSuccess((attendees) =>
         attendees.length === 0
-          ? res.status(404).send(attendees)
+          ? res
+              .status(404)
+              .send(attendeesPaginatedResponse(attendees, req.query.limit))
           : res
               .status(200)
               .send(attendeesPaginatedResponse(attendees, req.query.limit))

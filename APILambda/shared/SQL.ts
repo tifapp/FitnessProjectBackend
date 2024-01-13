@@ -19,17 +19,10 @@ export type DatabaseEvent = {
 
 export type DatabaseAttendee = {
   id: string
-  profileImageUrl: string
   name: string
+  joinTimestamp: Date
+  profileImageURL?: string
   handle: string
-  joinTimestamp: string
-  youToThemStatus: string
-  themToYouStatus: string
-}
-
-export type Cursor = {
-  userId: string
-  joinDate: string
 }
 
 export type EventAttendee = {
