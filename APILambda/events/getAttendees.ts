@@ -1,9 +1,9 @@
 import { SQLExecutable, conn } from "TiFBackendUtils"
 import { z } from "zod"
 import { ServerEnvironment } from "../env.js"
-import { DatabaseAttendee } from "../shared/SQL.js"
+import { DatabaseAttendee, PaginatedAttendeesResponse} from "../shared/SQL.js"
 import { ValidatedRouter } from "../validation.js"
-import { decodeCursor } from "../shared/Cursor.js"
+import { decodeAttendeesListCursor } from "../shared/Cursor.js"
 import { UserToProfileRelationStatus } from "../user/models.js"
 
 const AttendeesRequestSchema = z.object({
@@ -22,13 +22,6 @@ const CursorRequestSchema = z.object({
     .transform((arg) => parseInt(arg))
     .refine((arg) => arg >= 1 && arg <= 50)
 })
-
-type PaginatedAttendeesResponse = {
-  nextPageUserIdCursor: string
-  nextPageJoinDateCursor: Date | null
-  attendeesCount: number
-  attendees: DatabaseAttendee[]
-}
 
 type DatabaseAttendeeWithRelation = DatabaseAttendee & {
   themToYou: UserToProfileRelationStatus | null
@@ -49,7 +42,7 @@ const mapDatabaseAttendee = (sqlResult: DatabaseAttendeeWithRelation) => {
   }
 }
 
-const attendeesPaginatedResponse = (
+const paginatedAttendeesResponse = (
   attendees: DatabaseAttendeeWithRelation[],
   limit: number
 ): PaginatedAttendeesResponse => {
@@ -67,8 +60,10 @@ const attendeesPaginatedResponse = (
   const paginatedAttendees = mappedAttendees.slice(0, limit)
 
   return {
-    nextPageUserIdCursor,
-    nextPageJoinDateCursor,
+    nextPageCursor: JSON.stringify({
+      userId: nextPageUserIdCursor,
+      joinDate: nextPageJoinDateCursor
+    }),
     attendeesCount: paginatedAttendees.length,
     attendees: paginatedAttendees
   }
@@ -120,7 +115,7 @@ export const getAttendeesByEventIdRouter = (
       querySchema: CursorRequestSchema
     },
     (req, res) => {
-      const { userId, joinDate } = decodeCursor(req.query.nextPage)
+      const { userId, joinDate } = decodeAttendeesListCursor(req.query.nextPage)
 
       const decodedValues = DecodedCursorValidationSchema.parse({
         userId,
@@ -138,10 +133,10 @@ export const getAttendeesByEventIdRouter = (
         attendees.length === 0
           ? res
               .status(404)
-              .send(attendeesPaginatedResponse(attendees, req.query.limit))
+              .send(paginatedAttendeesResponse(attendees, req.query.limit))
           : res
               .status(200)
-              .send(attendeesPaginatedResponse(attendees, req.query.limit))
+              .send(paginatedAttendeesResponse(attendees, req.query.limit))
       )
     }
   )

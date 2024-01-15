@@ -5,14 +5,17 @@ import {
   callJoinEvent,
   callLeaveEvent
 } from "../test/apiCallers/events.js"
-import { encodeCursor } from "../shared/Cursor.js"
+import { encodeAttendeesListCursor } from "../shared/Cursor.js"
 import { createUserFlow } from "../test/userFlows/users.js"
 
 describe("Join the event by id tests", () => {
   const eventLocation = { latitude: 50, longitude: 50 }
   const limit = 2
-  const initialUserIdCursor = "firstPage"
-  const initialJoinDateCursor = "1970-01-01T00:00:00Z"
+  const initialCursorObject = {
+    userId: "firstPage",
+    joinDate: dayjs("1970-01-01T00:00:00Z").toDate()
+  }
+  const lastPageCursorResponse = /"userId":"lastPage","joinDate":null/
 
   it("should return 400 if limit is less than one", async () => {
     const { attendeeToken, eventIds } = await createEventFlow([
@@ -23,16 +26,11 @@ describe("Join the event by id tests", () => {
       }
     ])
 
-    const nextCursor = encodeCursor(
-      initialUserIdCursor,
-      dayjs(initialJoinDateCursor).toDate()
-    )
-
-    // Initial cursor
+    const firstPageCursorResp = encodeAttendeesListCursor(initialCursorObject)
     const resp = await callGetAttendees(
       attendeeToken,
       eventIds[0],
-      nextCursor,
+      firstPageCursorResp,
       0
     )
 
@@ -53,16 +51,11 @@ describe("Join the event by id tests", () => {
       }
     ])
 
-    const nextCursor = encodeCursor(
-      initialUserIdCursor,
-      dayjs(initialJoinDateCursor).toDate()
-    )
-
-    // Initial cursor
+    const firstPageCursorResp = encodeAttendeesListCursor(initialCursorObject)
     const resp = await callGetAttendees(
       attendeeToken,
       eventIds[0],
-      nextCursor,
+      firstPageCursorResp,
       51
     )
 
@@ -77,20 +70,19 @@ describe("Join the event by id tests", () => {
   it("should return 404 if attendee list is empty", async () => {
     const { token } = await createUserFlow()
 
-    const nextCursor = encodeCursor(
-      initialUserIdCursor,
-      dayjs(initialJoinDateCursor).toDate()
-    )
+    const firstPageCursorResp = encodeAttendeesListCursor(initialCursorObject)
     const eventId = 9999
-
-    // Initial cursor
-    const resp = await callGetAttendees(token, eventId, nextCursor, limit)
+    const resp = await callGetAttendees(
+      token,
+      eventId,
+      firstPageCursorResp,
+      limit
+    )
 
     expect(resp).toMatchObject({
       status: 404,
       body: expect.objectContaining({
-        nextPageUserIdCursor: "lastPage",
-        nextPageJoinDateCursor: null,
+        nextPageCursor: expect.stringMatching(lastPageCursorResponse),
         attendeesCount: 0,
         attendees: []
       })
@@ -109,16 +101,11 @@ describe("Join the event by id tests", () => {
     const { token: attendeeToken2 } = await createUserFlow()
     await callJoinEvent(attendeeToken2, eventIds[0])
 
-    const nextCursor = encodeCursor(
-      initialUserIdCursor,
-      dayjs(initialJoinDateCursor).toDate()
-    )
-
-    // Initial cursor
+    const firstPageCursorResp = encodeAttendeesListCursor(initialCursorObject)
     const resp = await callGetAttendees(
       attendeeToken,
       eventIds[0],
-      nextCursor,
+      firstPageCursorResp,
       limit
     )
 
@@ -143,8 +130,7 @@ describe("Join the event by id tests", () => {
             relations: { youToThem: null, themToYou: null }
           })
         ]),
-        nextPageJoinDateCursor: null,
-        nextPageUserIdCursor: expect.anything(),
+        nextPageCursor: expect.anything(),
         attendeesCount: expect.anything()
       })
     })
@@ -161,16 +147,11 @@ describe("Join the event by id tests", () => {
 
     await callLeaveEvent(attendeeToken, eventIds[0])
 
-    // Initial cursor
-    let nextCursor = encodeCursor(
-      initialUserIdCursor,
-      dayjs(initialJoinDateCursor).toDate()
-    )
-
+    const firstPageCursorResp = encodeAttendeesListCursor(initialCursorObject)
     let resp = await callGetAttendees(
       attendeeToken,
       eventIds[0],
-      nextCursor,
+      firstPageCursorResp,
       limit
     )
 
@@ -187,8 +168,7 @@ describe("Join the event by id tests", () => {
             relations: { youToThem: null, themToYou: null }
           })
         ]),
-        nextPageUserIdCursor: "lastPage",
-        nextPageJoinDateCursor: null,
+        nextPageCursor: expect.stringMatching(lastPageCursorResponse),
         attendeesCount: expect.anything()
       })
     })
@@ -206,24 +186,23 @@ describe("Join the event by id tests", () => {
     const { token: attendeeToken2 } = await createUserFlow()
     await callJoinEvent(attendeeToken2, eventIds[0])
 
-    // Initial cursor
-    let nextCursor = encodeCursor(
-      initialUserIdCursor,
-      dayjs(initialJoinDateCursor).toDate()
-    )
-
+    const firstPageCursorResp = encodeAttendeesListCursor(initialCursorObject)
     let resp = await callGetAttendees(
       attendeeToken,
       eventIds[0],
-      nextCursor,
+      firstPageCursorResp,
       limit
     )
 
-    let { nextPageUserIdCursor, nextPageJoinDateCursor } = resp.body
-
-    // Next cursor
-    nextCursor = encodeCursor(nextPageUserIdCursor, nextPageJoinDateCursor)
-    resp = await callGetAttendees(attendeeToken, eventIds[0], nextCursor, limit)
+    const lastPageCursorResp = encodeAttendeesListCursor(
+      JSON.parse(resp.body.nextPageCursor)
+    )
+    resp = await callGetAttendees(
+      attendeeToken,
+      eventIds[0],
+      lastPageCursorResp,
+      limit
+    )
 
     expect(resp).toMatchObject({
       status: 200,
@@ -238,8 +217,7 @@ describe("Join the event by id tests", () => {
             relations: { youToThem: null, themToYou: null }
           })
         ]),
-        nextPageUserIdCursor: "lastPage",
-        nextPageJoinDateCursor: null,
+        nextPageCursor: expect.stringMatching(lastPageCursorResponse),
         attendeesCount: expect.anything()
       })
     })

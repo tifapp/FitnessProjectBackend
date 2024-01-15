@@ -25,6 +25,12 @@ export type DatabaseAttendee = {
   handle: string
 }
 
+export type PaginatedAttendeesResponse = {
+  nextPageCursor: string
+  attendeesCount: number
+  attendees: DatabaseAttendee[]
+}
+
 export type EventAttendee = {
   userIds: string
   eventId: number
