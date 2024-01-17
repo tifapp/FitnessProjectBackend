@@ -5,6 +5,7 @@ import { testEvent } from "../test/testEvents.js"
 import { createEventFlow } from "../test/userFlows/events.js"
 import { getAttendeeCount, getAttendees } from "./getEventsByRegion.js"
 import { addPlacemarkToDB } from "./sharedSQL.js"
+import { conn } from "TiFBackendUtils"
 
 let eventOwnerTestToken: string
 let attendeeTestToken: string
@@ -117,13 +118,13 @@ describe("Testing the individual queries from the getEventsByRegion endpoint", (
   })
 
   it("should return the attendee list not including the event host", async () => {
-    const attendees = await getAttendees([`${ongoingEventTestId}`])
+    const attendees = await getAttendees(conn, [`${ongoingEventTestId}`])
     expect(attendees.value).toHaveLength(1)
     expect(attendees.value[0].userIds).not.toEqual(eventOwnerTestId)
   })
 
   it("should return the attendee count including the event host", async () => {
-    const attendees = await getAttendeeCount([`${ongoingEventTestId}`])
+    const attendees = await getAttendeeCount(conn, [`${ongoingEventTestId}`])
     expect(attendees.value[0].attendeeCount).toEqual(2)
   })
 })

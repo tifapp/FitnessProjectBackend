@@ -102,7 +102,7 @@ export const getEventsByRegion = (
     { ...eventsRequest }
   )
 
-export const getAttendees = (eventIds: string[]) => {
+export const getAttendees = (conn: SQLExecutable, eventIds: string[]) => {
   return conn.queryResults<EventAttendee>(
     `
     SELECT 
@@ -121,7 +121,7 @@ HAVING
   )
 }
 
-export const getAttendeeCount = (eventIds: string[]) => {
+export const getAttendeeCount = (conn: SQLExecutable, eventIds: string[]) => {
   return conn.queryResults<EventWithAttendeeCount>(
     ` SELECT
           E.id,
@@ -152,16 +152,19 @@ const setAttendeesPreviewForEvent = (
 }
 
 // Utilize the event to join with the attendees table to get the attendees
-const getEventAttendeesPreview = (events: GetEventByRegionEvent[]) => {
+const getEventAttendeesPreview = (
+  conn: SQLExecutable,
+  events: GetEventByRegionEvent[]
+) => {
   const eventIds = events.map((event) => event.id.toString())
 
   if (!eventIds.length) {
     return success([])
   }
 
-  const eventsByRegion = getAttendees(eventIds).flatMapSuccess(
+  const eventsByRegion = getAttendees(conn, eventIds).flatMapSuccess(
     (attendeesPreviews) =>
-      getAttendeeCount(eventIds).mapSuccess((eventsWithAttendeeCount) => {
+      getAttendeeCount(conn, eventIds).mapSuccess((eventsWithAttendeeCount) => {
         return setAttendeesPreviewForEvent(
           events,
           attendeesPreviews,
@@ -194,13 +197,13 @@ export const getEventsByRegionRouter = (
     { bodySchema: EventsRequestSchema },
     (req, res) =>
       conn
-        .transaction(() =>
-          getEventsByRegion(conn, {
+        .transaction((tx) =>
+          getEventsByRegion(tx, {
             userId: res.locals.selfId,
             userLatitude: req.body.userLatitude,
             userLongitude: req.body.userLongitude,
             radius: req.body.radius
-          }).flatMapSuccess((result) => getEventAttendeesPreview(result))
+          }).flatMapSuccess((result) => getEventAttendeesPreview(tx, result))
         )
         .mapSuccess((result) => {
           return res.status(200).json(result)
