@@ -1,23 +1,32 @@
-import base64url from "base64url"
 const defaultJoinDate = "1970-01-01T00:00:00Z"
 
 /**
- * Encodes the cursor for the attendees list.
+ * Encodes the cursor for the attendees list using Buffer.
  *
  * @param cursorObject - An object with properties 'userId' (string) and 'joinDate' (Date).
  * @returns The encoded cursor combining userId and joinDate.
  */
-export const encodeAttendeesListCursor = (cursorObject: {
-  userId: string
-  joinDate: Date
-}): string => {
+export const encodeAttendeesListCursor = (
+  cursorObject: {
+    userId: string
+    joinDate: Date
+  } | null
+): string => {
   const { userId, joinDate } = cursorObject
+    ? cursorObject
+    : {
+        userId: "firstPage",
+        joinDate: null
+      }
   const encodedJoinDate = joinDate ? joinDate.toISOString() : defaultJoinDate
-  return base64url.encode(`${userId}|${encodedJoinDate}`)
+  const encodedString = Buffer.from(`${userId}|${encodedJoinDate}`).toString(
+    "base64"
+  )
+  return encodedString
 }
 
 /**
- * Decodes the cursor for the attendees list.
+ * Decodes the cursor for the attendees list using Buffer.
  *
  * @param cursor - The encoded cursor string.
  * @returns Decoded userId and joinDate.
@@ -25,10 +34,11 @@ export const encodeAttendeesListCursor = (cursorObject: {
 export const decodeAttendeesListCursor = (
   cursor: string
 ): { userId: string; joinDate: Date } => {
-  const [encodedUserId, encodedJoinDate] = base64url.decode(cursor).split("|")
+  const decodedString = Buffer.from(cursor, "base64").toString("utf-8")
+  const [decodedUserId, decodedJoinDate] = decodedString.split("|")
   let joinDate = new Date(defaultJoinDate)
-  if (encodedJoinDate !== defaultJoinDate) {
-    joinDate = new Date(encodedJoinDate)
+  if (decodedJoinDate !== defaultJoinDate) {
+    joinDate = new Date(decodedJoinDate)
   }
-  return { userId: encodedUserId, joinDate }
+  return { userId: decodedUserId, joinDate }
 }

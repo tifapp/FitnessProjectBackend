@@ -1,7 +1,7 @@
 import { SQLExecutable, conn } from "TiFBackendUtils"
 import { z } from "zod"
 import { ServerEnvironment } from "../env.js"
-import { DatabaseAttendee, PaginatedAttendeesResponse} from "../shared/SQL.js"
+import { DatabaseAttendee, PaginatedAttendeesResponse } from "../shared/SQL.js"
 import { ValidatedRouter } from "../validation.js"
 import { decodeAttendeesListCursor } from "../shared/Cursor.js"
 import { UserToProfileRelationStatus } from "../user/models.js"
@@ -24,8 +24,8 @@ const CursorRequestSchema = z.object({
 })
 
 type DatabaseAttendeeWithRelation = DatabaseAttendee & {
-  themToYou: UserToProfileRelationStatus | null
-  youToThem: UserToProfileRelationStatus | null
+  themToYou: UserToProfileRelationStatus
+  youToThem: UserToProfileRelationStatus
 }
 
 const mapDatabaseAttendee = (sqlResult: DatabaseAttendeeWithRelation) => {
@@ -36,8 +36,8 @@ const mapDatabaseAttendee = (sqlResult: DatabaseAttendeeWithRelation) => {
     profileImageURL: sqlResult.profileImageURL,
     handle: sqlResult.handle,
     relations: {
-      youToThem: sqlResult.youToThem,
-      themToYou: sqlResult.themToYou
+      youToThem: sqlResult.youToThem ?? "not-friends",
+      themToYou: sqlResult.themToYou ?? "not-friends"
     }
   }
 }
@@ -69,6 +69,7 @@ const paginatedAttendeesResponse = (
   }
 }
 
+// TODO: use index as cursor instead of userid+joindate
 const getAttendeesByEventId = (
   conn: SQLExecutable,
   eventId: number,
