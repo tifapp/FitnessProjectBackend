@@ -1,3 +1,4 @@
+import { LocationCoordinate2D, Placemark } from "TiFBackendUtils"
 import dotenv from "dotenv"
 import { z } from "zod"
 
@@ -27,7 +28,10 @@ export const envVars = EnvVarsSchema.parse(process.env)
  * Examples of this include AWS S3 buckets, or SNS/Push notification clients.
  */
 export type ServerEnvironment = {
-  environment: EnvironmentType,
-  eventStartWindowInHours: number,
-  maxArrivals: number,
+  environment: EnvironmentType
+  eventStartWindowInHours: number
+  maxArrivals: number
+  SearchForPositionResultToPlacemark: (
+    location: LocationCoordinate2D
+  ) => Placemark
 }

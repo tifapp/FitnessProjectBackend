@@ -6,6 +6,10 @@ import { addBenchmarking, addRoutes, createApp } from "./app.js"
 import { addCognitoTokenVerification } from "./auth.js"
 import { ServerEnvironment } from "./env.js"
 import { addErrorReporting } from "./errorReporting.js"
+import {
+  LocationCoordinate2D,
+  SearchForPositionResultToPlacemark
+} from "TiFBackendUtils"
 
 const addEventToRequest = (app: Express) => {
   app.use((req, res, next) => {
@@ -34,7 +38,13 @@ const addEventToRequest = (app: Express) => {
   app.use(express.urlencoded({ extended: true }))
 }
 
-const env: ServerEnvironment = { environment: "prod", eventStartWindowInHours: 1, maxArrivals: 100 }
+const env: ServerEnvironment = {
+  environment: "prod",
+  eventStartWindowInHours: 1,
+  maxArrivals: 100,
+  SearchForPositionResultToPlacemark: (location: LocationCoordinate2D) =>
+    SearchForPositionResultToPlacemark(location)
+}
 
 const app = createApp()
 addEventToRequest(app)

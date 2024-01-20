@@ -30,7 +30,7 @@ export const SearchForPositionResultToPlacemark = (
       "Unknown Place",
     country: place?.Country ?? place?.Region ?? "Unknown Country",
     street: place?.Street ?? "Unknown Address",
-    street_num: place?.AddressNumber ?? 0,
+    street_num: place?.AddressNumber ?? "",
     unit_number: place?.UnitNumber ?? ""
   }
 }
