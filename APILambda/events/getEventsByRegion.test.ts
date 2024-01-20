@@ -1,18 +1,18 @@
 import dayjs from "dayjs"
-import {
-  callBlockUser,
-  callPostFriendRequest
-} from "../test/apiCallers/users.js"
-import { callGetEventsByRegion, callJoinEvent } from "../test/helpers/events.js"
+import { callBlockUser } from "../test/apiCallers/users.js"
+import { callGetEventsByRegion } from "../test/helpers/events.js"
 import { testEvent } from "../test/testEvents.js"
 import { createEventFlow } from "../test/userFlows/events.js"
 import { getAttendeeCount, getAttendees } from "./getEventsByRegion.js"
 import { addPlacemarkToDB } from "./sharedSQL.js"
+import { conn } from "TiFBackendUtils"
 
 let eventOwnerTestToken: string
 let attendeeTestToken: string
 let eventOwnerTestId: string
 let attendeeTestId: string
+let futureEventTestId: number
+let ongoingEventTestId: number
 
 const setupDB = async () => {
   addPlacemarkToDB({
@@ -54,15 +54,8 @@ const setupDB = async () => {
   eventOwnerTestToken = hostToken
   attendeeTestId = attendeeId
   eventOwnerTestId = hostId
-
-  await callPostFriendRequest(hostToken, attendeeId)
-  await callPostFriendRequest(attendeeToken, hostId)
-
-  await callJoinEvent(attendeeToken, ongoingEventId)
-  await callJoinEvent(hostToken, ongoingEventId)
-
-  await callJoinEvent(attendeeToken, futureEventId)
-  await callJoinEvent(hostToken, futureEventId)
+  ongoingEventTestId = ongoingEventId
+  futureEventTestId = futureEventId
 }
 
 describe("Testing the getEventsByRegion endpoint", () => {
@@ -78,6 +71,12 @@ describe("Testing the getEventsByRegion endpoint", () => {
 
     expect(respGetEventsByRegion.status).toEqual(200)
     expect(respGetEventsByRegion.body).toHaveLength(2)
+    const eventIds = [
+      respGetEventsByRegion.body[0].id,
+      respGetEventsByRegion.body[1].id
+    ]
+    expect(eventIds).toContain(ongoingEventTestId)
+    expect(eventIds).toContain(futureEventTestId)
   })
 })
 
@@ -94,18 +93,6 @@ describe("Testing the individual queries from the getEventsByRegion endpoint", (
     expect(events.body).toHaveLength(0)
   })
 
-  it("should remove the events where the host blocks the attendee", async () => {
-    await callBlockUser(eventOwnerTestToken, attendeeTestId)
-
-    const events = await callGetEventsByRegion(
-      attendeeTestToken,
-      testEvent.latitude,
-      testEvent.longitude,
-      50000
-    )
-    expect(events.body).toHaveLength(0)
-  })
-
   it("should remove the events where the attendee blocks the host", async () => {
     await callBlockUser(attendeeTestToken, eventOwnerTestId)
 
@@ -118,26 +105,26 @@ describe("Testing the individual queries from the getEventsByRegion endpoint", (
     expect(events.body).toHaveLength(0)
   })
 
-  it("should return the attendee list not including the event host", async () => {
+  it("should remove the events where the host blocks the attendee", async () => {
+    await callBlockUser(eventOwnerTestToken, attendeeTestId)
+
     const events = await callGetEventsByRegion(
       attendeeTestToken,
       testEvent.latitude,
       testEvent.longitude,
       50000
     )
-    const attendees = await getAttendees([`${events.body[0].id}`])
+    expect(events.body).toHaveLength(0)
+  })
+
+  it("should return the attendee list not including the event host", async () => {
+    const attendees = await getAttendees(conn, [`${ongoingEventTestId}`])
     expect(attendees.value).toHaveLength(1)
-    expect(attendees.value[0].userIds).not.toEqual(events.body[0].hostId)
+    expect(attendees.value[0].userIds).not.toEqual(eventOwnerTestId)
   })
 
   it("should return the attendee count including the event host", async () => {
-    const events = await callGetEventsByRegion(
-      attendeeTestToken,
-      testEvent.latitude,
-      testEvent.longitude,
-      50000
-    )
-    const attendees = await getAttendeeCount([`${events.body[0].id}`])
+    const attendees = await getAttendeeCount(conn, [`${ongoingEventTestId}`])
     expect(attendees.value[0].attendeeCount).toEqual(2)
   })
 })

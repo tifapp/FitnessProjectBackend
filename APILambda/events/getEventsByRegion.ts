@@ -41,7 +41,7 @@ export const convertEventsByRegionResult = (event: GetEventByRegionEvent) => {
       handle: event.hostHandle,
       profileImageURL: event.hostProfileImageURL,
       haveRelations: {
-        userToHost: event.relationHostToUser,
+        userToHost: event.relationUserToHost,
         hostToUser: event.relationHostToUser
       }
     },
@@ -91,7 +91,7 @@ export const getEventsByRegion = (
     FROM event E
     LEFT JOIN location L ON E.latitude = L.lat AND E.longitude = L.lon
     LEFT JOIN userRelations UserRelationOfHostToUser ON E.hostId = UserRelationOfHostToUser.fromUserId AND UserRelationOfHostToUser.toUserId = :userId
-    LEFT JOIN userRelations UserRelationOfUserToHost ON UserRelationOfHostToUser.toUserId = UserRelationOfUserToHost.fromUserId AND UserRelationOfUserToHost.toUserId = UserRelationOfHostToUser.fromUserId
+    LEFT JOIN userRelations UserRelationOfUserToHost ON UserRelationOfUserToHost.fromUserId = :userId AND UserRelationOfUserToHost.toUserId = E.hostId
     LEFT JOIN user U ON E.hostId = U.id
     WHERE ST_Distance_Sphere(POINT(:userLongitude, :userLatitude), POINT(E.longitude, E.latitude)) < :radius
       AND E.endTimestamp > NOW()
@@ -102,7 +102,7 @@ export const getEventsByRegion = (
     { ...eventsRequest }
   )
 
-export const getAttendees = (eventIds: string[]) => {
+export const getAttendees = (conn: SQLExecutable, eventIds: string[]) => {
   return conn.queryResults<EventAttendee>(
     `
     SELECT 
@@ -121,7 +121,7 @@ HAVING
   )
 }
 
-export const getAttendeeCount = (eventIds: string[]) => {
+export const getAttendeeCount = (conn: SQLExecutable, eventIds: string[]) => {
   return conn.queryResults<EventWithAttendeeCount>(
     ` SELECT
           E.id,
@@ -152,16 +152,19 @@ const setAttendeesPreviewForEvent = (
 }
 
 // Utilize the event to join with the attendees table to get the attendees
-const getEventAttendeesPreview = (events: GetEventByRegionEvent[]) => {
+const getEventAttendeesPreview = (
+  conn: SQLExecutable,
+  events: GetEventByRegionEvent[]
+) => {
   const eventIds = events.map((event) => event.id.toString())
 
   if (!eventIds.length) {
     return success([])
   }
 
-  const eventsByRegion = getAttendees(eventIds).flatMapSuccess(
+  const eventsByRegion = getAttendees(conn, eventIds).flatMapSuccess(
     (attendeesPreviews) =>
-      getAttendeeCount(eventIds).mapSuccess((eventsWithAttendeeCount) => {
+      getAttendeeCount(conn, eventIds).mapSuccess((eventsWithAttendeeCount) => {
         return setAttendeesPreviewForEvent(
           events,
           attendeesPreviews,
@@ -193,14 +196,15 @@ export const getEventsByRegionRouter = (
     "/region",
     { bodySchema: EventsRequestSchema },
     (req, res) =>
-      getEventsByRegion(conn, {
-        userId: res.locals.selfId,
-        userLatitude: req.body.userLatitude,
-        userLongitude: req.body.userLongitude,
-        radius: req.body.radius
-      })
-        .flatMapSuccess((result) => getEventAttendeesPreview(result))
-        .mapFailure((error) => res.status(401).json({ error }))
+      conn
+        .transaction((tx) =>
+          getEventsByRegion(tx, {
+            userId: res.locals.selfId,
+            userLatitude: req.body.userLatitude,
+            userLongitude: req.body.userLongitude,
+            radius: req.body.radius
+          }).flatMapSuccess((result) => getEventAttendeesPreview(tx, result))
+        )
         .mapSuccess((result) => {
           return res.status(200).json(result)
         })
