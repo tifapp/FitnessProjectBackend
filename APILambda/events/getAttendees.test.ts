@@ -12,7 +12,6 @@ import { DatabaseAttendee } from "../shared/SQL.js"
 const eventLocation = { latitude: 50, longitude: 50 }
 const lastPageCursorResponse = /"userId":"lastPage","joinDate":null/
 const paginationLimit = 2
-const initialCursorObject = null
 
 let attendeeTestToken: string
 let eventTestId: number
@@ -51,7 +50,7 @@ const getAllAttendeesListResponse = async (
     await callJoinEvent(attendeeToken, eventTestId)
   }
 
-  const firstPageCursorResp = encodeAttendeesListCursor(initialCursorObject)
+  const firstPageCursorResp = encodeAttendeesListCursor()
   const resp = await callGetAttendees(
     attendeeTestToken,
     eventTestId,
@@ -99,7 +98,7 @@ describe("Testing for getting attendees list endpoint", () => {
   it("should return 404 if attendee list is empty", async () => {
     const { token } = await createUserFlow()
 
-    const firstPageCursorResp = encodeAttendeesListCursor(initialCursorObject)
+    const firstPageCursorResp = encodeAttendeesListCursor()
     const eventId = 9999
     const resp = await callGetAttendees(
       token,
@@ -121,7 +120,7 @@ describe("Testing for getting attendees list endpoint", () => {
   it("should return 200 after paginating the first page of attendees list", async () => {
     const allAttendeesResp = await getAllAttendeesListResponse(1)
 
-    const firstPageCursorResp = encodeAttendeesListCursor(initialCursorObject)
+    const firstPageCursorResp = encodeAttendeesListCursor()
     const resp = await callGetAttendees(
       attendeeTestToken,
       eventTestId,
@@ -152,7 +151,7 @@ describe("Testing for getting attendees list endpoint", () => {
     await callLeaveEvent(attendeeTestToken, eventTestId)
     const allAttendeesResp = await getAllAttendeesListResponse()
 
-    const firstPageCursorResp = encodeAttendeesListCursor(initialCursorObject)
+    const firstPageCursorResp = encodeAttendeesListCursor()
     let resp = await callGetAttendees(
       attendeeTestToken,
       eventTestId,
@@ -185,7 +184,7 @@ describe("Testing for getting attendees list endpoint", () => {
 
     const allAttendees = allAttendeesResp.body.attendees
 
-    const firstPageCursorResp = encodeAttendeesListCursor(initialCursorObject)
+    const firstPageCursorResp = encodeAttendeesListCursor()
     let resp = await callGetAttendees(
       attendeeTestToken,
       eventTestId,
@@ -225,7 +224,7 @@ describe("Testing for getting attendees list endpoint", () => {
     const allAttendeesResp = await getAllAttendeesListResponse(1)
     const allAttendees = allAttendeesResp.body.attendees
 
-    const firstPageCursorResp = encodeAttendeesListCursor(initialCursorObject)
+    const firstPageCursorResp = encodeAttendeesListCursor()
     let resp = await callGetAttendees(
       attendeeTestToken,
       eventTestId,

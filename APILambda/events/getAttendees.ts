@@ -16,7 +16,7 @@ const DecodedCursorValidationSchema = z.object({
 })
 
 const CursorRequestSchema = z.object({
-  nextPage: z.string(),
+  nextPage: z.string().optional(),
   limit: z
     .string()
     .transform((arg) => parseInt(arg))
