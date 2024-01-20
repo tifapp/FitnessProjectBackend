@@ -10,6 +10,13 @@ export const EventColorSchema = z.union([
   z.literal("#F6BD60")
 ])
 
+export type GetEventWhenBlockedResponse = {
+  name: string
+  handle: string
+  profileImageURL?: string,
+  title: string
+}
+
 /**
  * All possible colors of an event.
  */

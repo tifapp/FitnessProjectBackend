@@ -3,13 +3,34 @@ import { z } from "zod"
 import { ServerEnvironment } from "../env.js"
 import { DatabaseEvent } from "../shared/SQL.js"
 import { ValidatedRouter } from "../validation.js"
+import {
+  userAndRelationsWithId,
+  DatabaseUserWithRelation
+} from "../user/getUser.js"
+import { GetEventWhenBlockedResponse } from "./models.js"
 
 const eventRequestSchema = z.object({
   eventId: z.string()
 })
 
-export const getEventById = (conn: SQLExecutable, eventId: number, userId: string) => conn.queryFirstResult<DatabaseEvent>(
-  `
+const getEventWhenBlockedResponse = (
+  dbUser: DatabaseUserWithRelation,
+  eventTitle: string
+): GetEventWhenBlockedResponse => ({
+  name: dbUser.name,
+  handle: dbUser.handle,
+  profileImageURL: dbUser.profileImageURL,
+  title: eventTitle
+})
+
+export const getEventById = (
+  conn: SQLExecutable,
+  eventId: number,
+  userId: string
+) =>
+  conn
+    .queryFirstResult<DatabaseEvent>(
+      `
     SELECT 
       e.*, 
       ua.arrivedAt,
@@ -26,9 +47,9 @@ export const getEventById = (conn: SQLExecutable, eventId: number, userId: strin
     WHERE 
         e.id = :eventId;
   `,
-  { eventId, userId }
-)
-  .withFailure("event-not-found" as const)
+      { eventId, userId }
+    )
+    .withFailure("event-not-found" as const)
 
 /**
  * Creates routes related to event operations.
@@ -42,12 +63,24 @@ export const getEventByIdRouter = (
   router.getWithValidation(
     "/details/:eventId",
     { pathParamsSchema: eventRequestSchema },
-    (req, res) => getEventById(
-      conn,
-      Number(req.params.eventId),
-      res.locals.selfId
-    )
-      .mapFailure((error) => res.status(404).json({ error }))
-      .mapSuccess((event) => res.status(200).send(event))
+    (req, res) =>
+      conn.transaction((tx) =>
+        getEventById(conn, Number(req.params.eventId), res.locals.selfId)
+          .flatMapSuccess((event) =>
+            userAndRelationsWithId(
+              tx,
+              event.hostId,
+              res.locals.selfId
+            ).mapSuccess((dbUser) =>
+              dbUser.themToYouStatus === "blocked" ||
+              dbUser.youToThemStatus === "blocked"
+                ? res
+                    .status(403)
+                    .json(getEventWhenBlockedResponse(dbUser, event.title))
+                : res.status(200).json(event)
+            )
+          )
+          .mapFailure((error) => res.status(404).json({ error }))
+      )
   )
 }

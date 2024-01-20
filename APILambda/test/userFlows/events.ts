@@ -8,12 +8,26 @@ export const createEventFlow = async (
 ): Promise<{
   attendeeToken: string
   attendeeId: string
-  hostId: string
+  attendeeName: string
+  attendeeHandle: string
   hostToken: string
+  hostId: string
+  hostName: string
+  hostHandle: string
   eventIds: number[]
 }> => {
-  const { token: hostToken, userId: hostId } = await createUserFlow()
-  const { token: attendeeToken, userId: attendeeId } = await createUserFlow()
+  const {
+    token: hostToken,
+    userId: hostId,
+    handle: hostHandle,
+    name: hostName
+  } = await createUserFlow()
+  const {
+    token: attendeeToken,
+    userId: attendeeId,
+    handle: attendeeHandle,
+    name: attendeeName
+  } = await createUserFlow()
 
   const eventPromises = await Promise.all(
     eventInput.map((details) =>
@@ -27,5 +41,15 @@ export const createEventFlow = async (
     eventIds.map((eventId) => callJoinEvent(attendeeToken, eventId))
   )
 
-  return { attendeeToken, attendeeId, hostId, hostToken, eventIds }
+  return {
+    attendeeToken,
+    attendeeId,
+    attendeeName,
+    attendeeHandle,
+    hostId,
+    hostToken,
+    hostHandle,
+    hostName,
+    eventIds
+  }
 }
