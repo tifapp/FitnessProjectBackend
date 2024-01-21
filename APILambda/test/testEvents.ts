@@ -19,4 +19,4 @@ const createTestEvent = (): CreateEventInput => {
   }
 }
 
-export const testEvent: CreateEventInput = createTestEvent()
+export const testEventInput: CreateEventInput = createTestEvent()

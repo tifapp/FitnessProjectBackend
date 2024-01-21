@@ -1,6 +1,6 @@
 import { CreateEventInput } from "../../events/createEvent.js"
 import { callCreateEvent, callJoinEvent } from "../apiCallers/events.js"
-import { testEvent } from "../testEvents.js"
+import { testEventInput } from "../testEvents.js"
 import { createUserFlow } from "./users.js"
 
 export const createEventFlow = async (
@@ -31,7 +31,7 @@ export const createEventFlow = async (
 
   const eventPromises = await Promise.all(
     eventInput.map((details) =>
-      callCreateEvent(hostToken, { ...testEvent, ...details })
+      callCreateEvent(hostToken, { ...testEventInput, ...details })
     )
   )
 

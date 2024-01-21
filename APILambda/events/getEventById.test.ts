@@ -1,10 +1,10 @@
 import { randomInt } from "crypto"
-import { callCreateEvent, callGetEvent } from "../test/apiCallers/events.js"
-import { createUserFlow } from "../test/userFlows/users.js"
-import { testEvent } from "../test/testEvents.js"
-import { callBlockUser } from "../test/apiCallers/users.js"
-import { createEventFlow } from "../test/userFlows/events.js"
 import dayjs from "dayjs"
+import { callCreateEvent, callGetEvent } from "../test/apiCallers/events.js"
+import { callBlockUser } from "../test/apiCallers/users.js"
+import { testEventInput } from "../test/testEvents.js"
+import { createEventFlow } from "../test/userFlows/events.js"
+import { createUserFlow } from "../test/userFlows/users.js"
 
 describe("GetSingleEvent tests", () => {
   it("should return 404 if the event doesnt exist", async () => {
@@ -23,7 +23,7 @@ describe("GetSingleEvent tests", () => {
     const startTimestamp = new Date("2050-01-01")
     const endTimestamp = new Date("2050-01-02")
     const createEventResponse = await callCreateEvent(token, {
-      ...testEvent,
+      ...testEventInput,
       startTimestamp,
       endTimestamp
     })
@@ -32,12 +32,12 @@ describe("GetSingleEvent tests", () => {
     expect(resp).toMatchObject({
       status: 200,
       body: {
-        title: testEvent.title,
-        description: testEvent.description,
+        title: testEventInput.title,
+        description: testEventInput.description,
         startTimestamp: startTimestamp.toISOString(),
         endTimestamp: endTimestamp.toISOString(),
-        latitude: testEvent.latitude,
-        longitude: testEvent.longitude
+        latitude: testEventInput.latitude,
+        longitude: testEventInput.longitude
       }
     })
   })
@@ -71,7 +71,7 @@ describe("Get event's host and title only", () => {
         handle: hostHandle,
         name: hostName,
         profileImageURL: null,
-        title: testEvent.title
+        title: testEventInput.title
       })
     })
   })
@@ -95,7 +95,7 @@ describe("Get event's host and title only", () => {
         handle: hostHandle,
         name: hostName,
         profileImageURL: null,
-        title: testEvent.title
+        title: testEventInput.title
       })
     })
   })
