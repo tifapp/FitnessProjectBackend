@@ -16,11 +16,12 @@ export const encodeAttendeesListCursor = (cursorObject?: {
         userId: "firstPage",
         joinDate: null
       }
-  const encodedJoinDate = joinDate ? joinDate.toISOString() : defaultJoinDate
-  const encodedString = Buffer.from(`${userId}|${encodedJoinDate}`).toString(
+
+  const joinDateToEncode = joinDate ? joinDate : defaultJoinDate
+  const encodedCursor = Buffer.from(`${userId}|${joinDateToEncode}`).toString(
     "base64"
   )
-  return encodedString
+  return encodedCursor
 }
 
 /**
