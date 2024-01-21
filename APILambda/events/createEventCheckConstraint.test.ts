@@ -3,7 +3,7 @@ import { randomUUID } from "crypto"
 import {
   expectFailsCheckConstraint
 } from "../test/database.js"
-import { testEvent } from "../test/testEvents.js"
+import { testEventInput } from "../test/testEvents.js"
 import { createEvent } from "./createEvent.js"
 
 describe("Insert event CheckConstraint test", () => {
@@ -12,7 +12,7 @@ describe("Insert event CheckConstraint test", () => {
       await createEvent(
         conn,
         {
-          ...testEvent,
+          ...testEventInput,
           startTimestamp: new Date(1000),
           endTimestamp: new Date(0)
         },

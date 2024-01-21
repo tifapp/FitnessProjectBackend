@@ -5,7 +5,7 @@ import { callCreateEvent, callJoinEvent } from "../test/apiCallers/events.js"
 import {
   callBlockUser
 } from "../test/apiCallers/users.js"
-import { testEvent } from "../test/testEvents.js"
+import { testEventInput } from "../test/testEvents.js"
 import { createUserFlow } from "../test/userFlows/users.js"
 import { createEvent } from "./createEvent.js"
 
@@ -13,7 +13,7 @@ describe("Join the event by id tests", () => {
   it("should return 201 when the user is able to successfully join the event", async () => {
     const { token: eventOwnerToken } = await createUserFlow()
     const { token: attendeeToken, userId: attendeeId } = await createUserFlow()
-    const event = await callCreateEvent(eventOwnerToken, testEvent)
+    const event = await callCreateEvent(eventOwnerToken, testEventInput)
     const resp = await callJoinEvent(attendeeToken, parseInt(event.body.id))
     expect(resp).toMatchObject({
       status: 201,
@@ -24,7 +24,7 @@ describe("Join the event by id tests", () => {
   it("should return 403 when the user is blocked by the event host", async () => {
     const { token: eventOwnerToken } = await createUserFlow()
     const { token: attendeeToken, userId: attendeeId } = await createUserFlow()
-    const event = await callCreateEvent(eventOwnerToken, testEvent)
+    const event = await callCreateEvent(eventOwnerToken, testEventInput)
     await callBlockUser(eventOwnerToken, attendeeId)
     const resp = await callJoinEvent(attendeeToken, parseInt(event.body.id))
     expect(resp).toMatchObject({
@@ -49,7 +49,7 @@ describe("Join the event by id tests", () => {
 
     // normally we can't create events in the past so we'll add this ended event to the table directly
     const { value: { insertId: eventId } } = await createEvent(conn, {
-      ...testEvent,
+      ...testEventInput,
       startTimestamp: dayjs().subtract(2, "month").toDate(),
       endTimestamp: dayjs().subtract(1, "month").toDate()
     }, eventOwnerId)
@@ -65,7 +65,7 @@ describe("Join the event by id tests", () => {
   it("should return 200 when the user tries to join an event twice", async () => {
     const { token: eventOwnerToken } = await createUserFlow()
     const { token: attendeeToken, userId: attendeeId } = await createUserFlow()
-    const event = await callCreateEvent(eventOwnerToken, testEvent)
+    const event = await callCreateEvent(eventOwnerToken, testEventInput)
     await callJoinEvent(attendeeToken, parseInt(event.body.id))
     const resp = await callJoinEvent(attendeeToken, parseInt(event.body.id))
     expect(resp).toMatchObject({

@@ -1,6 +1,6 @@
 import dayjs from "dayjs"
 import { callCreateEvent, callGetUpcomingEvents, callSetArrival } from "../../test/apiCallers/events.js"
-import { testEvent } from "../../test/testEvents.js"
+import { testEventInput } from "../../test/testEvents.js"
 import { createEventFlow } from "../../test/userFlows/events.js"
 import { createUserFlow } from "../../test/userFlows/users.js"
 
@@ -41,10 +41,10 @@ describe("getUpcomingEvents tests", () => {
       }
     ])
 
-    // unrelated event should not appear in upcoming list
+    // unrelated event that should not appear in upcoming list
     await callCreateEvent(hostToken,
       {
-        ...testEvent,
+        ...testEventInput,
         ...eventLocation,
         startTimestamp: dayjs().add(12, "hour").toDate(),
         endTimestamp: dayjs().add(1, "year").toDate()
