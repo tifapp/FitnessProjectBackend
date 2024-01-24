@@ -3,7 +3,10 @@ import { z } from "zod"
 import { ServerEnvironment } from "../env.js"
 import { DatabaseAttendee, PaginatedAttendeesResponse } from "../shared/SQL.js"
 import { ValidatedRouter } from "../validation.js"
-import { decodeAttendeesListCursor } from "../shared/Cursor.js"
+import {
+  decodeAttendeesListCursor,
+  encodeAttendeesListCursor
+} from "../shared/Cursor.js"
 import { UserToProfileRelationStatus } from "../user/models.js"
 
 const AttendeesRequestSchema = z.object({
@@ -58,19 +61,20 @@ const paginatedAttendeesResponse = (
     : null
 
   const paginatedAttendees = mappedAttendees.slice(0, limit)
+  const encondedNextPageCursor = encodeAttendeesListCursor({
+    userId: nextPageUserIdCursor,
+    joinDate: nextPageJoinDateCursor
+  })
 
   return {
-    nextPageCursor: JSON.stringify({
-      userId: nextPageUserIdCursor,
-      joinDate: nextPageJoinDateCursor
-    }),
+    nextPageCursor: encondedNextPageCursor,
     attendeesCount: paginatedAttendees.length,
     attendees: paginatedAttendees
   }
 }
 
 // TODO: use index as cursor instead of userid+joindate
-const getAttendeesByEventId = (
+const getAttendees = (
   conn: SQLExecutable,
   eventId: number,
   userId: string,
@@ -123,21 +127,23 @@ export const getAttendeesByEventIdRouter = (
         joinDate: joinDate
       })
 
-      return getAttendeesByEventId(
-        conn,
-        Number(req.params.eventId),
-        res.locals.selfId,
-        decodedValues.userId,
-        decodedValues.joinDate,
-        req.query.limit + 1 // Add 1 to handle checking last page
-      ).mapSuccess((attendees) =>
-        attendees.length === 0
-          ? res
-              .status(404)
-              .send(paginatedAttendeesResponse(attendees, req.query.limit))
-          : res
-              .status(200)
-              .send(paginatedAttendeesResponse(attendees, req.query.limit))
+      return conn.transaction((tx) =>
+        getAttendees(
+          tx,
+          Number(req.params.eventId),
+          res.locals.selfId,
+          decodedValues.userId,
+          decodedValues.joinDate,
+          req.query.limit + 1 // Add 1 to handle checking last page
+        ).mapSuccess((attendees) =>
+          attendees.length === 0
+            ? res
+                .status(404)
+                .send(paginatedAttendeesResponse(attendees, req.query.limit))
+            : res
+                .status(200)
+                .send(paginatedAttendeesResponse(attendees, req.query.limit))
+        )
       )
     }
   )

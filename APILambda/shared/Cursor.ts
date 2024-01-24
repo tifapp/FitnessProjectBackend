@@ -8,7 +8,7 @@ const defaultJoinDate = "1970-01-01T00:00:00Z"
  */
 export const encodeAttendeesListCursor = (cursorObject?: {
   userId: string
-  joinDate: Date
+  joinDate: Date | null
 }): string => {
   const { userId, joinDate } = cursorObject
     ? cursorObject

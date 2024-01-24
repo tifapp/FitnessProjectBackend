@@ -5,12 +5,18 @@ import {
   callJoinEvent,
   callLeaveEvent
 } from "../test/apiCallers/events.js"
-import { encodeAttendeesListCursor } from "../shared/Cursor.js"
+import {
+  decodeAttendeesListCursor,
+  encodeAttendeesListCursor
+} from "../shared/Cursor.js"
 import { createUserFlow } from "../test/userFlows/users.js"
 import { DatabaseAttendee } from "../shared/SQL.js"
 
 const eventLocation = { latitude: 50, longitude: 50 }
-const lastPageCursorResponse = /"userId":"lastPage","joinDate":null/
+const lastPageCursorResponse = {
+  userId: "lastPage",
+  joinDate: dayjs("1970-01-01T00:00:00.000Z").toDate()
+}
 const paginationLimit = 2
 
 let attendeeTestToken: string
@@ -107,10 +113,14 @@ describe("Testing for getting attendees list endpoint", () => {
       paginationLimit
     )
 
+    resp.body.nextPageCursor = decodeAttendeesListCursor(
+      resp.body.nextPageCursor
+    )
+
     expect(resp).toMatchObject({
       status: 404,
       body: {
-        nextPageCursor: expect.stringMatching(lastPageCursorResponse),
+        nextPageCursor: lastPageCursorResponse,
         attendeesCount: 0,
         attendees: []
       }
@@ -128,6 +138,9 @@ describe("Testing for getting attendees list endpoint", () => {
       paginationLimit
     )
 
+    resp.body.nextPageCursor = decodeAttendeesListCursor(
+      resp.body.nextPageCursor
+    )
     expect(resp).toMatchObject({
       status: 200,
       body: {
@@ -137,11 +150,12 @@ describe("Testing for getting attendees list endpoint", () => {
             id: attendee.id,
             name: attendee.name
           })),
-        nextPageCursor: JSON.stringify({
+        nextPageCursor: {
           userId: allAttendeesResp.body.attendees[paginationLimit - 1].id,
-          joinDate:
+          joinDate: dayjs(
             allAttendeesResp.body.attendees[paginationLimit - 1].joinTimestamp
-        }),
+          ).toDate()
+        },
         attendeesCount: paginationLimit
       }
     })
@@ -160,6 +174,9 @@ describe("Testing for getting attendees list endpoint", () => {
     )
 
     const allAttendees = allAttendeesResp.body.attendees
+    resp.body.nextPageCursor = decodeAttendeesListCursor(
+      resp.body.nextPageCursor
+    )
 
     expect(resp).toMatchObject({
       status: 200,
@@ -170,7 +187,7 @@ describe("Testing for getting attendees list endpoint", () => {
             name: allAttendees[0].name
           }
         ],
-        nextPageCursor: expect.stringMatching(lastPageCursorResponse),
+        nextPageCursor: lastPageCursorResponse,
         attendeesCount: 1
       }
     })
@@ -192,14 +209,16 @@ describe("Testing for getting attendees list endpoint", () => {
       paginationLimit
     )
 
-    const lastPageCursorResp = encodeAttendeesListCursor(
-      JSON.parse(resp.body.nextPageCursor)
-    )
+    const middlePageCursorResp = resp.body.nextPageCursor
     resp = await callGetAttendees(
       attendeeTestToken,
       eventTestId,
-      lastPageCursorResp,
+      middlePageCursorResp,
       paginationLimit
+    )
+
+    resp.body.nextPageCursor = decodeAttendeesListCursor(
+      resp.body.nextPageCursor
     )
 
     expect(resp).toMatchObject({
@@ -211,10 +230,10 @@ describe("Testing for getting attendees list endpoint", () => {
             id: attendee.id,
             name: attendee.name
           })),
-        nextPageCursor: JSON.stringify({
+        nextPageCursor: {
           userId: allAttendees[3].id,
-          joinDate: allAttendees[3].joinTimestamp
-        }),
+          joinDate: dayjs(allAttendees[3].joinTimestamp).toDate()
+        },
         attendeesCount: paginationLimit
       }
     })
@@ -232,14 +251,17 @@ describe("Testing for getting attendees list endpoint", () => {
       paginationLimit
     )
 
-    const lastPageCursorResp = encodeAttendeesListCursor(
-      JSON.parse(resp.body.nextPageCursor)
-    )
+    const lastPageCursorResp = resp.body.nextPageCursor
+
     resp = await callGetAttendees(
       attendeeTestToken,
       eventTestId,
       lastPageCursorResp,
       paginationLimit
+    )
+
+    resp.body.nextPageCursor = decodeAttendeesListCursor(
+      resp.body.nextPageCursor
     )
 
     expect(resp).toMatchObject({
@@ -251,7 +273,7 @@ describe("Testing for getting attendees list endpoint", () => {
             name: allAttendees[allAttendees.length - 1].name
           }
         ],
-        nextPageCursor: expect.stringMatching(lastPageCursorResponse),
+        nextPageCursor: lastPageCursorResponse,
         attendeesCount: 1
       }
     })
