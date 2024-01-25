@@ -77,27 +77,12 @@ export const getEventsByRegion = (
 ) =>
   conn.queryResults<GetEventByRegionEvent>(
     `
-    SELECT E.*,
-    L.name,
-    L.city, 
-    L.country, 
-    L.street, 
-    L.street_num,
-    U.name,
-    U.handle,
-    U.profileImageURL,
-    UserRelationOfHostToUser.status AS relationHostToUser, 
-    UserRelationOfUserToHost.status AS relationUserToHost
-    FROM event E
-    LEFT JOIN location L ON E.latitude = L.lat AND E.longitude = L.lon
-    LEFT JOIN userRelations UserRelationOfHostToUser ON E.hostId = UserRelationOfHostToUser.fromUserId AND UserRelationOfHostToUser.toUserId = :userId
-    LEFT JOIN userRelations UserRelationOfUserToHost ON UserRelationOfUserToHost.fromUserId = :userId AND UserRelationOfUserToHost.toUserId = E.hostId
-    LEFT JOIN user U ON E.hostId = U.id
-    WHERE ST_Distance_Sphere(POINT(:userLongitude, :userLatitude), POINT(E.longitude, E.latitude)) < :radius
-      AND E.endTimestamp > NOW()
-      AND (UserRelationOfHostToUser.status IS NULL OR UserRelationOfHostToUser.status <> 'blocked')
-      AND (UserRelationOfUserToHost.status IS NULL OR UserRelationOfUserToHost.status <> 'blocked')
-    GROUP BY E.id
+    SELECT * 
+    FROM ViewEventsByRegion
+    WHERE ST_Distance_Sphere(POINT(:userLongitude, :userLatitude), POINT(longitude, latitude)) < :radius
+      AND endTimestamp > NOW()
+      AND (relationHostToUser IS NULL OR relationHostToUser <> 'blocked')
+      AND (relationUserToHost IS NULL OR relationUserToHost <> 'blocked')
   `,
     { ...eventsRequest }
   )
@@ -106,16 +91,16 @@ export const getAttendees = (conn: SQLExecutable, eventIds: string[]) => {
   return conn.queryResults<EventAttendee>(
     `
     SELECT 
-    ea1.eventId,
-    GROUP_CONCAT(DISTINCT ea1.userId ORDER BY ea1.joinTimestamp) AS userIds
+    eventId,
+    userIds
 FROM 
-    eventAttendance ea1
+    ViewEventAttendees
 WHERE 
-    ea1.eventId IN (:eventIds)
+    eventId IN (:eventIds)
 GROUP BY 
-    ea1.eventId
+    eventId
 HAVING 
-    COUNT(DISTINCT ea1.userId) <= 3
+    COUNT(DISTINCT userIds) <= 3
   `,
     { eventIds }
   )
@@ -124,15 +109,13 @@ HAVING
 export const getAttendeeCount = (conn: SQLExecutable, eventIds: string[]) => {
   return conn.queryResults<EventWithAttendeeCount>(
     ` SELECT
-          E.id,
-          COUNT(A.eventId) AS attendeeCount
+          id,
+          attendeeCount
       FROM
-          eventAttendance A
-      JOIN
-          event E ON E.id = A.eventId
+          ViewEventAttendeeCount
       WHERE
-          E.id IN (:eventIds)
-      GROUP BY A.eventId`,
+        id IN (:eventIds)
+      GROUP BY id`,
     { eventIds }
   )
 }
