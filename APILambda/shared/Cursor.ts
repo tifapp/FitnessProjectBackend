@@ -16,7 +16,7 @@ export const encodeAttendeesListCursor = (cursorObject?: {
         userId: "firstPage",
         joinDate: null
       }
-
+      
   const joinDateToEncode = joinDate ? joinDate : defaultJoinDate
   const encodedCursor = Buffer.from(`${userId}|${joinDateToEncode}`).toString(
     "base64"
@@ -32,16 +32,21 @@ export const encodeAttendeesListCursor = (cursorObject?: {
  */
 export const decodeAttendeesListCursor = (
   cursor: string | undefined
-): { userId: string; joinDate: Date } => {
+): { userId: string; joinDate: Date | null } => {
   let joinDate = new Date(defaultJoinDate)
 
   if (cursor === undefined) {
     return { userId: "firstPage", joinDate }
   }
+
   const decodedString = Buffer.from(cursor, "base64").toString("utf-8")
   const [decodedUserId, decodedJoinDate] = decodedString.split("|")
-  if (decodedJoinDate !== defaultJoinDate) {
+
+  if (decodedUserId === "lastPage") {
+    return { userId: "lastPage", joinDate: null }
+  } else if (decodedJoinDate !== defaultJoinDate) {
     joinDate = new Date(decodedJoinDate)
   }
+
   return { userId: decodedUserId, joinDate }
 }

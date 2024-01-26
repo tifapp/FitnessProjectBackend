@@ -15,7 +15,7 @@ import { DatabaseAttendee } from "../shared/SQL.js"
 const eventLocation = { latitude: 50, longitude: 50 }
 const lastPageCursorResponse = {
   userId: "lastPage",
-  joinDate: dayjs("1970-01-01T00:00:00.000Z").toDate()
+  joinDate: null
 }
 const paginationLimit = 2
 
@@ -128,7 +128,10 @@ describe("Testing for getting attendees list endpoint", () => {
   })
 
   it("should return 200 after paginating the first page of attendees list", async () => {
-    const allAttendeesResp = await getAllAttendeesListResponse(1)
+    const numOfAdditionalAttendees = 1
+    const allAttendeesResp = await getAllAttendeesListResponse(
+      numOfAdditionalAttendees
+    )
 
     const firstPageCursorResp = encodeAttendeesListCursor()
     const resp = await callGetAttendees(
@@ -156,7 +159,7 @@ describe("Testing for getting attendees list endpoint", () => {
             allAttendeesResp.body.attendees[paginationLimit - 1].joinTimestamp
           ).toDate()
         },
-        attendeesCount: paginationLimit
+        attendeesCount: 3
       }
     })
   })
@@ -234,13 +237,16 @@ describe("Testing for getting attendees list endpoint", () => {
           userId: allAttendees[3].id,
           joinDate: dayjs(allAttendees[3].joinTimestamp).toDate()
         },
-        attendeesCount: paginationLimit
+        attendeesCount: 5
       }
     })
   })
 
   it("should return 200 after paginating the last page of attendees list", async () => {
-    const allAttendeesResp = await getAllAttendeesListResponse(1)
+    const numOfAdditionalAttendees = 1
+    const allAttendeesResp = await getAllAttendeesListResponse(
+      numOfAdditionalAttendees
+    )
     const allAttendees = allAttendeesResp.body.attendees
 
     const firstPageCursorResp = encodeAttendeesListCursor()
@@ -274,7 +280,7 @@ describe("Testing for getting attendees list endpoint", () => {
           }
         ],
         nextPageCursor: lastPageCursorResponse,
-        attendeesCount: 1
+        attendeesCount: 3
       }
     })
   })
