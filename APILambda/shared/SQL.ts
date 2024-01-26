@@ -17,6 +17,20 @@ export type DatabaseEvent = {
   arrivalStatus: string
 }
 
+export type DatabaseAttendee = {
+  id: string
+  name: string
+  joinTimestamp: Date
+  profileImageURL?: string
+  handle: string
+}
+
+export type PaginatedAttendeesResponse = {
+  nextPageCursor: string
+  attendeesCount: number
+  attendees: DatabaseAttendee[]
+}
+
 export type EventAttendee = {
   userIds: string
   eventId: number
