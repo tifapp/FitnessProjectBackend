@@ -1,6 +1,7 @@
+/* eslint-disable import/extensions */ // Due to jest setup
 import { faker } from "@faker-js/faker"
 import AWS from "aws-sdk"
-import { TestUser, TestUserInput } from "./global.d"
+import { TestUser, TestUserInput } from "../global"
 
 AWS.config.update({
   region: process.env.AWS_REGION,
@@ -96,5 +97,5 @@ export const createCognitoAuthToken = async (
     return `Bearer ${newIdToken}`
   }
 
-  return { auth: `Bearer ${idToken}`, id: signUpResult.UserSub, refreshAuth }
+  return { auth: `Bearer ${idToken}`, id: signUpResult.UserSub, name, refreshAuth }
 }

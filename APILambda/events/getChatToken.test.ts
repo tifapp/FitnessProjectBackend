@@ -1,15 +1,12 @@
 import { randomInt } from "crypto"
-import { resetDatabaseBeforeEach } from "../test/database.js"
 import {
   callCreateEvent,
   callGetEventChatToken
-} from "../test/helpers/events.js"
-import { createUserAndUpdateAuth } from "../test/helpers/users.js"
-import { testEvents } from "../test/testEvents.js"
+} from "../test/apiCallers/events.js"
+import { testEventInput } from "../test/testEvents.js"
+import { createUserFlow } from "../test/userFlows/users.js"
 
 describe("GetTokenRequest tests", () => {
-  resetDatabaseBeforeEach()
-
   // TODO: Make shared util for this
   // it("should return 401 if user does not exist", async () => {
   //   const resp = await callGetEventChatToken(global.defaultUser.auth, randomInt(1000))
@@ -19,7 +16,7 @@ describe("GetTokenRequest tests", () => {
   // })
 
   it("should return 404 if the event doesnt exist", async () => {
-    const userToken = await createUserAndUpdateAuth(global.defaultUser)
+    const { token: userToken } = await createUserFlow()
     const resp = await callGetEventChatToken(
       userToken,
       randomInt(1000)
@@ -32,10 +29,10 @@ describe("GetTokenRequest tests", () => {
   })
 
   it("should return 404 if the user is not part of the event", async () => {
-    const userToken = await createUserAndUpdateAuth(global.defaultUser)
-    const event = await callCreateEvent(userToken, testEvents[0])
+    const { token: userToken } = await createUserFlow()
+    const event = await callCreateEvent(userToken, testEventInput)
 
-    const user2Token = await createUserAndUpdateAuth(global.defaultUser2)
+    const { token: user2Token } = await createUserFlow()
     const resp = await callGetEventChatToken(user2Token, event.body.id)
 
     expect(resp).toMatchObject({

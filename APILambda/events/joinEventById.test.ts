@@ -1,46 +1,31 @@
+import { conn } from "TiFBackendUtils"
 import { randomInt } from "crypto"
-import { resetDatabaseBeforeEach } from "../test/database.js"
-import { callCreateEvent, callJoinEvent } from "../test/helpers/events.js"
+import dayjs from "dayjs"
+import { callCreateEvent, callJoinEvent } from "../test/apiCallers/events.js"
 import {
-  callBlockUser,
-  createUserAndUpdateAuth
-} from "../test/helpers/users.js"
-import { testEvents } from "../test/testEvents.js"
+  callBlockUser
+} from "../test/apiCallers/users.js"
+import { testEventInput } from "../test/testEvents.js"
+import { createUserFlow } from "../test/userFlows/users.js"
+import { createEvent } from "./createEvent.js"
 
 describe("Join the event by id tests", () => {
-  resetDatabaseBeforeEach()
-
-  // Happy Path
   it("should return 201 when the user is able to successfully join the event", async () => {
-    const eventOwnerToken = await createUserAndUpdateAuth(
-      global.defaultUser
-    )
-    const attendeeToken = await createUserAndUpdateAuth(
-      global.defaultUser2
-    )
-    const futureDate = new Date()
-    futureDate.setFullYear(futureDate.getFullYear() + 1)
-    const testEvent = { ...testEvents[0], endTimestamp: futureDate }
-    const event = await callCreateEvent(eventOwnerToken, testEvent)
+    const { token: eventOwnerToken } = await createUserFlow()
+    const { token: attendeeToken, userId: attendeeId } = await createUserFlow()
+    const event = await callCreateEvent(eventOwnerToken, testEventInput)
     const resp = await callJoinEvent(attendeeToken, parseInt(event.body.id))
     expect(resp).toMatchObject({
       status: 201,
-      body: { id: global.defaultUser2.id, token: expect.anything() }
+      body: { id: attendeeId, token: expect.anything() }
     })
   })
 
   it("should return 403 when the user is blocked by the event host", async () => {
-    const eventOwnerToken = await createUserAndUpdateAuth(
-      global.defaultUser
-    )
-    const attendeeToken = await createUserAndUpdateAuth(
-      global.defaultUser2
-    )
-    const futureDate = new Date()
-    futureDate.setFullYear(futureDate.getFullYear() + 1)
-    const testEvent = { ...testEvents[0], endTimestamp: futureDate }
-    const event = await callCreateEvent(eventOwnerToken, testEvent)
-    await callBlockUser(eventOwnerToken, global.defaultUser2.id)
+    const { token: eventOwnerToken } = await createUserFlow()
+    const { token: attendeeToken, userId: attendeeId } = await createUserFlow()
+    const event = await callCreateEvent(eventOwnerToken, testEventInput)
+    await callBlockUser(eventOwnerToken, attendeeId)
     const resp = await callJoinEvent(attendeeToken, parseInt(event.body.id))
     expect(resp).toMatchObject({
       status: 403,
@@ -49,9 +34,7 @@ describe("Join the event by id tests", () => {
   })
 
   it("should return 404 if the event doesn't exist", async () => {
-    const attendeeToken = await createUserAndUpdateAuth(
-      global.defaultUser2
-    )
+    const { token: attendeeToken } = await createUserFlow()
     const eventId = randomInt(1000)
     const resp = await callJoinEvent(attendeeToken, eventId)
     expect(resp).toMatchObject({
@@ -61,44 +44,33 @@ describe("Join the event by id tests", () => {
   })
 
   it("should return 403 when the event has ended", async () => {
-    const eventOwnerToken = await createUserAndUpdateAuth(
-      global.defaultUser
-    )
-    const attendeeToken = await createUserAndUpdateAuth(
-      global.defaultUser2
-    )
+    const { userId: eventOwnerId } = await createUserFlow()
+    const { token: attendeeToken } = await createUserFlow()
 
-    const currentDate = new Date()
-    jest.useFakeTimers()
-    jest.setSystemTime(new Date("2050-01-01"))
+    // normally we can't create events in the past so we'll add this ended event to the table directly
+    const { value: { insertId: eventId } } = await createEvent(conn, {
+      ...testEventInput,
+      startTimestamp: dayjs().subtract(2, "month").toDate(),
+      endTimestamp: dayjs().subtract(1, "month").toDate()
+    }, eventOwnerId)
 
-    const testEvent = { ...testEvents[0], endTimestamp: currentDate }
-    const event = await callCreateEvent(eventOwnerToken, testEvent)
-    const resp = await callJoinEvent(attendeeToken, parseInt(event.body.id))
+    const resp = await callJoinEvent(attendeeToken, Number(eventId))
+
     expect(resp).toMatchObject({
       status: 403,
       body: { error: "event-has-ended" }
     })
-
-    jest.useRealTimers()
   })
 
   it("should return 200 when the user tries to join an event twice", async () => {
-    const eventOwnerToken = await createUserAndUpdateAuth(
-      global.defaultUser
-    )
-    const attendeeToken = await createUserAndUpdateAuth(
-      global.defaultUser2
-    )
-    const futureDate = new Date()
-    futureDate.setFullYear(futureDate.getFullYear() + 1)
-    const testEvent = { ...testEvents[0], endTimestamp: futureDate }
-    const event = await callCreateEvent(eventOwnerToken, testEvent)
+    const { token: eventOwnerToken } = await createUserFlow()
+    const { token: attendeeToken, userId: attendeeId } = await createUserFlow()
+    const event = await callCreateEvent(eventOwnerToken, testEventInput)
     await callJoinEvent(attendeeToken, parseInt(event.body.id))
     const resp = await callJoinEvent(attendeeToken, parseInt(event.body.id))
     expect(resp).toMatchObject({
       status: 200,
-      body: { id: global.defaultUser2.id, token: expect.anything() } // should be event id?
+      body: { id: attendeeId, token: expect.anything() } // should be event id?
     })
   })
 })

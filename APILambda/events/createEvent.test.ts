@@ -1,18 +1,36 @@
-import { resetDatabaseBeforeEach } from "../test/database.js"
-import { callCreateEvent } from "../test/helpers/events.js"
-import { createUserAndUpdateAuth } from "../test/helpers/users.js"
-import { testEvents } from "../test/testEvents.js"
+import { conn } from "TiFBackendUtils"
+import { callCreateEvent } from "../test/apiCallers/events.js"
+import { testEventInput } from "../test/testEvents.js"
+import { createUserFlow } from "../test/userFlows/users.js"
 
 describe("CreateEvent tests", () => {
-  resetDatabaseBeforeEach()
-
-  it("should allow a user to create an event if the user exists", async () => {
-    const userToken = await createUserAndUpdateAuth(global.defaultUser)
-    const resp = await callCreateEvent(userToken, testEvents[0])
-    expect(resp).toMatchObject({
+  it("should allow a user to create an event and add them to the attendee list", async () => {
+    const { token, userId } = await createUserFlow()
+    const createEventResponse = await callCreateEvent(token, testEventInput)
+    expect(createEventResponse).toMatchObject({
       status: 201,
       body: { id: expect.anything() }
     })
-    expect(parseInt(resp.body.id)).not.toBeNaN()
+    expect(parseInt(createEventResponse.body.id)).not.toBeNaN()
+
+    const { value: attendee } = await conn.queryFirstResult<{userId: string, eventId: string}>(
+      `
+      SELECT *
+      FROM eventAttendance
+      WHERE userId = :userId
+        AND eventId = :eventId;      
+      `,
+      { eventId: parseInt(createEventResponse.body.id), userId }
+    )
+    expect(attendee).toMatchObject({ eventId: parseInt(createEventResponse.body.id), userId })
+  })
+
+  it("should not allow a user to create an event that ends in the past", async () => {
+    const { token } = await createUserFlow()
+    const resp = await callCreateEvent(token, { ...testEventInput, startTimestamp: new Date("2000-01-01"), endTimestamp: new Date("2000-01-02") })
+    expect(resp).toMatchObject({
+      status: 400,
+      body: { error: "invalid-request" }
+    })
   })
 })

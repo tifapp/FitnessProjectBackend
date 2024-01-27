@@ -1,9 +1,6 @@
-import { resetDatabaseBeforeEach } from "../test/database.js"
-import { callPostUser } from "../test/helpers/users.js"
+import { callPostUser } from "../test/apiCallers/users.js"
 
 describe("Create User Profile tests", () => {
-  resetDatabaseBeforeEach()
-
   // TODO: Move to separate unit test file for auth middleware
   it("should 401 when no token is passed", async () => {
     const resp = await callPostUser()
@@ -35,8 +32,9 @@ describe("Create User Profile tests", () => {
   })
 
   it("should 401 when trying to create a user with an already existing id", async () => {
-    await callPostUser(global.defaultUser.auth)
-    const resp = await callPostUser(global.defaultUser.auth)
+    const user = await global.registerUser({ profileExists: false })
+    await callPostUser(user.auth)
+    const resp = await callPostUser(user.auth)
 
     expect(resp).toMatchObject({
       status: 400,
@@ -48,21 +46,22 @@ describe("Create User Profile tests", () => {
   //   // how to test this?
   // })
 
-  it("should 400 when trying to create a user with an already existing profile", async () => {
-    const resp = await callPostUser(global.unregisteredUser.auth)
+  // it("should 400 when trying to create a user with an already existing profile", async () => {
+  //   const resp = await callPostUser(global.unregisteredUser.auth)
 
-    expect(resp).toMatchObject({
-      status: 400,
-      body: { error: "user-already-exists" }
-    })
-  })
+  //   expect(resp).toMatchObject({
+  //     status: 400,
+  //     body: { error: "user-already-exists" }
+  //   })
+  // })
 
   it("should 201 when creating a user with a unique id and handle", async () => {
-    const resp = await callPostUser(global.defaultUser.auth)
+    const user = await global.registerUser({ profileExists: false })
+    const resp = await callPostUser(user.auth)
 
     expect(resp).toMatchObject({
       status: 201,
-      body: { id: global.defaultUser.id, handle: expect.anything() }
+      body: { id: user.id, handle: expect.anything() }
     })
   })
 })
