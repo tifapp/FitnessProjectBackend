@@ -7,7 +7,7 @@ import { addCognitoTokenVerification } from "./auth.js"
 import { ServerEnvironment } from "./env.js"
 import { addErrorReporting } from "./errorReporting.js"
 
-const addEventToRequest = (app: Express) => {
+export const addEventToRequest = (app: Express) => {
   app.use((req, res, next) => {
     const { event } = getCurrentInvoke()
 
