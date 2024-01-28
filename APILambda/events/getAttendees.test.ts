@@ -10,12 +10,14 @@ import {
   encodeAttendeesListCursor
 } from "../shared/Cursor.js"
 import { createUserFlow } from "../test/userFlows/users.js"
-import { DatabaseAttendee } from "../shared/SQL.js"
+import { AttendeesCursorResponse, DatabaseAttendee } from "../shared/SQL.js"
+import { callSetArrival } from "../test/apiCallers/events.js"
 
 const eventLocation = { latitude: 50, longitude: 50 }
 const lastPageCursorResponse = {
   userId: "lastPage",
-  joinDate: null
+  joinDate: null,
+  arrivedAt: null
 }
 const paginationLimit = 2
 
@@ -27,7 +29,7 @@ let eventTestId: number
  *
  * @returns {Promise<void>} A Promise that resolves after creating the event and obtaining attendee and event IDs.
  */
-const createEvent = async () => {
+const createEvent = async (): Promise<void> => {
   const { attendeeToken, eventIds } = await createEventFlow([
     {
       ...eventLocation,
@@ -54,6 +56,7 @@ const getAllAttendeesListResponse = async (
   for (let i = 0; i < numOfAdditionalAttendees; i++) {
     const { token: attendeeToken } = await createUserFlow()
     await callJoinEvent(attendeeToken, eventTestId)
+    await callSetArrival(attendeeToken, { coordinate: eventLocation })
   }
 
   const firstPageCursorResp = encodeAttendeesListCursor()
@@ -64,6 +67,28 @@ const getAllAttendeesListResponse = async (
     limit
   )
   return resp
+}
+
+/**
+ * Function to retrieve the next page cursor response based on the provided attendee information.
+ *
+ * @param {Array} allAttendees - An array containing information about all attendees.
+ * @param {number} index - The index indicating the position of the attendee for which the response is generated.
+ * @returns {AttendeesCursorResponse} - An object representing the next page cursor response with userId, joinDate, and arrivedAt properties.
+ */
+const getNextPageCursorResp = (
+  allAttendees: Array<DatabaseAttendee>,
+  index: number
+): AttendeesCursorResponse => {
+  return {
+    userId: allAttendees[index].id,
+    joinDate: allAttendees[index].joinTimestamp
+      ? dayjs(allAttendees[index].joinTimestamp).toDate()
+      : null,
+    arrivedAt: allAttendees[index].arrivedAt
+      ? dayjs(allAttendees[index].arrivedAt).toDate()
+      : null
+  }
 }
 
 describe("Testing for getting attendees list endpoint", () => {
@@ -132,6 +157,7 @@ describe("Testing for getting attendees list endpoint", () => {
     const allAttendeesResp = await getAllAttendeesListResponse(
       numOfAdditionalAttendees
     )
+    const allAttendees = allAttendeesResp.body.attendees
 
     const firstPageCursorResp = encodeAttendeesListCursor()
     const resp = await callGetAttendees(
@@ -147,18 +173,13 @@ describe("Testing for getting attendees list endpoint", () => {
     expect(resp).toMatchObject({
       status: 200,
       body: {
-        attendees: allAttendeesResp.body.attendees
+        attendees: allAttendees
           .slice(0, 2)
           .map((attendee: DatabaseAttendee) => ({
             id: attendee.id,
             name: attendee.name
           })),
-        nextPageCursor: {
-          userId: allAttendeesResp.body.attendees[paginationLimit - 1].id,
-          joinDate: dayjs(
-            allAttendeesResp.body.attendees[paginationLimit - 1].joinTimestamp
-          ).toDate()
-        },
+        nextPageCursor: getNextPageCursorResp(allAttendees, 1),
         attendeesCount: 3
       }
     })
@@ -233,10 +254,7 @@ describe("Testing for getting attendees list endpoint", () => {
             id: attendee.id,
             name: attendee.name
           })),
-        nextPageCursor: {
-          userId: allAttendees[3].id,
-          joinDate: dayjs(allAttendees[3].joinTimestamp).toDate()
-        },
+        nextPageCursor: getNextPageCursorResp(allAttendees, 3),
         attendeesCount: 5
       }
     })
@@ -281,6 +299,87 @@ describe("Testing for getting attendees list endpoint", () => {
         ],
         nextPageCursor: lastPageCursorResponse,
         attendeesCount: 3
+      }
+    })
+  })
+
+  it("check that attendees who arrived first are on top of the attendees list", async () => {
+    const numOfAdditionalAttendees = 2
+    const allAttendeesResp = await getAllAttendeesListResponse(
+      numOfAdditionalAttendees
+    )
+
+    const allAttendees = allAttendeesResp.body.attendees
+
+    allAttendeesResp.body.nextPageCursor = decodeAttendeesListCursor(
+      allAttendeesResp.body.nextPageCursor
+    )
+
+    const firstPageCursorResp = encodeAttendeesListCursor()
+    let resp = await callGetAttendees(
+      attendeeTestToken,
+      eventTestId,
+      firstPageCursorResp,
+      paginationLimit
+    )
+
+    resp.body.nextPageCursor = decodeAttendeesListCursor(
+      resp.body.nextPageCursor
+    )
+
+    expect(resp).toMatchObject({
+      status: 200,
+      body: {
+        attendees: [
+          {
+            id: allAttendees[0].id,
+            name: allAttendees[0].name,
+            arrivalStatus: 1
+          },
+          {
+            id: allAttendees[1].id,
+            name: allAttendees[1].name,
+            arrivalStatus: 1
+          }
+        ],
+        nextPageCursor: getNextPageCursorResp(allAttendees, 1),
+        attendeesCount: 4
+      }
+    })
+
+    resp.body.nextPageCursor = encodeAttendeesListCursor(
+      resp.body.nextPageCursor
+    )
+
+    const lastPageCursorResp = resp.body.nextPageCursor
+    resp = await callGetAttendees(
+      attendeeTestToken,
+      eventTestId,
+      lastPageCursorResp,
+      paginationLimit
+    )
+
+    resp.body.nextPageCursor = decodeAttendeesListCursor(
+      resp.body.nextPageCursor
+    )
+
+    expect(resp).toMatchObject({
+      status: 200,
+      body: {
+        attendees: [
+          {
+            id: allAttendees[2].id,
+            name: allAttendees[2].name,
+            arrivalStatus: 0
+          },
+          {
+            id: allAttendees[3].id,
+            name: allAttendees[3].name,
+            arrivalStatus: 0
+          }
+        ],
+        nextPageCursor: lastPageCursorResponse,
+        attendeesCount: 4
       }
     })
   })

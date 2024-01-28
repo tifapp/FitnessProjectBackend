@@ -16,7 +16,8 @@ const AttendeesRequestSchema = z.object({
 
 const DecodedCursorValidationSchema = z.object({
   userId: z.string(),
-  joinDate: z.date().nullable()
+  joinDate: z.date().nullable(),
+  arrivedAt: z.date().nullable()
 })
 
 const CursorRequestSchema = z.object({
@@ -39,6 +40,8 @@ const mapDatabaseAttendee = (sqlResult: DatabaseAttendeeWithRelation) => {
     joinTimestamp: sqlResult.joinTimestamp,
     profileImageURL: sqlResult.profileImageURL,
     handle: sqlResult.handle,
+    arrivedAt: sqlResult.arrivedAt,
+    arrivalStatus: sqlResult.arrivalStatus,
     relations: {
       youToThem: sqlResult.youToThem ?? "not-friends",
       themToYou: sqlResult.themToYou ?? "not-friends"
@@ -61,11 +64,15 @@ const paginatedAttendeesResponse = (
   const nextPageJoinDateCursor = hasMoreAttendees
     ? mappedAttendees[limit - 1].joinTimestamp
     : null
+  const nextPageArrivedAtCursor = hasMoreAttendees
+    ? mappedAttendees[limit - 1].arrivedAt
+    : null
 
   const paginatedAttendees = mappedAttendees.slice(0, limit)
   const encondedNextPageCursor = encodeAttendeesListCursor({
     userId: nextPageUserIdCursor,
-    joinDate: nextPageJoinDateCursor
+    joinDate: nextPageJoinDateCursor,
+    arrivedAt: nextPageArrivedAtCursor
   })
 
   return {
@@ -106,6 +113,7 @@ const getAttendees = (
   userId: string,
   nextPageUserIdCursor: string,
   nextPageJoinDateCursor: Date | null,
+  nextPageArrivedAtCursor: Date | null,
   limit: number
 ) =>
   conn.queryResults<DatabaseAttendeeWithRelation>(
@@ -115,20 +123,32 @@ const getAttendees = (
         u.name, 
         u.handle, 
         ea.joinTimestamp,
+        ua.arrivedAt,
         MAX(CASE WHEN ur.fromUserId = :userId THEN ur.status END) AS youToThem,
-        MAX(CASE WHEN ur.toUserId = :userId THEN ur.status END) AS themToYou
+        MAX(CASE WHEN ur.toUserId = :userId THEN ur.status END) AS themToYou,
+        CASE WHEN ua.arrivedAt IS NOT NULL THEN 1 ELSE 0 END AS arrivalStatus
         FROM user AS u 
         INNER JOIN eventAttendance AS ea ON u.id = ea.userId 
         INNER JOIN event AS e ON ea.eventId = e.id
+        LEFT JOIN userArrivals AS ua ON ua.userId = u.id
         LEFT JOIN userRelations AS ur ON (ur.fromUserId = u.id AND ur.toUserId = :userId)
                                     OR (ur.fromUserId = :userId AND ur.toUserId = u.id)
         WHERE e.id = :eventId
-        AND (:nextPageUserIdCursor = 'firstPage' OR (:nextPageUserIdCursor, :nextPageJoinDateCursor) < (u.id, ea.joinTimestamp))
-        GROUP BY u.id
-        ORDER BY u.id ASC, ea.joinTimestamp ASC
+        AND (:nextPageUserIdCursor = 'firstPage' 
+          OR (ua.arrivedAt > :nextPageArrivedAtCursor OR (ua.arrivedAt IS NULL AND :nextPageArrivedAtCursor IS NOT NULL))
+            OR (ua.arrivedAt IS NULL AND :nextPageArrivedAtCursor IS NULL AND ea.joinTimestamp > :nextPageJoinDateCursor)
+            OR (ua.arrivedAt IS NULL AND :nextPageArrivedAtCursor IS NULL AND ea.joinTimestamp = :nextPageJoinDateCursor AND u.id > :nextPageUserIdCursor)
+          )
+        AND (ua.longitude = e.longitude AND ua.latitude = e.latitude
+          OR ua.arrivedAt IS NULL)
+        GROUP BY u.id, ua.arrivedAt
+        ORDER BY
+        COALESCE(ua.arrivedAt, '9999-12-31 23:59:59.999') ASC,
+        ea.joinTimestamp ASC,
+        u.id ASC
         LIMIT :limit;
   `,
-    { eventId, userId, nextPageUserIdCursor, nextPageJoinDateCursor, limit }
+    { eventId, userId, nextPageUserIdCursor, nextPageJoinDateCursor, nextPageArrivedAtCursor, limit }
   )
 
 const getAttendeesByEventId = (
@@ -137,6 +157,7 @@ const getAttendeesByEventId = (
   userId: string,
   nextPageUserIdCursor: string,
   nextPageJoinDateCursor: Date | null,
+  nextPageArrivedAtCursor: Date | null,
   limit: number
 ) => {
   return promiseResult(
@@ -147,6 +168,7 @@ const getAttendeesByEventId = (
         userId,
         nextPageUserIdCursor,
         nextPageJoinDateCursor,
+        nextPageArrivedAtCursor,
         limit
       ),
       getAttendeesCount(conn, eventId, userId)
@@ -174,11 +196,12 @@ export const getAttendeesByEventIdRouter = (
       querySchema: CursorRequestSchema
     },
     (req, res) => {
-      const { userId, joinDate } = decodeAttendeesListCursor(req.query.nextPage)
+      const { userId, joinDate, arrivedAt } = decodeAttendeesListCursor(req.query.nextPage)
 
       const decodedValues = DecodedCursorValidationSchema.parse({
         userId,
-        joinDate
+        joinDate,
+        arrivedAt
       })
 
       return conn.transaction((tx) =>
@@ -188,6 +211,7 @@ export const getAttendeesByEventIdRouter = (
           res.locals.selfId,
           decodedValues.userId,
           decodedValues.joinDate,
+          decodedValues.arrivedAt,
           req.query.limit + 1 // Add 1 to handle checking last page
         ).mapSuccess((results) => {
           const attendees = results.attendees
@@ -195,7 +219,7 @@ export const getAttendeesByEventIdRouter = (
             results.totalAttendeesCount === "no-results"
               ? 0
               : results.totalAttendeesCount.totalAttendeesCount
-
+        
           return attendeesCount === 0
             ? res
                 .status(404)
