@@ -26,7 +26,7 @@ export const createRegisterPushTokenRouter = (router: ValidatedRouter) => {
         ...req.body,
         userId: res.locals.selfId
       })
-        .mapSuccess(() => res.status(201).send())
+        .mapSuccess((status) => res.status(201).send({ status }))
         .mapFailure((error) => res.status(400).send({ error }))
     }
   )
