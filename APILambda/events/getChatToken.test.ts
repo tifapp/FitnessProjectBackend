@@ -3,7 +3,7 @@ import {
   callCreateEvent,
   callGetEventChatToken
 } from "../test/apiCallers/events.js"
-import { testEvent } from "../test/testEvents.js"
+import { testEventInput } from "../test/testEvents.js"
 import { createUserFlow } from "../test/userFlows/users.js"
 
 describe("GetTokenRequest tests", () => {
@@ -30,7 +30,7 @@ describe("GetTokenRequest tests", () => {
 
   it("should return 404 if the user is not part of the event", async () => {
     const { token: userToken } = await createUserFlow()
-    const event = await callCreateEvent(userToken, testEvent)
+    const event = await callCreateEvent(userToken, testEventInput)
 
     const { token: user2Token } = await createUserFlow()
     const resp = await callGetEventChatToken(user2Token, event.body.id)

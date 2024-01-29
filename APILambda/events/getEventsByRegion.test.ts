@@ -1,11 +1,11 @@
+import { conn } from "TiFBackendUtils"
 import dayjs from "dayjs"
 import { callBlockUser } from "../test/apiCallers/users.js"
 import { callGetEventsByRegion } from "../test/helpers/events.js"
-import { testEvent } from "../test/testEvents.js"
+import { testEventInput } from "../test/testEvents.js"
 import { createEventFlow } from "../test/userFlows/events.js"
 import { getAttendeeCount, getAttendees } from "./getEventsByRegion.js"
 import { addPlacemarkToDB } from "./sharedSQL.js"
-import { conn } from "TiFBackendUtils"
 
 let eventOwnerTestToken: string
 let attendeeTestToken: string
@@ -16,8 +16,8 @@ let ongoingEventTestId: number
 
 const setupDB = async () => {
   addPlacemarkToDB({
-    lat: testEvent.latitude,
-    lon: testEvent.longitude,
+    lat: testEventInput.latitude,
+    lon: testEventInput.longitude,
     name: "Sample Location",
     city: "Sample Neighborhood",
     country: "Sample Country",
@@ -27,8 +27,8 @@ const setupDB = async () => {
   })
 
   const eventLocation = {
-    latitude: testEvent.latitude,
-    longitude: testEvent.longitude
+    latitude: testEventInput.latitude,
+    longitude: testEventInput.longitude
   }
 
   const {
@@ -64,8 +64,8 @@ describe("Testing the getEventsByRegion endpoint", () => {
   it("should return 200 with the event, user relation, attendee count data", async () => {
     const respGetEventsByRegion = await callGetEventsByRegion(
       attendeeTestToken,
-      testEvent.latitude,
-      testEvent.longitude,
+      testEventInput.latitude,
+      testEventInput.longitude,
       50000
     )
 
@@ -86,8 +86,8 @@ describe("Testing the individual queries from the getEventsByRegion endpoint", (
   it("should not return events that are not within the radius", async () => {
     const events = await callGetEventsByRegion(
       attendeeTestToken,
-      testEvent.latitude + 10,
-      testEvent.longitude + 10,
+      testEventInput.latitude + 10,
+      testEventInput.longitude + 10,
       1
     )
     expect(events.body).toHaveLength(0)
@@ -98,8 +98,8 @@ describe("Testing the individual queries from the getEventsByRegion endpoint", (
 
     const events = await callGetEventsByRegion(
       attendeeTestToken,
-      testEvent.latitude,
-      testEvent.longitude,
+      testEventInput.latitude,
+      testEventInput.longitude,
       50000
     )
     expect(events.body).toHaveLength(0)
@@ -110,8 +110,8 @@ describe("Testing the individual queries from the getEventsByRegion endpoint", (
 
     const events = await callGetEventsByRegion(
       attendeeTestToken,
-      testEvent.latitude,
-      testEvent.longitude,
+      testEventInput.latitude,
+      testEventInput.longitude,
       50000
     )
     expect(events.body).toHaveLength(0)
