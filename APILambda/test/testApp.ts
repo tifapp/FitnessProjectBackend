@@ -1,4 +1,4 @@
-import { app } from "./testIndex.js"
+import { app } from "./devIndex.js"
 
 /**
  * Creates a test environment application.

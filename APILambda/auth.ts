@@ -53,6 +53,7 @@ export const addCognitoTokenVerification = (
 ) => {
   // TODO: - Verify JWT properly
   app.use(async (req, res, next) => {
+    // TODO: See if there's a way to use standard capitalization
     let auth = req.headers?.Authorization
     if (env.environment === "dev") {
       auth = req.headers?.authorization
