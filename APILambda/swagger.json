@@ -8,6 +8,23 @@
   "host" : "623qsegfb9.execute-api.us-west-2.amazonaws.com",
   "basePath" : "/",
   "schemes" : [ "https" ],
+  "securityDefinitions": {
+    "CognitoAuth": {
+      "type": "apiKey",
+      "name": "Authorization",
+      "in": "header",
+      "x-amazon-apigateway-authtype": "cognito_user_pools",
+      "x-amazon-apigateway-authorizer": {
+        "type": "cognito_user_pools",
+        "providerARNs": [
+          "arn:aws:cognito-idp:us-west-2:213277979580:userpool/us-west-2_VXUS2q1PM"
+        ]
+      }
+    }
+  },
+  "security": [
+    { "CognitoAuth": [] }
+  ],  
   "paths" : {
     "/" : {
       "x-amazon-apigateway-any-method" : {
