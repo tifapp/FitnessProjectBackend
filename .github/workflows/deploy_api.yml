@@ -70,7 +70,7 @@ jobs:
         run: |
           cd APILambda
           rm -f index.ts
-          mv ./test/testApp.ts ./index.ts
+          mv ./test/stagingIndex.ts ./index.ts
           npm run build
       
       - name: Remove dev dependencies
@@ -139,7 +139,7 @@ jobs:
         run: |
           cd APILambda
           export NODE_OPTIONS="--max_old_space_size=4096"
-          TEST_ENV=staging npm run test:ci
+          TEST_ENV=staging_tests npm run test:ci
   
   deploy:
     runs-on: ubuntu-latest

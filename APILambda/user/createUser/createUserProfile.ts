@@ -1,6 +1,6 @@
 import { SQLExecutable, conn, failure, promiseResult, success } from "TiFBackendUtils"
 import AWS from "aws-sdk"
-import { ServerEnvironment } from "../../env.js"
+import { CreateUserProfileEnvironment, envVars } from "../../env.js"
 import { ValidatedRouter } from "../../validation.js"
 import { RegisterUserRequest } from "../SQL.js"
 import { generateUniqueUsername } from "../generateUserHandle.js"
@@ -59,11 +59,11 @@ const createUserProfileTransaction = (
   )
 
 AWS.config.update({
-  region: process.env.AWS_REGION
+  region: envVars.AWS_REGION
 })
 
 export const createUserProfileRouter = (
-  environment: ServerEnvironment,
+  { setProfileCreatedAttribute }: CreateUserProfileEnvironment,
   router: ValidatedRouter
 ) =>
   router.postWithValidation("/", {}, (_, res) =>
@@ -75,7 +75,7 @@ export const createUserProfileRouter = (
         )
           .mapSuccess(handle => Object.assign(registerReq, { handle })))
       .flatMapSuccess(profile => createUserProfileTransaction(profile))
-      .flatMapSuccess(profile => environment.setProfileCreatedAttribute(res.locals.selfId).mapSuccess(() => profile))
+      .flatMapSuccess(profile => setProfileCreatedAttribute(res.locals.selfId).mapSuccess(() => profile))
       .mapFailure(error => res.status(error === "user-exists" ? 400 : 401).json({ error }))
       .mapSuccess(profile => res.status(201).json(profile))
   )

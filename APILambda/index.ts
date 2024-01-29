@@ -6,7 +6,7 @@ import { addBenchmarking, addRoutes, createApp } from "./app.js"
 import { addCognitoTokenVerification } from "./auth.js"
 import { ServerEnvironment } from "./env.js"
 import { addErrorReporting } from "./errorReporting.js"
-import { setProfileCreatedAttribute } from "./user/createUser/createUserProfileSetCognitoAttribute.js"
+import { setProfileCreatedAttribute } from "./user/createUser/setCognitoAttribute.js"
 
 export const addEventToRequest = (app: Express) => {
   app.use((req, res, next) => {
@@ -37,7 +37,6 @@ export const addEventToRequest = (app: Express) => {
 
 const env: ServerEnvironment = {
   environment: "prod",
-  eventStartWindowInHours: 1,
   maxArrivals: 100,
   setProfileCreatedAttribute: (userId: string) => setProfileCreatedAttribute(userId)
 }
