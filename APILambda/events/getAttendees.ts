@@ -41,7 +41,7 @@ const mapDatabaseAttendee = (sqlResult: DatabaseAttendeeWithRelation) => {
     profileImageURL: sqlResult.profileImageURL,
     handle: sqlResult.handle,
     arrivedAt: sqlResult.arrivedAt,
-    arrivalStatus: sqlResult.arrivalStatus,
+    arrivalStatus: !!sqlResult.arrivalStatus,
     relations: {
       youToThem: sqlResult.youToThem ?? "not-friends",
       themToYou: sqlResult.themToYou ?? "not-friends"
@@ -126,7 +126,7 @@ const getAttendees = (
         ua.arrivedAt,
         MAX(CASE WHEN ur.fromUserId = :userId THEN ur.status END) AS youToThem,
         MAX(CASE WHEN ur.toUserId = :userId THEN ur.status END) AS themToYou,
-        CASE WHEN ua.arrivedAt IS NOT NULL THEN 1 ELSE 0 END AS arrivalStatus
+        CASE WHEN ua.arrivedAt IS NOT NULL THEN true ELSE false END AS arrivalStatus
         FROM user AS u 
         INNER JOIN eventAttendance AS ea ON u.id = ea.userId 
         INNER JOIN event AS e ON ea.eventId = e.id

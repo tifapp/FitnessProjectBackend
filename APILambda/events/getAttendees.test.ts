@@ -309,6 +309,9 @@ describe("Testing for getting attendees list endpoint", () => {
       numOfAdditionalAttendees
     )
 
+    console.log("alll")
+    console.log(allAttendeesResp.body)
+
     const allAttendees = allAttendeesResp.body.attendees
 
     allAttendeesResp.body.nextPageCursor = decodeAttendeesListCursor(
@@ -334,12 +337,12 @@ describe("Testing for getting attendees list endpoint", () => {
           {
             id: allAttendees[0].id,
             name: allAttendees[0].name,
-            arrivalStatus: 1
+            arrivalStatus: true
           },
           {
             id: allAttendees[1].id,
             name: allAttendees[1].name,
-            arrivalStatus: 1
+            arrivalStatus: true
           }
         ],
         nextPageCursor: getNextPageCursorResp(allAttendees, 1),
@@ -370,12 +373,12 @@ describe("Testing for getting attendees list endpoint", () => {
           {
             id: allAttendees[2].id,
             name: allAttendees[2].name,
-            arrivalStatus: 0
+            arrivalStatus: false
           },
           {
             id: allAttendees[3].id,
             name: allAttendees[3].name,
-            arrivalStatus: 0
+            arrivalStatus: false
           }
         ],
         nextPageCursor: lastPageCursorResponse,
