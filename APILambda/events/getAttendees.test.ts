@@ -308,10 +308,7 @@ describe("Testing for getting attendees list endpoint", () => {
     const allAttendeesResp = await getAllAttendeesListResponse(
       numOfAdditionalAttendees
     )
-
-    console.log("alll")
-    console.log(allAttendeesResp.body)
-
+    
     const allAttendees = allAttendeesResp.body.attendees
 
     allAttendeesResp.body.nextPageCursor = decodeAttendeesListCursor(
