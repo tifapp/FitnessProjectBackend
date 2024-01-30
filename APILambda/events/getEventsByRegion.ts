@@ -78,7 +78,7 @@ export const getEventsByRegion = (
   conn.queryResults<GetEventByRegionEvent>(
     `
     SELECT * 
-    FROM ViewEventsByRegion
+    FROM ViewEvents
     WHERE ST_Distance_Sphere(POINT(:userLongitude, :userLatitude), POINT(longitude, latitude)) < :radius
       AND endTimestamp > NOW()
       AND (relationHostToUser IS NULL OR relationHostToUser <> 'blocked')
