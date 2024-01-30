@@ -26,7 +26,7 @@ describe("GetUser tests", () => {
       body: expect.objectContaining({
         id: searchedUserId,
         name: searchedUserName,
-        handle: searchedUserHandle
+        handle: `${searchedUserHandle}`
       })
     })
   })
@@ -44,7 +44,7 @@ describe("Get blocked user's profile name only", () => {
       status: 200,
       body: {
         name,
-        handle,
+        handle: `${handle}`,
         relations: { themToYou: "blocked" }
       }
     })

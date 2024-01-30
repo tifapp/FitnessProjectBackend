@@ -1,4 +1,4 @@
-import { conn } from "TiFBackendUtils"
+import { UserHandle, conn } from "TiFBackendUtils"
 import { randomUUID } from "crypto"
 import { expectFailsCheckConstraint } from "../test/database.js"
 import { insertUser } from "./createUserProfile.js"
@@ -10,7 +10,7 @@ describe("CheckConstraint tests", () => {
         {
           id: randomUUID(),
           name: "test",
-          handle: "(*(*&(SJK"
+          handle: "(*(*&(SJK" as unknown as UserHandle
         }
       )
     })
@@ -21,7 +21,7 @@ describe("CheckConstraint tests", () => {
       await insertUser(conn, {
         id: randomUUID(),
         name: "test",
-        handle: ""
+        handle: "(*(*&(SJK" as unknown as UserHandle
       })
     })
   })

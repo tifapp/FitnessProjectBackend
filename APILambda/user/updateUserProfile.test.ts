@@ -69,7 +69,7 @@ describe("Update user profile tests", () => {
 
       const resp = await callUpdateUserHandle(
         userToken,
-        takenHandle
+        `${takenHandle}`
       )
 
       expect(resp).toMatchObject({

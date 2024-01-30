@@ -8,6 +8,7 @@ import { DatabaseUser } from "./models.js"
 type RegisterUserRequest = {
   id: string
   name: string
+  handle?: UserHandle
 }
 
 const checkValidName = (name: string, id: string) => {
@@ -55,7 +56,7 @@ export const insertUser = (
  * @returns an object containing the id of the newly registered user
  */
 const createUserProfileTransaction = (
-  request: RegisterUserRequest & {handle?: UserHandle}
+  request: RegisterUserRequest
 ) =>
   conn.transaction((tx) =>
     userWithHandleOrIdExists(tx, request.id, request.handle)

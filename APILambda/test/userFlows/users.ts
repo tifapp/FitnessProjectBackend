@@ -14,5 +14,5 @@ export const createUserFlow = async (): Promise<{handle: string, userId: string,
 
   testUserCounter.currentUserIndex = (testUserCounter.currentUserIndex + 1)
 
-  return { userId, handle, token, name: testUser.name }
+  return { userId, handle: handle.rawValue, token, name: testUser.name }
 }
