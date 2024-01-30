@@ -2,6 +2,7 @@ import { LocationCoordinate2D, LocationCoordinates2DSchema, SQLExecutable, conn,
 import { z } from "zod"
 import { ServerEnvironment } from "../env.js"
 import { ValidatedRouter } from "../validation.js"
+import { getUpcomingEventsByRegion } from "./arrivals/getUpcomingEvents.js"
 import { insertArrival } from "./arrivals/setArrivalStatus.js"
 import { checkChatPermissionsTransaction } from "./getChatToken.js"
 import { getEventById } from "./getEventById.js"
@@ -13,8 +14,13 @@ const joinEventParamsSchema = z.object({
 
 const joinEventBodySchema = z
   .object({
-    coordinate: LocationCoordinates2DSchema
+    region: z.object({
+      coordinate: LocationCoordinates2DSchema,
+      arrivalRadiusMeters: z.number()
+    })
   }).optional()
+
+export type JoinEventInput = z.infer<typeof joinEventBodySchema>
 
 const joinEvent = (conn: SQLExecutable, userId: string, eventId: number, coordinate?: LocationCoordinate2D) => {
   return conn.transaction((tx) =>
@@ -39,9 +45,11 @@ const joinEvent = (conn: SQLExecutable, userId: string, eventId: number, coordin
                   )
                   .flatMapSuccess(({ status }) =>
                     checkChatPermissionsTransaction(eventId, userId)
-                      .mapSuccess(chatPermissions => (
-                        { ...chatPermissions, status, isArrived }
-                      ))
+                      .flatMapSuccess((chatPermissions) => getUpcomingEventsByRegion(tx, userId)
+                        .mapSuccess(upcomingRegions => (
+                          { ...chatPermissions, status, isArrived, upcomingRegions }
+                        ))
+                      )
                   )
               )
           )
@@ -78,7 +86,7 @@ export const joinEventRouter = (
     "/join/:eventId",
     { pathParamsSchema: joinEventParamsSchema, bodySchema: joinEventBodySchema },
     (req, res) =>
-      joinEvent(conn, res.locals.selfId, Number(req.params.eventId), req.body?.coordinate)
+      joinEvent(conn, res.locals.selfId, Number(req.params.eventId), req.body?.region?.coordinate)
         .mapFailure((error) =>
           res
             .status(
@@ -90,6 +98,6 @@ export const joinEventRouter = (
             )
             .json({ error })
         )
-        .mapSuccess(({ status, id, tokenRequest, isArrived }) => res.status(status).json({ id, token: tokenRequest, isArrived }))
+        .mapSuccess(({ status, id, tokenRequest, isArrived, upcomingRegions }) => res.status(status).json({ id, token: tokenRequest, isArrived, upcomingRegions }))
   )
 }

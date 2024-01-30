@@ -1,7 +1,7 @@
 import { conn } from "TiFBackendUtils"
 import { randomInt } from "crypto"
 import dayjs from "dayjs"
-import { callCreateEvent, callJoinEvent } from "../test/apiCallers/events.js"
+import { callCreateEvent, callJoinEvent, callJoinEventWithArrival } from "../test/apiCallers/events.js"
 import {
   callBlockUser
 } from "../test/apiCallers/users.js"
@@ -13,33 +13,33 @@ describe("Join the event by id tests", () => {
   it("should not save arrival when the user passes a location but they aren't eligible to join the event", async () => {
     const { token: eventOwnerToken } = await createUserFlow()
     const { token: attendeeToken, userId: attendeeId } = await createUserFlow()
-    const event = await callCreateEvent(eventOwnerToken, testEvent)
+    const event = await callCreateEvent(eventOwnerToken, testEventInput)
     const resp = await callJoinEvent(attendeeToken, parseInt(event.body.id))
     expect(resp).toMatchObject({
       status: 201,
-      body: { id: attendeeId, token: expect.anything(), isArrived: false }
+      body: { id: attendeeId, token: expect.anything(), isArrived: false, upcomingRegions: expect.anything() }
     })
   })
 
   it("should not save arrival when the user passes a location and its outdated", async () => {
     const { token: eventOwnerToken } = await createUserFlow()
     const { token: attendeeToken, userId: attendeeId } = await createUserFlow()
-    const event = await callCreateEvent(eventOwnerToken, testEvent)
+    const event = await callCreateEvent(eventOwnerToken, testEventInput)
     const resp = await callJoinEvent(attendeeToken, parseInt(event.body.id))
     expect(resp).toMatchObject({
       status: 201,
-      body: { id: attendeeId, token: expect.anything(), isArrived: false }
+      body: { id: attendeeId, token: expect.anything(), isArrived: false, upcomingRegions: expect.anything() }
     })
   })
 
   it("should save arrival when the user passes a location", async () => {
     const { token: eventOwnerToken } = await createUserFlow()
     const { token: attendeeToken, userId: attendeeId } = await createUserFlow()
-    const event = await callCreateEvent(eventOwnerToken, { ...testEvent })
-    const resp = await callJoinEvent(attendeeToken, parseInt(event.body.id))
+    const event = await callCreateEvent(eventOwnerToken, { ...testEventInput })
+    const resp = await callJoinEventWithArrival(attendeeToken, parseInt(event.body.id), { coordinate: { latitude: testEventInput.latitude, longitude: testEventInput.longitude } })
     expect(resp).toMatchObject({
       status: 201,
-      body: { id: attendeeId, token: expect.anything(), isArrived: true }
+      body: { id: attendeeId, token: expect.anything(), isArrived: true, upcomingRegions: expect.anything() }
     })
   })
 
