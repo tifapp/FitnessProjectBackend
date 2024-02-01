@@ -303,6 +303,38 @@ describe("Testing for getting attendees list endpoint", () => {
     })
   })
 
+  it("should return 200 if going past last page of attendees list", async () => {
+    const firstPageCursorResp = encodeAttendeesListCursor()
+    let resp = await callGetAttendees(
+      attendeeTestToken,
+      eventTestId,
+      firstPageCursorResp,
+      paginationLimit
+    )
+
+    const lastPageCursorResp = resp.body.nextPageCursor
+
+    resp = await callGetAttendees(
+      attendeeTestToken,
+      eventTestId,
+      lastPageCursorResp,
+      paginationLimit
+    )
+
+    resp.body.nextPageCursor = decodeAttendeesListCursor(
+      resp.body.nextPageCursor
+    )
+
+    expect(resp).toMatchObject({
+      status: 200,
+      body: {
+        attendees: [],
+        nextPageCursor: lastPageCursorResponse,
+        attendeesCount: 2
+      }
+    })
+  })
+
   it("check that attendees who arrived first are on top of the attendees list", async () => {
     const numOfAdditionalAttendees = 2
     const allAttendeesResp = await getAllAttendeesListResponse(
@@ -334,12 +366,16 @@ describe("Testing for getting attendees list endpoint", () => {
           {
             id: allAttendees[0].id,
             name: allAttendees[0].name,
-            arrivalStatus: true
+            joinTimestamp: allAttendees[0].joinTimestamp,
+            arrivalStatus: true,
+            arrivedAt: allAttendees[0].arrivedAt
           },
           {
             id: allAttendees[1].id,
             name: allAttendees[1].name,
-            arrivalStatus: true
+            joinTimestamp: allAttendees[1].joinTimestamp,
+            arrivalStatus: true,
+            arrivedAt: allAttendees[1].arrivedAt
           }
         ],
         nextPageCursor: getNextPageCursorResp(allAttendees, 1),
@@ -369,13 +405,17 @@ describe("Testing for getting attendees list endpoint", () => {
         attendees: [
           {
             id: allAttendees[2].id,
+            joinTimestamp: allAttendees[2].joinTimestamp,
             name: allAttendees[2].name,
-            arrivalStatus: false
+            arrivalStatus: false,
+            arrivedAt: allAttendees[2].arrivedAt
           },
           {
             id: allAttendees[3].id,
+            joinTimestamp: allAttendees[3].joinTimestamp,
             name: allAttendees[3].name,
-            arrivalStatus: false
+            arrivalStatus: false,
+            arrivedAt: allAttendees[3].arrivedAt
           }
         ],
         nextPageCursor: lastPageCursorResponse,
