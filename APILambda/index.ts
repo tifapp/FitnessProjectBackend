@@ -1,7 +1,11 @@
 import awsServerlessExpress, {
   getCurrentInvoke
 } from "@vendia/serverless-express"
-import { LocationCoordinate2D, SearchForPositionResultToPlacemark } from "TiFBackendUtils"
+import {
+  LocationCoordinate2D, SearchForPositionResultToPlacemark,
+  invokeAWSLambda
+} from "TiFBackendUtils"
+
 import express, { Express } from "express"
 import { addBenchmarking, addRoutes, createApp } from "./app.js"
 import { addCognitoTokenVerification } from "./auth.js"
@@ -42,7 +46,11 @@ const env: ServerEnvironment = {
   eventStartWindowInHours: 1,
   maxArrivals: 100,
   SearchForPositionResultToPlacemark: (location: LocationCoordinate2D) =>
-    SearchForPositionResultToPlacemark(location)
+    SearchForPositionResultToPlacemark(location),
+  callGeocodingLambda: (latitude: number, longitude: number) =>
+    invokeAWSLambda("geocodingPipeline", {
+      location: { latitude, longitude }
+    })
 }
 
 const app = createApp()

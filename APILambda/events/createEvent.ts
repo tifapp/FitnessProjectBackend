@@ -1,10 +1,8 @@
 import {
   SQLExecutable,
-  SearchForPositionResultToPlacemark,
   addPlacemarkToDB,
   checkExistingPlacemarkInDB,
   conn,
-  invokeAWSLambda,
   success
 } from "TiFBackendUtils"
 import { z } from "zod"
@@ -89,7 +87,9 @@ INSERT INTO event (
 export const addPlacemarkForEvent = (
   insertId: string,
   eventLatitude: number,
-  eventLongitude: number
+  eventLongitude: number,
+  SearchForPositionResultToPlacemark: ServerEnvironment["SearchForPositionResultToPlacemark"],
+  callGeocodingLambda: ServerEnvironment["callGeocodingLambda"]
 ) => {
   insertIdForEvent = insertId
   return checkExistingPlacemarkInDB(conn, {
@@ -102,9 +102,7 @@ export const addPlacemarkForEvent = (
         longitude: eventLongitude
       })
       if (placemark === undefined) {
-        invokeAWSLambda("geocodingPipeline", {
-          location: { eventLatitude, eventLongitude }
-        })
+        callGeocodingLambda(eventLatitude, eventLongitude)
       } else {
         addPlacemarkToDB(conn, placemark)
       }
@@ -138,7 +136,9 @@ export const createEventRouter = (
               return addPlacemarkForEvent(
                 insertId,
                 req.body.latitude,
-                req.body.longitude
+                req.body.longitude,
+                environment.SearchForPositionResultToPlacemark,
+                environment.callGeocodingLambda
               )
             })
             .flatMapSuccess(() =>
