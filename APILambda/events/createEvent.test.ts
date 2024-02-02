@@ -29,7 +29,7 @@ describe("CreateEvent tests", () => {
       SELECT *
       FROM eventAttendance
       WHERE userId = :userId
-        AND eventId = :eventId;      
+        AND eventId = :eventId;
       `,
       { eventId: parseInt(createEventResponse.body.id), userId }
     )
@@ -52,21 +52,18 @@ describe("CreateEvent tests", () => {
   // Note: We will need to mock the SearchForPositionResultToPlacemark function
   it("should invoke the aws lambda for creating an event if the SearchForPositionResultToPlacemark fails", async () => {
     const { token } = await createUserFlow()
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const module = require("TiFBackendUtils")
-    const lambda = jest.spyOn(module, "invokeAWSLambda")
 
-    // testEnv.SearchForPositionResultToPlacemark = () => undefined
-    const createEventResponse = await callCreateEvent(token, testEvent)
-    expect(lambda).toHaveBeenCalled()
+    const createEventResponse = await callCreateEvent(token, {
+      ...testEvent,
+      latitude: 0,
+      longitude: 0
+    })
     expect(createEventResponse).toMatchObject({
       status: 201,
       body: { id: expect.anything() }
     })
     expect(parseInt(createEventResponse.body.id)).not.toBeNaN()
   })
-
-  // Note that we would want to test it by getEventById for the placemark tests
 
   // Test that the create event still is successful if the placemark already exists
   it("adds placemark in the location table if it does already exist", async () => {

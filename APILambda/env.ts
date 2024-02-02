@@ -1,4 +1,4 @@
-import { LocationCoordinate2D, Placemark } from "TiFBackendUtils"
+import { LocationCoordinate2D, Placemark, PromiseResult } from "TiFBackendUtils"
 import dotenv from "dotenv"
 import { z } from "zod"
 
@@ -33,5 +33,6 @@ export type ServerEnvironment = {
   maxArrivals: number
   SearchForPositionResultToPlacemark: (
     location: LocationCoordinate2D
-  ) => Placemark
+  ) => Placemark | undefined
+  callGeocodingLambda: (latitude: number, longitude: number) => unknown
 }
