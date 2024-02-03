@@ -6,6 +6,7 @@ import {
 import { callCreateEvent } from "../test/apiCallers/events.js"
 import { testEventInput } from "../test/testEvents.js"
 import { createUserFlow } from "../test/userFlows/users.js"
+import { missingAddressTestLocation } from "../test/testApp.js"
 
 describe("CreateEvent tests", () => {
   beforeEach(() => {
@@ -55,8 +56,8 @@ describe("CreateEvent tests", () => {
 
     const createEventResponse = await callCreateEvent(token, {
       ...testEvent,
-      latitude: 0,
-      longitude: 0
+      latitude: missingAddressTestLocation.latitude,
+      longitude: missingAddressTestLocation.longitude
     })
     expect(createEventResponse).toMatchObject({
       status: 201,

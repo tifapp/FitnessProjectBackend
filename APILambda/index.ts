@@ -3,50 +3,14 @@ import awsServerlessExpress, {
 } from "@vendia/serverless-express"
 import {
   LocationCoordinate2D,
-  Result,
-  Retryable,
   SearchForPositionResultToPlacemark,
-  addPlacemarkToDB,
-  checkExistingPlacemarkInDB,
-  conn,
-  exponentialFunctionBackoff,
-  invokeAWSLambda,
-  success
+  invokeAWSLambda
 } from "TiFBackendUtils"
 import express, { Express } from "express"
 import { addBenchmarking, addRoutes, createApp } from "./app.js"
 import { addCognitoTokenVerification } from "./auth.js"
 import { ServerEnvironment } from "./env.js"
 import { addErrorReporting } from "./errorReporting.js"
-/**
- * @type {import('@types/aws-lambda').APIGatewayProxyHandler}
- */
-
-interface LocationSearchRequest extends Retryable {
-  coordinate: LocationCoordinate2D
-}
-
-// TODO: Fix handler type, fix util dependencies
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const eventHandler: any = exponentialFunctionBackoff<
-  LocationSearchRequest,
-  Result<"placemark-successfully-inserted", "placemark-already-exists">
->(async (event: LocationSearchRequest) =>
-  checkExistingPlacemarkInDB(conn, {
-    latitude: parseFloat(event.coordinate.latitude.toFixed(10)),
-    longitude: parseFloat(event.coordinate.longitude.toFixed(10))
-  })
-    .flatMapSuccess(async () =>
-      success(
-        SearchForPositionResultToPlacemark({
-          latitude: event.coordinate.latitude,
-          longitude: event.coordinate.longitude
-        })
-      )
-    )
-    .flatMapSuccess((placemark) => addPlacemarkToDB(conn, placemark))
-    .mapSuccess(() => "placemark-successfully-inserted" as const)
-)
 
 const addEventToRequest = (app: Express) => {
   app.use((req, res, next) => {

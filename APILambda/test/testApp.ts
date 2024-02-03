@@ -2,10 +2,16 @@ import {
   LocationCoordinate2D,
   SearchForPositionResultToPlacemark
 } from "TiFBackendUtils"
+import { handler } from "../../GeocodingLambda/index.js"
 import { addBenchmarking, addRoutes, createApp } from "../app.js"
 import { addCognitoTokenVerification } from "../auth.js"
 import { ServerEnvironment } from "../env.js"
-import { eventHandler } from "../index.js"
+// import { eventHandler } from "../index.js"
+
+export const missingAddressTestLocation = {
+  latitude: 0,
+  longitude: 0
+}
 
 // deploy one test env for the stage tests. if those pass, then deploy the actual env to stage
 export const testEnv: ServerEnvironment = {
@@ -14,7 +20,10 @@ export const testEnv: ServerEnvironment = {
   eventStartWindowInHours: 1,
   maxArrivals: 4,
   SearchForPositionResultToPlacemark: (location: LocationCoordinate2D) => {
-    if (location.latitude === 0 && location.longitude === 0) {
+    if (
+      location.latitude === missingAddressTestLocation.latitude &&
+      location.longitude === missingAddressTestLocation.longitude
+    ) {
       return undefined
     } else {
       SearchForPositionResultToPlacemark({
@@ -24,7 +33,7 @@ export const testEnv: ServerEnvironment = {
     }
   },
   callGeocodingLambda: (eventLatitude: number, eventLongitude: number) =>
-    eventHandler({
+    handler({
       coordinate: {
         latitude: eventLatitude,
         longitude: eventLongitude
