@@ -7,6 +7,7 @@ import {
   Result,
   Retryable,
   SearchClosestAddressToCoordinates,
+  SearchForPositionResultToPlacemark,
   addPlacemarkToDB,
   checkExistingPlacemarkInDB,
   conn,
