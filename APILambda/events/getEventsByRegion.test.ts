@@ -33,10 +33,8 @@ const setupDB = async () => {
   }
 
   const {
-    attendeeToken,
-    attendeeId,
-    hostId,
-    hostToken,
+    attendeesList: [attendee],
+    host,
     eventIds: [futureEventId, ongoingEventId]
   } = await createEventFlow([
     {
@@ -49,12 +47,12 @@ const setupDB = async () => {
       startTimestamp: dayjs().subtract(12, "hour").toDate(),
       endTimestamp: dayjs().add(1, "year").toDate()
     }
-  ])
+  ], 1)
 
-  attendeeTestToken = attendeeToken
-  eventOwnerTestToken = hostToken
-  attendeeTestId = attendeeId
-  eventOwnerTestId = hostId
+  attendeeTestToken = attendee.token
+  eventOwnerTestToken = host.token
+  attendeeTestId = attendee.userId
+  eventOwnerTestId = host.userId
   ongoingEventTestId = ongoingEventId
   futureEventTestId = futureEventId
 }
