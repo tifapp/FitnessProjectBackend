@@ -1,5 +1,5 @@
 import dayjs from "dayjs"
-import { callGetEvent, callJoinEvent, callSetArrival, callSetDeparture } from "../../test/apiCallers/events.js"
+import { callGetEvent, callSetArrival, callSetDeparture } from "../../test/apiCallers/events.js"
 import { createEventFlow } from "../../test/userFlows/events.js"
 
 const eventLocation = { latitude: 50, longitude: 50 }
@@ -7,14 +7,13 @@ const eventLocation = { latitude: 50, longitude: 50 }
 describe("SetArrivalStatus tests", () => {
   it("should return upcoming events from the arrived and departed endpoints", async () => {
     // cant mock planetscale time
-    const { attendeeToken, eventIds } = await createEventFlow([{
+    const { attendeesList: [attendee], eventIds } = await createEventFlow([{
       ...eventLocation,
       startTimestamp: dayjs().add(12, "hour").toDate(),
       endTimestamp: dayjs().add(1, "year").toDate()
-    }])
-    await callJoinEvent(attendeeToken, eventIds[0])
+    }], 1)
 
-    expect(await callSetArrival(attendeeToken, {
+    expect(await callSetArrival(attendee.token, {
       coordinate: eventLocation
     })).toMatchObject({
       body: {
@@ -25,7 +24,7 @@ describe("SetArrivalStatus tests", () => {
       }
     })
 
-    expect(await callSetDeparture(attendeeToken, {
+    expect(await callSetDeparture(attendee.token, {
       coordinate: eventLocation
     })).toMatchObject({
       body: {
@@ -38,23 +37,23 @@ describe("SetArrivalStatus tests", () => {
   })
 
   it("should persist arrival when checking events", async () => {
-    const { attendeeToken, eventIds } = await createEventFlow([{ ...eventLocation }])
+    const { attendeesList: [attendee], eventIds } = await createEventFlow([{ ...eventLocation }], 1)
 
-    await callSetArrival(attendeeToken, {
+    await callSetArrival(attendee.token, {
       coordinate: eventLocation
     })
 
-    expect(await callGetEvent(attendeeToken, eventIds[0])).toMatchObject({
+    expect(await callGetEvent(attendee.token, eventIds[0])).toMatchObject({
       body: {
         arrivalStatus: "arrived"
       }
     })
 
-    await callSetDeparture(attendeeToken, {
+    await callSetDeparture(attendee.token, {
       coordinate: eventLocation
     })
 
-    expect(await callGetEvent(attendeeToken, eventIds[0])).toMatchObject({
+    expect(await callGetEvent(attendee.token, eventIds[0])).toMatchObject({
       body: {
         arrivalStatus: "not-arrived"
       }

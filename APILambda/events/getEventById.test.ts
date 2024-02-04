@@ -48,11 +48,8 @@ describe("Get event's host and title only", () => {
 
   it("should return host name and event title if blocked by host", async () => {
     const {
-      attendeeToken,
-      attendeeId,
-      hostToken,
-      hostHandle,
-      hostName,
+      attendeesList: [{ token: attendeeToken, userId: attendeeId }],
+      host,
       eventIds
     } = await createEventFlow([
       {
@@ -60,16 +57,16 @@ describe("Get event's host and title only", () => {
         startTimestamp: dayjs().add(12, "hour").toDate(),
         endTimestamp: dayjs().add(1, "year").toDate()
       }
-    ])
+    ], 1)
 
-    await callBlockUser(hostToken, attendeeId)
+    await callBlockUser(host.token, attendeeId)
     const resp = await callGetEvent(attendeeToken, eventIds[0])
 
     expect(resp).toMatchObject({
       status: 403,
       body: expect.objectContaining({
-        handle: hostHandle,
-        name: hostName,
+        handle: host.handle,
+        name: host.name,
         profileImageURL: null,
         title: testEventInput.title
       })
@@ -77,23 +74,23 @@ describe("Get event's host and title only", () => {
   })
 
   it("should return host name and event title if attendee blocked host", async () => {
-    const { attendeeToken, hostId, hostHandle, hostName, eventIds } =
+    const { attendeesList: [{ token: attendeeToken }], host, eventIds } =
       await createEventFlow([
         {
           ...eventLocation,
           startTimestamp: dayjs().add(12, "hour").toDate(),
           endTimestamp: dayjs().add(1, "year").toDate()
         }
-      ])
+      ], 1)
 
-    await callBlockUser(attendeeToken, hostId)
+    await callBlockUser(attendeeToken, host.userId)
     const resp = await callGetEvent(attendeeToken, eventIds[0])
 
     expect(resp).toMatchObject({
       status: 403,
       body: expect.objectContaining({
-        handle: hostHandle,
-        name: hostName,
+        handle: host.handle,
+        name: host.name,
         profileImageURL: null,
         title: testEventInput.title
       })

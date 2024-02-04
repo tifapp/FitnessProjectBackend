@@ -17,12 +17,7 @@ describe("getUpcomingEvents tests", () => {
   it("should return 200 with an array of events if the user has upcoming events", async () => {
     const eventLocation = { latitude: 50, longitude: 50 }
 
-    const { attendeeToken, hostToken, eventIds: [, arrivedTestEventId, ongoingTestEventId, notArrivedTestEventId] } = await createEventFlow([
-      {
-        ...eventLocation,
-        startTimestamp: dayjs().add(1, "month").toDate(),
-        endTimestamp: dayjs().add(1, "year").toDate()
-      },
+    const { attendeesList: [attendee], host, eventIds: [arrivedTestEventId, ongoingTestEventId, notArrivedTestEventId] } = await createEventFlow([
       {
         ...eventLocation,
         startTimestamp: dayjs().add(12, "hour").toDate(),
@@ -38,11 +33,16 @@ describe("getUpcomingEvents tests", () => {
         longitude: 25,
         startTimestamp: dayjs().add(12, "hour").toDate(),
         endTimestamp: dayjs().add(1, "year").toDate()
+      },
+      {
+        ...eventLocation,
+        startTimestamp: dayjs().add(1, "month").toDate(),
+        endTimestamp: dayjs().add(1, "year").toDate()
       }
-    ])
+    ], 1)
 
     // unrelated event that should not appear in upcoming list
-    await callCreateEvent(hostToken,
+    await callCreateEvent(host.token,
       {
         ...testEventInput,
         ...eventLocation,
@@ -51,11 +51,11 @@ describe("getUpcomingEvents tests", () => {
       }
     )
 
-    await callSetArrival(attendeeToken, {
+    await callSetArrival(attendee.token, {
       coordinate: eventLocation
     })
 
-    expect(await callGetUpcomingEvents(attendeeToken)).toMatchObject({
+    expect(await callGetUpcomingEvents(attendee.token)).toMatchObject({
       status: 200,
       body: {
         upcomingRegions: [{

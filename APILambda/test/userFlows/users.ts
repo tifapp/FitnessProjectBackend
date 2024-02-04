@@ -1,9 +1,11 @@
-import { callPostUser } from "../apiCallers/users.js"
+import { callPostUser } from "../apiCallers/users.js";
+
+export type TestUser = {handle: string, userId: string, token: string, name: string};
 
 export const testUserCounter = { currentUserIndex: 0 }
 
 // database is reset for each test so we need to create a new auth for each test
-export const createUserFlow = async (): Promise<{handle: string, userId: string, token: string, name: string}> => {
+export const createUserFlow = async (): Promise<TestUser> => {
   if (testUserCounter.currentUserIndex >= global.users.length) {
     throw new Error("used all test users")
   }
