@@ -13,7 +13,7 @@ export const createEventFlow = async (
 }> => {
   const host = await createUserFlow()
 
-  if (eventInputs.length <= 1) {
+  if (eventInputs.length < 1) {
     throw new Error("need at least one test event input")
   }
 

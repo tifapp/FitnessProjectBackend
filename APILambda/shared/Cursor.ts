@@ -10,14 +10,12 @@ export const encodeAttendeesListCursor = (cursorObject?: {
   userId: string
   joinDate: Date | null
 }): string => {
-  const { userId, joinDate } = cursorObject
-    ? cursorObject
-    : {
-        userId: "firstPage",
-        joinDate: null
-      }
-      
-  const joinDateToEncode = joinDate ? joinDate : defaultJoinDate
+  const { userId, joinDate } = cursorObject || {
+    userId: "firstPage",
+    joinDate: null
+  }
+
+  const joinDateToEncode = joinDate || defaultJoinDate
   const encodedCursor = Buffer.from(`${userId}|${joinDateToEncode}`).toString(
     "base64"
   )
