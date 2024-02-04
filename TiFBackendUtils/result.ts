@@ -291,3 +291,6 @@ export function failure<Failure> (value?: Failure) {
   if (!value) return new FailureResult<never, undefined>(undefined)
   return new FailureResult<never, Failure>(value)
 }
+
+// promiseresult.pipe
+// promiseresult.reduce

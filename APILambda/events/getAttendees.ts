@@ -6,7 +6,7 @@ import {
   encodeAttendeesListCursor
 } from "../shared/Cursor.js"
 import { DatabaseAttendee, PaginatedAttendeesResponse } from "../shared/SQL.js"
-import { UserToProfileRelationStatus } from "../user/models.js"
+import { UserToUserRelation } from "../user/models.js"
 import { ValidatedRouter } from "../validation.js"
 
 const AttendeesRequestSchema = z.object({
@@ -27,50 +27,26 @@ const CursorRequestSchema = z.object({
     .refine((arg) => arg >= 1 && arg <= 50)
 })
 
-type DatabaseAttendeeWithRelation = DatabaseAttendee & {
-  themToYou: UserToProfileRelationStatus
-  youToThem: UserToProfileRelationStatus
-}
-
-const mapDatabaseAttendee = (sqlResult: DatabaseAttendeeWithRelation) => {
-  return {
-    id: sqlResult.id,
-    name: sqlResult.name,
-    joinTimestamp: sqlResult.joinTimestamp,
-    profileImageURL: sqlResult.profileImageURL,
-    handle: sqlResult.handle,
-    arrivedAt: sqlResult.arrivedAt,
-    arrivalStatus: !!sqlResult.arrivalStatus,
-    role: sqlResult.role,
-    relations: {
-      youToThem: sqlResult.youToThem ?? "not-friends",
-      themToYou: sqlResult.themToYou ?? "not-friends"
-    }
-  }
-}
+type DatabaseAttendeeWithRelation = DatabaseAttendee & UserToUserRelation
 
 const paginatedAttendeesResponse = (
   attendees: DatabaseAttendeeWithRelation[],
   limit: number,
   totalAttendeeCount: number
 ): PaginatedAttendeesResponse => {
-  const mappedAttendees = attendees.map(mapDatabaseAttendee)
-
-  const hasMoreAttendees = mappedAttendees.length > limit
+  const hasMoreAttendees = attendees.length > limit
 
   const nextPageUserIdCursor = hasMoreAttendees
-    ? mappedAttendees[limit - 1].id
+    ? attendees[limit - 1].id
     : "lastPage"
   const nextPageJoinDateCursor = hasMoreAttendees
-    ? mappedAttendees[limit - 1].joinTimestamp
+    ? attendees[limit - 1].joinTimestamp
     : null
   const nextPageArrivedAtCursor = hasMoreAttendees
-    ? mappedAttendees[limit - 1].arrivedAt
+    ? attendees[limit - 1].arrivedAt
     : null
 
-  let paginatedAttendees = []
-  paginatedAttendees = mappedAttendees.slice(0, limit)
-
+  const paginatedAttendees = attendees.slice(0, limit)
   const encondedNextPageCursor = encodeAttendeesListCursor({
     userId: nextPageUserIdCursor,
     joinDate: nextPageJoinDateCursor,
@@ -105,7 +81,7 @@ const getAttendeesCount = (
           );
     `,
     { eventId, userId }
-  )
+  ).flatMapFailure(() => success({ totalAttendeeCount: 0 }))
 
 // TODO: use index as cursor instead of userid+joindate
 const getAttendees = (
@@ -184,10 +160,10 @@ const getAttendeesByEventId = (
         limit
       ),
       getAttendeesCount(conn, eventId, userId)
-    ]).then((results) => {
+    ]).then(([{ value: attendees }, { value: { totalAttendeeCount } }]) => {
       return success({
-        attendees: results[0].value,
-        totalAttendeeCount: results[1].value
+        attendees,
+        totalAttendeeCount
       })
     })
   )
@@ -227,13 +203,7 @@ export const getAttendeesByEventIdRouter = (
           decodedValues.joinDate,
           decodedValues.arrivedAt,
           req.query.limit + 1 // Add 1 to handle checking last page
-        ).mapSuccess((results) => {
-          const attendees = results.attendees
-          const totalAttendeeCount =
-            results.totalAttendeeCount === "no-results"
-              ? 0
-              : results.totalAttendeeCount.totalAttendeeCount
-
+        ).mapSuccess(({ attendees, totalAttendeeCount }) => {
           return totalAttendeeCount === 0
             ? res
               .status(404)
