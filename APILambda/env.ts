@@ -34,5 +34,5 @@ export type ServerEnvironment = {
   SearchForPositionResultToPlacemark: (
     location: LocationCoordinate2D
   ) => Placemark | undefined
-  callGeocodingLambda: (latitude: number, longitude: number) => unknown
+  callGeocodingLambda: (latitude: number, longitude: number) => void
 }
