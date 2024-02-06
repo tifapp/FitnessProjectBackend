@@ -48,5 +48,5 @@ export type ServerEnvironment = CreateUserProfileEnvironment & SetArrivalStatusE
   SearchForPositionResultToPlacemark: (
     location: LocationCoordinate2D
   ) => Placemark
-  callGeocodingLambda: (latitude: number, longitude: number) => unknown
+  callGeocodingLambda: (latitude: number, longitude: number) => void
 }
