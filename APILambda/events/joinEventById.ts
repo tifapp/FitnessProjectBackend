@@ -5,6 +5,7 @@ import { ValidatedRouter } from "../validation.js"
 import { checkChatPermissionsTransaction } from "./getChatToken.js"
 import { getEventById } from "./getEventById.js"
 import { isUserNotBlocked } from "./sharedSQL.js"
+import { ATTENDEE } from "../shared/Role.js";
 
 const joinEventSchema = z.object({
   eventId: z.string()
@@ -18,7 +19,7 @@ const joinEvent = (conn: SQLExecutable, userId: string, eventId: number) => {
       )
       .flatMapSuccess((event) =>
         new Date() < event.endTimestamp // perform in sql?
-          ? addUserToAttendeeList(tx, userId, eventId).flatMapSuccess(
+          ? addUserToAttendeeList(tx, userId, eventId, ATTENDEE).flatMapSuccess(
             ({ rowsAffected }) =>
               rowsAffected > 0 ? success(201) : success(200)
           )
@@ -39,11 +40,12 @@ const joinEvent = (conn: SQLExecutable, userId: string, eventId: number) => {
 export const addUserToAttendeeList = (
   conn: SQLExecutable,
   userId: string,
-  eventId: number
+  eventId: number,
+  role: string
 ) =>
   conn.queryResult(
-    "INSERT IGNORE INTO eventAttendance (userId, eventId) VALUES (:userId, :eventId)",
-    { userId, eventId }
+    "INSERT IGNORE INTO eventAttendance (userId, eventId, role) VALUES (:userId, :eventId, :role)",
+    { userId, eventId, role }
   )
 
 /**

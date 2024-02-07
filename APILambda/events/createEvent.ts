@@ -4,6 +4,7 @@ import { ServerEnvironment } from "../env.js"
 import { ValidatedRouter } from "../validation.js"
 import { addUserToAttendeeList } from "./joinEventById.js"
 import { EventColorSchema } from "./models.js"
+import { HOST } from "../shared/Role.js";
 
 const CreateEventSchema = z
   .object({
@@ -88,7 +89,7 @@ export const createEventRouter = (
     (req, res) => {
       return conn.transaction(tx =>
         createEvent(tx, req.body, res.locals.selfId)
-          .flatMapSuccess(({ insertId }) => addUserToAttendeeList(tx, res.locals.selfId, parseInt(insertId)).mapSuccess(() => ({ insertId })))
+          .flatMapSuccess(({ insertId }) => addUserToAttendeeList(tx, res.locals.selfId, parseInt(insertId), HOST).mapSuccess(() => ({ insertId })))
       )
         .mapFailure((error) => res.status(500).json({ error }))
         .mapSuccess(({ insertId }) => res.status(201).json({ id: insertId }))

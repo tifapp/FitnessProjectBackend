@@ -24,7 +24,8 @@ export type DatabaseAttendee = {
   profileImageURL?: string
   handle: string
   arrivalStatus: boolean
-  arrivedAt: Date
+  arrivedAt: Date,
+  role: string
 }
 
 export type PaginatedAttendeesResponse = {
