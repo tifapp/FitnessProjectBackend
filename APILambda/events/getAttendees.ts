@@ -52,12 +52,11 @@ const mapDatabaseAttendee = (sqlResult: DatabaseAttendeeWithRelation) => {
 
 const paginatedAttendeesResponse = (
   attendees: DatabaseAttendeeWithRelation[],
-  hostAttendees: DatabaseAttendeeWithRelation[],
   limit: number,
   totalAttendeesCount: number
 ): PaginatedAttendeesResponse => {
   const mappedAttendees = attendees.map(mapDatabaseAttendee)
-  const mappedHostAttendees = hostAttendees.map(mapDatabaseAttendee)
+  //const mappedHostAttendees = hostAttendees.map(mapDatabaseAttendee)
 
   const hasMoreAttendees = mappedAttendees.length > limit
 
@@ -72,7 +71,7 @@ const paginatedAttendeesResponse = (
     : null
 
   let paginatedAttendees = []
-  paginatedAttendees = mappedHostAttendees.concat(mappedAttendees.slice(0, limit))
+  paginatedAttendees = mappedAttendees.slice(0, limit)
 
   const encondedNextPageCursor = encodeAttendeesListCursor({
     userId: nextPageUserIdCursor,
@@ -111,48 +110,6 @@ const getAttendeesCount = (
     { eventId, userId }
   )
 
-const getHostAttendees = (
-  conn: SQLExecutable,
-  eventId: number,
-  userId: string,
-  nextPageUserIdCursor: string,
-) =>
-  conn.queryResults<DatabaseAttendeeWithRelation>(
-    `SELECT 
-    u.id, 
-    u.profileImageURL, 
-    u.name, 
-    u.handle, 
-    MAX(ea.joinTimestamp) as joinTimestamp,
-    ua.arrivedAt,
-    ea.role,
-    MAX(CASE WHEN ur.fromUserId = :userId THEN ur.status END) AS youToThem,
-    MAX(CASE WHEN ur.toUserId = :userId THEN ur.status END) AS themToYou,
-    CASE WHEN ua.arrivedAt IS NOT NULL THEN true ELSE false END AS arrivalStatus
-    FROM user AS u 
-    INNER JOIN eventAttendance AS ea ON u.id = ea.userId 
-    INNER JOIN event AS e ON ea.eventId = e.id
-    LEFT JOIN userArrivals AS ua ON ua.userId = u.id
-    LEFT JOIN userRelations AS ur ON (ur.fromUserId = u.id AND ur.toUserId = :userId)
-                                  OR (ur.fromUserId = :userId AND ur.toUserId = u.id)
-    WHERE e.id = :eventId
-      AND ea.role = 'host'
-      AND :nextPageUserIdCursor = 'firstPage' 
-      AND (ua.longitude = e.longitude AND ua.latitude = e.latitude
-          OR ua.arrivedAt IS NULL)
-    GROUP BY u.id, ua.arrivedAt, u.profileImageURL, u.name, u.handle, ea.role
-    ORDER BY
-      COALESCE(ua.arrivedAt, '9999-12-31 23:59:59.999') ASC,
-      MAX(ea.joinTimestamp) ASC,
-      u.id ASC;
-      `,
-    {
-      eventId,
-      userId,
-      nextPageUserIdCursor
-    }
-  )
-
 // TODO: use index as cursor instead of userid+joindate
 const getAttendees = (
   conn: SQLExecutable,
@@ -187,11 +144,12 @@ const getAttendees = (
         OR (ua.arrivedAt IS NULL AND :nextPageArrivedAtCursor IS NULL AND ea.joinTimestamp > :nextPageJoinDateCursor)
         OR (ua.arrivedAt IS NULL AND :nextPageArrivedAtCursor IS NULL AND ea.joinTimestamp = :nextPageJoinDateCursor AND u.id > :nextPageUserIdCursor)
       )
-    AND ea.role <> 'host'
+    AND (ea.role <> 'host' OR :nextPageUserIdCursor = 'firstPage')
     AND (ua.longitude = e.longitude AND ua.latitude = e.latitude
       OR ua.arrivedAt IS NULL)
     GROUP BY u.id, ua.arrivedAt
     ORDER BY
+    CASE WHEN :nextPageUserIdCursor = 'firstPage' THEN CASE WHEN ea.role = 'host' THEN 0 ELSE 1 END ELSE 1 END,
     COALESCE(ua.arrivedAt, '9999-12-31 23:59:59.999') ASC,
     ea.joinTimestamp ASC,
     u.id ASC
@@ -227,13 +185,11 @@ const getAttendeesByEventId = (
         nextPageArrivedAtCursor,
         limit
       ),
-      getHostAttendees(conn, eventId, userId, nextPageUserIdCursor),
       getAttendeesCount(conn, eventId, userId)
     ]).then((results) => {
       return success({
         attendees: results[0].value,
-        hostAttendees: results[1].value,
-        totalAttendeesCount: results[2].value
+        totalAttendeesCount: results[1].value
       })
     })
   )
@@ -275,7 +231,6 @@ export const getAttendeesByEventIdRouter = (
           req.query.limit + 1 // Add 1 to handle checking last page
         ).mapSuccess((results) => {
           const attendees = results.attendees
-          const hostAttendees = results.hostAttendees
           const attendeesCount =
             results.totalAttendeesCount === "no-results"
               ? 0
@@ -287,7 +242,6 @@ export const getAttendeesByEventIdRouter = (
                 .send(
                   paginatedAttendeesResponse(
                     attendees,
-                    hostAttendees,
                     req.query.limit,
                     attendeesCount
                   )
@@ -297,7 +251,6 @@ export const getAttendeesByEventIdRouter = (
                 .send(
                   paginatedAttendeesResponse(
                     attendees,
-                    hostAttendees,
                     req.query.limit,
                     attendeesCount
                   )

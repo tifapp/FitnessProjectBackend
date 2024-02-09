@@ -173,13 +173,19 @@ describe("Testing for getting attendees list endpoint", () => {
     expect(resp).toMatchObject({
       status: 200,
       body: {
-        attendees: allAttendees
-          .slice(0, 3)
-          .map((attendee: DatabaseAttendee) => ({
-            id: attendee.id,
-            name: attendee.name
-          })),
-        nextPageCursor: getNextPageCursorResp(allAttendees, 2),
+        attendees: [
+          {
+            id: allAttendees[0].id,
+            name: allAttendees[0].name,
+            role: "host",
+          },
+          {
+            id: allAttendees[1].id,
+            name: allAttendees[1].name,
+            role: "attendee",
+          }
+        ],
+        nextPageCursor: getNextPageCursorResp(allAttendees, 1),
         attendeesCount: 4
       }
     })
@@ -208,7 +214,8 @@ describe("Testing for getting attendees list endpoint", () => {
         attendees: [
           {
             id: allAttendees[0].id,
-            name: allAttendees[0].name
+            name: allAttendees[0].name,
+            role: "host"
           }
         ],
         nextPageCursor: lastPageCursorResponse,
@@ -218,7 +225,7 @@ describe("Testing for getting attendees list endpoint", () => {
   })
 
   it("should return 200 after paginating middle of page", async () => {
-    const numOfAdditionalAttendees = 4
+    const numOfAdditionalAttendees = 3
     const allAttendeesResp = await getAllAttendeesListResponse(
       numOfAdditionalAttendees
     )
@@ -249,19 +256,20 @@ describe("Testing for getting attendees list endpoint", () => {
       status: 200,
       body: {
         attendees: allAttendees
-          .slice(3, 5)
+          .slice(2, 4)
           .map((attendee: DatabaseAttendee) => ({
             id: attendee.id,
-            name: attendee.name
+            name: attendee.name,
+            role: "attendee"
           })),
-        nextPageCursor: getNextPageCursorResp(allAttendees, 4),
-        attendeesCount: 6
+        nextPageCursor: getNextPageCursorResp(allAttendees, 3),
+        attendeesCount: 5
       }
     })
   })
 
   it("should return 200 after paginating the last page of attendees list", async () => {
-    const numOfAdditionalAttendees = 2
+    const numOfAdditionalAttendees = 1
     const allAttendeesResp = await getAllAttendeesListResponse(
       numOfAdditionalAttendees
     )
@@ -293,11 +301,12 @@ describe("Testing for getting attendees list endpoint", () => {
         attendees: [
           {
             id: allAttendees[allAttendees.length - 1].id,
-            name: allAttendees[allAttendees.length - 1].name
+            name: allAttendees[allAttendees.length - 1].name,
+            role: "attendee"
           }
         ],
         nextPageCursor: lastPageCursorResponse,
-        attendeesCount: 4
+        attendeesCount: 3
       }
     })
   })
@@ -334,14 +343,13 @@ describe("Testing for getting attendees list endpoint", () => {
     })
   })
 
-  it("check that attendees who arrived first are on top of the attendees list", async () => {
-    const numOfAdditionalAttendees = 3
+  it("check that attendees who arrived first or host are on top of the attendees list", async () => {
+    const numOfAdditionalAttendees = 2
     const allAttendeesResp = await getAllAttendeesListResponse(
       numOfAdditionalAttendees
     )
 
     const allAttendees = allAttendeesResp.body.attendees
-    console.log(allAttendees)
 
     allAttendeesResp.body.nextPageCursor = decodeAttendeesListCursor(
       allAttendeesResp.body.nextPageCursor
@@ -378,18 +386,10 @@ describe("Testing for getting attendees list endpoint", () => {
             arrivalStatus: true,
             role: "attendee",
             arrivedAt: allAttendees[1].arrivedAt
-          },
-          {
-            id: allAttendees[2].id,
-            name: allAttendees[2].name,
-            joinTimestamp: allAttendees[2].joinTimestamp,
-            arrivalStatus: true,
-            role: "attendee",
-            arrivedAt: allAttendees[2].arrivedAt
           }
         ],
-        nextPageCursor: getNextPageCursorResp(allAttendees, 2),
-        attendeesCount: 5
+        nextPageCursor: getNextPageCursorResp(allAttendees, 1),
+        attendeesCount: 4
       }
     })
 
@@ -414,63 +414,24 @@ describe("Testing for getting attendees list endpoint", () => {
       body: {
         attendees: [
           {
+            id: allAttendees[2].id,
+            joinTimestamp: allAttendees[2].joinTimestamp,
+            name: allAttendees[2].name,
+            arrivalStatus: true,
+            role: "attendee",
+            arrivedAt: allAttendees[2].arrivedAt
+          },
+          {
             id: allAttendees[3].id,
             joinTimestamp: allAttendees[3].joinTimestamp,
             name: allAttendees[3].name,
-            arrivalStatus: true,
-            role: "attendee",
-            arrivedAt: allAttendees[3].arrivedAt
-          },
-          {
-            id: allAttendees[4].id,
-            joinTimestamp: allAttendees[4].joinTimestamp,
-            name: allAttendees[4].name,
             arrivalStatus: false,
             role: "attendee",
-            arrivedAt: allAttendees[4].arrivedAt
+            arrivedAt: allAttendees[3].arrivedAt
           }
         ],
         nextPageCursor: lastPageCursorResponse,
-        attendeesCount: 5
-      }
-    })
-  })
-
-  it("should return 200 after getting host from attendees list", async () => {
-    const allAttendeesResp = await getAllAttendeesListResponse()
-
-    const firstPageCursorResp = encodeAttendeesListCursor()
-    let resp = await callGetAttendees(
-      attendeeTestToken,
-      eventTestId,
-      firstPageCursorResp,
-      paginationLimit
-    )
-
-    console.log(allAttendeesResp.body)
-
-    const allAttendees = allAttendeesResp.body.attendees
-    resp.body.nextPageCursor = decodeAttendeesListCursor(
-      resp.body.nextPageCursor
-    )
-
-    expect(resp).toMatchObject({
-      status: 200,
-      body: {
-        attendees: [
-          {
-            id: allAttendees[0].id,
-            name: allAttendees[0].name,
-            role: "host"
-          },
-          {
-            id: allAttendees[1].id,
-            name: allAttendees[1].name,
-            role: "attendee"
-          }
-        ],
-        nextPageCursor: lastPageCursorResponse,
-        attendeesCount: 2
+        attendeesCount: 4
       }
     })
   })
