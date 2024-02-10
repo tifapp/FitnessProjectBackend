@@ -30,7 +30,7 @@ export type DatabaseAttendee = {
 
 export type PaginatedAttendeesResponse = {
   nextPageCursor: string
-  attendeesCount: number
+  totalAttendeeCount: number
   attendees: DatabaseAttendee[]
 }
 

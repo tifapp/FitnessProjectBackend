@@ -146,7 +146,7 @@ describe("Testing for getting attendees list endpoint", () => {
       status: 404,
       body: {
         nextPageCursor: lastPageCursorResponse,
-        attendeesCount: 0,
+        totalAttendeeCount: 0,
         attendees: []
       }
     })
@@ -186,7 +186,7 @@ describe("Testing for getting attendees list endpoint", () => {
           }
         ],
         nextPageCursor: getNextPageCursorResp(allAttendees, 1),
-        attendeesCount: 4
+        totalAttendeeCount: 4
       }
     })
   })
@@ -219,7 +219,7 @@ describe("Testing for getting attendees list endpoint", () => {
           }
         ],
         nextPageCursor: lastPageCursorResponse,
-        attendeesCount: 1
+        totalAttendeeCount: 1
       }
     })
   })
@@ -263,7 +263,7 @@ describe("Testing for getting attendees list endpoint", () => {
             role: "attendee"
           })),
         nextPageCursor: getNextPageCursorResp(allAttendees, 3),
-        attendeesCount: 5
+        totalAttendeeCount: 5
       }
     })
   })
@@ -306,7 +306,7 @@ describe("Testing for getting attendees list endpoint", () => {
           }
         ],
         nextPageCursor: lastPageCursorResponse,
-        attendeesCount: 3
+        totalAttendeeCount: 3
       }
     })
   })
@@ -338,7 +338,7 @@ describe("Testing for getting attendees list endpoint", () => {
       body: {
         attendees: [],
         nextPageCursor: lastPageCursorResponse,
-        attendeesCount: 2
+        totalAttendeeCount: 2
       }
     })
   })
@@ -389,7 +389,7 @@ describe("Testing for getting attendees list endpoint", () => {
           }
         ],
         nextPageCursor: getNextPageCursorResp(allAttendees, 1),
-        attendeesCount: 4
+        totalAttendeeCount: 4
       }
     })
 
@@ -431,7 +431,7 @@ describe("Testing for getting attendees list endpoint", () => {
           }
         ],
         nextPageCursor: lastPageCursorResponse,
-        attendeesCount: 4
+        totalAttendeeCount: 4
       }
     })
   })

@@ -53,7 +53,7 @@ const mapDatabaseAttendee = (sqlResult: DatabaseAttendeeWithRelation) => {
 const paginatedAttendeesResponse = (
   attendees: DatabaseAttendeeWithRelation[],
   limit: number,
-  totalAttendeesCount: number
+  totalAttendeeCount: number
 ): PaginatedAttendeesResponse => {
   const mappedAttendees = attendees.map(mapDatabaseAttendee)
   //const mappedHostAttendees = hostAttendees.map(mapDatabaseAttendee)
@@ -81,7 +81,7 @@ const paginatedAttendeesResponse = (
 
   return {
     nextPageCursor: encondedNextPageCursor,
-    attendeesCount: totalAttendeesCount,
+    totalAttendeeCount: totalAttendeeCount,
     attendees: paginatedAttendees
   }
 }
@@ -91,9 +91,9 @@ const getAttendeesCount = (
   eventId: number,
   userId: string
 ) =>
-  conn.queryFirstResult<{ totalAttendeesCount: number }>(
+  conn.queryFirstResult<{ totalAttendeeCount: number }>(
     `SELECT 
-        COUNT(*) AS totalAttendeesCount
+        COUNT(*) AS totalAttendeeCount
         FROM 
             user AS u 
             INNER JOIN eventAttendance AS ea ON u.id = ea.userId 
@@ -189,7 +189,7 @@ const getAttendeesByEventId = (
     ]).then((results) => {
       return success({
         attendees: results[0].value,
-        totalAttendeesCount: results[1].value
+        totalAttendeeCount: results[1].value
       })
     })
   )
@@ -231,19 +231,19 @@ export const getAttendeesByEventIdRouter = (
           req.query.limit + 1 // Add 1 to handle checking last page
         ).mapSuccess((results) => {
           const attendees = results.attendees
-          const attendeesCount =
-            results.totalAttendeesCount === "no-results"
+          const totalAttendeeCount =
+            results.totalAttendeeCount === "no-results"
               ? 0
-              : results.totalAttendeesCount.totalAttendeesCount
+              : results.totalAttendeeCount.totalAttendeeCount
 
-          return attendeesCount === 0
+          return totalAttendeeCount === 0
             ? res
                 .status(404)
                 .send(
                   paginatedAttendeesResponse(
                     attendees,
                     req.query.limit,
-                    attendeesCount
+                    totalAttendeeCount
                   )
                 )
             : res
@@ -252,7 +252,7 @@ export const getAttendeesByEventIdRouter = (
                   paginatedAttendeesResponse(
                     attendees,
                     req.query.limit,
-                    attendeesCount
+                    totalAttendeeCount
                   )
                 )
         })
