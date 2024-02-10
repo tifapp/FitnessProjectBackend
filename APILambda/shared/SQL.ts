@@ -23,12 +23,20 @@ export type DatabaseAttendee = {
   joinTimestamp: Date
   profileImageURL?: string
   handle: string
+  arrivalStatus: boolean
+  arrivedAt: Date
 }
 
 export type PaginatedAttendeesResponse = {
   nextPageCursor: string
   attendeesCount: number
   attendees: DatabaseAttendee[]
+}
+
+export type AttendeesCursorResponse = {
+  userId: string,
+  joinDate: Date | null,
+  arrivedAt: Date | null
 }
 
 export type EventAttendee = {
