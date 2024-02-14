@@ -32,7 +32,13 @@ export const getEventById = (
     .queryFirstResult<DatabaseEvent>(
       `
     SELECT 
-      e.*, 
+      e.*,
+      L.name,
+      L.city, 
+      L.country, 
+      L.street, 
+      L.street_num, 
+      L.timeZone,
       ua.arrivedAt,
       CASE 
         WHEN ua.userId IS NOT NULL THEN "arrived"
@@ -44,6 +50,10 @@ export const getEventById = (
         userArrivals ua ON e.latitude = ua.latitude 
                         AND e.longitude = ua.longitude 
                         AND ua.userId = :userId
+    LEFT JOIN 
+        location L ON e.latitude = L.lat 
+                  AND e.longitude = L.lon
+
     WHERE 
         e.id = :eventId;
   `,
