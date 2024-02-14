@@ -12,6 +12,7 @@ import {
 import { createUserFlow } from "../test/userFlows/users.js"
 import { AttendeesCursorResponse, DatabaseAttendee } from "../shared/SQL.js"
 import { callSetArrival } from "../test/apiCallers/events.js"
+import { callBlockUser } from "../test/apiCallers/users.js"
 
 const eventLocation = { latitude: 50, longitude: 50 }
 const lastPageCursorResponse = {
@@ -22,6 +23,9 @@ const lastPageCursorResponse = {
 const paginationLimit = 2
 
 let attendeeTestToken: string
+let attendeeTestId: string
+let hostTestToken: string
+let hostTestId: string
 let eventTestId: number
 
 /**
@@ -30,15 +34,19 @@ let eventTestId: number
  * @returns {Promise<void>} A Promise that resolves after creating the event and obtaining attendee and event IDs.
  */
 const createEvent = async (): Promise<void> => {
-  const { attendeeToken, eventIds } = await createEventFlow([
-    {
-      ...eventLocation,
-      startTimestamp: dayjs().add(12, "hour").toDate(),
-      endTimestamp: dayjs().add(1, "year").toDate()
-    }
-  ])
+  const { attendeeToken, attendeeId, hostToken, hostId, eventIds } =
+    await createEventFlow([
+      {
+        ...eventLocation,
+        startTimestamp: dayjs().add(12, "hour").toDate(),
+        endTimestamp: dayjs().add(1, "year").toDate()
+      }
+    ])
 
   attendeeTestToken = attendeeToken
+  attendeeTestId = attendeeId
+  hostTestToken = hostToken
+  hostTestId = hostId
   eventTestId = eventIds[0]
 }
 
@@ -51,12 +59,27 @@ const createEvent = async (): Promise<void> => {
  */
 const getAllAttendeesListResponse = async (
   numOfAdditionalAttendees: number = 0,
+  numAttendeesBlockingViewer: number = 0,
+  numViewerBlockingAttendees: number = 0,
   limit: number = 5
 ) => {
+  let numAttendeesBlockingViewerCounter = 0
+  let numViewerBlockingAttendeesCounter = 0
   for (let i = 0; i < numOfAdditionalAttendees; i++) {
-    const { token: attendeeToken } = await createUserFlow()
+    const { token: attendeeToken, userId: attendeeUserId } =
+      await createUserFlow()
     await callJoinEvent(attendeeToken, eventTestId)
     await callSetArrival(attendeeToken, { coordinate: eventLocation })
+
+    if (numAttendeesBlockingViewerCounter < numAttendeesBlockingViewer) {
+      await callBlockUser(attendeeToken, attendeeTestId)
+      numAttendeesBlockingViewerCounter += 1
+    }
+
+    if (numViewerBlockingAttendeesCounter < numViewerBlockingAttendees) {
+      await callBlockUser(attendeeTestToken, attendeeUserId)
+      numViewerBlockingAttendeesCounter += 1
+    }
   }
 
   const firstPageCursorResp = encodeAttendeesListCursor()
@@ -99,6 +122,8 @@ describe("Testing for getting attendees list endpoint", () => {
     const limit = 0
     const resp = await getAllAttendeesListResponse(
       numOfAdditionalAttendees,
+      0,
+      0,
       limit
     )
 
@@ -115,6 +140,8 @@ describe("Testing for getting attendees list endpoint", () => {
     const limit = 51
     const resp = await getAllAttendeesListResponse(
       numOfAdditionalAttendees,
+      0,
+      0,
       limit
     )
 
@@ -177,12 +204,12 @@ describe("Testing for getting attendees list endpoint", () => {
           {
             id: allAttendees[0].id,
             name: allAttendees[0].name,
-            role: "host",
+            role: "host"
           },
           {
             id: allAttendees[1].id,
             name: allAttendees[1].name,
-            role: "attendee",
+            role: "attendee"
           }
         ],
         nextPageCursor: getNextPageCursorResp(allAttendees, 1),
@@ -433,6 +460,208 @@ describe("Testing for getting attendees list endpoint", () => {
         nextPageCursor: lastPageCursorResponse,
         totalAttendeeCount: 4
       }
+    })
+  })
+
+  it("should return total attendee count and attendees who did not block viewer", async () => {
+    const numOfAdditionalAttendees = 3
+    const numAttendeesBlockingViewer = 2
+    const numViewerBlockingAttendees = 0
+
+    const allAttendeesResp = await getAllAttendeesListResponse(
+      numOfAdditionalAttendees,
+      numAttendeesBlockingViewer,
+      numViewerBlockingAttendees
+    )
+
+    const allAttendees = allAttendeesResp.body.attendees
+
+    const firstPageCursorResp = encodeAttendeesListCursor()
+    let resp = await callGetAttendees(
+      attendeeTestToken,
+      eventTestId,
+      firstPageCursorResp,
+      paginationLimit
+    )
+
+    resp.body.nextPageCursor = decodeAttendeesListCursor(
+      resp.body.nextPageCursor
+    )
+
+    expect(resp).toMatchObject({
+      status: 200,
+      body: {
+        attendees: [
+          {
+            id: allAttendees[0].id,
+            joinTimestamp: allAttendees[0].joinTimestamp,
+            name: allAttendees[0].name,
+            arrivalStatus: false,
+            role: "host",
+            arrivedAt: allAttendees[0].arrivedAt,
+            relations: { youToThem: "not-friends", themToYou: "not-friends" }
+          },
+          {
+            id: allAttendees[1].id,
+            joinTimestamp: allAttendees[1].joinTimestamp,
+            name: allAttendees[1].name,
+            arrivalStatus: true,
+            role: "attendee",
+            arrivedAt: allAttendees[1].arrivedAt,
+            relations: { youToThem: "not-friends", themToYou: "not-friends" }
+          }
+        ],
+        nextPageCursor: getNextPageCursorResp(allAttendees, 1),
+        totalAttendeeCount: 3
+      }
+    })
+  })
+
+  it("should return 403 if host blocked viewing user", async () => {
+    await callBlockUser(hostTestToken, attendeeTestId)
+
+    const firstPageCursorResp = encodeAttendeesListCursor()
+    let resp = await callGetAttendees(
+      attendeeTestToken,
+      eventTestId,
+      firstPageCursorResp,
+      paginationLimit
+    )
+
+    expect(resp).toMatchObject({
+      status: 403
+    })
+  })
+
+  it("should hide attendees that block the viewer and the viewer blocks them", async () => {
+    const numOfAdditionalAttendees = 2
+    const numViewerBlockingAttendees = 2
+    const numAttendeesBlockingViewer = 2
+
+    const allAttendeesResp = await getAllAttendeesListResponse(
+      numOfAdditionalAttendees,
+      numAttendeesBlockingViewer,
+      numViewerBlockingAttendees
+    )
+
+    const allAttendees = allAttendeesResp.body.attendees
+
+    const firstPageCursorResp = encodeAttendeesListCursor()
+    let resp = await callGetAttendees(
+      attendeeTestToken,
+      eventTestId,
+      firstPageCursorResp,
+      paginationLimit
+    )
+
+    resp.body.nextPageCursor = decodeAttendeesListCursor(
+      resp.body.nextPageCursor
+    )
+
+    expect(resp).toMatchObject({
+      status: 200,
+      body: {
+        attendees: [
+          {
+            id: allAttendees[0].id,
+            joinTimestamp: allAttendees[0].joinTimestamp,
+            name: allAttendees[0].name,
+            arrivalStatus: false,
+            role: "host",
+            arrivedAt: allAttendees[0].arrivedAt,
+            relations: { youToThem: "not-friends", themToYou: "not-friends" }
+          },
+          {
+            id: allAttendees[1].id,
+            joinTimestamp: allAttendees[1].joinTimestamp,
+            name: allAttendees[1].name,
+            arrivalStatus: false,
+            role: "attendee",
+            arrivedAt: allAttendees[1].arrivedAt,
+            relations: { youToThem: "not-friends", themToYou: "not-friends" }
+          }
+        ],
+        nextPageCursor: lastPageCursorResponse,
+        totalAttendeeCount: 2
+      }
+    })
+  })
+
+  it("should check that blocked users and total attendees count are not hidden from attendees list \
+   when user blocks an attendee and the host", async () => {
+    await callBlockUser(attendeeTestToken, hostTestId)
+
+    const numOfAdditionalAttendees = 2
+    const numViewerBlockingAttendees = 1
+    const numAttendeesBlockingViewer = 0
+    const allAttendeesResp = await getAllAttendeesListResponse(
+      numOfAdditionalAttendees,
+      numAttendeesBlockingViewer,
+      numViewerBlockingAttendees
+    )
+
+    const allAttendees = allAttendeesResp.body.attendees
+    const firstPageCursorResp = encodeAttendeesListCursor()
+
+    let resp = await callGetAttendees(
+      attendeeTestToken,
+      eventTestId,
+      firstPageCursorResp,
+      paginationLimit
+    )
+
+    resp.body.nextPageCursor = decodeAttendeesListCursor(
+      resp.body.nextPageCursor
+    )
+
+    expect(resp).toMatchObject({
+      status: 200,
+      body: {
+        attendees: [
+          {
+            id: allAttendees[0].id,
+            joinTimestamp: allAttendees[0].joinTimestamp,
+            name: allAttendees[0].name,
+            arrivalStatus: false,
+            role: "host",
+            arrivedAt: allAttendees[0].arrivedAt,
+            relations: { youToThem: "blocked", themToYou: "not-friends" }
+          },
+          {
+            id: allAttendees[1].id,
+            joinTimestamp: allAttendees[1].joinTimestamp,
+            name: allAttendees[1].name,
+            arrivalStatus: true,
+            role: "attendee",
+            arrivedAt: allAttendees[1].arrivedAt,
+            relations: { youToThem: "blocked", themToYou: "not-friends" }
+          }
+        ],
+        nextPageCursor: getNextPageCursorResp(allAttendees, 1),
+        totalAttendeeCount: 4
+      }
+    })
+  })
+
+  it("should return 403 if trying to see attendees list when host and user block each other", async () => {
+    await callBlockUser(hostTestToken, attendeeTestId)
+    await callBlockUser(attendeeTestToken, hostTestId)
+
+    const firstPageCursorResp = encodeAttendeesListCursor()
+
+    let resp = await callGetAttendees(
+      attendeeTestToken,
+      eventTestId,
+      firstPageCursorResp,
+      paginationLimit
+    )
+
+    resp.body.nextPageCursor = decodeAttendeesListCursor(
+      resp.body.nextPageCursor
+    )
+
+    expect(resp).toMatchObject({
+      status: 403
     })
   })
 })

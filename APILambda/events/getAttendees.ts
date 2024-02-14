@@ -56,7 +56,6 @@ const paginatedAttendeesResponse = (
   totalAttendeeCount: number
 ): PaginatedAttendeesResponse => {
   const mappedAttendees = attendees.map(mapDatabaseAttendee)
-  //const mappedHostAttendees = hostAttendees.map(mapDatabaseAttendee)
 
   const hasMoreAttendees = mappedAttendees.length > limit
 
@@ -93,19 +92,19 @@ const getAttendeesCount = (
 ) =>
   conn.queryFirstResult<{ totalAttendeeCount: number }>(
     `SELECT 
-        COUNT(*) AS totalAttendeeCount
-        FROM 
-            user AS u 
-            INNER JOIN eventAttendance AS ea ON u.id = ea.userId 
-            INNER JOIN event AS e ON ea.eventId = e.id
-            LEFT JOIN userRelations AS ur ON (ur.fromUserId = u.id AND ur.toUserId = :userId)
-                                        OR (ur.fromUserId = :userId AND ur.toUserId = u.id)
-        WHERE 
-            e.id = :eventId
-            AND (
-                ur.status IS NULL 
-                OR (ur.status != 'blocked' AND ur.toUserId = :userId)
-        );
+      COUNT(*) AS totalAttendeeCount
+      FROM 
+          user AS u 
+          INNER JOIN eventAttendance AS ea ON u.id = ea.userId 
+          INNER JOIN event AS e ON ea.eventId = e.id
+          LEFT JOIN userRelations AS ur1 ON ur1.fromUserId = u.id AND ur1.toUserId = :userId
+          LEFT JOIN userRelations AS ur2 ON ur2.fromUserId = :userId AND ur2.toUserId = u.id
+      WHERE 
+          e.id = :eventId
+          AND (
+              (ur1.status IS NULL OR (ur1.status != 'blocked' AND ur1.toUserId = :userId))
+              OR (ur1.status = 'blocked' AND COALESCE(ur2.status, '') IS NULL)
+          );
     `,
     { eventId, userId }
   )
@@ -148,6 +147,7 @@ const getAttendees = (
     AND (ua.longitude = e.longitude AND ua.latitude = e.latitude
       OR ua.arrivedAt IS NULL)
     GROUP BY u.id, ua.arrivedAt
+    HAVING themToYou IS NULL OR MAX(CASE WHEN ur.toUserId = :userId THEN ur.status END) <> 'blocked' OR ea.role = 'host'
     ORDER BY
     CASE WHEN :nextPageUserIdCursor = 'firstPage' THEN CASE WHEN ea.role = 'host' THEN 0 ELSE 1 END ELSE 1 END,
     COALESCE(ua.arrivedAt, '9999-12-31 23:59:59.999') ASC,
@@ -246,6 +246,10 @@ export const getAttendeesByEventIdRouter = (
                     totalAttendeeCount
                   )
                 )
+            : attendees.length > 0 &&
+              attendees[0].role === "host" &&
+              attendees[0].themToYou === "blocked"
+            ? res.status(403).send()
             : res
                 .status(200)
                 .send(
