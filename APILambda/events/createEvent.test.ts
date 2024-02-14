@@ -3,19 +3,18 @@ import {
   addPlacemarkToDB,
   conn
 } from "TiFBackendUtils"
-import { callCreateEvent } from "../test/apiCallers/events.js"
+import { find } from "geo-tz"
+import { callCreateEvent, callGetEvent } from "../test/apiCallers/events.js"
+import { missingAddressTestLocation } from "../test/testApp.js"
 import { testEventInput } from "../test/testEvents.js"
 import { createUserFlow } from "../test/userFlows/users.js"
-import { missingAddressTestLocation } from "../test/testApp.js"
 
 describe("CreateEvent tests", () => {
-  beforeEach(() => {
-    jest.restoreAllMocks()
-  })
-
   it("should allow a user to create an event and add them to the attendee list", async () => {
     const { token, userId } = await createUserFlow()
     const createEventResponse = await callCreateEvent(token, testEventInput)
+    const timeZone = find(testEventInput.latitude, testEventInput.longitude)
+
     expect(createEventResponse).toMatchObject({
       status: 201,
       body: { id: expect.anything() }
@@ -38,6 +37,8 @@ describe("CreateEvent tests", () => {
       eventId: parseInt(createEventResponse.body.id),
       userId
     })
+    const resp = await callGetEvent(token, createEventResponse.body.id)
+    expect(resp.body.timeZone).toEqual(timeZone[0])
   })
 
   it("should not allow a user to create an event that ends in the past", async () => {
@@ -55,7 +56,7 @@ describe("CreateEvent tests", () => {
     const { token } = await createUserFlow()
 
     const createEventResponse = await callCreateEvent(token, {
-      ...testEvent,
+      ...testEventInput,
       latitude: missingAddressTestLocation.latitude,
       longitude: missingAddressTestLocation.longitude
     })
@@ -67,16 +68,16 @@ describe("CreateEvent tests", () => {
   })
 
   // Test that the create event still is successful if the placemark already exists
-  it("adds placemark in the location table if it does already exist", async () => {
+  it("create event still is successful if the placemark already exists", async () => {
     const { token } = await createUserFlow()
     const placemark = SearchForPositionResultToPlacemark({
-      latitude: testEvent.latitude,
-      longitude: testEvent.longitude
+      latitude: testEventInput.latitude,
+      longitude: testEventInput.longitude
     })
-
-    addPlacemarkToDB(conn, placemark)
+    const timeZone = find(testEventInput.latitude, testEventInput.longitude)[0]
+    addPlacemarkToDB(conn, placemark, timeZone)
     const event = await callCreateEvent(token, {
-      ...testEvent,
+      ...testEventInput,
       startTimestamp: new Date("2050-01-01"),
       endTimestamp: new Date("2050-01-02")
     })

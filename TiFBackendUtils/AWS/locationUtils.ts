@@ -66,11 +66,11 @@ export const checkExistingPlacemarkInDB = (
     .inverted()
     .withFailure("placemark-already-exists" as const)
 
-export const addPlacemarkToDB = (conn: SQLExecutable, place: Placemark) =>
+export const addPlacemarkToDB = (conn: SQLExecutable, place: Placemark, timeZone: string) =>
   conn.queryResults(
     `
-    INSERT INTO location (name, city, country, street, street_num, lat, lon)
-    VALUES (:name, :city, :country, :street, :street_num, :lat, :lon)
+    INSERT INTO location (name, city, country, street, street_num, lat, lon, timeZone)
+    VALUES (:name, :city, :country, :street, :street_num, :lat, :lon, :timeZone)
     `,
-    place
+    { timeZone, ...place }
   )
