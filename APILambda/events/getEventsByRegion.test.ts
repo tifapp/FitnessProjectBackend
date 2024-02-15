@@ -1,11 +1,12 @@
 import { conn } from "TiFBackendUtils"
 import dayjs from "dayjs"
-import { callBlockUser } from "../test/apiCallers/users.js"
 import { callGetEventsByRegion } from "../test/helpers/events.js"
 import { testEventInput } from "../test/testEvents.js"
 import { createEventFlow } from "../test/userFlows/events.js"
-import { getAttendeeCount, getAttendees } from "./getEventsByRegion.js"
 import { addPlacemarkToDB } from "./sharedSQL.js"
+import { conn } from "TiFBackendUtils"
+import { getAttendeeCount, getAttendees } from "./getEventsByRegion.js"
+import { callBlockUser } from "../test/apiCallers/users.js"
 
 let eventOwnerTestToken: string
 let attendeeTestToken: string
