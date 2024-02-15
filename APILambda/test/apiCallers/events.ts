@@ -79,3 +79,16 @@ export const callGetEventChatToken = async (
     .set("Authorization", bearerToken)
     .send()
 }
+
+export const callGetAttendees = async (
+  bearerToken: string,
+  eventId: number,
+  nextPage: string,
+  limit: number
+) => {
+  return await request(testApp)
+    .get(`/event/attendees/${eventId}`)
+    .query({ nextPage, limit })
+    .set("Authorization", bearerToken)
+    .send()
+}
