@@ -103,7 +103,6 @@ const getAttendeesCount = (
           e.id = :eventId
           AND (
               (ur1.status IS NULL OR (ur1.status != 'blocked' AND ur1.toUserId = :userId))
-              OR (ur1.status = 'blocked' AND COALESCE(ur2.status, '') IS NULL)
           );
     `,
     { eventId, userId }
