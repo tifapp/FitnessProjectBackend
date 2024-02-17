@@ -87,4 +87,31 @@ describe("CreateEvent tests", () => {
       body: { id: expect.anything() }
     })
   })
+
+  // Test that the create event still is successful if the location is on a border of two timezones
+  it("create event still is successful if the location is on a border of two timezones", async () => {
+    const { token } = await createUserFlow()
+
+    // Coordinates for the timezone border of ['Asia/Shanghai', 'Asia/Urumqi']
+    const placemark = SearchForPositionResultToPlacemark({
+      latitude: 43.839319,
+      longitude: 87.526148
+    })
+    const timeZone = find(43.839319, 87.526148)[0]
+    addPlacemarkToDB(conn, placemark, timeZone)
+    const event = await callCreateEvent(token, {
+      ...testEvent,
+      latitude: 43.839319,
+      longitude: 87.526148,
+      startTimestamp: new Date("2050-01-01"),
+      endTimestamp: new Date("2050-01-02")
+    })
+
+    expect(event).toMatchObject({
+      status: 201,
+      body: { id: expect.anything() }
+    })
+    const resp = await callGetEvent(token, event.body.id)
+    expect(resp.body.timeZone).toEqual(timeZone)
+  })
 })
