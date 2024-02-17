@@ -71,12 +71,16 @@ const getAllAttendeesListResponse = async (
     await callJoinEvent(attendeeToken, eventTestId)
     await callSetArrival(attendeeToken, { coordinate: eventLocation })
 
-    if (numAttendeesBlockingCurrentUserCounter < numAttendeesBlockingCurrentUser) {
+    if (
+      numAttendeesBlockingCurrentUserCounter < numAttendeesBlockingCurrentUser
+    ) {
       await callBlockUser(attendeeToken, currentAttendeeTestId)
       numAttendeesBlockingCurrentUserCounter += 1
     }
 
-    if (numAttendeesBlockedByCurrentUserCounter < numAttendeesBlockedByCurrentUser) {
+    if (
+      numAttendeesBlockedByCurrentUserCounter < numAttendeesBlockedByCurrentUser
+    ) {
       await callBlockUser(currentAttendeeTestToken, attendeeUserId)
       numAttendeesBlockedByCurrentUserCounter += 1
     }
@@ -587,8 +591,7 @@ describe("Testing for getting attendees list endpoint", () => {
     })
   })
 
-  it("should check that blocked users and total attendees count are not hidden from attendees list \
-   when user blocks an attendee and the host", async () => {
+  it("include blocked users and total attendees count when user blocks an attendee and the host", async () => {
     await callBlockUser(currentAttendeeTestToken, hostTestId)
 
     const numOfAdditionalAttendees = 2
