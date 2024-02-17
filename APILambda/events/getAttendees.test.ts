@@ -533,7 +533,8 @@ describe("Testing for getting attendees list endpoint", () => {
     )
 
     expect(resp).toMatchObject({
-      status: 403
+      status: 403,
+      body: { error: "blocked-by-host" }
     })
   })
 
@@ -664,7 +665,8 @@ describe("Testing for getting attendees list endpoint", () => {
     )
 
     expect(resp).toMatchObject({
-      status: 403
+      status: 403,
+      body: { error: "blocked-by-host" }
     })
   })
 })

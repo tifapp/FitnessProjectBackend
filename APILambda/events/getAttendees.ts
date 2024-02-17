@@ -97,12 +97,12 @@ const getAttendeesCount = (
           user AS u 
           INNER JOIN eventAttendance AS ea ON u.id = ea.userId 
           INNER JOIN event AS e ON ea.eventId = e.id
-          LEFT JOIN userRelations AS ur1 ON ur1.fromUserId = u.id AND ur1.toUserId = :userId
-          LEFT JOIN userRelations AS ur2 ON ur2.fromUserId = :userId AND ur2.toUserId = u.id
+          LEFT JOIN userRelations AS themToYouStatus ON themToYouStatus.fromUserId = u.id AND themToYouStatus.toUserId = :userId
+          LEFT JOIN userRelations AS youToThemStatus ON youToThemStatus.fromUserId = :userId AND youToThemStatus.toUserId = u.id
       WHERE 
           e.id = :eventId
           AND (
-              (ur1.status IS NULL OR (ur1.status != 'blocked' AND ur1.toUserId = :userId))
+              (themToYouStatus.status IS NULL OR (themToYouStatus.status != 'blocked' AND themToYouStatus.toUserId = :userId))
           );
     `,
     { eventId, userId }
@@ -248,7 +248,7 @@ export const getAttendeesByEventIdRouter = (
             : attendees.length > 0 &&
               attendees[0].role === "host" &&
               attendees[0].themToYou === "blocked"
-            ? res.status(403).send()
+            ? res.status(403).send({ error: "blocked-by-host" })
             : res
                 .status(200)
                 .send(
