@@ -84,5 +84,5 @@ describe("Leave event tests", () => {
     })
   })
 
-  // TODO: Test eventAttendance endpoint to check that the user is no longer there
+  // TODO: Test eventAttendance endpoint to check that the user is no longer on the eventAttendance list
 })
