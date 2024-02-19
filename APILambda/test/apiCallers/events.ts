@@ -2,6 +2,7 @@ import request from "supertest"
 import { SetArrivalStatusInput } from "../../events/arrivals/setArrivalStatus.js"
 import { SetDepartureInput } from "../../events/arrivals/setDeparture.js"
 import { CreateEventInput } from "../../events/createEvent.js"
+import { JoinEventInput } from "../../events/joinEventById.js"
 import { testApp } from "../testApp.js"
 
 export const callCreateEvent = async (
@@ -10,6 +11,17 @@ export const callCreateEvent = async (
 ) => {
   return await request(testApp)
     .post("/event")
+    .set("Authorization", bearerToken)
+    .send(req)
+}
+
+export const callJoinEventWithArrival = async (
+  bearerToken: string,
+  eventId: number,
+  req: JoinEventInput
+) => {
+  return await request(testApp)
+    .post(`/event/join/${eventId}`)
     .set("Authorization", bearerToken)
     .send(req)
 }
