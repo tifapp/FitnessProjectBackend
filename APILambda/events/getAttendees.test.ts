@@ -1,7 +1,6 @@
 import dayjs from "dayjs"
 import {
-  decodeAttendeesListCursor,
-  encodeAttendeesListCursor
+  decodeAttendeesListCursor, encodeAttendeesListCursor
 } from "../shared/Cursor.js"
 import { AttendeesCursorResponse, DatabaseAttendee } from "../shared/SQL.js"
 import {
@@ -33,12 +32,9 @@ const getAllAttendeesListResponse = async ({
 }) => {
   const { attendeesList: [{ token: attendeeToken }], eventIds: [eventTestId] } = await createEventFlow([{}], numOfAttendees)
 
-  // TODO: Use undefined cursor
-  const firstPageCursorResp = encodeAttendeesListCursor()
   const resp = await callGetAttendees(
     attendeeToken,
     eventTestId,
-    firstPageCursorResp,
     limit
   )
   return { resp, attendeeToken, eventTestId }
@@ -98,12 +94,10 @@ describe("Testing for getting attendees list endpoint", () => {
   it("should return 404 if attendee list is empty", async () => {
     const { token } = await createUserFlow()
 
-    const firstPageCursorResp = encodeAttendeesListCursor()
     const eventId = 9999
     const resp = await callGetAttendees(
       token,
       eventId,
-      firstPageCursorResp,
       paginationLimit
     )
 
@@ -126,11 +120,9 @@ describe("Testing for getting attendees list endpoint", () => {
       numOfAttendees: 2
     })
 
-    const firstPageCursorResp = encodeAttendeesListCursor()
     const resp = await callGetAttendees(
       attendeeToken,
       eventTestId,
-      firstPageCursorResp,
       paginationLimit
     )
 
@@ -157,11 +149,9 @@ describe("Testing for getting attendees list endpoint", () => {
     const { token } = await createUserFlow()
     const { host, eventIds: [eventId] } = await createEventFlow()
 
-    const firstPageCursorResp = encodeAttendeesListCursor()
     const resp = await callGetAttendees(
       token,
       eventId,
-      firstPageCursorResp,
       paginationLimit
     )
 
@@ -191,11 +181,9 @@ describe("Testing for getting attendees list endpoint", () => {
 
     const allAttendees = allAttendeesResp.body.attendees
 
-    const firstPageCursorResp = encodeAttendeesListCursor()
     let resp = await callGetAttendees(
       attendeeToken,
       eventTestId,
-      firstPageCursorResp,
       paginationLimit
     )
 
@@ -203,8 +191,8 @@ describe("Testing for getting attendees list endpoint", () => {
     resp = await callGetAttendees(
       attendeeToken,
       eventTestId,
-      middlePageCursorResp,
-      paginationLimit
+      paginationLimit,
+      middlePageCursorResp
     )
 
     resp.body.nextPageCursor = decodeAttendeesListCursor(
@@ -313,10 +301,11 @@ describe("Testing for getting attendees list endpoint", () => {
     )
 
     const firstPageCursorResp = encodeAttendeesListCursor()
+    const allAttendees = allAttendeesResp.body.attendees
+
     let resp = await callGetAttendees(
-      attendeeTestToken,
+      attendeeToken,
       eventTestId,
-      firstPageCursorResp,
       paginationLimit
     )
 
@@ -354,10 +343,10 @@ describe("Testing for getting attendees list endpoint", () => {
 
     const lastPageCursorResp = resp.body.nextPageCursor
     resp = await callGetAttendees(
-      attendeeTestToken,
+      attendeeToken,
       eventTestId,
-      lastPageCursorResp,
-      paginationLimit
+      paginationLimit,
+      lastPageCursorResp
     )
 
     resp.body.nextPageCursor = decodeAttendeesListCursor(
