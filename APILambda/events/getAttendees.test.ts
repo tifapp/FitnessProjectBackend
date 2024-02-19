@@ -1,19 +1,20 @@
+import { conn } from "TiFBackendUtils"
 import dayjs from "dayjs"
-import { createEventFlow } from "../test/userFlows/events.js"
-import {
-  callGetAttendees,
-  callJoinEvent,
-  callLeaveEvent
-} from "../test/apiCallers/events.js"
 import {
   decodeAttendeesListCursor,
   encodeAttendeesListCursor
 } from "../shared/Cursor.js"
-import { createUserFlow } from "../test/userFlows/users.js"
-import { AttendeesCursorResponse, DatabaseAttendee } from "../shared/SQL.js"
-import { callSetArrival } from "../test/apiCallers/events.js"
+import { AttendeesCursorResponse } from "../shared/SQL.js"
+import {
+  callGetAttendees, callSetArrival
+} from "../test/apiCallers/events.js"
+import { testEventInput } from "../test/testEvents.js"
+import { createEventFlow } from "../test/userFlows/events.js"
+import { TestUser, createUserFlow } from "../test/userFlows/users.js"
+import { createEvent } from "./createEvent.js"
 
 const eventLocation = { latitude: 50, longitude: 50 }
+// TODO: should have a universal "lastpagecursor" value
 const lastPageCursorResponse = {
   userId: "lastPage",
   joinDate: null,
@@ -21,85 +22,55 @@ const lastPageCursorResponse = {
 }
 const paginationLimit = 2
 
-let attendeeTestToken: string
-let eventTestId: number
-
-/**
- * Create a new event with a specified location and time range.
- *
- * @returns {Promise<void>} A Promise that resolves after creating the event and obtaining attendee and event IDs.
- */
-const createEvent = async (): Promise<void> => {
-  const { attendeeToken, eventIds } = await createEventFlow([
-    {
-      ...eventLocation,
-      startTimestamp: dayjs().add(12, "hour").toDate(),
-      endTimestamp: dayjs().add(1, "year").toDate()
-    }
-  ])
-
-  attendeeTestToken = attendeeToken
-  eventTestId = eventIds[0]
-}
-
 /**
  * Retrieve a response containing a list of attendees for a given event.
  *
- * @param {number} numOfAdditionalAttendees - The number of additional attendees to simulate for testing purposes (default: 0).
+ * @param {number} numOfAttendees - The number of additional attendees to simulate for testing purposes (default: 0).
  * @param {number} limit - The maximum number of attendees to include in the response (default: 5).
  * @returns {Promise<request.Response>} A Promise that resolves with the response containing the list of attendees.
  */
-const getAllAttendeesListResponse = async (
-  numOfAdditionalAttendees: number = 0,
-  limit: number = 5
-) => {
-  for (let i = 0; i < numOfAdditionalAttendees; i++) {
-    const { token: attendeeToken } = await createUserFlow()
-    await callJoinEvent(attendeeToken, eventTestId)
-    await callSetArrival(attendeeToken, { coordinate: eventLocation })
-  }
+const getAttendeesListResponse = async ({
+  numOfAttendees = 1
+}: {
+  numOfAttendees?: number,
+}) => {
+  const { attendeesList, eventIds: [testEventId] } = await createEventFlow([{ ...eventLocation }], numOfAttendees)
 
-  const firstPageCursorResp = encodeAttendeesListCursor()
-  const resp = await callGetAttendees(
-    attendeeTestToken,
-    eventTestId,
-    firstPageCursorResp,
-    limit
-  )
-  return resp
+  return { attendeeToken: attendeesList?.[0]?.token, attendeesList, testEventId }
 }
 
 /**
  * Function to retrieve the next page cursor response based on the provided attendee information.
  *
- * @param {Array} allAttendees - An array containing information about all attendees.
+ * @param {Array} testAttendees - An array containing information about all attendees.
  * @param {number} index - The index indicating the position of the attendee for which the response is generated.
  * @returns {AttendeesCursorResponse} - An object representing the next page cursor response with userId, joinDate, and arrivedAt properties.
  */
 const getNextPageCursorResp = (
-  allAttendees: Array<DatabaseAttendee>,
+  testAttendees: Array<TestUser>,
   index: number
 ): AttendeesCursorResponse => {
   return {
-    userId: allAttendees[index].id,
-    joinDate: allAttendees[index].joinTimestamp
-      ? dayjs(allAttendees[index].joinTimestamp).toDate()
+    userId: testAttendees[index].userId,
+    joinDate: index >= testAttendees.length
+      ? expect.any(Date)
       : null,
-    arrivedAt: allAttendees[index].arrivedAt
-      ? dayjs(allAttendees[index].arrivedAt).toDate()
+    arrivedAt: index >= testAttendees.length
+      ? expect.any(Date)
       : null
   }
 }
 
 describe("Testing for getting attendees list endpoint", () => {
-  beforeEach(createEvent)
-
   it("should return 400 if limit is less than one", async () => {
-    const numOfAdditionalAttendees = 0
-    const limit = 0
-    const resp = await getAllAttendeesListResponse(
-      numOfAdditionalAttendees,
-      limit
+    const { attendeeToken, testEventId } = await getAttendeesListResponse({
+      numOfAttendees: 1
+    })
+
+    const resp = await callGetAttendees(
+      attendeeToken,
+      testEventId,
+      0
     )
 
     expect(resp).toMatchObject({
@@ -111,11 +82,14 @@ describe("Testing for getting attendees list endpoint", () => {
   })
 
   it("should return 400 if limit is greater than fifty", async () => {
-    const numOfAdditionalAttendees = 0
-    const limit = 51
-    const resp = await getAllAttendeesListResponse(
-      numOfAdditionalAttendees,
-      limit
+    const { attendeeToken, testEventId } = await getAttendeesListResponse({
+      numOfAttendees: 1
+    })
+
+    const resp = await callGetAttendees(
+      attendeeToken,
+      testEventId,
+      51
     )
 
     expect(resp).toMatchObject({
@@ -127,14 +101,41 @@ describe("Testing for getting attendees list endpoint", () => {
   })
 
   it("should return 404 if attendee list is empty", async () => {
+    const { token, userId } = await createUserFlow()
+
+    const { value: { insertId } } = await createEvent(
+      conn,
+      {
+        ...testEventInput,
+        startTimestamp: dayjs().add(12, "hour").toDate(),
+        endTimestamp: dayjs().add(24, "hour").toDate()
+      },
+      userId
+    )
+
+    const resp = await callGetAttendees(
+      token,
+      Number(insertId),
+      paginationLimit
+    )
+
+    expect(resp).toMatchObject({
+      status: 404,
+      body: {
+        nextPageCursor: encodeAttendeesListCursor(lastPageCursorResponse),
+        attendeesCount: 0,
+        attendees: []
+      }
+    })
+  })
+
+  it("should return 404 if event doesn't exist", async () => {
     const { token } = await createUserFlow()
 
-    const firstPageCursorResp = encodeAttendeesListCursor()
     const eventId = 9999
     const resp = await callGetAttendees(
       token,
       eventId,
-      firstPageCursorResp,
       paginationLimit
     )
 
@@ -153,51 +154,45 @@ describe("Testing for getting attendees list endpoint", () => {
   })
 
   it("should return 200 after paginating the first page of attendees list", async () => {
-    const numOfAdditionalAttendees = 1
-    const allAttendeesResp = await getAllAttendeesListResponse(
-      numOfAdditionalAttendees
-    )
-    const allAttendees = allAttendeesResp.body.attendees
+    const { attendeesList, attendeeToken, testEventId } = await getAttendeesListResponse({
+      numOfAttendees: 2
+    })
 
-    const firstPageCursorResp = encodeAttendeesListCursor()
     const resp = await callGetAttendees(
-      attendeeTestToken,
-      eventTestId,
-      firstPageCursorResp,
+      attendeeToken,
+      testEventId,
       paginationLimit
     )
 
     resp.body.nextPageCursor = decodeAttendeesListCursor(
       resp.body.nextPageCursor
     )
+
     expect(resp).toMatchObject({
       status: 200,
       body: {
-        attendees: allAttendees
+        attendees: attendeesList
           .slice(0, 2)
-          .map((attendee: DatabaseAttendee) => ({
-            id: attendee.id,
-            name: attendee.name
+          .map(({ userId: id, name }) => ({
+            id,
+            name
           })),
-        nextPageCursor: getNextPageCursorResp(allAttendees, 1),
+        nextPageCursor: getNextPageCursorResp(attendeesList, 1),
         attendeesCount: 3
       }
     })
   })
 
   it("should return 200 after paginating first page with one attendee", async () => {
-    await callLeaveEvent(attendeeTestToken, eventTestId)
-    const allAttendeesResp = await getAllAttendeesListResponse()
+    const { token } = await createUserFlow()
+    const { host, eventIds: [eventId] } = await createEventFlow()
 
-    const firstPageCursorResp = encodeAttendeesListCursor()
-    let resp = await callGetAttendees(
-      attendeeTestToken,
-      eventTestId,
-      firstPageCursorResp,
+    const resp = await callGetAttendees(
+      token,
+      eventId,
       paginationLimit
     )
 
-    const allAttendees = allAttendeesResp.body.attendees
     resp.body.nextPageCursor = decodeAttendeesListCursor(
       resp.body.nextPageCursor
     )
@@ -207,8 +202,8 @@ describe("Testing for getting attendees list endpoint", () => {
       body: {
         attendees: [
           {
-            id: allAttendees[0].id,
-            name: allAttendees[0].name
+            id: host.userId,
+            name: host.name
           }
         ],
         nextPageCursor: lastPageCursorResponse,
@@ -218,27 +213,22 @@ describe("Testing for getting attendees list endpoint", () => {
   })
 
   it("should return 200 after paginating middle of page", async () => {
-    const numOfAdditionalAttendees = 3
-    const allAttendeesResp = await getAllAttendeesListResponse(
-      numOfAdditionalAttendees
-    )
+    const { attendeesList, attendeeToken, testEventId } = await getAttendeesListResponse({
+      numOfAttendees: 4
+    })
 
-    const allAttendees = allAttendeesResp.body.attendees
-
-    const firstPageCursorResp = encodeAttendeesListCursor()
     let resp = await callGetAttendees(
-      attendeeTestToken,
-      eventTestId,
-      firstPageCursorResp,
+      attendeeToken,
+      testEventId,
       paginationLimit
     )
 
     const middlePageCursorResp = resp.body.nextPageCursor
     resp = await callGetAttendees(
-      attendeeTestToken,
-      eventTestId,
-      middlePageCursorResp,
-      paginationLimit
+      attendeeToken,
+      testEventId,
+      paginationLimit,
+      middlePageCursorResp
     )
 
     resp.body.nextPageCursor = decodeAttendeesListCursor(
@@ -248,40 +238,36 @@ describe("Testing for getting attendees list endpoint", () => {
     expect(resp).toMatchObject({
       status: 200,
       body: {
-        attendees: allAttendees
+        attendees: attendeesList
           .slice(2, 4)
-          .map((attendee: DatabaseAttendee) => ({
-            id: attendee.id,
-            name: attendee.name
+          .map(({ userId: id, name }) => ({
+            id,
+            name
           })),
-        nextPageCursor: getNextPageCursorResp(allAttendees, 3),
+        nextPageCursor: getNextPageCursorResp(attendeesList, 3),
         attendeesCount: 5
       }
     })
   })
 
   it("should return 200 after paginating the last page of attendees list", async () => {
-    const numOfAdditionalAttendees = 1
-    const allAttendeesResp = await getAllAttendeesListResponse(
-      numOfAdditionalAttendees
-    )
-    const allAttendees = allAttendeesResp.body.attendees
+    const { attendeesList, attendeeToken, testEventId } = await getAttendeesListResponse({
+      numOfAttendees: 2
+    })
 
-    const firstPageCursorResp = encodeAttendeesListCursor()
     let resp = await callGetAttendees(
-      attendeeTestToken,
-      eventTestId,
-      firstPageCursorResp,
+      attendeeToken,
+      testEventId,
       paginationLimit
     )
 
     const lastPageCursorResp = resp.body.nextPageCursor
 
     resp = await callGetAttendees(
-      attendeeTestToken,
-      eventTestId,
-      lastPageCursorResp,
-      paginationLimit
+      attendeeToken,
+      testEventId,
+      paginationLimit,
+      lastPageCursorResp
     )
 
     resp.body.nextPageCursor = decodeAttendeesListCursor(
@@ -293,8 +279,8 @@ describe("Testing for getting attendees list endpoint", () => {
       body: {
         attendees: [
           {
-            id: allAttendees[allAttendees.length - 1].id,
-            name: allAttendees[allAttendees.length - 1].name
+            id: attendeesList[attendeesList.length - 1].userId,
+            name: attendeesList[attendeesList.length - 1].name
           }
         ],
         nextPageCursor: lastPageCursorResponse,
@@ -304,21 +290,23 @@ describe("Testing for getting attendees list endpoint", () => {
   })
 
   it("should return 200 if going past last page of attendees list", async () => {
-    const firstPageCursorResp = encodeAttendeesListCursor()
+    const { attendeeToken, testEventId } = await getAttendeesListResponse({
+      numOfAttendees: 2
+    })
+
     let resp = await callGetAttendees(
-      attendeeTestToken,
-      eventTestId,
-      firstPageCursorResp,
+      attendeeToken,
+      testEventId,
       paginationLimit
     )
 
     const lastPageCursorResp = resp.body.nextPageCursor
 
     resp = await callGetAttendees(
-      attendeeTestToken,
-      eventTestId,
-      lastPageCursorResp,
-      paginationLimit
+      attendeeToken,
+      testEventId,
+      paginationLimit,
+      lastPageCursorResp
     )
 
     resp.body.nextPageCursor = decodeAttendeesListCursor(
@@ -336,22 +324,16 @@ describe("Testing for getting attendees list endpoint", () => {
   })
 
   it("check that attendees who arrived first are on top of the attendees list", async () => {
-    const numOfAdditionalAttendees = 2
-    const allAttendeesResp = await getAllAttendeesListResponse(
-      numOfAdditionalAttendees
-    )
-    
-    const allAttendees = allAttendeesResp.body.attendees
-
-    allAttendeesResp.body.nextPageCursor = decodeAttendeesListCursor(
-      allAttendeesResp.body.nextPageCursor
+    const { attendeeToken, attendeesList, testEventId } = await getAttendeesListResponse(
+      { numOfAttendees: 3 }
     )
 
-    const firstPageCursorResp = encodeAttendeesListCursor()
+    await callSetArrival(attendeesList[0].token, { coordinate: eventLocation })
+    await callSetArrival(attendeesList[1].token, { coordinate: eventLocation })
+
     let resp = await callGetAttendees(
-      attendeeTestToken,
-      eventTestId,
-      firstPageCursorResp,
+      attendeeToken,
+      testEventId,
       paginationLimit
     )
 
@@ -364,21 +346,21 @@ describe("Testing for getting attendees list endpoint", () => {
       body: {
         attendees: [
           {
-            id: allAttendees[0].id,
-            name: allAttendees[0].name,
-            joinTimestamp: allAttendees[0].joinTimestamp,
+            id: attendeesList[0].userId,
+            name: attendeesList[0].name,
+            joinTimestamp: expect.any(Date),
             arrivalStatus: true,
-            arrivedAt: allAttendees[0].arrivedAt
+            arrivedAt: expect.any(Date)
           },
           {
-            id: allAttendees[1].id,
-            name: allAttendees[1].name,
-            joinTimestamp: allAttendees[1].joinTimestamp,
+            id: attendeesList[1].userId,
+            name: attendeesList[1].name,
+            joinTimestamp: expect.any(Date),
             arrivalStatus: true,
-            arrivedAt: allAttendees[1].arrivedAt
+            arrivedAt: expect.any(Date)
           }
         ],
-        nextPageCursor: getNextPageCursorResp(allAttendees, 1),
+        nextPageCursor: getNextPageCursorResp(attendeesList, 1),
         attendeesCount: 4
       }
     })
@@ -389,10 +371,10 @@ describe("Testing for getting attendees list endpoint", () => {
 
     const lastPageCursorResp = resp.body.nextPageCursor
     resp = await callGetAttendees(
-      attendeeTestToken,
-      eventTestId,
-      lastPageCursorResp,
-      paginationLimit
+      attendeeToken,
+      testEventId,
+      paginationLimit,
+      lastPageCursorResp
     )
 
     resp.body.nextPageCursor = decodeAttendeesListCursor(
@@ -404,18 +386,18 @@ describe("Testing for getting attendees list endpoint", () => {
       body: {
         attendees: [
           {
-            id: allAttendees[2].id,
-            joinTimestamp: allAttendees[2].joinTimestamp,
-            name: allAttendees[2].name,
+            id: attendeesList[2].userId,
+            joinTimestamp: expect.any(Date),
+            name: attendeesList[2].name,
             arrivalStatus: false,
-            arrivedAt: allAttendees[2].arrivedAt
+            arrivedAt: undefined
           },
           {
-            id: allAttendees[3].id,
-            joinTimestamp: allAttendees[3].joinTimestamp,
-            name: allAttendees[3].name,
+            id: attendeesList[3].userId,
+            joinTimestamp: expect.any(Date),
+            name: attendeesList[3].name,
             arrivalStatus: false,
-            arrivedAt: allAttendees[3].arrivedAt
+            arrivedAt: undefined
           }
         ],
         nextPageCursor: lastPageCursorResponse,

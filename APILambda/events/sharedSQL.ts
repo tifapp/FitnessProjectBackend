@@ -28,8 +28,8 @@ export const isUserNotBlocked = (
 export const addPlacemarkToDB = (place: Placemark) =>
   conn.queryResults(
     `
-    INSERT INTO location (name, city, country, street, street_num, lat, lon)
-    VALUES (:name, :city, :country, :street, :street_num, :lat, :lon)
+    INSERT INTO location (name, city, country, street, street_num, lat, lon, timeZone)
+    VALUES (:name, :city, :country, :street, :street_num, :lat, :lon, :timeZone)
     `,
     place
   )

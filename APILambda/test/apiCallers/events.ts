@@ -95,8 +95,8 @@ export const callGetEventChatToken = async (
 export const callGetAttendees = async (
   bearerToken: string,
   eventId: number,
-  nextPage: string,
-  limit: number
+  limit: number,
+  nextPage?: string
 ) => {
   return await request(testApp)
     .get(`/event/attendees/${eventId}`)
