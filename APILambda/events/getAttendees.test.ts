@@ -4,6 +4,7 @@ import {
   decodeAttendeesListCursor,
   encodeAttendeesListCursor
 } from "../shared/Cursor.js"
+import { callBlockUser } from "../test/apiCallers/users.js"
 import { AttendeesCursorResponse } from "../shared/SQL.js"
 import {
   callGetAttendees, callSetArrival
@@ -29,6 +30,7 @@ const paginationLimit = 2
  * @param {number} limit - The maximum number of attendees to include in the response (default: 5).
  * @returns {Promise<request.Response>} A Promise that resolves with the response containing the list of attendees.
  */
+
 const getAttendeesListResponse = async ({
   numOfAttendees = 1
 }: {
@@ -415,6 +417,209 @@ describe("Testing for getting attendees list endpoint", () => {
         nextPageCursor: lastPageCursorResponse,
         totalAttendeeCount: 4
       }
+    })
+  })
+
+  it("should return total attendee count and attendees, exluding ones that blocked current user", async () => {
+    const numOfAdditionalAttendees = 3
+    const numAttendeesBlockingCurrentUser = 2
+    const numAttendeesBlockedByCurrentUser = 0
+
+    const allAttendeesResp = await getAllAttendeesListResponse(
+      numOfAdditionalAttendees,
+      numAttendeesBlockingCurrentUser,
+      numAttendeesBlockedByCurrentUser
+    )
+
+    const allAttendees = allAttendeesResp.body.attendees
+
+    const firstPageCursorResp = encodeAttendeesListCursor()
+    let resp = await callGetAttendees(
+      currentAttendeeTestToken,
+      eventTestId,
+      firstPageCursorResp,
+      paginationLimit
+    )
+
+    resp.body.nextPageCursor = decodeAttendeesListCursor(
+      resp.body.nextPageCursor
+    )
+
+    expect(resp).toMatchObject({
+      status: 200,
+      body: {
+        attendees: [
+          {
+            id: allAttendees[0].id,
+            joinTimestamp: allAttendees[0].joinTimestamp,
+            name: allAttendees[0].name,
+            arrivalStatus: false,
+            role: "host",
+            arrivedAt: allAttendees[0].arrivedAt,
+            relations: { youToThem: "not-friends", themToYou: "not-friends" }
+          },
+          {
+            id: allAttendees[1].id,
+            joinTimestamp: allAttendees[1].joinTimestamp,
+            name: allAttendees[1].name,
+            arrivalStatus: true,
+            role: "attendee",
+            arrivedAt: allAttendees[1].arrivedAt,
+            relations: { youToThem: "not-friends", themToYou: "not-friends" }
+          }
+        ],
+        nextPageCursor: getNextPageCursorResp(allAttendees, 1),
+        totalAttendeeCount: 3
+      }
+    })
+  })
+
+  it("should return 403 if host blocked current user", async () => {
+    await callBlockUser(hostTestToken, currentAttendeeTestId)
+
+    const firstPageCursorResp = encodeAttendeesListCursor()
+    let resp = await callGetAttendees(
+      currentAttendeeTestToken,
+      eventTestId,
+      firstPageCursorResp,
+      paginationLimit
+    )
+
+    expect(resp).toMatchObject({
+      status: 403,
+      body: { error: "blocked-by-host" }
+    })
+  })
+
+  it("should hide attendees who block the current user and the current user blocks them", async () => {
+    const numOfAdditionalAttendees = 2
+    const numAttendeesBlockedByCurrentUser = 2
+    const numAttendeesBlockingCurrentUser = 2
+
+    const allAttendeesResp = await getAllAttendeesListResponse(
+      numOfAdditionalAttendees,
+      numAttendeesBlockingCurrentUser,
+      numAttendeesBlockedByCurrentUser
+    )
+
+    const allAttendees = allAttendeesResp.body.attendees
+
+    const firstPageCursorResp = encodeAttendeesListCursor()
+    let resp = await callGetAttendees(
+      currentAttendeeTestToken,
+      eventTestId,
+      firstPageCursorResp,
+      paginationLimit
+    )
+
+    resp.body.nextPageCursor = decodeAttendeesListCursor(
+      resp.body.nextPageCursor
+    )
+
+    expect(resp).toMatchObject({
+      status: 200,
+      body: {
+        attendees: [
+          {
+            id: allAttendees[0].id,
+            joinTimestamp: allAttendees[0].joinTimestamp,
+            name: allAttendees[0].name,
+            arrivalStatus: false,
+            role: "host",
+            arrivedAt: allAttendees[0].arrivedAt,
+            relations: { youToThem: "not-friends", themToYou: "not-friends" }
+          },
+          {
+            id: allAttendees[1].id,
+            joinTimestamp: allAttendees[1].joinTimestamp,
+            name: allAttendees[1].name,
+            arrivalStatus: false,
+            role: "attendee",
+            arrivedAt: allAttendees[1].arrivedAt,
+            relations: { youToThem: "not-friends", themToYou: "not-friends" }
+          }
+        ],
+        nextPageCursor: lastPageCursorResponse,
+        totalAttendeeCount: 2
+      }
+    })
+  })
+
+  it("include blocked users and total attendees count when user blocks an attendee and the host", async () => {
+    await callBlockUser(currentAttendeeTestToken, hostTestId)
+
+    const numOfAdditionalAttendees = 2
+    const numAttendeesBlockedByCurrentUser = 1
+    const numAttendeesBlockingCurrentUser = 0
+    const allAttendeesResp = await getAllAttendeesListResponse(
+      numOfAdditionalAttendees,
+      numAttendeesBlockingCurrentUser,
+      numAttendeesBlockedByCurrentUser
+    )
+
+    const allAttendees = allAttendeesResp.body.attendees
+    const firstPageCursorResp = encodeAttendeesListCursor()
+
+    let resp = await callGetAttendees(
+      currentAttendeeTestToken,
+      eventTestId,
+      firstPageCursorResp,
+      paginationLimit
+    )
+
+    resp.body.nextPageCursor = decodeAttendeesListCursor(
+      resp.body.nextPageCursor
+    )
+
+    expect(resp).toMatchObject({
+      status: 200,
+      body: {
+        attendees: [
+          {
+            id: allAttendees[0].id,
+            joinTimestamp: allAttendees[0].joinTimestamp,
+            name: allAttendees[0].name,
+            arrivalStatus: false,
+            role: "host",
+            arrivedAt: allAttendees[0].arrivedAt,
+            relations: { youToThem: "blocked", themToYou: "not-friends" }
+          },
+          {
+            id: allAttendees[1].id,
+            joinTimestamp: allAttendees[1].joinTimestamp,
+            name: allAttendees[1].name,
+            arrivalStatus: true,
+            role: "attendee",
+            arrivedAt: allAttendees[1].arrivedAt,
+            relations: { youToThem: "blocked", themToYou: "not-friends" }
+          }
+        ],
+        nextPageCursor: getNextPageCursorResp(allAttendees, 1),
+        totalAttendeeCount: 4
+      }
+    })
+  })
+
+  it("should return 403 if trying to see attendees list when host and user block each other", async () => {
+    await callBlockUser(hostTestToken, currentAttendeeTestId)
+    await callBlockUser(currentAttendeeTestToken, hostTestId)
+
+    const firstPageCursorResp = encodeAttendeesListCursor()
+
+    let resp = await callGetAttendees(
+      currentAttendeeTestToken,
+      eventTestId,
+      firstPageCursorResp,
+      paginationLimit
+    )
+
+    resp.body.nextPageCursor = decodeAttendeesListCursor(
+      resp.body.nextPageCursor
+    )
+
+    expect(resp).toMatchObject({
+      status: 403,
+      body: { error: "blocked-by-host" }
     })
   })
 })
