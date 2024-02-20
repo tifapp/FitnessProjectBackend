@@ -147,7 +147,7 @@ describe("Testing for getting attendees list endpoint", () => {
       status: 404,
       body: {
         nextPageCursor: lastPageCursorResponse,
-        attendeesCount: 0,
+        totalAttendeeCount: 0,
         attendees: []
       }
     })
@@ -171,14 +171,20 @@ describe("Testing for getting attendees list endpoint", () => {
     expect(resp).toMatchObject({
       status: 200,
       body: {
-        attendees: attendeesList
-          .slice(0, 2)
-          .map(({ userId: id, name }) => ({
-            id,
-            name
-          })),
+        attendees: [
+          {
+            id: attendeesList[0].id,
+            name: attendeesList[0].name,
+            role: "host",
+          },
+          {
+            id: attendeesList[1].id,
+            name: attendeesList[1].name,
+            role: "attendee",
+          }
+        ],
         nextPageCursor: getNextPageCursorResp(attendeesList, 1),
-        attendeesCount: 3
+        totalAttendeeCount: 4
       }
     })
   })
@@ -202,12 +208,13 @@ describe("Testing for getting attendees list endpoint", () => {
       body: {
         attendees: [
           {
-            id: host.userId,
-            name: host.name
+            id: host.id,
+            name: host.name,
+            role: "host"
           }
         ],
         nextPageCursor: lastPageCursorResponse,
-        attendeesCount: 1
+        totalAttendeeCount: 1
       }
     })
   })
@@ -241,11 +248,12 @@ describe("Testing for getting attendees list endpoint", () => {
         attendees: attendeesList
           .slice(2, 4)
           .map(({ userId: id, name }) => ({
-            id,
-            name
+            id: attendee.id,
+            name: attendee.name,
+            role: "attendee"
           })),
         nextPageCursor: getNextPageCursorResp(attendeesList, 3),
-        attendeesCount: 5
+        totalAttendeeCount: 5
       }
     })
   })
@@ -262,7 +270,6 @@ describe("Testing for getting attendees list endpoint", () => {
     )
 
     const lastPageCursorResp = resp.body.nextPageCursor
-
     resp = await callGetAttendees(
       attendeeToken,
       testEventId,
@@ -281,10 +288,11 @@ describe("Testing for getting attendees list endpoint", () => {
           {
             id: attendeesList[attendeesList.length - 1].userId,
             name: attendeesList[attendeesList.length - 1].name
+            role: "attendee"
           }
         ],
         nextPageCursor: lastPageCursorResponse,
-        attendeesCount: 3
+        totalAttendeeCount: 3
       }
     })
   })
@@ -318,12 +326,12 @@ describe("Testing for getting attendees list endpoint", () => {
       body: {
         attendees: [],
         nextPageCursor: lastPageCursorResponse,
-        attendeesCount: 2
+        totalAttendeeCount: 2
       }
     })
   })
 
-  it("check that attendees who arrived first are on top of the attendees list", async () => {
+  it("check that host and attendees who arrived first are on top of the attendees list", async () => {
     const { attendeeToken, attendeesList, testEventId } = await getAttendeesListResponse(
       { numOfAttendees: 3 }
     )
@@ -350,14 +358,16 @@ describe("Testing for getting attendees list endpoint", () => {
             name: attendeesList[0].name,
             joinTimestamp: expect.any(Date),
             arrivalStatus: true,
-            arrivedAt: expect.any(Date)
+            arrivedAt: expect.any(Date),
+            role: "host",
           },
           {
             id: attendeesList[1].userId,
             name: attendeesList[1].name,
             joinTimestamp: expect.any(Date),
             arrivalStatus: true,
-            arrivedAt: expect.any(Date)
+            arrivedAt: expect.any(Date),
+            role: "attendee",
           }
         ],
         nextPageCursor: getNextPageCursorResp(attendeesList, 1),
@@ -389,6 +399,7 @@ describe("Testing for getting attendees list endpoint", () => {
             id: attendeesList[2].userId,
             joinTimestamp: expect.any(Date),
             name: attendeesList[2].name,
+            role: "attendee",
             arrivalStatus: false,
             arrivedAt: undefined
           },
@@ -397,11 +408,12 @@ describe("Testing for getting attendees list endpoint", () => {
             joinTimestamp: expect.any(Date),
             name: attendeesList[3].name,
             arrivalStatus: false,
+            role: "attendee",
             arrivedAt: undefined
           }
         ],
         nextPageCursor: lastPageCursorResponse,
-        attendeesCount: 4
+        totalAttendeeCount: 4
       }
     })
   })

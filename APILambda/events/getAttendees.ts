@@ -41,6 +41,7 @@ const mapDatabaseAttendee = (sqlResult: DatabaseAttendeeWithRelation) => {
     handle: sqlResult.handle,
     arrivedAt: sqlResult.arrivedAt,
     arrivalStatus: !!sqlResult.arrivalStatus,
+    role: sqlResult.role,
     relations: {
       youToThem: sqlResult.youToThem ?? "not-friends",
       themToYou: sqlResult.themToYou ?? "not-friends"
@@ -51,9 +52,10 @@ const mapDatabaseAttendee = (sqlResult: DatabaseAttendeeWithRelation) => {
 const paginatedAttendeesResponse = (
   attendees: DatabaseAttendeeWithRelation[],
   limit: number,
-  totalAttendeesCount: number
+  totalAttendeeCount: number
 ): PaginatedAttendeesResponse => {
   const mappedAttendees = attendees.map(mapDatabaseAttendee)
+  //const mappedHostAttendees = hostAttendees.map(mapDatabaseAttendee)
 
   const hasMoreAttendees = mappedAttendees.length > limit
 
@@ -67,7 +69,9 @@ const paginatedAttendeesResponse = (
     ? mappedAttendees[limit - 1].arrivedAt
     : null
 
-  const paginatedAttendees = mappedAttendees.slice(0, limit)
+  let paginatedAttendees = []
+  paginatedAttendees = mappedAttendees.slice(0, limit)
+
   const encondedNextPageCursor = encodeAttendeesListCursor({
     userId: nextPageUserIdCursor,
     joinDate: nextPageJoinDateCursor,
@@ -76,7 +80,7 @@ const paginatedAttendeesResponse = (
 
   return {
     nextPageCursor: encondedNextPageCursor,
-    attendeesCount: totalAttendeesCount,
+    totalAttendeeCount: totalAttendeeCount,
     attendees: paginatedAttendees
   }
 }
@@ -86,22 +90,22 @@ const getAttendeesCount = (
   eventId: number,
   userId: string
 ) =>
-  conn.queryFirstResult<{ totalAttendeesCount: number }>(
+  conn.queryFirstResult<{ totalAttendeeCount: number }>(
     `SELECT 
-      COUNT(*) AS totalAttendeesCount
-      FROM 
-          user AS u 
-          INNER JOIN eventAttendance AS ea ON u.id = ea.userId 
-          INNER JOIN event AS e ON ea.eventId = e.id
-          LEFT JOIN userRelations AS ur ON (ur.fromUserId = u.id AND ur.toUserId = :userId)
-                                      OR (ur.fromUserId = :userId AND ur.toUserId = u.id)
-      WHERE 
-          e.id = :eventId
-          AND (
-              ur.status IS NULL 
-              OR (ur.status != 'blocked' AND ur.toUserId = :userId)
-      );
-  `,
+        COUNT(*) AS totalAttendeeCount
+        FROM 
+            user AS u 
+            INNER JOIN eventAttendance AS ea ON u.id = ea.userId 
+            INNER JOIN event AS e ON ea.eventId = e.id
+            LEFT JOIN userRelations AS ur ON (ur.fromUserId = u.id AND ur.toUserId = :userId)
+                                        OR (ur.fromUserId = :userId AND ur.toUserId = u.id)
+        WHERE 
+            e.id = :eventId
+            AND (
+                ur.status IS NULL 
+                OR (ur.status != 'blocked' AND ur.toUserId = :userId)
+        );
+    `,
     { eventId, userId }
   )
 
@@ -117,37 +121,47 @@ const getAttendees = (
 ) =>
   conn.queryResults<DatabaseAttendeeWithRelation>(
     `SELECT 
-        u.id, 
-        u.profileImageURL, 
-        u.name, 
-        u.handle, 
-        ea.joinTimestamp,
-        ua.arrivedAt,
-        MAX(CASE WHEN ur.fromUserId = :userId THEN ur.status END) AS youToThem,
-        MAX(CASE WHEN ur.toUserId = :userId THEN ur.status END) AS themToYou,
-        CASE WHEN ua.arrivedAt IS NOT NULL THEN true ELSE false END AS arrivalStatus
-        FROM user AS u 
-        INNER JOIN eventAttendance AS ea ON u.id = ea.userId 
-        INNER JOIN event AS e ON ea.eventId = e.id
-        LEFT JOIN userArrivals AS ua ON ua.userId = u.id
-        LEFT JOIN userRelations AS ur ON (ur.fromUserId = u.id AND ur.toUserId = :userId)
-                                    OR (ur.fromUserId = :userId AND ur.toUserId = u.id)
-        WHERE e.id = :eventId
-        AND (:nextPageUserIdCursor = 'firstPage' 
-          OR (ua.arrivedAt > :nextPageArrivedAtCursor OR (ua.arrivedAt IS NULL AND :nextPageArrivedAtCursor IS NOT NULL))
-            OR (ua.arrivedAt IS NULL AND :nextPageArrivedAtCursor IS NULL AND ea.joinTimestamp > :nextPageJoinDateCursor)
-            OR (ua.arrivedAt IS NULL AND :nextPageArrivedAtCursor IS NULL AND ea.joinTimestamp = :nextPageJoinDateCursor AND u.id > :nextPageUserIdCursor)
-          )
-        AND (ua.longitude = e.longitude AND ua.latitude = e.latitude
-          OR ua.arrivedAt IS NULL)
-        GROUP BY u.id, ua.arrivedAt
-        ORDER BY
-        COALESCE(ua.arrivedAt, '9999-12-31 23:59:59.999') ASC,
-        ea.joinTimestamp ASC,
-        u.id ASC
-        LIMIT :limit;
+    u.id, 
+    u.profileImageURL, 
+    u.name, 
+    u.handle, 
+    ea.joinTimestamp,
+    ua.arrivedAt,
+    ea.role,
+    MAX(CASE WHEN ur.fromUserId = :userId THEN ur.status END) AS youToThem,
+    MAX(CASE WHEN ur.toUserId = :userId THEN ur.status END) AS themToYou,
+    CASE WHEN ua.arrivedAt IS NOT NULL THEN true ELSE false END AS arrivalStatus
+    FROM user AS u 
+    INNER JOIN eventAttendance AS ea ON u.id = ea.userId 
+    INNER JOIN event AS e ON ea.eventId = e.id
+    LEFT JOIN userArrivals AS ua ON ua.userId = u.id
+    LEFT JOIN userRelations AS ur ON (ur.fromUserId = u.id AND ur.toUserId = :userId)
+                                OR (ur.fromUserId = :userId AND ur.toUserId = u.id)
+    WHERE e.id = :eventId
+    AND (:nextPageUserIdCursor = 'firstPage' 
+      OR (ua.arrivedAt > :nextPageArrivedAtCursor OR (ua.arrivedAt IS NULL AND :nextPageArrivedAtCursor IS NOT NULL))
+        OR (ua.arrivedAt IS NULL AND :nextPageArrivedAtCursor IS NULL AND ea.joinTimestamp > :nextPageJoinDateCursor)
+        OR (ua.arrivedAt IS NULL AND :nextPageArrivedAtCursor IS NULL AND ea.joinTimestamp = :nextPageJoinDateCursor AND u.id > :nextPageUserIdCursor)
+      )
+    AND (ea.role <> 'host' OR :nextPageUserIdCursor = 'firstPage')
+    AND (ua.longitude = e.longitude AND ua.latitude = e.latitude
+      OR ua.arrivedAt IS NULL)
+    GROUP BY u.id, ua.arrivedAt
+    ORDER BY
+    CASE WHEN :nextPageUserIdCursor = 'firstPage' THEN CASE WHEN ea.role = 'host' THEN 0 ELSE 1 END ELSE 1 END,
+    COALESCE(ua.arrivedAt, '9999-12-31 23:59:59.999') ASC,
+    ea.joinTimestamp ASC,
+    u.id ASC
+    LIMIT :limit;
   `,
-    { eventId, userId, nextPageUserIdCursor, nextPageJoinDateCursor, nextPageArrivedAtCursor, limit }
+    {
+      eventId,
+      userId,
+      nextPageUserIdCursor,
+      nextPageJoinDateCursor,
+      nextPageArrivedAtCursor,
+      limit
+    }
   )
 
 const getAttendeesByEventId = (
@@ -174,7 +188,7 @@ const getAttendeesByEventId = (
     ]).then((results) => {
       return success({
         attendees: results[0].value,
-        totalAttendeesCount: results[1].value
+        totalAttendeeCount: results[1].value
       })
     })
   )
@@ -195,7 +209,9 @@ export const getAttendeesByEventIdRouter = (
       querySchema: CursorRequestSchema
     },
     (req, res) => {
-      const { userId, joinDate, arrivedAt } = decodeAttendeesListCursor(req.query.nextPage)
+      const { userId, joinDate, arrivedAt } = decodeAttendeesListCursor(
+        req.query.nextPage
+      )
 
       const decodedValues = DecodedCursorValidationSchema.parse({
         userId,
@@ -214,19 +230,19 @@ export const getAttendeesByEventIdRouter = (
           req.query.limit + 1 // Add 1 to handle checking last page
         ).mapSuccess((results) => {
           const attendees = results.attendees
-          const attendeesCount =
-            results.totalAttendeesCount === "no-results"
+          const totalAttendeeCount =
+            results.totalAttendeeCount === "no-results"
               ? 0
-              : results.totalAttendeesCount.totalAttendeesCount
-        
-          return attendeesCount === 0
+              : results.totalAttendeeCount.totalAttendeeCount
+
+          return totalAttendeeCount === 0
             ? res
               .status(404)
               .send(
                 paginatedAttendeesResponse(
                   attendees,
                   req.query.limit,
-                  attendeesCount
+                  totalAttendeeCount
                 )
               )
             : res
@@ -235,7 +251,7 @@ export const getAttendeesByEventIdRouter = (
                 paginatedAttendeesResponse(
                   attendees,
                   req.query.limit,
-                  attendeesCount
+                  totalAttendeeCount
                 )
               )
         })

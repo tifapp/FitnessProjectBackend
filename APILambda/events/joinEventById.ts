@@ -7,6 +7,7 @@ import { insertArrival } from "./arrivals/setArrivalStatus.js"
 import { checkChatPermissionsTransaction } from "./getChatToken.js"
 import { getEventById } from "./getEventById.js"
 import { isUserNotBlocked } from "./sharedSQL.js"
+import { ATTENDEE } from "../shared/Role.js";
 
 const joinEventParamsSchema = z.object({
   eventId: z.string()
@@ -38,7 +39,7 @@ const joinEvent = (conn: SQLExecutable, userId: string, eventId: number, coordin
               ).mapSuccess(() => ({ isArrived: true }))
               : success(({ isArrived: false })))
               .flatMapSuccess(({ isArrived }) =>
-                addUserToAttendeeList(tx, userId, eventId)
+                addUserToAttendeeList(tx, userId, eventId, ATTENDEE)
                   .flatMapSuccess(
                     ({ rowsAffected }) =>
                       rowsAffected > 0 ? success({ status: 201 }) : success({ status: 200 })
@@ -63,11 +64,12 @@ const joinEvent = (conn: SQLExecutable, userId: string, eventId: number, coordin
 export const addUserToAttendeeList = (
   conn: SQLExecutable,
   userId: string,
-  eventId: number
+  eventId: number,
+  role: string
 ) =>
   conn.queryResult(
-    "INSERT IGNORE INTO eventAttendance (userId, eventId) VALUES (:userId, :eventId)",
-    { userId, eventId }
+    "INSERT IGNORE INTO eventAttendance (userId, eventId, role) VALUES (:userId, :eventId, :role)",
+    { userId, eventId, role }
   )
 
 /**
