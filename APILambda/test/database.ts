@@ -2,7 +2,7 @@ import { conn } from "TiFBackendUtils"
 import { fail } from "assert"
 
 export const resetDB = async () => {
-  await Promise.all([
+  await Promise.allSettled([
     conn.queryResults("DELETE FROM eventAttendance"),
     conn.queryResults("DELETE FROM location"),
     conn.queryResults("DELETE FROM pushTokens"),
@@ -12,7 +12,7 @@ export const resetDB = async () => {
     conn.queryResults("DELETE FROM location")
   ])
   await conn.queryResults("DELETE FROM event")
-  conn.queryResults("DELETE FROM user")
+  await conn.queryResults("DELETE FROM user")
 }
 
 /**

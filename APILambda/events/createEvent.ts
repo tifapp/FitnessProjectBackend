@@ -14,8 +14,6 @@ import { ValidatedRouter } from "../validation.js"
 import { addUserToAttendeeList } from "./joinEventById.js"
 import { EventColorSchema } from "./models.js"
 
-let insertIdForEvent: string
-
 const CreateEventSchema = z
   .object({
     description: z.string().max(500),
@@ -93,7 +91,6 @@ export const addPlacemarkForEvent = (
   SearchClosestAddressToCoordinates: ServerEnvironment["SearchClosestAddressToCoordinates"],
   callGeocodingLambda: ServerEnvironment["callGeocodingLambda"]
 ) => {
-  insertIdForEvent = insertId
   return checkExistingPlacemarkInDB(conn, {
     longitude: eventLongitude,
     latitude: eventLatitude
@@ -132,26 +129,25 @@ export const createEventRouter = (
       return conn
         .transaction((tx) =>
           createEvent(tx, req.body, res.locals.selfId)
-            .flatMapSuccess(({ insertId }) => {
-              return addPlacemarkForEvent(
-                insertId,
-                req.body.latitude,
-                req.body.longitude,
-                environment.SearchClosestAddressToCoordinates,
-                environment.callGeocodingLambda
-              )
-            })
-            .flatMapSuccess(() =>
+            .flatMapSuccess(({ insertId }) =>
               addUserToAttendeeList(
                 tx,
                 res.locals.selfId,
-                parseInt(insertIdForEvent),
+                parseInt(insertId),
                 HOST
-              )
+              ).flatMapSuccess(() =>
+                addPlacemarkForEvent(
+                  insertId,
+                  req.body.latitude,
+                  req.body.longitude,
+                  environment.SearchClosestAddressToCoordinates,
+                  environment.callGeocodingLambda
+                )
+              ).mapSuccess(() => ({ insertId }))
             )
         )
         .mapFailure((error) => res.status(500).json({ error }))
-        .mapSuccess(() => res.status(201).json({ id: insertIdForEvent }))
+        .mapSuccess(({ insertId }) => res.status(201).json({ id: insertId }))
     }
   )
 }

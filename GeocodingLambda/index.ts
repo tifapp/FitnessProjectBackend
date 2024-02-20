@@ -4,6 +4,7 @@
 
 import {
   LocationCoordinate2D,
+  Placemark,
   Result,
   Retryable,
   SearchClosestAddressToCoordinates,
@@ -37,7 +38,7 @@ export const handler: any = exponentialFunctionBackoff<
           longitude: event.coordinate.longitude
         }).then(placemark => success(placemark))
       ))
-    .flatMapSuccess((placemark) => {
+    .flatMapSuccess((placemark: Placemark) => {
       const timeZone = getTimeZone(event.coordinate)[0]
       return addPlacemarkToDB(conn, placemark, timeZone)
     })
