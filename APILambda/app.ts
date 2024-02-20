@@ -4,6 +4,7 @@ import { getUpcomingEventsByRegionRouter } from "./events/arrivals/getUpcomingEv
 import { setArrivalStatusRouter } from "./events/arrivals/setArrivalStatus.js"
 import { setDepartureRouter } from "./events/arrivals/setDeparture.js"
 import { createEventRouter } from "./events/createEvent.js"
+import { getAttendeesByEventIdRouter } from "./events/getAttendees.js"
 import { getChatTokenRouter } from "./events/getChatToken.js"
 import { getEventByIdRouter } from "./events/getEventById.js"
 import { getEventsByRegionRouter } from "./events/getEventsByRegion.js"
@@ -22,7 +23,6 @@ import { updateUserSettingsRouter } from "./user/settings/updateUserSettings.js"
 import { createUnblockUserRouter } from "./user/unblockUser.js"
 import { updateUserProfileRouter } from "./user/updateUserProfile.js"
 import { createValidatedRouter } from "./validation.js"
-import { getAttendeesByEventIdRouter } from "./events/getAttendees.js"
 
 /**
  * Creates an application instance.
@@ -37,6 +37,7 @@ export const createApp = () => {
   return app
 }
 
+// instead of here, should be aggregated in the jest suite
 export const addBenchmarking = (app: Application) => {
   app.use((req, res, next) => {
     const start = Date.now()

@@ -1,11 +1,10 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 // keys must be regex
 export default {
-  preset: "ts-jest/presets/js-with-ts-esm",
   testEnvironment: "node",
   clearMocks: true,
   transform: {
-    "^.+\\.ts?$": "ts-jest"
+    "^.+\\.ts?$": ["esbuild-jest"]
   },
   transformIgnorePatterns: [
     "/node_modules/(?!(@planetscale|node-fetch|data-uri-to-buffer|fetch-blob|formdata-polyfill))"
@@ -15,7 +14,16 @@ export default {
     "^(\\.{1,2}/.*)\\.js$": "$1"
   },
   globalSetup: "./test/jestSetup.ts",
-  globalTeardown: "./test/jestTeardown.ts",
-  testTimeout: 30000,
-  setupFilesAfterEnv: ["./test/setupHooks.ts"]
+  // globalTeardown: "./test/jestTeardown.ts",
+  testTimeout: 20000,
+  setupFilesAfterEnv: ["./test/setupHooks.ts"],
+  watchPlugins: [
+    "jest-watch-typeahead/filename",
+    "jest-watch-typeahead/testname",
+    [
+      "jest-watch-suspend", {
+        "suspend-on-start": true
+      }
+    ]
+  ]
 }
