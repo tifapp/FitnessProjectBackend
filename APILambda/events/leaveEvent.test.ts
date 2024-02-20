@@ -7,7 +7,7 @@ describe("Leave event tests", () => {
   const eventLocation = { latitude: 50, longitude: 50 }
 
   it("should return 204 if user leaves the event", async () => {
-    const { attendeesList: [attendee], eventIds } = await createEventFlow([
+    const { attendeesList: [attendee], eventIds: [eventId] } = await createEventFlow([
       {
         ...eventLocation,
         startTimestamp: dayjs().add(12, "hour").toDate(),
@@ -15,7 +15,7 @@ describe("Leave event tests", () => {
       }
     ], 1)
 
-    const resp = await callLeaveEvent(attendee.token, eventIds[0])
+    const resp = await callLeaveEvent(attendee.token, eventId)
 
     expect(resp).toMatchObject({
       status: 204
@@ -23,7 +23,7 @@ describe("Leave event tests", () => {
   })
 
   it("should return 400 if host leaves own event and co-host does not exist", async () => {
-    const { host, eventIds } = await createEventFlow([
+    const { host, eventIds: [eventId] } = await createEventFlow([
       {
         ...eventLocation,
         startTimestamp: dayjs().add(12, "hour").toDate(),
@@ -31,7 +31,7 @@ describe("Leave event tests", () => {
       }
     ], 1)
 
-    const resp = await callLeaveEvent(host.token, eventIds[0])
+    const resp = await callLeaveEvent(host.token, eventId)
 
     expect(resp).toMatchObject({
       status: 400,

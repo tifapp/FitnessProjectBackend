@@ -43,12 +43,9 @@ export const getEventById = (
         userArrivals ua ON ViewEvents.latitude = ua.latitude
           AND ViewEvents.longitude = ua.longitude
           AND ua.userId = :userId
-      WHERE endTimestamp > NOW()
-        AND (relationHostToUser IS NULL OR relationHostToUser <> 'blocked')
-        AND (relationUserToHost IS NULL OR relationUserToHost <> 'blocked')
-        AND id = :eventId
-  `,
-      { eventId, userId }
+      WHERE id = :eventId
+      `,
+      { eventId, userId } // how to handle ended events?
     )
     .withFailure("event-not-found" as const)
 

@@ -15,25 +15,15 @@ export const callCreateEvent = async (
     .send(req)
 }
 
-export const callJoinEventWithArrival = async (
+export const callJoinEvent = async (
   bearerToken: string,
   eventId: number,
-  req: JoinEventInput
+  req?: JoinEventInput
 ) => {
   return await request(testApp)
     .post(`/event/join/${eventId}`)
     .set("Authorization", bearerToken)
     .send(req)
-}
-
-export const callJoinEvent = async (
-  bearerToken: string,
-  eventId: number
-) => {
-  return await request(testApp)
-    .post(`/event/join/${eventId}`)
-    .set("Authorization", bearerToken)
-    .send()
 }
 
 export const callLeaveEvent = async (

@@ -1,13 +1,13 @@
 import { LocationCoordinate2D, LocationCoordinates2DSchema, SQLExecutable, conn, failure, success } from "TiFBackendUtils"
 import { z } from "zod"
 import { ServerEnvironment } from "../env.js"
+import { ATTENDEE } from "../shared/Role.js"
 import { ValidatedRouter } from "../validation.js"
 import { getUpcomingEventsByRegion } from "./arrivals/getUpcomingEvents.js"
 import { insertArrival } from "./arrivals/setArrivalStatus.js"
 import { checkChatPermissionsTransaction } from "./getChatToken.js"
 import { getEventById } from "./getEventById.js"
 import { isUserNotBlocked } from "./sharedSQL.js"
-import { ATTENDEE } from "../shared/Role.js";
 
 const joinEventParamsSchema = z.object({
   eventId: z.string()
