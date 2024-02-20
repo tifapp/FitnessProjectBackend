@@ -24,4 +24,5 @@ export interface Placemark {
   street: string
   street_num: string // camelCase
   unit_number: string // camelCase
+  timeZone: string
 }

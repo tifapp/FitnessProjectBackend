@@ -1,10 +1,8 @@
 /* eslint-disable import/extensions */ // todo: allow ts imports here
-import dotenv from "dotenv"
 import { TestUser, TestUserInput } from "../global"
 import { createCognitoAuthToken } from "./createCognitoUsers"
 import { createMockAuthToken } from "./createMockUsers"
-
-dotenv.config()
+import { testEnvVars } from "./testEnv"
 
 const setGlobalVariables = async ({ createUser, maxUsers }: {createUser: (user?: TestUserInput) => Promise<TestUser>, maxUsers: number}) => {
   global.registerUser = createUser
@@ -17,7 +15,7 @@ const setGlobalVariables = async ({ createUser, maxUsers }: {createUser: (user?:
 export default async (): Promise<void> => {
   process.env.TZ = "UTC"
 
-  if (process.env.TEST_ENV === "staging") {
+  if (testEnvVars.TEST_ENV === "staging_tests") {
     await setGlobalVariables({ createUser: createCognitoAuthToken, maxUsers: 10 })
   } else {
     await setGlobalVariables({ createUser: createMockAuthToken, maxUsers: 10 })

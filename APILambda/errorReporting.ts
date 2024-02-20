@@ -2,6 +2,7 @@
 import dotenv from "dotenv"
 import { Application } from "express"
 import https from "https"
+import { envVars } from "./env.js"
 
 dotenv.config()
 
@@ -24,7 +25,7 @@ const sendMessageToSlack = (
     headers: {
       "Content-Type": "application/json",
       "Content-Length": Buffer.byteLength(postData),
-      Authorization: `Bearer ${process.env.SLACK_APP_ID}`
+      Authorization: `Bearer ${envVars.SLACK_APP_ID}`
     }
   }
 
