@@ -79,7 +79,7 @@ const paginatedAttendeesResponse = (
 
   return {
     nextPageCursor: encondedNextPageCursor,
-    totalAttendeeCount: totalAttendeeCount,
+    totalAttendeeCount,
     attendees: paginatedAttendees
   }
 }
@@ -243,19 +243,20 @@ export const getAttendeesByEventIdRouter = (
                   req.query.limit,
                   totalAttendeeCount
                 )
+              )
             : attendees.length > 0 &&
               attendees[0].role === "host" &&
               attendees[0].themToYou === "blocked"
-            ? res.status(403).send({ error: "blocked-by-host" })
-            : res
-              .status(200)
-              .send(
-                paginatedAttendeesResponse(
-                  attendees,
-                  req.query.limit,
-                  totalAttendeeCount
+              ? res.status(403).send({ error: "blocked-by-host" })
+              : res
+                .status(200)
+                .send(
+                  paginatedAttendeesResponse(
+                    attendees,
+                    req.query.limit,
+                    totalAttendeeCount
+                  )
                 )
-              )
         })
       )
     }
