@@ -1,12 +1,14 @@
 /* eslint-disable import/extensions */ // Due to jest setup
 import { faker } from "@faker-js/faker"
 import AWS from "aws-sdk"
+import { envVars } from "../env"
 import { TestUser, TestUserInput } from "../global"
+import { testEnvVars } from "./testEnv"
 
 AWS.config.update({
-  region: process.env.AWS_REGION,
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+  region: envVars.AWS_REGION,
+  accessKeyId: envVars.AWS_ACCESS_KEY_ID,
+  secretAccessKey: envVars.AWS_SECRET_ACCESS_KEY
 })
 
 const cognito = new AWS.CognitoIdentityServiceProvider()
@@ -19,7 +21,7 @@ export const createCognitoAuthToken = async (
   const password = "P@$$W0Rd"
 
   const signUpParams: AWS.CognitoIdentityServiceProvider.SignUpRequest = {
-    ClientId: process.env.COGNITO_CLIENT_APP_ID ?? "",
+    ClientId: testEnvVars.COGNITO_CLIENT_APP_ID ?? "",
     Username: email,
     Password: password,
     UserAttributes: [
@@ -34,7 +36,7 @@ export const createCognitoAuthToken = async (
 
   const adminConfirmSignUpParams: AWS.CognitoIdentityServiceProvider.AdminConfirmSignUpRequest =
     {
-      UserPoolId: process.env.COGNITO_USER_POOL_ID ?? "",
+      UserPoolId: envVars.COGNITO_USER_POOL_ID ?? "",
       Username: email
     }
 
@@ -42,7 +44,7 @@ export const createCognitoAuthToken = async (
 
   const verifyEmailParams: AWS.CognitoIdentityServiceProvider.AdminUpdateUserAttributesRequest =
     {
-      UserPoolId: process.env.COGNITO_USER_POOL_ID ?? "",
+      UserPoolId: envVars.COGNITO_USER_POOL_ID ?? "",
       Username: email,
       UserAttributes: [
         {
@@ -62,7 +64,7 @@ export const createCognitoAuthToken = async (
 
   const signInParams: AWS.CognitoIdentityServiceProvider.InitiateAuthRequest = {
     AuthFlow: "USER_PASSWORD_AUTH",
-    ClientId: process.env.COGNITO_CLIENT_APP_ID ?? "",
+    ClientId: testEnvVars.COGNITO_CLIENT_APP_ID ?? "",
     AuthParameters: {
       USERNAME: email,
       PASSWORD: password
@@ -81,7 +83,7 @@ export const createCognitoAuthToken = async (
   const refreshAuth = async () => {
     const refreshParams: AWS.CognitoIdentityServiceProvider.InitiateAuthRequest = {
       AuthFlow: "REFRESH_TOKEN_AUTH",
-      ClientId: process.env.COGNITO_CLIENT_APP_ID ?? "",
+      ClientId: testEnvVars.COGNITO_CLIENT_APP_ID ?? "",
       AuthParameters: {
         REFRESH_TOKEN: refreshToken
       }

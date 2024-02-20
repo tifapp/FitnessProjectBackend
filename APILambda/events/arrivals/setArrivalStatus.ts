@@ -1,6 +1,6 @@
 import { LocationCoordinate2D, LocationCoordinates2DSchema, SQLExecutable, conn, failure, success } from "TiFBackendUtils"
 import { z } from "zod"
-import { ServerEnvironment } from "../../env.js"
+import { ServerEnvironment, SetArrivalStatusEnvironment } from "../../env.js"
 import { ValidatedRouter } from "../../validation.js"
 import { getUpcomingEventsByRegion } from "./getUpcomingEvents.js"
 
@@ -84,12 +84,12 @@ export const insertArrival = (
     )
 
 const setArrivalStatusTransaction = (
-  environment: ServerEnvironment,
+  { maxArrivals }: SetArrivalStatusEnvironment,
   userId: string,
   request: SetArrivalStatusInput
 ) =>
   conn.transaction((tx) => deleteOldArrivals(tx, userId, request.coordinate)
-    .flatMapSuccess(() => deleteMaxArrivals(tx, userId, environment.maxArrivals))
+    .flatMapSuccess(() => deleteMaxArrivals(tx, userId, maxArrivals))
     .flatMapSuccess(() =>
       insertArrival(
         tx,

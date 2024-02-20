@@ -23,7 +23,8 @@ const setupDB = async () => {
     country: "Sample Country",
     street: "Sample Street",
     street_num: "1234",
-    unit_number: "5678"
+    unit_number: "5678",
+    timeZone: "Sample/Timezone"
   })
 
   const eventLocation = {
@@ -32,10 +33,8 @@ const setupDB = async () => {
   }
 
   const {
-    attendeeToken,
-    attendeeId,
-    hostId,
-    hostToken,
+    attendeesList: [attendee],
+    host,
     eventIds: [futureEventId, ongoingEventId]
   } = await createEventFlow([
     {
@@ -48,17 +47,17 @@ const setupDB = async () => {
       startTimestamp: dayjs().subtract(12, "hour").toDate(),
       endTimestamp: dayjs().add(1, "year").toDate()
     }
-  ])
+  ], 1)
 
-  attendeeTestToken = attendeeToken
-  eventOwnerTestToken = hostToken
-  attendeeTestId = attendeeId
-  eventOwnerTestId = hostId
+  attendeeTestToken = attendee.token
+  eventOwnerTestToken = host.token
+  attendeeTestId = attendee.userId
+  eventOwnerTestId = host.userId
   ongoingEventTestId = ongoingEventId
   futureEventTestId = futureEventId
 }
 
-describe("Testing the getEventsByRegion endpoint", () => {
+describe("getEventsByRegion endpoint tests", () => {
   beforeEach(setupDB)
 
   it("should return 200 with the event, user relation, attendee count data", async () => {
@@ -78,10 +77,6 @@ describe("Testing the getEventsByRegion endpoint", () => {
     expect(eventIds).toContain(ongoingEventTestId)
     expect(eventIds).toContain(futureEventTestId)
   })
-})
-
-describe("Testing the individual queries from the getEventsByRegion endpoint", () => {
-  beforeEach(setupDB)
 
   it("should not return events that are not within the radius", async () => {
     const events = await callGetEventsByRegion(
@@ -117,14 +112,16 @@ describe("Testing the individual queries from the getEventsByRegion endpoint", (
     expect(events.body).toHaveLength(0)
   })
 
-  it("should return the attendee list not including the event host", async () => {
-    const attendees = await getAttendees(conn, [`${ongoingEventTestId}`])
-    expect(attendees.value).toHaveLength(1)
-    expect(attendees.value[0].userIds).not.toEqual(eventOwnerTestId)
-  })
+  describe("tests for attendee count and attendee list queries within getEventsByRegion", () => {
+    it("should return the attendee count including the event host", async () => {
+      const attendees = await getAttendeeCount(conn, [`${ongoingEventTestId}`])
+      expect(attendees.value[0].attendeeCount).toEqual(2)
+    })
 
-  it("should return the attendee count including the event host", async () => {
-    const attendees = await getAttendeeCount(conn, [`${ongoingEventTestId}`])
-    expect(attendees.value[0].attendeeCount).toEqual(2)
+    it("should return the attendee list not including the event host", async () => {
+      const attendees = await getAttendees(conn, [`${ongoingEventTestId}`])
+      expect(attendees.value).toHaveLength(1)
+      expect(attendees.value[0].userIds).not.toEqual(eventOwnerTestId)
+    })
   })
 })

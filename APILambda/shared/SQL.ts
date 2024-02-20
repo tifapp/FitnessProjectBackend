@@ -76,5 +76,32 @@ export type GetEventByRegionEvent = {
   hostProfileImageURL: string
 }
 
+export type GetEventByIdEvent = {
+  id: number
+  arrivedAt: string
+  hostId: string
+  title: string
+  description: string
+  startTimestamp: Date
+  endTimestamp: Date
+  color: EventColor
+  latitude: number
+  longitude: number
+  shouldHideAfterStartDate: boolean
+  isChatEnabled: boolean
+  relationUserToHost: string
+  relationHostToUser: string
+  name: string
+  city: string
+  country: string
+  street: string
+  street_num: number
+  totalAttendees: number
+  attendeesPreview: EventAttendee
+  hostName: string
+  hostHandle: string
+  hostProfileImageURL: string
+}
+
 // add withvalidatedrequest middleware to all
 // add with valid user check to some

@@ -1,12 +1,12 @@
 import { SQLExecutable, conn } from "TiFBackendUtils"
 import { z } from "zod"
 import { ServerEnvironment } from "../env.js"
-import { DatabaseEvent } from "../shared/SQL.js"
-import { ValidatedRouter } from "../validation.js"
+import { GetEventByIdEvent } from "../shared/SQL.js"
 import {
-  userAndRelationsWithId,
-  DatabaseUserWithRelation
+  DatabaseUserWithRelation,
+  userAndRelationsWithId
 } from "../user/getUser.js"
+import { ValidatedRouter } from "../validation.js"
 import { GetEventWhenBlockedResponse } from "./models.js"
 
 const eventRequestSchema = z.object({
@@ -29,23 +29,24 @@ export const getEventById = (
   userId: string
 ) =>
   conn
-    .queryFirstResult<DatabaseEvent>(
+    .queryFirstResult<GetEventByIdEvent>(
       `
-    SELECT 
-      e.*, 
-      ua.arrivedAt,
-      CASE 
-        WHEN ua.userId IS NOT NULL THEN "arrived"
-        ELSE "not-arrived"
-      END AS arrivalStatus
-    FROM 
-        event e
-    LEFT JOIN 
-        userArrivals ua ON e.latitude = ua.latitude 
-                        AND e.longitude = ua.longitude 
-                        AND ua.userId = :userId
-    WHERE 
-        e.id = :eventId;
+      SELECT 
+        ViewEvents.*,
+        ua.arrivedAt,
+        CASE
+          WHEN ua.userId IS NOT NULL THEN "arrived"
+          ELSE "not-arrived" 
+        END AS arrivalStatus
+      FROM ViewEvents
+      LEFT JOIN
+        userArrivals ua ON ViewEvents.latitude = ua.latitude
+          AND ViewEvents.longitude = ua.longitude
+          AND ua.userId = :userId
+      WHERE endTimestamp > NOW()
+        AND (relationHostToUser IS NULL OR relationHostToUser <> 'blocked')
+        AND (relationUserToHost IS NULL OR relationUserToHost <> 'blocked')
+        AND id = :eventId
   `,
       { eventId, userId }
     )
@@ -75,8 +76,8 @@ export const getEventByIdRouter = (
               dbUser.themToYouStatus === "blocked" ||
               dbUser.youToThemStatus === "blocked"
                 ? res
-                    .status(403)
-                    .json(getEventWhenBlockedResponse(dbUser, event.title))
+                  .status(403)
+                  .json(getEventWhenBlockedResponse(dbUser, event.title))
                 : res.status(200).json(event)
             )
           )

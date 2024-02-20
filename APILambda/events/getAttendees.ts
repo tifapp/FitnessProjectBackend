@@ -1,14 +1,13 @@
-import { SQLExecutable, conn, promiseResult } from "TiFBackendUtils"
+import { SQLExecutable, conn, promiseResult, success } from "TiFBackendUtils"
 import { z } from "zod"
 import { ServerEnvironment } from "../env.js"
-import { DatabaseAttendee, PaginatedAttendeesResponse } from "../shared/SQL.js"
-import { ValidatedRouter } from "../validation.js"
 import {
   decodeAttendeesListCursor,
   encodeAttendeesListCursor
 } from "../shared/Cursor.js"
+import { DatabaseAttendee, PaginatedAttendeesResponse } from "../shared/SQL.js"
 import { UserToProfileRelationStatus } from "../user/models.js"
-import { success } from "TiFBackendUtils"
+import { ValidatedRouter } from "../validation.js"
 
 const AttendeesRequestSchema = z.object({
   eventId: z.string()
@@ -238,23 +237,23 @@ export const getAttendeesByEventIdRouter = (
 
           return totalAttendeeCount === 0
             ? res
-                .status(404)
-                .send(
-                  paginatedAttendeesResponse(
-                    attendees,
-                    req.query.limit,
-                    totalAttendeeCount
-                  )
+              .status(404)
+              .send(
+                paginatedAttendeesResponse(
+                  attendees,
+                  req.query.limit,
+                  totalAttendeeCount
                 )
+              )
             : res
-                .status(200)
-                .send(
-                  paginatedAttendeesResponse(
-                    attendees,
-                    req.query.limit,
-                    totalAttendeeCount
-                  )
+              .status(200)
+              .send(
+                paginatedAttendeesResponse(
+                  attendees,
+                  req.query.limit,
+                  totalAttendeeCount
                 )
+              )
         })
       )
     }

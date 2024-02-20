@@ -1,6 +1,6 @@
 import { conn } from "TiFBackendUtils"
 import { randomUUID } from "crypto"
-import { expectFailsCheckConstraint } from "../test/database.js"
+import { expectFailsCheckConstraint } from "../../test/database.js"
 import { insertUser } from "./createUserProfile.js"
 
 describe("CheckConstraint tests", () => {
