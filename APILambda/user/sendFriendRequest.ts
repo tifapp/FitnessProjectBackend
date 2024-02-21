@@ -1,7 +1,7 @@
 import { SQLExecutable, conn, failure, success } from "TiFBackendUtils"
 import { z } from "zod"
 import { ValidatedRouter } from "../validation.js"
-import { UserToProfileRelationStatus } from "./models.js"
+import { UserRelationStatus } from "./models.js"
 
 const friendRequestSchema = z.object({
   userId: z.string().uuid()
@@ -50,19 +50,19 @@ const sendFriendRequest = (
   receiverId: string
 ) =>
   twoWayUserRelation(conn, senderId, receiverId).flatMapSuccess(
-    ({ youToThemStatus, themToYouStatus }) => {
+    ({ youToThem, themToYou }) => {
       if (
-        youToThemStatus === "friends" ||
-        youToThemStatus === "friend-request-pending"
+        youToThem === "friends" ||
+        youToThem === "friend-request-pending"
       ) {
-        return success({ statusChanged: false, status: youToThemStatus })
+        return success({ statusChanged: false, status: youToThem })
       }
 
-      if (themToYouStatus === "blocked") {
+      if (themToYou === "blocked") {
         return failure("blocked" as const)
       }
 
-      if (themToYouStatus === "friend-request-pending") {
+      if (themToYou === "friend-request-pending") {
         return makeFriends(conn, senderId, receiverId).withSuccess({
           statusChanged: true,
           status: "friends" as const
@@ -85,7 +85,7 @@ const twoWayUserRelation = (
     .queryResults<{
       fromUserId: string
       toUserId: string
-      status: UserToProfileRelationStatus
+      status: UserRelationStatus
     }>(
       `
     SELECT * FROM userRelations ur 
@@ -98,10 +98,10 @@ const twoWayUserRelation = (
     )
     .flatMapSuccess((results) =>
       success({
-        youToThemStatus: results.find(
+        youToThem: results.find(
           (res) => res.fromUserId === youId && res.toUserId === themId
         )?.status,
-        themToYouStatus: results.find(
+        themToYou: results.find(
           (res) => res.fromUserId === themId && res.toUserId === youId
         )?.status
       })

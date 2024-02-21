@@ -14,8 +14,13 @@ export type DatabaseUser = {
 /**
  * A type representing the relationship status between 2 users.
  */
-export type UserToProfileRelationStatus =
+export type UserRelationStatus =
   | "not-friends"
   | "friend-request-pending"
   | "friends"
   | "blocked"
+
+export type UserToUserRelation = {
+  themToYou: UserRelationStatus
+  youToThem: UserRelationStatus
+}
