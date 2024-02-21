@@ -69,7 +69,7 @@ export const checkChatPermissionsTransaction = (
     .flatMapSuccess(async (event) => {
       const permissions = determineChatPermissions(
         event.hostId,
-        event.endTimestamp,
+        event.endDateTime,
         userId,
         eventId
       )

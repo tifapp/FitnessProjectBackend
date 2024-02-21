@@ -126,7 +126,7 @@ const setAttendeesPreviewForEvent = (
   eventsWithAttendeeCount: EventWithAttendeeCount[]
 ) => {
   for (let i = 0; i < events.length; i++) {
-    events[i].attendeesPreview = attendeesPreviews[i] ?? []
+    events[i].attendeesPreview = attendeesPreviews ?? []
     events[i].totalAttendees = eventsWithAttendeeCount[i]
       ? eventsWithAttendeeCount[i].attendeeCount
       : 0

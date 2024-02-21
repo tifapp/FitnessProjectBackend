@@ -17,7 +17,7 @@ const joinEvent = (conn: SQLExecutable, userId: string, eventId: number) => {
         isUserNotBlocked(tx, event.hostId, userId).withSuccess(event)
       )
       .flatMapSuccess((event) =>
-        new Date() < event.endTimestamp // perform in sql?
+        new Date() < event.endDateTime // perform in sql?
           ? addUserToAttendeeList(tx, userId, eventId).flatMapSuccess(
             ({ rowsAffected }) =>
               rowsAffected > 0 ? success(201) : success(200)
