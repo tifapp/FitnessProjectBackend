@@ -52,12 +52,21 @@ export const validateRequest =
   ({ bodySchema, querySchema, pathParamsSchema }: ValidationSchemas) =>
     async (req: Request, res: Response, next: NextFunction) => {
       try {
+        // express.json() converts null bodies to {}, but lambda can receive null bodies in requests
+        if (req.body === null || Object.keys(req.body).length === 0) {
+          req.body = undefined
+        }
+        if (req.query === null || Object.keys(req.query).length === 0) {
+          req.query = undefined as never
+        }
+        if (req.params === null || Object.keys(req.params).length === 0) {
+          req.params = undefined as never
+        }
+
         const validationSchema = z.object({
-        // supertest sends {} by default, lambda gets null
-          body: bodySchema ?? z.union([z.literal(null), z.object({}).strict()]),
-          query: querySchema ?? z.union([z.literal(null), z.object({}).strict()]),
-          params:
-          pathParamsSchema ?? z.union([z.literal(null), z.object({}).strict()])
+          body: bodySchema ?? z.undefined(),
+          query: querySchema ?? z.undefined(),
+          params: pathParamsSchema ?? z.undefined()
         })
 
         const { body, query, params } = await validationSchema.parseAsync({

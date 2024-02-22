@@ -29,8 +29,8 @@ export const SearchForPositionResultToPlacemark = (
       place?.SubRegion,
     country: place?.Country ?? place?.Region,
     street: place?.Street,
-    street_num: place?.AddressNumber ?? "",
-    unit_number: place?.UnitNumber ?? ""
+    street_num: place?.AddressNumber,
+    unit_number: place?.UnitNumber
   }
 }
 

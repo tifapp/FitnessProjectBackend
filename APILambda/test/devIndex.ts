@@ -5,13 +5,14 @@ import { addCognitoTokenVerification } from "../auth.js"
 import { ServerEnvironment } from "../env.js"
 
 export const missingAddressTestLocation = {
-  latitude: 50,
-  longitude: 50
+  latitude: 23.45,
+  longitude: 23.45
 }
 
 export const testEnv: ServerEnvironment = {
   environment: "dev",
   maxArrivals: 4,
+  eventStartWindowInHours: 1,
   setProfileCreatedAttribute: () => promiseResult(success()),
   SearchClosestAddressToCoordinates: async (location: LocationCoordinate2D) => {
     if (

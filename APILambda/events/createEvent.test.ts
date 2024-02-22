@@ -6,7 +6,7 @@ import {
 } from "TiFBackendUtils"
 import dayjs from "dayjs"
 import { callCreateEvent, callGetEvent } from "../test/apiCallers/events.js"
-import { missingAddressTestLocation } from "../test/testApp.js"
+import { missingAddressTestLocation } from "../test/devIndex.js"
 import { testEventInput } from "../test/testEvents.js"
 import { createEventFlow } from "../test/userFlows/events.js"
 import { createUserFlow } from "../test/userFlows/users.js"
@@ -14,7 +14,7 @@ import { createUserFlow } from "../test/userFlows/users.js"
 describe("CreateEvent tests", () => {
   it("should allow a user to create an event and add them to the attendee list", async () => {
     const {
-      hostId,
+      host,
       eventResponses
     } = await createEventFlow([{}])
     expect(eventResponses[0]).toMatchObject({
@@ -30,9 +30,9 @@ describe("CreateEvent tests", () => {
       WHERE userId = :userId
         AND eventId = :eventId;      
       `,
-      { eventId: parseInt(eventResponses[0].body.id), userId: hostId }
+      { eventId: parseInt(eventResponses[0].body.id), userId: host.userId }
     )
-    expect(attendee).toMatchObject({ eventId: parseInt(eventResponses[0].body.id), userId: hostId })
+    expect(attendee).toMatchObject({ eventId: parseInt(eventResponses[0].body.id), userId: host.userId })
   })
 
   it("should not allow a user to create an event that ends in the past", async () => {
@@ -62,7 +62,7 @@ describe("CreateEvent tests", () => {
     const resp = await callGetEvent(token, eventIds[0])
     expect(resp).toMatchObject({
       status: 200,
-      body: { id: expect.anything(), city: expect.anything(), country: expect.anything(), street_num: expect.anything() }
+      body: { id: expect.anything(), city: expect.anything(), country: expect.anything() }
     })
     expect(parseInt(resp.body.id)).not.toBeNaN()
   })

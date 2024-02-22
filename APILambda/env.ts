@@ -45,7 +45,7 @@ export type SetArrivalStatusEnvironment = {
 export type ServerEnvironment = CreateUserProfileEnvironment & SetArrivalStatusEnvironment & {
   environment: "dev" | "staging" | "prod"
   eventStartWindowInHours: number
-  SearchForPositionResultToPlacemark: (
+  SearchClosestAddressToCoordinates: (
     location: LocationCoordinate2D
   ) => Promise<Placemark>
   callGeocodingLambda: (latitude: number, longitude: number) => void
