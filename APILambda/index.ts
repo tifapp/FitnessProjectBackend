@@ -5,7 +5,6 @@ import {
   SearchClosestAddressToCoordinates,
   invokeAWSLambda
 } from "TiFBackendUtils"
-
 import express, { Express } from "express"
 import { addBenchmarking, addRoutes, createApp } from "./app.js"
 import { addCognitoTokenVerification } from "./auth.js"

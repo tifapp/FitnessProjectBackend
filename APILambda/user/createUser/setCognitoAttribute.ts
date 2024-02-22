@@ -2,6 +2,10 @@ import { failure, promiseResult, success } from "TiFBackendUtils"
 import AWS from "aws-sdk"
 import { envVars } from "../../env.js"
 
+AWS.config.update({
+  region: envVars.AWS_REGION
+})
+
 const cognito = new AWS.CognitoIdentityServiceProvider()
 
 // TODO: Need retry mechanism
