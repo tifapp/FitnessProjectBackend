@@ -46,8 +46,8 @@ const CreateEventSchema = z
 
 export type CreateEventInput = z.infer<typeof CreateEventSchema>
 
-export const getTimeZone = (latitude: number, longitude: number) => {
-  return find(latitude, longitude)
+export const getTimeZone = (coordinate: {latitude: number, longitude: number}) => {
+  return find(coordinate.latitude, coordinate.longitude)
 }
 
 export const createEvent = (
@@ -106,7 +106,7 @@ export const addPlacemarkForEvent = (
         latitude: eventLatitude,
         longitude: eventLongitude
       })
-      const timeZone = find(eventLatitude, eventLongitude)[0]
+      const timeZone = getTimeZone({ eventLatitude, eventLongitude })[0]
       if (placemark === undefined) {
         callGeocodingLambda(eventLatitude, eventLongitude)
       } else {
