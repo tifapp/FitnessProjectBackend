@@ -1,21 +1,37 @@
-import { SQLExecutable, conn } from "TiFBackendUtils"
+import {
+  SQLExecutable,
+  addPlacemarkToDB,
+  checkExistingPlacemarkInDB,
+  conn,
+  getTimeZone,
+  promiseResult,
+  success
+} from "TiFBackendUtils"
 import { z } from "zod"
 import { ServerEnvironment } from "../env.js"
+import { HOST } from "../shared/Role.js"
 import { ValidatedRouter } from "../validation.js"
 import { addUserToAttendeeList } from "./joinEventById.js"
 import { EventColorSchema } from "./models.js"
-import { HOST } from "../shared/Role.js";
+
+let insertIdForEvent: string
 
 const CreateEventSchema = z
   .object({
     description: z.string().max(500),
     startTimestamp: z.string().datetime(),
-    endTimestamp: z.string().datetime().refine((date) => {
-      return new Date(date) > new Date()
-    }, {
-      message: "endTimestamp must be in the future"
-      // TODO: add minimum duration check
-    }),
+    endTimestamp: z
+      .string()
+      .datetime()
+      .refine(
+        (date) => {
+          return new Date(date) > new Date()
+        },
+        {
+          message: "endTimestamp must be in the future"
+          // TODO: add minimum duration check
+        }
+      ),
     color: EventColorSchema,
     title: z.string().max(50),
     shouldHideAfterStartDate: z.boolean(),
@@ -36,9 +52,8 @@ export const createEvent = (
   input: CreateEventInput,
   hostId: string
 ) =>
-  conn
-    .queryResult(
-      `
+  conn.queryResult(
+    `
 INSERT INTO event (
   hostId,
   title, 
@@ -63,13 +78,40 @@ INSERT INTO event (
   :longitude
 )
 `,
-      {
-        ...input,
-        startTimestamp: input.startTimestamp.getTime() / 1000,
-        endTimestamp: input.endTimestamp.getTime() / 1000,
-        hostId
-      }
-    )
+    {
+      ...input,
+      startTimestamp: input.startTimestamp.getTime() / 1000,
+      endTimestamp: input.endTimestamp.getTime() / 1000,
+      hostId
+    }
+  )
+
+export const addPlacemarkForEvent = (
+  insertId: string,
+  eventLatitude: number,
+  eventLongitude: number,
+  SearchClosestAddressToCoordinates: ServerEnvironment["SearchClosestAddressToCoordinates"],
+  callGeocodingLambda: ServerEnvironment["callGeocodingLambda"]
+) => {
+  insertIdForEvent = insertId
+  return checkExistingPlacemarkInDB(conn, {
+    longitude: eventLongitude,
+    latitude: eventLatitude
+  })
+    .flatMapSuccess(() => {
+      const timeZone = getTimeZone({ latitude: eventLatitude, longitude: eventLongitude })[0]
+      return promiseResult(
+        SearchClosestAddressToCoordinates({
+          latitude: eventLatitude,
+          longitude: eventLongitude
+        }).then(placemark => { console.log("not going to calling geocoding lambda"); return addPlacemarkToDB(conn, placemark, timeZone) })
+          .catch(() => { console.log("calling geocoding lambda"); callGeocodingLambda(eventLatitude, eventLongitude); return promiseResult(success()) })
+      )
+    })
+    .flatMapFailure(() => {
+      return success()
+    })
+}
 
 /**
  * Creates routes related to event operations.
@@ -87,12 +129,29 @@ export const createEventRouter = (
     "/",
     { bodySchema: CreateEventSchema },
     (req, res) => {
-      return conn.transaction(tx =>
-        createEvent(tx, req.body, res.locals.selfId)
-          .flatMapSuccess(({ insertId }) => addUserToAttendeeList(tx, res.locals.selfId, parseInt(insertId), HOST).mapSuccess(() => ({ insertId })))
-      )
+      return conn
+        .transaction((tx) =>
+          createEvent(tx, req.body, res.locals.selfId)
+            .flatMapSuccess(({ insertId }) => {
+              return addPlacemarkForEvent(
+                insertId,
+                req.body.latitude,
+                req.body.longitude,
+                environment.SearchClosestAddressToCoordinates,
+                environment.callGeocodingLambda
+              )
+            })
+            .flatMapSuccess(() =>
+              addUserToAttendeeList(
+                tx,
+                res.locals.selfId,
+                parseInt(insertIdForEvent),
+                HOST
+              )
+            )
+        )
         .mapFailure((error) => res.status(500).json({ error }))
-        .mapSuccess(({ insertId }) => res.status(201).json({ id: insertId }))
+        .mapSuccess(() => res.status(201).json({ id: insertIdForEvent }))
     }
   )
 }

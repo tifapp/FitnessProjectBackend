@@ -8,7 +8,8 @@ export const resetDB = async () => {
     conn.queryResults("DELETE FROM pushTokens"),
     conn.queryResults("DELETE FROM userRelations"),
     conn.queryResults("DELETE FROM userSettings"),
-    conn.queryResults("DELETE FROM userArrivals")
+    conn.queryResults("DELETE FROM userArrivals"),
+    conn.queryResults("DELETE FROM location")
   ])
   await conn.queryResults("DELETE FROM event")
   conn.queryResults("DELETE FROM user")

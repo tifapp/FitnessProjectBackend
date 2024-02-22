@@ -1,6 +1,11 @@
 import awsServerlessExpress, {
   getCurrentInvoke
 } from "@vendia/serverless-express"
+import {
+  SearchClosestAddressToCoordinates,
+  invokeAWSLambda
+} from "TiFBackendUtils"
+
 import express, { Express } from "express"
 import { addBenchmarking, addRoutes, createApp } from "./app.js"
 import { addCognitoTokenVerification } from "./auth.js"
@@ -37,8 +42,14 @@ export const addEventToRequest = (app: Express) => {
 
 const env: ServerEnvironment = {
   environment: "prod",
+  setProfileCreatedAttribute: (userId: string) => setProfileCreatedAttribute(userId),
+  eventStartWindowInHours: 1,
   maxArrivals: 100,
-  setProfileCreatedAttribute: (userId: string) => setProfileCreatedAttribute(userId)
+  SearchClosestAddressToCoordinates,
+  callGeocodingLambda: (latitude: number, longitude: number) =>
+    invokeAWSLambda("geocodingPipeline", {
+      location: { latitude, longitude }
+    })
 }
 
 const app = createApp()
