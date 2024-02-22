@@ -12,8 +12,9 @@ import { createUserFlow } from "../test/userFlows/users.js"
 describe("CreateEvent tests", () => {
   it("should allow a user to create an event and add them to the attendee list", async () => {
     const { token, userId } = await createUserFlow()
-    const createEventResponse = await callCreateEvent(token, testEventInput)
-    const timeZone = find(testEventInput.latitude, testEventInput.longitude)
+    // Coordinates for the timezone border of ['Asia/Shanghai', 'Asia/Urumqi']
+    const createEventResponse = await callCreateEvent(token, { ...testEventInput, latitude: 43.839319, longitude: 87.526148 })
+    const timeZone = find(43.839319, 87.526148)
 
     expect(createEventResponse).toMatchObject({
       status: 201,
