@@ -11,9 +11,9 @@ import {
   checkExistingPlacemarkInDB,
   conn,
   exponentialFunctionBackoff,
+  getTimeZone,
   success
 } from "TiFBackendUtils"
-import { find } from "geo-tz"
 
 interface LocationSearchRequest extends Retryable {
   coordinate: LocationCoordinate2D
@@ -38,7 +38,7 @@ export const handler: any = exponentialFunctionBackoff<
       )
     )
     .flatMapSuccess((placemark) => {
-      const timeZone = find(event.coordinate.latitude, event.coordinate.longitude)[0]
+      const timeZone = getTimeZone(event.coordinate)[0]
       return addPlacemarkToDB(conn, placemark, timeZone)
     })
     .mapSuccess(() => "placemark-successfully-inserted" as const)

@@ -32,13 +32,14 @@ export const createEventFlow = async (
   } = await createUserFlow()
 
   const eventResponses = await Promise.all(
-    eventInput.map((details) =>
-    console.log()
-      callCreateEvent(hostToken, { ...testEventInput, ...details })
-    )
+    eventInput.map((details) => {
+      return callCreateEvent(hostToken, { ...testEventInput, ...details })
+    })
   )
 
-  const eventIds = eventResponses.map((event) => parseInt(event.body.id))
+  const eventIds = eventResponses.map((event) => {
+    if (event.ok) { return parseInt(event.body.id) } else { throw new Error("invalid test event given") }
+  })
 
   await Promise.all(
     eventIds.map((eventId) => callJoinEvent(attendeeToken, eventId))
