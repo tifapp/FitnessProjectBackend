@@ -4,6 +4,7 @@ import {
   checkExistingPlacemarkInDB,
   conn,
   getTimeZone,
+  promiseResult,
   success
 } from "TiFBackendUtils"
 import { z } from "zod"
@@ -89,7 +90,7 @@ export const addPlacemarkForEvent = (
   insertId: string,
   eventLatitude: number,
   eventLongitude: number,
-  SearchForPositionResultToPlacemark: ServerEnvironment["SearchForPositionResultToPlacemark"],
+  SearchClosestAddressToCoordinates: ServerEnvironment["SearchClosestAddressToCoordinates"],
   callGeocodingLambda: ServerEnvironment["callGeocodingLambda"]
 ) => {
   insertIdForEvent = insertId
@@ -98,17 +99,14 @@ export const addPlacemarkForEvent = (
     latitude: eventLatitude
   })
     .flatMapSuccess(() => {
-      const placemark = SearchForPositionResultToPlacemark({
-        latitude: eventLatitude,
-        longitude: eventLongitude
-      })
       const timeZone = getTimeZone({ latitude: eventLatitude, longitude: eventLongitude })[0]
-      if (placemark === undefined) {
-        callGeocodingLambda(eventLatitude, eventLongitude)
-      } else {
-        addPlacemarkToDB(conn, placemark, timeZone)
-      }
-      return success()
+      return promiseResult(
+        SearchClosestAddressToCoordinates({
+          latitude: eventLatitude,
+          longitude: eventLongitude
+        }).then(placemark => { console.log("not going to calling geocoding lambda"); return addPlacemarkToDB(conn, placemark, timeZone) })
+          .catch(() => { console.log("calling geocoding lambda"); callGeocodingLambda(eventLatitude, eventLongitude); return promiseResult(success()) })
+      )
     })
     .flatMapFailure(() => {
       return success()
@@ -139,7 +137,7 @@ export const createEventRouter = (
                 insertId,
                 req.body.latitude,
                 req.body.longitude,
-                environment.SearchForPositionResultToPlacemark,
+                environment.SearchClosestAddressToCoordinates,
                 environment.callGeocodingLambda
               )
             })

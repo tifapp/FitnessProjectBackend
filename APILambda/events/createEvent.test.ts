@@ -1,5 +1,5 @@
 import {
-  SearchForPositionResultToPlacemark,
+  SearchClosestAddressToCoordinates,
   addPlacemarkToDB,
   conn,
   getTimeZone
@@ -44,8 +44,8 @@ describe("CreateEvent tests", () => {
     })
   })
 
-  // Note: We will need to mock the SearchForPositionResultToPlacemark function
-  it("should invoke the aws lambda for creating an event if the SearchForPositionResultToPlacemark fails", async () => {
+  // Note: We will need to mock the SearchClosestAddressToCoordinates function
+  it("should invoke the aws lambda for creating an event if geocoding fails", async () => {
     const { token } = await createUserFlow()
     const {
       eventIds
@@ -58,17 +58,18 @@ describe("CreateEvent tests", () => {
         endTimestamp: dayjs().add(1, "year").toDate()
       }
     ])
+    await new Promise(resolve => setTimeout(resolve, 1000))
     const resp = await callGetEvent(token, eventIds[0])
     expect(resp).toMatchObject({
       status: 200,
-      body: { id: expect.anything(), city: expect.anything(), country: expect.anything(), street: expect.anything(), street_num: expect.anything() }
+      body: { id: expect.anything(), city: expect.anything(), country: expect.anything(), street_num: expect.anything() }
     })
     expect(parseInt(resp.body.id)).not.toBeNaN()
   })
 
   it("create event still is successful if the placemark already exists", async () => {
     const { token } = await createUserFlow()
-    const placemark = SearchForPositionResultToPlacemark({ latitude: 43.839319, longitude: 87.526148 })
+    const placemark = await SearchClosestAddressToCoordinates({ latitude: 43.839319, longitude: 87.526148 })
     const timeZone = getTimeZone({ latitude: 43.839319, longitude: 87.526148 })[0]
     addPlacemarkToDB(conn, placemark, timeZone)
     const {

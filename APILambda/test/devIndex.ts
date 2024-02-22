@@ -1,32 +1,32 @@
-import { LocationCoordinate2D, SearchForPositionResultToPlacemark, promiseResult, success } from "TiFBackendUtils"
+import { LocationCoordinate2D, SearchClosestAddressToCoordinates, promiseResult, success } from "TiFBackendUtils"
 import { handler } from "../../GeocodingLambda/index.js"
 import { addBenchmarking, addRoutes, createApp } from "../app.js"
 import { addCognitoTokenVerification } from "../auth.js"
 import { ServerEnvironment } from "../env.js"
 
 export const missingAddressTestLocation = {
-  latitude: 0,
-  longitude: 0
+  latitude: 50,
+  longitude: 50
 }
 
 export const testEnv: ServerEnvironment = {
   environment: "dev",
   maxArrivals: 4,
   setProfileCreatedAttribute: () => promiseResult(success()),
-  SearchForPositionResultToPlacemark: (location: LocationCoordinate2D) => {
+  SearchClosestAddressToCoordinates: async (location: LocationCoordinate2D) => {
     if (
       location.latitude === missingAddressTestLocation.latitude &&
       location.longitude === missingAddressTestLocation.longitude
     ) {
-      return undefined
+      throw new Error()
     } else {
-      SearchForPositionResultToPlacemark({
+      return SearchClosestAddressToCoordinates({
         latitude: location.latitude,
         longitude: location.longitude
       })
     }
   },
-  callGeocodingLambda: (eventLatitude: number, eventLongitude: number) =>
+  callGeocodingLambda: async (eventLatitude: number, eventLongitude: number) =>
     handler({
       coordinate: {
         latitude: eventLatitude,

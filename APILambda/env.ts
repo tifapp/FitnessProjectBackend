@@ -47,6 +47,6 @@ export type ServerEnvironment = CreateUserProfileEnvironment & SetArrivalStatusE
   eventStartWindowInHours: number
   SearchForPositionResultToPlacemark: (
     location: LocationCoordinate2D
-  ) => Placemark
+  ) => Promise<Placemark>
   callGeocodingLambda: (latitude: number, longitude: number) => void
 }

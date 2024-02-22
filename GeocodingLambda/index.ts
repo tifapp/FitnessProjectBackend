@@ -6,12 +6,13 @@ import {
   LocationCoordinate2D,
   Result,
   Retryable,
-  SearchForPositionResultToPlacemark,
+  SearchClosestAddressToCoordinates,
   addPlacemarkToDB,
   checkExistingPlacemarkInDB,
   conn,
   exponentialFunctionBackoff,
   getTimeZone,
+  promiseResult,
   success
 } from "TiFBackendUtils"
 
@@ -29,14 +30,13 @@ export const handler: any = exponentialFunctionBackoff<
     latitude: parseFloat(event.coordinate.latitude.toFixed(10)),
     longitude: parseFloat(event.coordinate.longitude.toFixed(10))
   })
-    .flatMapSuccess(async () =>
-      success(
-        SearchForPositionResultToPlacemark({
+    .flatMapSuccess(() =>
+      promiseResult(
+        SearchClosestAddressToCoordinates({
           latitude: event.coordinate.latitude,
           longitude: event.coordinate.longitude
-        })
-      )
-    )
+        }).then(placemark => success(placemark))
+      ))
     .flatMapSuccess((placemark) => {
       const timeZone = getTimeZone(event.coordinate)[0]
       return addPlacemarkToDB(conn, placemark, timeZone)
