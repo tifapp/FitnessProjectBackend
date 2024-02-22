@@ -31,21 +31,33 @@ export const getEventById = (
   conn
     .queryFirstResult<GetEventByIdEvent>(
       `
-      SELECT 
-        ViewEvents.*,
-        ua.arrivedAt,
-        CASE
-          WHEN ua.userId IS NOT NULL THEN "arrived"
-          ELSE "not-arrived" 
-        END AS arrivalStatus
-      FROM ViewEvents
-      LEFT JOIN
-        userArrivals ua ON ViewEvents.latitude = ua.latitude
-          AND ViewEvents.longitude = ua.longitude
-          AND ua.userId = :userId
-      WHERE id = :eventId
-      `,
-      { eventId, userId } // how to handle ended events?
+    SELECT 
+      e.*,
+      L.name,
+      L.city, 
+      L.country, 
+      L.street, 
+      L.street_num, 
+      L.timeZone,
+      ua.arrivedAt,
+      CASE 
+        WHEN ua.userId IS NOT NULL THEN "arrived"
+        ELSE "not-arrived"
+      END AS arrivalStatus
+    FROM 
+        event e
+    LEFT JOIN 
+        userArrivals ua ON e.latitude = ua.latitude 
+                        AND e.longitude = ua.longitude 
+                        AND ua.userId = :userId
+    LEFT JOIN 
+        location L ON e.latitude = L.lat 
+                  AND e.longitude = L.lon
+
+    WHERE 
+        e.id = :eventId;
+  `,
+      { eventId, userId }
     )
     .withFailure("event-not-found" as const)
 

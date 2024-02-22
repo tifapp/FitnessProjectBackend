@@ -1,11 +1,10 @@
-import { conn } from "TiFBackendUtils"
+import { addPlacemarkToDB, conn } from "TiFBackendUtils"
 import dayjs from "dayjs"
 import { callBlockUser } from "../test/apiCallers/users.js"
 import { callGetEventsByRegion } from "../test/helpers/events.js"
 import { testEventInput } from "../test/testEvents.js"
 import { createEventFlow } from "../test/userFlows/events.js"
 import { getAttendeeCount, getAttendees } from "./getEventsByRegion.js"
-import { addPlacemarkToDB } from "./sharedSQL.js"
 
 let eventOwnerTestToken: string
 let attendeeTestToken: string
@@ -15,7 +14,7 @@ let futureEventTestId: number
 let ongoingEventTestId: number
 
 const setupDB = async () => {
-  addPlacemarkToDB({
+  addPlacemarkToDB(conn, {
     lat: testEventInput.latitude,
     lon: testEventInput.longitude,
     name: "Sample Location",
@@ -23,9 +22,8 @@ const setupDB = async () => {
     country: "Sample Country",
     street: "Sample Street",
     street_num: "1234",
-    unit_number: "5678",
-    timeZone: "Sample/Timezone"
-  })
+    unit_number: "5678"
+  }, "Sample/Timezone")
 
   const eventLocation = {
     latitude: testEventInput.latitude,
