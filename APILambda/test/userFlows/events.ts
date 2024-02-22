@@ -6,6 +6,8 @@ import { createUserFlow } from "./users.js"
 export const createEventFlow = async (
   eventInput: Partial<CreateEventInput>[]
 ): Promise<{
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  eventResponses: any
   attendeeToken: string
   attendeeId: string
   attendeeName: string
@@ -29,19 +31,21 @@ export const createEventFlow = async (
     name: attendeeName
   } = await createUserFlow()
 
-  const eventPromises = await Promise.all(
+  const eventResponses = await Promise.all(
     eventInput.map((details) =>
+    console.log()
       callCreateEvent(hostToken, { ...testEventInput, ...details })
     )
   )
 
-  const eventIds = eventPromises.map((event) => parseInt(event.body.id))
+  const eventIds = eventResponses.map((event) => parseInt(event.body.id))
 
   await Promise.all(
     eventIds.map((eventId) => callJoinEvent(attendeeToken, eventId))
   )
 
   return {
+    eventResponses,
     attendeeToken,
     attendeeId,
     attendeeName,

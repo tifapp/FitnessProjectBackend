@@ -2,11 +2,11 @@ import { SQLExecutable, conn } from "TiFBackendUtils"
 import { z } from "zod"
 import { ServerEnvironment } from "../env.js"
 import { DatabaseEvent } from "../shared/SQL.js"
-import { ValidatedRouter } from "../validation.js"
 import {
-  userAndRelationsWithId,
-  DatabaseUserWithRelation
+  DatabaseUserWithRelation,
+  userAndRelationsWithId
 } from "../user/getUser.js"
+import { ValidatedRouter } from "../validation.js"
 import { GetEventWhenBlockedResponse } from "./models.js"
 
 const eventRequestSchema = z.object({
@@ -85,8 +85,8 @@ export const getEventByIdRouter = (
               dbUser.themToYouStatus === "blocked" ||
               dbUser.youToThemStatus === "blocked"
                 ? res
-                    .status(403)
-                    .json(getEventWhenBlockedResponse(dbUser, event.title))
+                  .status(403)
+                  .json(getEventWhenBlockedResponse(dbUser, event.title))
                 : res.status(200).json(event)
             )
           )
