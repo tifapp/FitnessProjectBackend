@@ -9,6 +9,8 @@ export const createEventFlow = async (
 ): Promise<{
   attendeesList: TestUser[]
   host: TestUser
+   // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   eventResponses: any
   eventIds: number[]
 }> => {
   const host = await createUserFlow()
@@ -17,13 +19,13 @@ export const createEventFlow = async (
     throw new Error("need at least one test event input")
   }
 
-  const eventPromises = await Promise.all(
+  const eventResponses = await Promise.all(
     eventInputs.map((details) =>
       callCreateEvent(host.token, { ...testEventInput, ...details })
     )
   )
 
-  const eventIds = eventPromises.map((event) => parseInt(event.body.id))
+  const eventIds = eventResponses.map((event) => parseInt(event.body.id))
 
   const attendeesList = []
 
@@ -40,6 +42,7 @@ export const createEventFlow = async (
   return {
     attendeesList,
     host,
+    eventResponses,
     eventIds
   }
 }
