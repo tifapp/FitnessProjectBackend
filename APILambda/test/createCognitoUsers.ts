@@ -1,17 +1,14 @@
 /* eslint-disable import/extensions */ // Due to jest setup
+import { AdminConfirmSignUpRequest, AdminUpdateUserAttributesRequest, CognitoIdentityProvider, InitiateAuthRequest, SignUpRequest } from "@aws-sdk/client-cognito-identity-provider"
+import { fromEnv } from "@aws-sdk/credential-providers"
 import { faker } from "@faker-js/faker"
-import AWS from "aws-sdk"
 import { envVars } from "../env"
 import { TestUser, TestUserInput } from "../global"
 import { testEnvVars } from "./testEnv"
 
-AWS.config.update({
-  region: envVars.AWS_REGION,
-  accessKeyId: envVars.AWS_ACCESS_KEY_ID,
-  secretAccessKey: envVars.AWS_SECRET_ACCESS_KEY
+const cognito = new CognitoIdentityProvider({
+  credentials: fromEnv()
 })
-
-const cognito = new AWS.CognitoIdentityServiceProvider()
 
 export const createCognitoAuthToken = async (
   user?: TestUserInput
@@ -20,7 +17,7 @@ export const createCognitoAuthToken = async (
   const email = faker.internet.email()
   const password = "P@$$W0Rd"
 
-  const signUpParams: AWS.CognitoIdentityServiceProvider.SignUpRequest = {
+  const signUpParams: SignUpRequest = {
     ClientId: testEnvVars.COGNITO_CLIENT_APP_ID ?? "",
     Username: email,
     Password: password,
@@ -32,17 +29,17 @@ export const createCognitoAuthToken = async (
     ]
   }
 
-  const signUpResult = await cognito.signUp(signUpParams).promise()
+  const signUpResult = await cognito.signUp(signUpParams)
 
-  const adminConfirmSignUpParams: AWS.CognitoIdentityServiceProvider.AdminConfirmSignUpRequest =
+  const adminConfirmSignUpParams: AdminConfirmSignUpRequest =
     {
       UserPoolId: envVars.COGNITO_USER_POOL_ID ?? "",
       Username: email
     }
 
-  await cognito.adminConfirmSignUp(adminConfirmSignUpParams).promise()
+  await cognito.adminConfirmSignUp(adminConfirmSignUpParams)
 
-  const verifyEmailParams: AWS.CognitoIdentityServiceProvider.AdminUpdateUserAttributesRequest =
+  const verifyEmailParams: AdminUpdateUserAttributesRequest =
     {
       UserPoolId: envVars.COGNITO_USER_POOL_ID ?? "",
       Username: email,
@@ -60,9 +57,9 @@ export const createCognitoAuthToken = async (
 
   console.log("creating the user and about to set the user's profile_created attribute to true for the user ", email)
 
-  await cognito.adminUpdateUserAttributes(verifyEmailParams).promise().catch(err => { console.error(err); throw new Error(err) })
+  await cognito.adminUpdateUserAttributes(verifyEmailParams).catch(err => { console.error(err); throw new Error(err) })
 
-  const signInParams: AWS.CognitoIdentityServiceProvider.InitiateAuthRequest = {
+  const signInParams: InitiateAuthRequest = {
     AuthFlow: "USER_PASSWORD_AUTH",
     ClientId: testEnvVars.COGNITO_CLIENT_APP_ID ?? "",
     AuthParameters: {
@@ -71,7 +68,7 @@ export const createCognitoAuthToken = async (
     }
   }
 
-  const authResult = await cognito.initiateAuth(signInParams).promise()
+  const authResult = await cognito.initiateAuth(signInParams)
   const idToken = authResult.AuthenticationResult?.IdToken
   const refreshToken = authResult.AuthenticationResult?.RefreshToken
 
@@ -79,9 +76,13 @@ export const createCognitoAuthToken = async (
     throw new Error("Failed to authenticate and obtain tokens")
   }
 
+  if (!signUpResult.UserSub) {
+    throw new Error("Failed to create user id")
+  }
+
   // try a testUser class to update the state
   const refreshAuth = async () => {
-    const refreshParams: AWS.CognitoIdentityServiceProvider.InitiateAuthRequest = {
+    const refreshParams: InitiateAuthRequest = {
       AuthFlow: "REFRESH_TOKEN_AUTH",
       ClientId: testEnvVars.COGNITO_CLIENT_APP_ID ?? "",
       AuthParameters: {
@@ -89,7 +90,7 @@ export const createCognitoAuthToken = async (
       }
     }
 
-    const newAuthResult = await cognito.initiateAuth(refreshParams).promise()
+    const newAuthResult = await cognito.initiateAuth(refreshParams)
     const newIdToken = newAuthResult.AuthenticationResult?.IdToken
 
     if (!newIdToken) {

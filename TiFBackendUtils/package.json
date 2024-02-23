@@ -7,13 +7,14 @@
   "dependencies": {
     "@aws-sdk/client-location": "^3.388.0",
     "@planetscale/database": "^1.7.0",
-    "node-fetch": "^3.3.2",
-    "geo-tz": "^8.0.1"
+    "geo-tz": "^8.0.1",
+    "node-fetch": "^3.3.2"
   },
   "peerDependencies": {
-    "aws-sdk": "^2.978.0",
-    "zod": "^3.22.4",
-    "dotenv": "^16.3.1"
+    "@aws-sdk/client-eventbridge": "^3.515.0",
+    "@aws-sdk/client-lambda": "^3.518.0",
+    "dotenv": "^16.3.1",
+    "zod": "^3.22.4"
   },
   "scripts": {
     "build": "npx tsc",
