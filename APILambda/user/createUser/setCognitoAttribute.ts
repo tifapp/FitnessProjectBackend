@@ -1,16 +1,12 @@
+import { AdminUpdateUserAttributesRequest, CognitoIdentityProvider } from "@aws-sdk/client-cognito-identity-provider"
 import { failure, promiseResult, success } from "TiFBackendUtils"
-import AWS from "aws-sdk"
 import { envVars } from "../../env.js"
 
-AWS.config.update({
-  region: envVars.AWS_REGION
-})
-
-const cognito = new AWS.CognitoIdentityServiceProvider()
+const cognito = new CognitoIdentityProvider()
 
 // TODO: Need retry mechanism
 export const setProfileCreatedAttribute = (userId: string) => {
-  const verifyEmailParams: AWS.CognitoIdentityServiceProvider.AdminUpdateUserAttributesRequest =
+  const verifyEmailParams: AdminUpdateUserAttributesRequest =
     {
       UserPoolId: envVars.COGNITO_USER_POOL_ID,
       Username: userId,
@@ -23,7 +19,7 @@ export const setProfileCreatedAttribute = (userId: string) => {
     }
 
   return promiseResult(
-    cognito.adminUpdateUserAttributes(verifyEmailParams).promise()
+    cognito.adminUpdateUserAttributes(verifyEmailParams)
       .then((val) =>
         success(val)
       )
