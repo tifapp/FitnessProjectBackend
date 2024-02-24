@@ -1,5 +1,5 @@
 import { EventBridge } from "@aws-sdk/client-eventbridge"
-import { InvokeCommandInput, Lambda } from "@aws-sdk/client-lambda"
+import { InvocationType, Lambda } from "@aws-sdk/client-lambda"
 import dotenv from "dotenv"
 
 dotenv.config()
@@ -50,12 +50,8 @@ export const scheduleAWSLambda = async (
 export const invokeAWSLambda = async (
   lambdaName: string,
   targetLambdaParams?: unknown
-) => {
-  const params = {
-    FunctionName: lambdaName,
-    InvocationType: "Event",
-    Payload: JSON.stringify(targetLambdaParams)
-  }
-
-  return await lambda.invoke(params as InvokeCommandInput)
-}
+) => lambda.invoke({
+  FunctionName: lambdaName,
+  InvocationType: InvocationType.RequestResponse,
+  Payload: JSON.stringify(targetLambdaParams)
+})
