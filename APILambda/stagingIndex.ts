@@ -3,10 +3,10 @@ import { LocationCoordinate2D, invokeAWSLambda } from "TiFBackendUtils"
 import { addBenchmarking, addRoutes, createApp } from "./app.js"
 import { addCognitoTokenVerification } from "./auth.js"
 import { ServerEnvironment } from "./env.js"
-import { addEventToRequest } from "./index.js"
+import { addEventToRequest } from "./serverlessMiddleware.js"
 import { setProfileCreatedAttribute } from "./user/createUser/setCognitoAttribute.js"
 
-// do not import anything from ./test here, wont be accessible in deployment
+// do not import anything from ./test or ./index here, wont be accessible in deployment
 const stagingEnv: ServerEnvironment = {
   setProfileCreatedAttribute,
   callGeocodingLambda: (location: LocationCoordinate2D) =>
