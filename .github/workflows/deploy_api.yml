@@ -71,7 +71,7 @@ jobs:
         run: |
           cd APILambda
           rm -f index.ts
-          mv ./test/stagingIndex.ts ./index.ts
+          mv ./stagingIndex.ts ./index.ts
           npm run build
       
       - name: Remove dev dependencies
@@ -143,8 +143,8 @@ jobs:
           TEST_ENV=staging_tests npm run test:ci
   
   deploy:
+    if: ${{ always() }}
     needs: staging_tests
-    if: always()
     runs-on: ubuntu-latest
 
     steps:
