@@ -136,9 +136,14 @@ jobs:
           aws apigateway put-rest-api --rest-api-id 623qsegfb9 --mode merge --parameters basepath=prepend --body fileb://APILambda/swagger.json
           aws apigateway create-deployment --rest-api-id 623qsegfb9 --stage-name $stageName --description 'Deployed'
         
+      - name: Reset workspace
+        uses: actions/checkout@v2
+
       - name: Install dependencies
         run: |
           cd TiFBackendUtils
+          npm ci
+          cd ../GeocodingLambda
           npm ci
           cd ../APILambda
           npm ci
