@@ -9,7 +9,6 @@ on:
 jobs:
   staging_tests:
     if: github.ref == 'refs/heads/development'
-    needs: deploy
     runs-on: ubuntu-latest
     timeout-minutes: 10
     
@@ -62,7 +61,9 @@ jobs:
 
       - name: Install dependencies
         run: |
-          cd APILambda
+          cd GeocodingLambda
+          npm ci
+          cd ../APILambda
           npm ci
           npm install ../TiFBackendUtils/dist/TiFBackendUtils-1.0.0.tgz
 
@@ -142,6 +143,8 @@ jobs:
           TEST_ENV=staging_tests npm run test:ci
   
   deploy:
+    needs: staging_tests
+    if: always()
     runs-on: ubuntu-latest
 
     steps:
