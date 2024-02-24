@@ -41,9 +41,9 @@ export const addEventToRequest = (app: Express) => {
 
 const env: ServerEnvironment = {
   environment: "prod",
-  setProfileCreatedAttribute: (userId: string) => setProfileCreatedAttribute(userId),
   eventStartWindowInHours: 1,
   maxArrivals: 100,
+  setProfileCreatedAttribute,
   callGeocodingLambda: (location: LocationCoordinate2D) =>
     invokeAWSLambda("geocodingPipeline", location)
 }
