@@ -7,39 +7,34 @@ import {
   Placemark,
   Result,
   Retryable,
-  SearchClosestAddressToCoordinates,
-  addPlacemarkToDB,
-  checkExistingPlacemarkInDB,
   conn,
   exponentialFunctionBackoff,
-  getTimeZone,
   promiseResult,
   success
 } from "TiFBackendUtils"
+import { SearchClosestAddressToCoordinates, addPlacemarkToDB, checkExistingPlacemarkInDB, getTimeZone } from "./utils.js"
 
-interface LocationSearchRequest extends Retryable {
-  coordinate: LocationCoordinate2D
-}
+interface LocationSearchRequest extends Retryable, LocationCoordinate2D {}
 
 // TODO: Fix handler type, fix util dependencies
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const handler: any = exponentialFunctionBackoff<
   LocationSearchRequest,
   Result<"placemark-successfully-inserted", "placemark-already-exists">
->(async (event: LocationSearchRequest) =>
+>(async ({ latitude, longitude }: LocationCoordinate2D) =>
   checkExistingPlacemarkInDB(conn, {
-    latitude: parseFloat(event.coordinate.latitude.toFixed(10)),
-    longitude: parseFloat(event.coordinate.longitude.toFixed(10))
+    latitude: parseFloat(latitude.toFixed(10)),
+    longitude: parseFloat(longitude.toFixed(10))
   })
     .flatMapSuccess(() =>
       promiseResult(
         SearchClosestAddressToCoordinates({
-          latitude: event.coordinate.latitude,
-          longitude: event.coordinate.longitude
+          latitude,
+          longitude
         }).then(placemark => success(placemark))
       ))
     .flatMapSuccess((placemark: Placemark) => {
-      const timeZone = getTimeZone(event.coordinate)[0]
+      const timeZone = getTimeZone({ latitude, longitude })[0]
       return addPlacemarkToDB(conn, placemark, timeZone)
     })
     .mapSuccess(() => "placemark-successfully-inserted" as const)

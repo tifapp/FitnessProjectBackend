@@ -1,12 +1,9 @@
 import {
-  SearchClosestAddressToCoordinates,
-  addPlacemarkToDB,
-  conn,
-  getTimeZone
+  conn
 } from "TiFBackendUtils"
 import dayjs from "dayjs"
+import { addPlacemarkToDB } from "../../GeocodingLambda/utils.js"
 import { callCreateEvent, callGetEvent } from "../test/apiCallers/events.js"
-import { missingAddressTestLocation } from "../test/devIndex.js"
 import { testEventInput } from "../test/testEvents.js"
 import { createEventFlow } from "../test/userFlows/events.js"
 import { createUserFlow } from "../test/userFlows/users.js"
@@ -35,6 +32,27 @@ describe("CreateEvent tests", () => {
     expect(attendee).toMatchObject({ eventId: parseInt(eventResponses[0].body.id), userId: host.userId })
   })
 
+  it("should invoke the aws lambda for creating an event", async () => {
+    const { token } = await createUserFlow()
+    const {
+      eventIds
+    } = await createEventFlow([
+      {
+        title: "test event",
+        latitude: 36.98,
+        longitude: -122.06,
+        startTimestamp: dayjs().subtract(12, "hour").toDate(),
+        endTimestamp: dayjs().add(1, "year").toDate()
+      }
+    ])
+    const resp = await callGetEvent(token, eventIds[0])
+    expect(resp).toMatchObject({
+      status: 200,
+      body: { id: expect.anything(), city: expect.anything(), country: expect.anything() }
+    })
+    expect(parseInt(resp.body.id)).not.toBeNaN()
+  })
+
   it("should not allow a user to create an event that ends in the past", async () => {
     const { token } = await createUserFlow()
     const resp = await callCreateEvent(token, { ...testEventInput, startTimestamp: new Date("2000-01-01"), endTimestamp: new Date("2000-01-02") })
@@ -44,34 +62,18 @@ describe("CreateEvent tests", () => {
     })
   })
 
-  // Note: We will need to mock the SearchClosestAddressToCoordinates function
-  it("should invoke the aws lambda for creating an event if geocoding fails", async () => {
-    const { token } = await createUserFlow()
-    const {
-      eventIds
-    } = await createEventFlow([
-      {
-        title: "test event",
-        latitude: missingAddressTestLocation.latitude,
-        longitude: missingAddressTestLocation.longitude,
-        startTimestamp: dayjs().subtract(12, "hour").toDate(),
-        endTimestamp: dayjs().add(1, "year").toDate()
-      }
-    ])
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    const resp = await callGetEvent(token, eventIds[0])
-    expect(resp).toMatchObject({
-      status: 200,
-      body: { id: expect.anything(), city: expect.anything(), country: expect.anything() }
-    })
-    expect(parseInt(resp.body.id)).not.toBeNaN()
-  })
-
   it("create event still is successful if the placemark already exists", async () => {
     const { token } = await createUserFlow()
-    const placemark = await SearchClosestAddressToCoordinates({ latitude: 43.839319, longitude: 87.526148 })
-    const timeZone = getTimeZone({ latitude: 43.839319, longitude: 87.526148 })[0]
-    addPlacemarkToDB(conn, placemark, timeZone)
+    addPlacemarkToDB(conn, {
+      lat: testEventInput.latitude,
+      lon: testEventInput.longitude,
+      name: "Sample Location",
+      city: "Sample Neighborhood",
+      country: "Sample Country",
+      street: "Sample Street",
+      street_num: "1234",
+      unit_number: "5678"
+    }, "Sample/Timezone")
     const {
       eventIds
     } = await createEventFlow([
@@ -110,12 +112,10 @@ describe("CreateEvent tests", () => {
 
     const resp = await callGetEvent(token, eventIds[0])
 
-    const timeZone = getTimeZone({ latitude: 43.839319, longitude: 87.526148 })[0]
-
     expect(resp).toMatchObject({
       status: 200,
       body: { id: expect.anything() }
     })
-    expect(resp.body.timeZone).toEqual(timeZone)
+    expect(resp.body.timeZone).toEqual("Asia/Shanghai")
   })
 })

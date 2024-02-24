@@ -1,3 +1,2 @@
-export * from "./lambdaUtils.js"
-export * from "./locationUtils.js"
+export * from "./lambdaUtils.js";
 

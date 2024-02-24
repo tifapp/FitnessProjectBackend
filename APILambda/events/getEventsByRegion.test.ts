@@ -1,5 +1,6 @@
-import { addPlacemarkToDB, conn } from "TiFBackendUtils"
+import { conn } from "TiFBackendUtils"
 import dayjs from "dayjs"
+import { addPlacemarkToDB } from "../../GeocodingLambda/utils.js"
 import { callBlockUser } from "../test/apiCallers/users.js"
 import { callGetEventsByRegion } from "../test/helpers/events.js"
 import { testEventInput } from "../test/testEvents.js"

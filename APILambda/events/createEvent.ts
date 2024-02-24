@@ -1,10 +1,6 @@
 import {
   SQLExecutable,
-  addPlacemarkToDB,
-  checkExistingPlacemarkInDB,
   conn,
-  getTimeZone,
-  promiseResult,
   success
 } from "TiFBackendUtils"
 import { z } from "zod"
@@ -84,39 +80,13 @@ INSERT INTO event (
     }
   )
 
-export const addPlacemarkForEvent = (
-  insertId: string,
-  eventLatitude: number,
-  eventLongitude: number,
-  SearchClosestAddressToCoordinates: ServerEnvironment["SearchClosestAddressToCoordinates"],
-  callGeocodingLambda: ServerEnvironment["callGeocodingLambda"]
-) => {
-  return checkExistingPlacemarkInDB(conn, {
-    longitude: eventLongitude,
-    latitude: eventLatitude
-  })
-    .flatMapSuccess(() => {
-      const timeZone = getTimeZone({ latitude: eventLatitude, longitude: eventLongitude })[0]
-      return promiseResult(
-        SearchClosestAddressToCoordinates({
-          latitude: eventLatitude,
-          longitude: eventLongitude
-        }).then(placemark => { console.log("not going to calling geocoding lambda"); return addPlacemarkToDB(conn, placemark, timeZone) })
-          .catch(() => { console.log("calling geocoding lambda"); callGeocodingLambda(eventLatitude, eventLongitude); return promiseResult(success()) })
-      )
-    })
-    .flatMapFailure(() => {
-      return success()
-    })
-}
-
 /**
  * Creates routes related to event operations.
  *
  * @param environment see {@link ServerEnvironment}.
  */
 export const createEventRouter = (
-  environment: ServerEnvironment,
+  { callGeocodingLambda }: ServerEnvironment,
   router: ValidatedRouter
 ) => {
   /**
@@ -135,14 +105,19 @@ export const createEventRouter = (
                 res.locals.selfId,
                 parseInt(insertId),
                 HOST
-              ).flatMapSuccess(() =>
-                addPlacemarkForEvent(
-                  insertId,
-                  req.body.latitude,
-                  req.body.longitude,
-                  environment.SearchClosestAddressToCoordinates,
-                  environment.callGeocodingLambda
-                )
+              ).flatMapSuccess(async () => {
+                try {
+                  await callGeocodingLambda({
+                    longitude:
+                    req.body.longitude,
+                    latitude:
+                    req.body.latitude
+                  })
+                } catch (e) {
+                  console.error("Could not create placemark for ", req.body)
+                }
+                return success()
+              }
               ).mapSuccess(() => ({ insertId }))
             )
         )

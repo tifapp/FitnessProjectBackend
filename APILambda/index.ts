@@ -2,7 +2,7 @@ import awsServerlessExpress, {
   getCurrentInvoke
 } from "@vendia/serverless-express"
 import {
-  SearchClosestAddressToCoordinates,
+  LocationCoordinate2D,
   invokeAWSLambda
 } from "TiFBackendUtils"
 import express, { Express } from "express"
@@ -44,11 +44,8 @@ const env: ServerEnvironment = {
   setProfileCreatedAttribute: (userId: string) => setProfileCreatedAttribute(userId),
   eventStartWindowInHours: 1,
   maxArrivals: 100,
-  SearchClosestAddressToCoordinates,
-  callGeocodingLambda: (latitude: number, longitude: number) =>
-    invokeAWSLambda("geocodingPipeline", {
-      location: { latitude, longitude }
-    })
+  callGeocodingLambda: (location: LocationCoordinate2D) =>
+    invokeAWSLambda("geocodingPipeline", location)
 }
 
 const app = createApp()
