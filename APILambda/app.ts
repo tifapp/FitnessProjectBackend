@@ -9,6 +9,7 @@ import { getEventByIdRouter } from "./events/getEventById.js"
 import { getEventsByRegionRouter } from "./events/getEventsByRegion.js"
 import { joinEventRouter } from "./events/joinEventById.js"
 import { leaveEventRouter } from "./events/leaveEvent.js"
+import { endEventRouter } from "./events/endEvent.js"
 import { autocompleteUsersRouter } from "./user/autocompleteUsers.js"
 import { createBlockUserRouter } from "./user/blockUser.js"
 import { createUserProfileRouter } from "./user/createUser/createUserProfile.js"
@@ -63,6 +64,7 @@ const addEventRoutes = (environment: ServerEnvironment) => {
   getEventByIdRouter(environment, router)
   joinEventRouter(environment, router)
   leaveEventRouter(environment, router)
+  endEventRouter(environment, router)
   setArrivalStatusRouter(environment, router)
   setDepartureRouter(environment, router)
   getUpcomingEventsByRegionRouter(environment, router)

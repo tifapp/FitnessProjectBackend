@@ -36,6 +36,17 @@ export const callLeaveEvent = async (
     .send()
 }
 
+export const callEndEvent = async (
+  bearerToken: string,
+  eventId: number
+) => {
+  return await request(testApp)
+    .post(`/event/end/${eventId}`)
+    .set("Authorization", bearerToken)
+    .send()
+}
+
+
 export const callSetArrival = async (
   bearerToken: string,
   req: SetArrivalStatusInput
