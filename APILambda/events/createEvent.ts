@@ -5,7 +5,6 @@ import {
   conn,
   success
 } from "TiFBackendUtils"
-import { find } from "geo-tz"
 import { z } from "zod"
 import { ServerEnvironment } from "../env.js"
 import { ValidatedRouter } from "../validation.js"
@@ -44,10 +43,6 @@ const CreateEventSchema = z
   }))
 
 export type CreateEventInput = z.infer<typeof CreateEventSchema>
-
-export const getTimeZone = (latitude: number, longitude: number) => {
-  return find(latitude, longitude)
-}
 
 export const createEvent = (
   conn: SQLExecutable,
