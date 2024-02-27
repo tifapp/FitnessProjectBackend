@@ -3,10 +3,11 @@ import {
   Place,
   SearchPlaceIndexForPositionCommand
 } from "@aws-sdk/client-location"
-import { SQLExecutable } from "../SQLExecutable/index.js"
-import { LocationCoordinate2D, Placemark } from "../location.js"
+import { SQLExecutable } from "TiFBackendUtils/SQLExecutable/index.js"
+import { LocationCoordinate2D, Placemark } from "TiFBackendUtils/location.js"
+import { find } from "geo-tz"
 
-const locationClient = new LocationClient({ region: "us-west-2" })
+const locationClient = new LocationClient({ region: process.env.AWS_REGION })
 
 /**
  * Converts an AWS location search result into placemark format.
@@ -76,3 +77,7 @@ export const addPlacemarkToDB = (conn: SQLExecutable, place: Placemark, timeZone
     `,
     { timeZone, ...place }
   )
+
+export const getTimeZone = (coordinate: {latitude: number, longitude: number}) => {
+  return find(coordinate.latitude, coordinate.longitude)
+}

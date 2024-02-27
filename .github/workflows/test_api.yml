@@ -41,6 +41,7 @@ jobs:
         run: |
           cd TiFBackendUtils
           npm ci
+          npm run dbtots
           cd ../GeocodingLambda
           npm ci
           cd ../APILambda

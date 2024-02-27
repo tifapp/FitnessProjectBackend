@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 // Env variables
-import { LocationCoordinate2D, Placemark, PromiseResult } from "TiFBackendUtils"
+import { LocationCoordinate2D, PromiseResult } from "TiFBackendUtils"
 import dotenv from "dotenv"
 import { z } from "zod"
 
@@ -45,8 +45,5 @@ export type SetArrivalStatusEnvironment = {
 export type ServerEnvironment = CreateUserProfileEnvironment & SetArrivalStatusEnvironment & {
   environment: "dev" | "staging" | "prod"
   eventStartWindowInHours: number
-  SearchClosestAddressToCoordinates: (
-    location: LocationCoordinate2D
-  ) => Promise<Placemark>
-  callGeocodingLambda: (latitude: number, longitude: number) => void
+  callGeocodingLambda: (location: LocationCoordinate2D) => Promise<unknown>
 }

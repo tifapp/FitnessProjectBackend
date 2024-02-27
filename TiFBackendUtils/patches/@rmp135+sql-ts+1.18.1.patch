@@ -1,0 +1,38 @@
+diff --git a/node_modules/@rmp135/sql-ts/dist/Adapters/mysql.js b/node_modules/@rmp135/sql-ts/dist/Adapters/mysql.js
+index b768174..9bdaa70 100644
+--- a/node_modules/@rmp135/sql-ts/dist/Adapters/mysql.js
++++ b/node_modules/@rmp135/sql-ts/dist/Adapters/mysql.js
+@@ -92,14 +92,14 @@ var default_1 = /** @class */ (function () {
+             return __generator(this, function (_a) {
+                 switch (_a.label) {
+                     case 0:
+-                        sql = "\n      SELECT\n        column_name as name,\n        is_nullable as isNullable,\n        column_comment as comment,\n        COLUMN_DEFAULT AS defaultValue,\n        CASE WHEN LOCATE('auto_increment', extra) <> 0 OR COLUMN_DEFAULT IS NOT NULL THEN 1 ELSE 0 END isOptional,\n        CASE WHEN EXISTS(\n          SELECT NULL FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE kcu\n          WHERE CONSTRAINT_NAME = 'PRIMARY'\n          AND kcu.TABLE_NAME = :table\n          AND kcu.TABLE_SCHEMA = :schema\n          AND kcu.COLUMN_NAME = c.COLUMN_NAME\n        ) THEN 1 ELSE 0 END isPrimaryKey,\n        data_type AS type\n        FROM information_schema.columns c\n        WHERE TABLE_NAME = :table\n        AND c.TABLE_SCHEMA = :schema\n        ORDER BY ORDINAL_POSITION\n      ";
++                        sql = "\n      SELECT\n        column_name as name,\n        is_nullable as isNullable,\n        column_comment as comment,\n        COLUMN_DEFAULT AS defaultValue,\n        CASE WHEN LOCATE('auto_increment', extra) <> 0 OR COLUMN_DEFAULT IS NOT NULL THEN 1 ELSE 0 END isOptional,\n        CASE WHEN EXISTS(\n          SELECT NULL FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE kcu\n          WHERE CONSTRAINT_NAME = 'PRIMARY'\n          AND kcu.TABLE_NAME = :table\n          AND kcu.TABLE_SCHEMA = :schema\n          AND kcu.COLUMN_NAME = c.COLUMN_NAME\n        ) THEN 1 ELSE 0 END isPrimaryKey,\n        data_type AS type,\n    column_type AS columnType\n         FROM information_schema.columns c\n        WHERE TABLE_NAME = :table\n        AND c.TABLE_SCHEMA = :schema\n        ORDER BY ORDINAL_POSITION\n      ";
+                         return [4 /*yield*/, db.raw(sql, { table: table, schema: schema })];
+                     case 1: return [2 /*return*/, (_a.sent())[0]
+                             .map(function (c) {
+                             var _a, _b;
+                             return ({
+                                 name: c.name,
+-                                type: c.type,
++                                type: c.columnType,
+                                 nullable: c.isNullable == 'YES',
+                                 optional: c.isOptional === 1,
+                                 isEnum: false,
+diff --git a/node_modules/@rmp135/sql-ts/dist/ColumnTasks.js b/node_modules/@rmp135/sql-ts/dist/ColumnTasks.js
+index edab7c7..280d0f8 100644
+--- a/node_modules/@rmp135/sql-ts/dist/ColumnTasks.js
++++ b/node_modules/@rmp135/sql-ts/dist/ColumnTasks.js
+@@ -168,6 +168,12 @@ function convertType(column, table, config, dialect) {
+     var userTypeMap = config.typeMap;
+     // Start with user config overrides.
+     convertedType = overrides[fullname];
++    // Convert mysql types
++    const parts = column.type.split('(');
++    if (convertedType == null && parts[0] === "enum") {
++        convertedType = parts[1].slice(0, -1).trim().replace(/,/g, '|');
++    }
++    column.type = parts[0]
+     // Then check the user config typemap.
+     if (convertedType == null) {
+         convertedType = Object.keys(userTypeMap).find(function (t) { return userTypeMap[t].includes(column.type); });

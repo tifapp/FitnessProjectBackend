@@ -5,14 +5,17 @@
   "description": "",
   "main": "index.js",
   "dependencies": {
+    "@aws-sdk/client-location": "^3.515.0",
     "dotenv": "^16.3.1",
-    "TiFBackendUtils": "file:../TiFBackendUtils",
-    "aws-sdk": "^2.978.0"
+    "geo-tz": "^8.0.1",
+    "TiFBackendUtils": "file:../TiFBackendUtils"
   },
   "scripts": {
+    "dbtots": "node ../TiFBackendUtils/Planetscale/dbToTs.mjs",
     "build": "npx tsc",
     "test": "jest",
-    "test:ci": "jest --ci --detectOpenHandles"
+    "test:ci": "jest --ci --detectOpenHandles",
+    "postinstall": "node removeUnusedTimezones.cjs"
   },
   "devDependencies": {
     "@types/jest": "^29.5.2",
