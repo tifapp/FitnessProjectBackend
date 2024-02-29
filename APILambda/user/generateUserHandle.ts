@@ -1,6 +1,6 @@
 import { PromiseResult, SQLExecutable, failure, promiseResult } from "TiFBackendUtils"
 import crypto from "crypto"
-import { userWithHandleDoesNotExist } from "./SQL.js"
+import { userWithHandleDoesNotExist } from "./UserExistsChecks.js"
 
 const generateNumericHash = (input: string) => {
   const hash = crypto.createHash("sha1").update(input).digest("hex")

@@ -1,17 +1,18 @@
-import { SQLExecutable, UserHandle, conn, success } from "TiFBackendUtils"
+import { DBuser, NullablePartial, SQLExecutable, UserHandle, conn, success } from "TiFBackendUtils"
 import { z } from "zod"
 import { ServerEnvironment } from "../env.js"
 import { ValidatedRouter } from "../validation.js"
-import { userWithHandleDoesNotExist } from "./SQL.js"
-import { DatabaseUser } from "./models.js"
+import { userWithHandleDoesNotExist } from "./UserExistsChecks.js"
 
 const UpdateUserRequestSchema = z.object({
   name: z.string().optional(),
   bio: z.string().max(250).optional(),
-  handle: UserHandle.schema.optional()
+  handle: UserHandle.schema.optional().transform(handle => handle?.rawValue)
 })
 
-export type UpdateUserRequest = z.infer<typeof UpdateUserRequestSchema>
+type UpdateUserRequest = z.infer<typeof UpdateUserRequestSchema>
+
+type EditableProfileFields = Pick<DBuser, "bio" | "handle" | "name">
 
 /**
  * Creates routes related to user operations.
@@ -31,7 +32,7 @@ export const updateUserProfileRouter = (
     { bodySchema: UpdateUserRequestSchema },
     (req, res) =>
       conn
-        .transaction((tx) => updateProfile(tx, res.locals.selfId, req.body))
+        .transaction((tx) => updateProfileTransaction(tx, res.locals.selfId, req.body))
         .mapFailure((error) => res.status(400).json({ error }))
         .mapSuccess(() => res.status(204).send())
   )
@@ -39,41 +40,26 @@ export const updateUserProfileRouter = (
   return router
 }
 
+const updateProfileTransaction = (
+  conn: SQLExecutable,
+  userId: string,
+  updatedProfile: UpdateUserRequest
+) =>
+  (updatedProfile.handle ? userWithHandleDoesNotExist(conn, updatedProfile.handle) : success())
+    .flatMapSuccess(() => updateProfile(conn, userId, updatedProfile))
+
 const updateProfile = (
   conn: SQLExecutable,
   userId: string,
-  request: UpdateUserRequest
-) =>
-  (request.handle ? userWithHandleDoesNotExist(conn, request.handle?.rawValue) : success())
-    .flatMapSuccess(() => getProfile(conn, userId))
-    .flatMapSuccess((profile) => {
-      const handle = request.handle?.rawValue ?? profile.handle
-      const name = request.name ?? profile.name
-      const updatedProfile = { ...profile, ...request, handle, name }
-      return overwriteProfile(conn, userId, updatedProfile)
-    })
-
-type DatabaseUserProfile = {
-  name: string
-  handle: string
-  bio?: string
-}
-
-const overwriteProfile = (
-  conn: SQLExecutable,
-  userId: string,
-  profile: DatabaseUserProfile
+  { handle = null, name = null, bio = null }: NullablePartial<EditableProfileFields>
 ) =>
   conn
     .queryResults(
-      "UPDATE user SET name = :name, bio = :bio, handle = :handle WHERE id = :userId",
-      { ...profile, userId }
+      `UPDATE user 
+      SET 
+      name = COALESCE(:name, name),
+      bio = COALESCE(:bio, bio), 
+      handle = COALESCE(:handle, handle)
+      WHERE id = :userId`,
+      { handle, name, bio, userId }
     )
-
-const getProfile = (conn: SQLExecutable, userId: string) =>
-  conn
-    .queryFirstResult<Pick<DatabaseUser, "bio" | "handle" | "name">>(
-      "SELECT name, handle, bio FROM user WHERE id = :userId",
-      { userId }
-    )
-    .withFailure("user-not-found" as const)

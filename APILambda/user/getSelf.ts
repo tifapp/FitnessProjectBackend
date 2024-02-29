@@ -1,7 +1,16 @@
-import { conn } from "TiFBackendUtils"
+import { DBuser, SQLExecutable, conn } from "TiFBackendUtils"
 import { ServerEnvironment } from "../env.js"
 import { ValidatedRouter } from "../validation.js"
-import { userWithId } from "./SQL.js"
+
+/**
+ * Queries the user with the given id.
+ */
+const getSelf = (conn: SQLExecutable, userId: string) =>
+  conn
+    .queryFirstResult<DBuser>("SELECT * FROM user WHERE id = :userId", {
+      userId
+    })
+    .withFailure("user-not-found" as const)
 
 /**
  * Creates routes related to user operations.
@@ -16,7 +25,7 @@ export const getSelfRouter = (
    * gets the current user's account info
    */
   router.getWithValidation("/self", {}, (_, res) =>
-    userWithId(conn, res.locals.selfId)
+    getSelf(conn, res.locals.selfId)
       .mapFailure((error) => res.status(500).json({ error }))
       .mapSuccess((user) => res.status(200).json(user))
   )

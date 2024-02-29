@@ -1,7 +1,7 @@
 import { SQLExecutable, conn, failure, success } from "TiFBackendUtils"
 import { z } from "zod"
 import { ValidatedRouter } from "../validation.js"
-import { UserToProfileRelationStatus } from "./models.js"
+import { getUserAndRelationship } from "./TiFUser.js"
 
 const friendRequestSchema = z.object({
   userId: z.string().uuid()
@@ -49,21 +49,21 @@ const sendFriendRequest = (
   senderId: string,
   receiverId: string
 ) =>
-  twoWayUserRelation(conn, senderId, receiverId).flatMapSuccess(
-    ({ youToThemStatus, themToYouStatus }) => {
+  getUserAndRelationship(conn, senderId, receiverId).flatMapSuccess(
+    ({ fromYouToThem, fromThemToYou }) => {
       if (
-        youToThemStatus === "friends" ||
-        youToThemStatus === "friend-request-pending"
+        fromYouToThem === "friends" ||
+        fromYouToThem === "friend-request-pending"
       ) {
-        return success({ statusChanged: false, status: youToThemStatus })
+        return success({ statusChanged: false, status: fromYouToThem })
       }
 
-      if (themToYouStatus === "blocked") {
+      if (fromThemToYou === "blocked") {
         return failure("blocked" as const)
       }
 
-      if (themToYouStatus === "friend-request-pending") {
-        return makeFriends(conn, senderId, receiverId).withSuccess({
+      if (fromThemToYou === "friend-request-pending") {
+        return makeFriends(conn, senderId, receiverId).withSuccess({ // could be combined all into one, something like "upsert where fromUser=xxx, toUser=yyy and relation is friend-request pending"
           statusChanged: true,
           status: "friends" as const
         })
@@ -75,37 +75,6 @@ const sendFriendRequest = (
       })
     }
   )
-
-const twoWayUserRelation = (
-  conn: SQLExecutable,
-  youId: string,
-  themId: string
-) =>
-  conn
-    .queryResults<{
-      fromUserId: string
-      toUserId: string
-      status: UserToProfileRelationStatus
-    }>(
-      `
-    SELECT * FROM userRelations ur 
-    WHERE 
-      (ur.fromUserId = :youId AND ur.toUserId = :themId) 
-      OR 
-      (ur.fromUserId = :themId AND ur.toUserId = :youId) 
-    `,
-      { youId, themId }
-    )
-    .flatMapSuccess((results) =>
-      success({
-        youToThemStatus: results.find(
-          (res) => res.fromUserId === youId && res.toUserId === themId
-        )?.status,
-        themToYouStatus: results.find(
-          (res) => res.fromUserId === themId && res.toUserId === youId
-        )?.status
-      })
-    )
 
 const makeFriends = (
   conn: SQLExecutable,
