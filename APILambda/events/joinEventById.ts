@@ -27,7 +27,7 @@ const joinEvent = (conn: SQLExecutable, userId: string, eventId: number, coordin
   return conn.transaction((tx) =>
     getEventById(tx, eventId, userId)
       .flatMapSuccess((event) =>
-        (new Date() < event.endTimestamp // perform in sql?
+        (new Date() < event.endTimestamp && !event.endedAt // perform in sql?
           ? isUserNotBlocked(tx, event.hostId, userId)
           : failure("event-has-ended" as const))
           .flatMapSuccess(() =>
