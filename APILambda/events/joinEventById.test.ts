@@ -1,20 +1,31 @@
 import { conn } from "TiFBackendUtils"
 import { randomInt } from "crypto"
 import dayjs from "dayjs"
-import { callCreateEvent, callGetAttendees, callJoinEvent } from "../test/apiCallers/events.js"
 import {
-  callBlockUser
-} from "../test/apiCallers/users.js"
+  callCreateEvent,
+  callEndEvent,
+  callGetAttendees,
+  callJoinEvent
+} from "../test/apiCallers/events.js"
+import { callBlockUser } from "../test/apiCallers/users.js"
 import { testEventInput } from "../test/testEvents.js"
 import { createUserFlow } from "../test/userFlows/users.js"
 import { createEvent } from "./createEvent.js"
+import { createEventFlow } from "../test/userFlows/events.js"
+
+const eventLocation = { latitude: 50, longitude: 50 }
 
 describe("Join the event by id tests", () => {
   it("should not save arrival when the user passes an outdated location", async () => {
     const { token: eventOwnerToken } = await createUserFlow()
     const { token: attendeeToken, userId: attendeeId } = await createUserFlow()
     const event = await callCreateEvent(eventOwnerToken, testEventInput)
-    const resp = await callJoinEvent(attendeeToken, parseInt(event.body.id), { region: { arrivalRadiusMeters: 0, coordinate: { latitude: 0, longitude: 0 } } })
+    const resp = await callJoinEvent(attendeeToken, parseInt(event.body.id), {
+      region: {
+        arrivalRadiusMeters: 0,
+        coordinate: { latitude: 0, longitude: 0 }
+      }
+    })
     expect(resp).toMatchObject({
       status: 201,
       body: { id: attendeeId, token: expect.anything(), isArrived: false }
@@ -43,7 +54,15 @@ describe("Join the event by id tests", () => {
     const { token: eventOwnerToken } = await createUserFlow()
     const { token: attendeeToken, userId: attendeeId } = await createUserFlow()
     const event = await callCreateEvent(eventOwnerToken, { ...testEventInput })
-    const resp = await callJoinEvent(attendeeToken, parseInt(event.body.id), { region: { arrivalRadiusMeters: 0, coordinate: { latitude: testEventInput.latitude, longitude: testEventInput.longitude } } })
+    const resp = await callJoinEvent(attendeeToken, parseInt(event.body.id), {
+      region: {
+        arrivalRadiusMeters: 0,
+        coordinate: {
+          latitude: testEventInput.latitude,
+          longitude: testEventInput.longitude
+        }
+      }
+    })
     expect(resp).toMatchObject({
       status: 201,
       body: { id: attendeeId, token: expect.anything(), isArrived: true }
@@ -79,7 +98,21 @@ describe("Join the event by id tests", () => {
     const resp = await callJoinEvent(attendeeToken, parseInt(event.body.id))
     expect(resp).toMatchObject({
       status: 201,
-      body: { id: attendeeId, token: expect.anything(), upcomingRegions: [{ eventIds: [Number(event.body.id)], coordinate: { latitude: testEventInput.latitude, longitude: testEventInput.longitude }, isArrived: false, arrivalRadiusMeters: 500 }] }
+      body: {
+        id: attendeeId,
+        token: expect.anything(),
+        upcomingRegions: [
+          {
+            eventIds: [Number(event.body.id)],
+            coordinate: {
+              latitude: testEventInput.latitude,
+              longitude: testEventInput.longitude
+            },
+            isArrived: false,
+            arrivalRadiusMeters: 500
+          }
+        ]
+      }
     })
   })
 
@@ -110,11 +143,17 @@ describe("Join the event by id tests", () => {
     const { token: attendeeToken } = await createUserFlow()
 
     // normally we can't create events in the past so we'll add this ended event to the table directly
-    const { value: { insertId: eventId } } = await createEvent(conn, {
-      ...testEventInput,
-      startTimestamp: dayjs().subtract(2, "month").toDate(),
-      endTimestamp: dayjs().subtract(1, "month").toDate()
-    }, eventOwnerId)
+    const {
+      value: { insertId: eventId }
+    } = await createEvent(
+      conn,
+      {
+        ...testEventInput,
+        startTimestamp: dayjs().subtract(2, "month").toDate(),
+        endTimestamp: dayjs().subtract(1, "month").toDate()
+      },
+      eventOwnerId
+    )
 
     const resp = await callJoinEvent(attendeeToken, Number(eventId))
 
@@ -133,6 +172,31 @@ describe("Join the event by id tests", () => {
     expect(resp).toMatchObject({
       status: 200,
       body: { id: attendeeId, token: expect.anything() } // should be event id not user id?
+    })
+  })
+
+  it("should return 403 if joining an event that has ended", async () => {
+    const {
+      eventIds,
+      host,
+      attendeesList: [attendee]
+    } = await createEventFlow(
+      [
+        {
+          ...eventLocation,
+          startTimestamp: dayjs().add(12, "hour").toDate(),
+          endTimestamp: dayjs().add(1, "year").toDate()
+        }
+      ],
+      1
+    )
+
+    await callEndEvent(host.token, eventIds[0])
+    const resp = await callJoinEvent(attendee.token, eventIds[0])
+
+    expect(resp).toMatchObject({
+      status: 403,
+      body: { error: "event-has-ended" }
     })
   })
 })

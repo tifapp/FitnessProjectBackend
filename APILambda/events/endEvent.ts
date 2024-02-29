@@ -7,11 +7,7 @@ const endEventParamsSchema = z.object({
   eventId: z.string()
 })
 
-export const endEventByHost = (
-  conn: SQLExecutable,
-  hostId: string,
-  eventId: number
-) =>
+const endEventByHost = (conn: SQLExecutable, hostId: string, eventId: number) =>
   conn
     .queryResult(
       `UPDATE event 
