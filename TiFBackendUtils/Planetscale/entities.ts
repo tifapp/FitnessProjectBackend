@@ -128,17 +128,7 @@ export interface DBViewEvents {
   'title': string;
   'userName': string | null;
 }
-export interface DBViewUserWithRelations {
-  'bio': string | null;
-  'creationDate'?: Date;
-  'handle': string;
-  'id': string;
-  'name': string;
-  'profileImageURL': string | null;
-  'themToYouStatus': 'friends'|'friend-request-pending'|'blocked' | null;
-  'updatedAt': Date | null;
-  'youToThemStatus': 'friends'|'friend-request-pending'|'blocked' | null;
-}
+
 export interface DBcopy_state {
   'id'?: any;
   'lastpk': string | null;

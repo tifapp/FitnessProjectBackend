@@ -45,7 +45,7 @@ describe("Get blocked user's profile name only", () => {
       body: {
         name,
         handle,
-        relations: { themToYou: "blocked" }
+        relations: { themToYouStatus: "blocked" }
       }
     })
   })

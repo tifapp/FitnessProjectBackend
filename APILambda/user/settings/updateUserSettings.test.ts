@@ -57,6 +57,28 @@ describe("Update Settings tests", () => {
     expect(settings2LastUpdatedAt.getTime()).toBeGreaterThanOrEqual(
       settings1LastUpdatedAt.getTime()
     )
+
+    const updateResp3 = await callPatchSettings(token, {
+      isCrashReportingEnabled: true
+    })
+    expect(withEmptyResponseBody(updateResp3)).toMatchObject({
+      status: 204,
+      body: ""
+    })
+
+    const settings3Resp = await callGetSettings(token)
+    expect(settings3Resp).toMatchObject({
+      status: 200,
+      body: expect.objectContaining({
+        isAnalyticsEnabled: true,
+        isCrashReportingEnabled: true,
+        isEventNotificationsEnabled: true,
+        isMentionsNotificationsEnabled: true,
+        isChatNotificationsEnabled: false,
+        isFriendRequestNotificationsEnabled: true,
+        lastUpdatedAt: expect.anything()
+      })
+    })
   })
 
   it("should 400 for an invalid settings body", async () => {
