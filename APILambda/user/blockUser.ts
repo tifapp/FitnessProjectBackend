@@ -44,8 +44,7 @@ const blockUser = (
     .flatMapSuccess(() => {
       return conn.queryResults(
         `
-      UPDATE userRelations
-      SET status = 'not-friends'
+      DELETE userRelations
       WHERE fromUserId = :toUserId AND toUserId = :fromUserId AND status != 'blocked';
       `,
         { fromUserId, toUserId }

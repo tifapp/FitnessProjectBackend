@@ -1,7 +1,6 @@
-import { SQLExecutable, conn } from "TiFBackendUtils"
+import { SQLExecutable, TifEvent, conn, getEventAttendeesPreview, success } from "TiFBackendUtils"
 import { z } from "zod"
 import { ServerEnvironment } from "../env.js"
-import { GetEventByIdEvent } from "../shared/SQL.js"
 import {
   DatabaseUserWithRelation,
   userAndRelationsWithId
@@ -15,12 +14,23 @@ const eventRequestSchema = z.object({
 
 const getEventWhenBlockedResponse = (
   dbUser: DatabaseUserWithRelation,
-  eventTitle: string
+  eventTitle: string,
+  eventId: number
 ): GetEventWhenBlockedResponse => ({
-  name: dbUser.name,
-  handle: dbUser.handle,
-  profileImageURL: dbUser.profileImageURL,
-  title: eventTitle
+  title: eventTitle,
+  id: eventId,
+  host: {
+    username: dbUser.name,
+    id: dbUser.id,
+    handle: dbUser.handle,
+    profileImageURL: dbUser.profileImageURL,
+    relations: {
+      themToYou: dbUser.themToYouStatus,
+      youToThem: dbUser.youToThemStatus
+    }
+  },
+  createdAt: dbUser.creationDate,
+  updatedAt: dbUser.updatedAt
 })
 
 export const getEventById = (
@@ -29,33 +39,22 @@ export const getEventById = (
   userId: string
 ) =>
   conn
-    .queryFirstResult<GetEventByIdEvent>(
+    .queryFirstResult<TifEvent>(
       `
-    SELECT 
-      e.*,
-      L.name,
-      L.city, 
-      L.country, 
-      L.street, 
-      L.street_num, 
-      L.timeZone,
-      ua.arrivedAt,
-      CASE 
-        WHEN ua.userId IS NOT NULL THEN "arrived"
-        ELSE "not-arrived"
-      END AS arrivalStatus
-    FROM 
-        event e
-    LEFT JOIN 
-        userArrivals ua ON e.latitude = ua.latitude 
-                        AND e.longitude = ua.longitude 
-                        AND ua.userId = :userId
-    LEFT JOIN 
-        location L ON e.latitude = L.lat 
-                  AND e.longitude = L.lon
-
-    WHERE 
-        e.id = :eventId;
+      SELECT TifEventView.*,
+        CASE 
+        WHEN TifEventView.hostId = :userId THEN "current-user"
+        ELSE UserRelationOfHostToUser.status
+        END AS themToYou,
+        CASE 
+        WHEN TifEventView.hostId = :userId THEN "current-user"
+        ELSE UserRelationOfUserToHost.status
+        END AS youToThem
+      FROM TifEventView
+      LEFT JOIN userRelations UserRelationOfHostToUser ON TifEventView.hostId = UserRelationOfHostToUser.fromUserId AND UserRelationOfHostToUser.toUserId = :userId
+      LEFT JOIN userRelations UserRelationOfUserToHost ON UserRelationOfUserToHost.fromUserId = :userId AND UserRelationOfUserToHost.toUserId = TifEventView.hostId
+      WHERE 
+        TifEventView.id = :eventId
   `,
       { eventId, userId }
     )
@@ -76,19 +75,22 @@ export const getEventByIdRouter = (
     (req, res) =>
       conn.transaction((tx) =>
         getEventById(conn, Number(req.params.eventId), res.locals.selfId)
-          .flatMapSuccess((event) =>
-            userAndRelationsWithId(
+          .flatMapSuccess((event) => {
+            console.log("Event returned from getEventById ", event)
+            return userAndRelationsWithId(
               tx,
               event.hostId,
               res.locals.selfId
-            ).mapSuccess((dbUser) =>
+            ).flatMapSuccess((dbUser) =>
               dbUser.themToYouStatus === "blocked" ||
               dbUser.youToThemStatus === "blocked"
-                ? res
+                ? success(res
                   .status(403)
-                  .json(getEventWhenBlockedResponse(dbUser, event.title))
-                : res.status(200).json(event)
+                  .json(getEventWhenBlockedResponse(dbUser, event.title, Number(event.id))))
+                : getEventAttendeesPreview(tx, [event], res.locals.selfId)
+                  .mapSuccess((event) => res.status(200).json(event))
             )
+          }
           )
           .mapFailure((error) => res.status(404).json({ error }))
       )

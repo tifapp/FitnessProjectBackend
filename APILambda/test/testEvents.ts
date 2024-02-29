@@ -11,8 +11,8 @@ const createTestEvent = (): CreateEventInput => {
   return {
     title: faker.word.noun({ length: { min: 5, max: 50 } }),
     description: faker.animal.rodent(),
-    startTimestamp: new Date(new Date().setMonth(new Date().getMonth() + 1)),
-    endTimestamp: new Date(new Date().setMonth(new Date().getMonth() + 2)),
+    startDateTime: new Date(new Date().setMonth(new Date().getMonth() + 1)),
+    endDateTime: new Date(new Date().setMonth(new Date().getMonth() + 2)),
     color: "#72B01D",
     shouldHideAfterStartDate: true,
     isChatEnabled: true,

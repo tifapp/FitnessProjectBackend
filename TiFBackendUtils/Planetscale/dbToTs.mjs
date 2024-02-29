@@ -20,6 +20,13 @@ const config = {
   typeMap: {
     boolean: ["tinyint"]
   },
+  typeOverrides: {
+    "tif.TifEventView.hasArrived": "boolean"
+  },
+  columnOptionality: {
+    "tif.TifEventView.hasArrived": "required"
+  },
+  globalOptionality: "required",
   // eslint-disable-next-line no-template-curly-in-string
   interfaceNameFormat: "DB${table}"
 }

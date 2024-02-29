@@ -28,10 +28,14 @@ export const SearchForPositionResultToPlacemark = (
       place?.Neighborhood ??
       place?.Municipality ??
       place?.SubRegion,
-    country: place?.Country ?? place?.Region,
+    // country: place?.Country, // TODO: Need to get the full country name
     street: place?.Street,
-    street_num: place?.AddressNumber,
-    unit_number: place?.UnitNumber
+    streetNum: place?.AddressNumber,
+    unitNumber: place?.UnitNumber,
+    postalCode: place?.PostalCode,
+    region: place?.Region,
+    isoCountryCode: place?.Country,
+    country: undefined
   }
 }
 

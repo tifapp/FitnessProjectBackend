@@ -1,12 +1,12 @@
-import { conn } from "TiFBackendUtils"
+import { conn, getAttendeeCount, getAttendees } from "TiFBackendUtils"
 import dayjs from "dayjs"
 import { addPlacemarkToDB } from "../../GeocodingLambda/utils.js"
-import { callBlockUser } from "../test/apiCallers/users.js"
 import { callGetEventsByRegion } from "../test/helpers/events.js"
 import { testEventInput } from "../test/testEvents.js"
 import { createEventFlow } from "../test/userFlows/events.js"
 import { getAttendeeCount, getAttendees } from "./getEventsByRegion.js"
 import { callEndEvent } from "../test/apiCallers/events.js"
+import { callBlockUser } from "../test/apiCallers/users.js"
 
 let eventOwnerTestToken: string
 let attendeeTestToken: string
@@ -40,21 +40,18 @@ const setupDB = async () => {
     attendeesList: [attendee],
     host,
     eventIds: [futureEventId, ongoingEventId]
-  } = await createEventFlow(
-    [
-      {
-        ...eventLocation,
-        startTimestamp: dayjs().add(12, "hour").toDate(),
-        endTimestamp: dayjs().add(1, "year").toDate()
-      },
-      {
-        ...eventLocation,
-        startTimestamp: dayjs().subtract(12, "hour").toDate(),
-        endTimestamp: dayjs().add(1, "year").toDate()
-      }
-    ],
-    1
-  )
+  } = await createEventFlow([
+    {
+      ...eventLocation,
+      startDateTime: dayjs().add(12, "hour").toDate(),
+      endDateTime: dayjs().add(1, "year").toDate()
+    },
+    {
+      ...eventLocation,
+      startDateTime: dayjs().subtract(12, "hour").toDate(),
+      endDateTime: dayjs().add(1, "year").toDate()
+    }
+  ], 1)
 
   attendeeTestToken = attendee.token
   eventOwnerTestToken = host.token

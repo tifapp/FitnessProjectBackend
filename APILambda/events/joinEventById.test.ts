@@ -92,8 +92,8 @@ describe("Join the event by id tests", () => {
     const { token: attendeeToken, userId: attendeeId } = await createUserFlow()
     const event = await callCreateEvent(eventOwnerToken, {
       ...testEventInput,
-      startTimestamp: dayjs().add(12, "hour").toDate(),
-      endTimestamp: dayjs().add(24, "hour").toDate()
+      startDateTime: dayjs().add(12, "hour").toDate(),
+      endDateTime: dayjs().add(24, "hour").toDate()
     })
     const resp = await callJoinEvent(attendeeToken, parseInt(event.body.id))
     expect(resp).toMatchObject({
@@ -143,17 +143,11 @@ describe("Join the event by id tests", () => {
     const { token: attendeeToken } = await createUserFlow()
 
     // normally we can't create events in the past so we'll add this ended event to the table directly
-    const {
-      value: { insertId: eventId }
-    } = await createEvent(
-      conn,
-      {
-        ...testEventInput,
-        startTimestamp: dayjs().subtract(2, "month").toDate(),
-        endTimestamp: dayjs().subtract(1, "month").toDate()
-      },
-      eventOwnerId
-    )
+    const { value: { insertId: eventId } } = await createEvent(conn, {
+      ...testEventInput,
+      startDateTime: dayjs().subtract(2, "month").toDate(),
+      endDateTime: dayjs().subtract(1, "month").toDate()
+    }, eventOwnerId)
 
     const resp = await callJoinEvent(attendeeToken, Number(eventId))
 

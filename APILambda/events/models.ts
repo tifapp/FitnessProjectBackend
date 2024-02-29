@@ -11,10 +11,20 @@ export const EventColorSchema = z.union([
 ])
 
 export type GetEventWhenBlockedResponse = {
-  name: string
-  handle: string
-  profileImageURL?: string,
-  title: string
+  title: string,
+  id: number,
+  host: {
+    username: string,
+    id: string,
+    handle: string,
+    profileImageURL?: string,
+    relations: {
+      themToYou: string | null,
+      youToThem: string | null
+    }
+  }
+  createdAt: Date,
+  updatedAt: Date | undefined
 }
 
 /**
