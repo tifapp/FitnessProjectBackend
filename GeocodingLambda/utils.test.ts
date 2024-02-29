@@ -17,8 +17,8 @@ describe("SearchForPositionResultToPlacemark", () => {
     } as Place
 
     expect(SearchForPositionResultToPlacemark(coordinate, place)).toEqual({
-      lat: 12.34,
-      lon: 56.78,
+      latitude: 12.34,
+      longitude: 56.78,
       name: "Sample Location",
       city: "Sample Neighborhood",
       country: undefined,
@@ -35,8 +35,8 @@ describe("SearchForPositionResultToPlacemark", () => {
     const place = {} as Place
 
     expect(SearchForPositionResultToPlacemark(coordinate, place)).toEqual({
-      lat: 12.34,
-      lon: 56.78,
+      latitude: 12.34,
+      longitude: 56.78,
       name: undefined,
       city: undefined,
       country: undefined,

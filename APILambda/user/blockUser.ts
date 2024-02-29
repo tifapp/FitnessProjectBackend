@@ -1,8 +1,7 @@
-import { SQLExecutable, conn } from "TiFBackendUtils"
+import { SQLExecutable, conn, userWithIdExists } from "TiFBackendUtils"
 import { z } from "zod"
 import { userNotFoundResponse } from "../shared/Responses.js"
 import { ValidatedRouter } from "../validation.js"
-import { userWithIdExists } from "./SQL.js"
 
 const BlockUserRequestSchema = z.object({
   userId: z.string().uuid()

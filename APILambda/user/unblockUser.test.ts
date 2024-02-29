@@ -61,7 +61,7 @@ describe("UnblockUser tests", () => {
     expect(resp).toMatchObject({
       status: 200,
       body: expect.objectContaining({
-        relations: { youToThem: "not-friends", themToYou: "not-friends" }
+        relations: { fromYouToThem: "not-friends", fromThemToYou: "not-friends" }
       })
     })
   })

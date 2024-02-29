@@ -272,6 +272,22 @@ export const promiseResult = <Success, Failure>(
   })
 }
 
+/*
+* Extracts the success type from a given result
+*/
+export type ExtractSuccess<T> = T extends SuccessResult<infer S, any> ? S
+                     : T extends FailureResult<infer S, any> ? S
+                     : T extends PromiseResult<infer S, any> ? S
+                     : never;
+
+/*
+* Extracts the failure type from a given result
+*/
+export type ExtractFailure<T> = T extends SuccessResult<any, infer F> ? F
+                     : T extends FailureResult<any, infer F> ? F
+                     : T extends PromiseResult<any, infer F> ? F
+                     : never;
+
 /**
  * Creates a {@link SuccessResult} with the given value.
  */

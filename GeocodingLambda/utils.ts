@@ -21,8 +21,8 @@ export const SearchForPositionResultToPlacemark = (
   place?: Place
 ): Placemark => {
   return {
-    lat: location.latitude,
-    lon: location.longitude,
+    latitude: location.latitude,
+    longitude: location.longitude,
     name: place?.Label,
     city:
       place?.Neighborhood ??
@@ -35,7 +35,7 @@ export const SearchForPositionResultToPlacemark = (
     region: place?.Region,
     isoCountryCode: place?.Country,
     country: undefined,
-    timezone: place?.TimeZone?.Name
+    timezoneIdentifier: place?.TimeZone?.Name
   }
 }
 
@@ -64,7 +64,7 @@ export const checkExistingPlacemarkInDB = (
   conn
     .queryHasResults(
       `
-    SELECT TRUE FROM location WHERE lat = :latitude AND lon = :longitude LIMIT 1
+    SELECT TRUE FROM location WHERE latitude = :latitude AND longitude = :longitude LIMIT 1
     `,
       location
     )
@@ -72,8 +72,8 @@ export const checkExistingPlacemarkInDB = (
     .withFailure("placemark-already-exists" as const)
 
 export const addPlacemarkToDB = (conn: SQLExecutable, {
-  lat,
-  lon,
+  latitude,
+  longitude,
   name = null,
   city = null,
   country = null,
@@ -82,13 +82,13 @@ export const addPlacemarkToDB = (conn: SQLExecutable, {
   postalCode = null,
   region = null,
   isoCountryCode = null
-}: Placemark, timeZone: string) =>
+}: Placemark, timezoneIdentifier: string) =>
   conn.queryResults(
     `
-        INSERT INTO location (name, city, country, street, street_num, postal_code, lat, lon, timeZone, isoCountryCode)
-        VALUES (:name, :city, :country, :street, :streetNumber, :postalCode, :lat, :lon, :timeZone, :isoCountryCode)
+        INSERT INTO location (name, city, country, street, streetNumber, postalCode, latitude, longitude, timezoneIdentifier, isoCountryCode)
+        VALUES (:name, :city, :country, :street, :streetNumber, :postalCode, :latitude, :longitude, :timezoneIdentifier, :isoCountryCode)
         `,
-    { timeZone, lat, lon, name, city, country, street, streetNumber, postalCode, region, isoCountryCode }
+    { timezoneIdentifier, latitude, longitude, name, city, country, street, streetNumber, postalCode, region, isoCountryCode }
   )
 
 export const getTimeZone = (coordinate: {latitude: number, longitude: number}) => {

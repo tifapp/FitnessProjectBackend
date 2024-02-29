@@ -41,8 +41,8 @@ describe("Block User tests", () => {
     expect(await callGetUser(fromUserToken, toUserId)).toMatchObject({
       body: expect.objectContaining({
         relations: {
-          youToThem: "blocked",
-          themToYou: "not-friends"
+          fromYouToThem: "blocked",
+          fromThemToYou: "not-friends"
         }
       })
     })
@@ -50,8 +50,8 @@ describe("Block User tests", () => {
     expect(await callGetUser(toUserToken, fromUserId)).toMatchObject({
       body: expect.objectContaining({
         relations: {
-          youToThem: "not-friends",
-          themToYou: "blocked"
+          fromYouToThem: "not-friends",
+          fromThemToYou: "blocked"
         }
       })
     })
@@ -66,8 +66,8 @@ describe("Block User tests", () => {
     expect(await callGetUser(fromUserToken, toUserId)).toMatchObject({
       body: expect.objectContaining({
         relations: {
-          youToThem: "blocked",
-          themToYou: "blocked"
+          fromYouToThem: "blocked",
+          fromThemToYou: "blocked"
         }
       })
     })
@@ -75,8 +75,8 @@ describe("Block User tests", () => {
     expect(await callGetUser(toUserToken, fromUserId)).toMatchObject({
       body: expect.objectContaining({
         relations: {
-          youToThem: "blocked",
-          themToYou: "blocked"
+          fromYouToThem: "blocked",
+          fromThemToYou: "blocked"
         }
       })
     })

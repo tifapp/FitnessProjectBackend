@@ -1,8 +1,7 @@
-import { SQLExecutable, conn, failure } from "TiFBackendUtils"
+import { DBevent, SQLExecutable, conn, failure } from "TiFBackendUtils"
 import { z } from "zod"
 import { ServerEnvironment } from "../env.js"
 import { ValidatedRouter } from "../validation.js"
-import { GetEventByIdEvent } from "../shared/SQL.js"
 
 const leaveEventSchema = z.object({
   eventId: z.string()
@@ -16,7 +15,7 @@ const leaveEvent = (conn: SQLExecutable, userId: string, eventId: number) => {
         return failure("event-not-found")
       })
       .flatMapSuccess((event) => {
-        if (!event.endedAt) {
+        if (!event.endedDateTime) {
           return isHostUserNotFromOwnEvent(tx, userId, eventId)
             .flatMapSuccess(() =>
               removeUserFromAttendeeList(tx, userId, eventId)
@@ -27,7 +26,7 @@ const leaveEvent = (conn: SQLExecutable, userId: string, eventId: number) => {
             .mapFailure((error) => {
               return error
             })
-        } else if (event.endedAt <= event.startTimestamp) {
+        } else if (event.endedDateTime <= event.startDateTime) {
           return failure("event-has-been-cancelled" as const)
         } else {
           return failure("event-has-ended" as const)
@@ -37,7 +36,7 @@ const leaveEvent = (conn: SQLExecutable, userId: string, eventId: number) => {
 }
 
 const getEvent = (conn: SQLExecutable, eventId: number) =>
-  conn.queryFirstResult<GetEventByIdEvent>(
+  conn.queryFirstResult<DBevent>(
     "SELECT * FROM event WHERE id = :eventId;",
     {
       eventId
@@ -68,7 +67,7 @@ const removeUserFromAttendeeList = (
   conn.queryResult(
     `DELETE ea FROM eventAttendance AS ea
     JOIN event AS e ON ea.eventId = e.id
-    WHERE ea.userId = :userId AND ea.eventId = :eventId AND e.endedAt IS NULL`,
+    WHERE ea.userId = :userId AND ea.eventId = :eventId AND e.endedDateTime IS NULL`,
     { userId, eventId }
   )
 
@@ -98,10 +97,10 @@ export const leaveEventRouter = (
               error === "co-host-not-found"
                 ? 400
                 : error === "event-not-found"
-                ? 404
-                : 403
+                  ? 404
+                  : 403
             )
-            .json({ error: error })
+            .json({ error })
         )
   )
 }

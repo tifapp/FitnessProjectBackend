@@ -23,8 +23,9 @@ export const handler: any = exponentialFunctionBackoff<
   Result<"placemark-successfully-inserted", "placemark-already-exists">
 >(async ({ latitude, longitude }: LocationCoordinate2D) =>
   checkExistingPlacemarkInDB(conn, {
-    latitude: parseFloat(latitude.toFixed(10)),
-    longitude: parseFloat(longitude.toFixed(10))
+    // WARN: remember to keep precision in sync with the type of lat/lon in the db
+    latitude: parseFloat(latitude.toFixed(7)),
+    longitude: parseFloat(longitude.toFixed(7))
   })
     .flatMapSuccess(() =>
       promiseResult(
@@ -34,11 +35,11 @@ export const handler: any = exponentialFunctionBackoff<
         }).then(placemark => success(placemark))
       ))
     .flatMapSuccess((placemark: Placemark) => {
-      const timeZone = placemark.timezone ?? getTimeZone({ latitude, longitude })[0]
-      if (!timeZone) { // should we throw if no address exists? ex. pacific ocean
+      const timezoneIdentifier = placemark.timezoneIdentifier ?? getTimeZone({ latitude, longitude })[0]
+      if (!timezoneIdentifier) { // should we throw if no address exists? ex. pacific ocean
         throw new Error(`Could not find timezone for ${JSON.stringify(location)}.`)
       }
-      return addPlacemarkToDB(conn, placemark, timeZone)
+      return addPlacemarkToDB(conn, placemark, timezoneIdentifier)
     })
     .mapSuccess(() => "placemark-successfully-inserted" as const)
 )

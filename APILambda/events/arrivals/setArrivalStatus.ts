@@ -49,9 +49,9 @@ export const deleteMaxArrivals = (
     .flatMapSuccess((arrivalCount) => arrivalCount > arrivalsLimit
       ? conn.queryFirstResult<{userId: string, latitude: number, longitude: number}>(
         `
-        SELECT arrivedAt FROM userArrivals 
+        SELECT arrivedDateTime FROM userArrivals 
         WHERE userId = :userId 
-        ORDER BY arrivedAt ASC 
+        ORDER BY arrivedDateTime ASC 
         LIMIT 1 
       `,
         { userId }
@@ -78,7 +78,7 @@ export const insertArrival = (
       `
         INSERT INTO userArrivals (userId, latitude, longitude)
         VALUES (:userId, :latitude, :longitude)
-        ON DUPLICATE KEY UPDATE arrivedAt = CURRENT_TIMESTAMP;    
+        ON DUPLICATE KEY UPDATE arrivedDateTime = CURRENT_TIMESTAMP;    
       `,
       { userId, latitude: coordinate.latitude, longitude: coordinate.longitude }
     )
@@ -96,8 +96,7 @@ const setArrivalStatusTransaction = (
         userId,
         request.coordinate
       ))
-    .flatMapSuccess(() => getUpcomingEventsByRegion(tx, userId))
-  )
+    .flatMapSuccess(() => getUpcomingEventsByRegion(tx, userId)))
     .mapSuccess((eventRegions) => ({ status: 200, upcomingRegions: eventRegions }))
 
 export const setArrivalStatusRouter = (

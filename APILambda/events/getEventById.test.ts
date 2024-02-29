@@ -8,7 +8,7 @@ import { callBlockUser } from "../test/apiCallers/users.js"
 import { testEventInput } from "../test/testEvents.js"
 import { createEventFlow } from "../test/userFlows/events.js"
 import { createUserFlow } from "../test/userFlows/users.js"
-import { GetEventWhenBlockedResponse } from "./models.js"
+import { BlockedTiFEventResponse } from "./getEventById.js"
 
 describe("GetSingleEvent tests", () => {
   const eventLocation = {
@@ -38,8 +38,8 @@ describe("GetSingleEvent tests", () => {
     addPlacemarkToDB(
       conn,
       {
-        lat: testEventInput.latitude,
-        lon: testEventInput.longitude,
+        latitude: testEventInput.latitude,
+        longitude: testEventInput.longitude,
         name: "Sample Location",
         city: "Sample Neighborhood",
         country: "Sample Country",
@@ -106,8 +106,8 @@ describe("GetSingleEvent tests", () => {
         },
         host: {
           relations: {
-            themToYou: "not-friends",
-            youToThem: "not-friends"
+            fromThemToYou: "not-friends",
+            fromYouToThem: "not-friends"
           },
           id: host.userId,
           username: host.name,
@@ -118,12 +118,12 @@ describe("GetSingleEvent tests", () => {
           shouldHideAfterStartDate: true,
           isChatEnabled: true
         },
-        updatedAt: expect.any(String),
-        createdAt: expect.any(String),
+        updatedDateTime: expect.any(String),
+        createdDateTime: expect.any(String),
         userAttendeeStatus: "not-participating",
-        joinDate: null,
+        joinedDateTime: null,
         hasArrived: false,
-        endedAt: null
+        endedDateTime: null
       })
     expect(resp.status).toEqual(200)
   })
@@ -152,7 +152,7 @@ describe("Checks the data returned if the user blocks the host or vice versa is 
     const resp = await callGetEvent(attendeesList[1].token, eventIds[0])
 
     expect(resp.status).toEqual(403)
-    expectTypeOf(resp.body).toMatchTypeOf<GetEventWhenBlockedResponse>()
+    expectTypeOf(resp.body).toMatchTypeOf<BlockedTiFEventResponse>()
   })
 
   it("should return host name and event title if attendee blocked host", async () => {
@@ -169,7 +169,7 @@ describe("Checks the data returned if the user blocks the host or vice versa is 
     const resp = await callGetEvent(attendeesList[1].token, eventIds[0])
 
     expect(resp.status).toEqual(403)
-    expectTypeOf(resp.body).toMatchTypeOf<GetEventWhenBlockedResponse>()
+    expectTypeOf(resp.body).toMatchTypeOf<BlockedTiFEventResponse>()
   })
 })
 
@@ -209,7 +209,7 @@ describe("Check that the secondsToStart is accurate", () => {
 })
 
 describe("Check the user relations return the appropriate relation between the user and host", () => {
-  it("should return 'current-user' if the user views their own event for the themToYou and youToThem properties", async () => {
+  it("should return 'current-user' if the user views their own event for the fromThemToYou and fromYouToThem properties", async () => {
     const eventLocation = {
       latitude: testEventInput.latitude,
       longitude: testEventInput.longitude
@@ -232,8 +232,8 @@ describe("Check the user relations return the appropriate relation between the u
       body: expect.objectContaining({
         host: expect.objectContaining({
           relations: expect.objectContaining({
-            youToThem: "current-user",
-            themToYou: "current-user"
+            fromYouToThem: "current-user",
+            fromThemToYou: "current-user"
           })
         })
       })

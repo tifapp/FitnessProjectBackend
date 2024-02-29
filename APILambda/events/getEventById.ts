@@ -1,36 +1,31 @@
-import { DBTifEvent, SQLExecutable, conn, refactorEventsToMatchTifEvent, setEventAttendeesFields, success } from "TiFBackendUtils"
+import { DBTifEvent, SQLExecutable, TiFEvent, conn, setEventAttendeesFields, success, tifEventResponseFromDatabaseEvent } from "TiFBackendUtils"
 import { z } from "zod"
 import { ServerEnvironment } from "../env.js"
-import {
-  DatabaseUserWithRelation,
-  userAndRelationsWithId
-} from "../user/getUser.js"
 import { ValidatedRouter } from "../validation.js"
-import { GetEventWhenBlockedResponse } from "./models.js"
 
 const eventRequestSchema = z.object({
   eventId: z.string()
 })
 
+export type BlockedTiFEventResponse = Pick<TiFEvent, "title" | "id" | "host" | "createdDateTime" | "updatedDateTime">
+
 const getEventWhenBlockedResponse = (
-  dbUser: DatabaseUserWithRelation,
-  eventTitle: string,
-  eventId: number
-): GetEventWhenBlockedResponse => ({
-  title: eventTitle,
-  id: eventId,
+  event: DBTifEvent
+): BlockedTiFEventResponse => ({
+  title: event.title,
+  id: event.id,
   host: {
-    username: dbUser.name,
-    id: dbUser.id,
-    handle: dbUser.handle,
-    profileImageURL: dbUser.profileImageURL,
+    username: event.hostUsername,
+    id: event.hostId,
+    handle: event.hostHandle,
+    profileImageURL: null,
     relations: {
-      themToYou: dbUser.themToYouStatus,
-      youToThem: dbUser.youToThemStatus
+      fromThemToYou: event.fromThemToYou,
+      fromYouToThem: event.fromYouToThem
     }
   },
-  createdAt: dbUser.creationDate,
-  updatedAt: dbUser.updatedAt
+  createdDateTime: event.createdDateTime,
+  updatedDateTime: event.updatedDateTime
 })
 
 export const getEventById = (
@@ -48,14 +43,14 @@ export const getEventById = (
                     WHEN UserRelationOfHostToUser.status IS NULL THEN 'not-friends'
                     ELSE UserRelationOfHostToUser.status
                 END
-       END AS themToYou,
+       END AS fromThemToYou,
        CASE
            WHEN TifEventView.hostId = :userId THEN 'current-user'
            ELSE CASE
                     WHEN UserRelationOfUserToHost.status IS NULL THEN 'not-friends'
                     ELSE UserRelationOfUserToHost.status
                 END
-       END AS youToThem
+       END AS fromYouToThem
       FROM TifEventView
       LEFT JOIN userRelations UserRelationOfHostToUser
           ON TifEventView.hostId = UserRelationOfHostToUser.fromUserId
@@ -85,19 +80,13 @@ export const getEventByIdRouter = (
       conn.transaction((tx) =>
         getEventById(conn, Number(req.params.eventId), res.locals.selfId)
           .flatMapSuccess((event) =>
-            userAndRelationsWithId(
-              tx,
-              event.hostId,
-              res.locals.selfId
-            ).flatMapSuccess((dbUser) =>
-              dbUser.themToYouStatus === "blocked" ||
-              dbUser.youToThemStatus === "blocked"
-                ? success(res
-                  .status(403)
-                  .json(getEventWhenBlockedResponse(dbUser, event.title, Number(event.id))))
-                : setEventAttendeesFields(tx, [event], res.locals.selfId).flatMapSuccess((events) => refactorEventsToMatchTifEvent(events))// TODO: if no timezone, return error
-                  .mapSuccess((event) => res.status(200).json(event[0]))
-            )
+            event.fromThemToYou === "blocked" ||
+            event.fromYouToThem === "blocked"
+              ? success(res
+                .status(403)
+                .json(getEventWhenBlockedResponse(event)))
+              : setEventAttendeesFields(tx, [event], res.locals.selfId).mapSuccess(([event]) => tifEventResponseFromDatabaseEvent(event)) // TODO: if no timezone, return error
+                .mapSuccess((event) => res.status(200).json(event))
           )
           .mapFailure((error) => res.status(404).json({ error }))
       )

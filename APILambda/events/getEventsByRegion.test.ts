@@ -19,8 +19,8 @@ export const setupDB = async () => {
   addPlacemarkToDB(
     conn,
     {
-      lat: testEventInput.latitude,
-      lon: testEventInput.longitude,
+      latitude: testEventInput.latitude,
+      longitude: testEventInput.longitude,
       name: "Sample Location",
       city: "Sample Neighborhood",
       country: "Sample Country",

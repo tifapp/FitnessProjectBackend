@@ -1,7 +1,7 @@
 import { conn } from "TiFBackendUtils"
 import dayjs from "dayjs"
+import { AttendeesCursorResponse } from "../shared/Attendee.js"
 import { decodeAttendeesListCursor } from "../shared/Cursor.js"
-import { AttendeesCursorResponse } from "../shared/SQL.js"
 import { callGetAttendees, callSetArrival } from "../test/apiCallers/events.js"
 import { callBlockUser } from "../test/apiCallers/users.js"
 import { testEventInput } from "../test/testEvents.js"
@@ -13,8 +13,8 @@ const eventLocation = { latitude: 50, longitude: 50 }
 // TODO: should have a universal "lastpagecursor" value
 const lastPageCursorResponse = {
   userId: "lastPage",
-  joinDate: null,
-  arrivedAt: null
+  joinedDateTime: null,
+  arrivedDateTime: null
 }
 const paginationLimit = 2
 
@@ -50,15 +50,15 @@ const createTestAttendeesList = async ({
  *
  * @param {Array} testAttendees - An array containing information about all attendees.
  * @param {number} index - The index indicating the position of the attendee for which the response is generated.
- * @returns {AttendeesCursorResponse} - An object representing the next page cursor response with userId, joinDate, and arrivedAt properties.
+ * @returns {AttendeesCursorResponse} - An object representing the next page cursor response with userId, joinedDateTime, and arrivedDateTime properties.
  */
 const getNextPageCursorResp = (
   testAttendees: Array<TestUser>,
   index: number
-): Omit<AttendeesCursorResponse, "arrivedAt"> => {
+): Omit<AttendeesCursorResponse, "arrivedDateTime"> => {
   return {
     userId: testAttendees[index].userId,
-    joinDate: index >= testAttendees.length ? null : expect.any(Date)
+    joinedDateTime: index >= testAttendees.length ? null : expect.any(Date)
   }
 }
 
@@ -336,7 +336,7 @@ describe("getAttendeesList endpoint", () => {
     })
   })
 
-  it("check that attendee list is sorted by role, arrivedAt, then joinDateTime", async () => {
+  it("check that attendee list is sorted by role, arrivedDateTime, then joinedDateTime", async () => {
     const { attendeeToken, attendeesList, testEventId } =
       await createTestAttendeesList({ numOfAttendees: 3 })
 
@@ -355,10 +355,10 @@ describe("getAttendeesList endpoint", () => {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     resp.body.attendees.forEach((attendee: any) => {
-      attendee.joinTimestamp = new Date(attendee.joinTimestamp)
+      attendee.joinedDateTime = new Date(attendee.joinedDateTime)
     })
-    resp.body.attendees[1].arrivedAt = new Date(
-      resp.body.attendees[1].arrivedAt
+    resp.body.attendees[1].arrivedDateTime = new Date(
+      resp.body.attendees[1].arrivedDateTime
     )
 
     expect(resp).toMatchObject({
@@ -368,17 +368,17 @@ describe("getAttendeesList endpoint", () => {
           {
             id: attendeesList[0].userId,
             name: attendeesList[0].name,
-            joinTimestamp: expect.any(Date),
+            joinedDateTime: expect.any(Date),
             hasArrived: false,
-            arrivedAt: null,
+            arrivedDateTime: null,
             role: "hosting"
           },
           {
             id: attendeesList[1].userId,
             name: attendeesList[1].name,
-            joinTimestamp: expect.any(Date),
+            joinedDateTime: expect.any(Date),
             hasArrived: true,
-            arrivedAt: expect.any(Date),
+            arrivedDateTime: expect.any(Date),
             role: "attending"
           }
         ],
@@ -399,7 +399,7 @@ describe("getAttendeesList endpoint", () => {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     resp.body.attendees.forEach((attendee: any) => {
-      attendee.joinTimestamp = new Date(attendee.joinTimestamp)
+      attendee.joinedDateTime = new Date(attendee.joinedDateTime)
     })
 
     resp.body.nextPageCursor = decodeAttendeesListCursor(
@@ -412,19 +412,19 @@ describe("getAttendeesList endpoint", () => {
         attendees: [
           {
             id: attendeesList[2].userId,
-            joinTimestamp: expect.any(Date),
+            joinedDateTime: expect.any(Date),
             name: attendeesList[2].name,
             role: "attending",
             hasArrived: false,
-            arrivedAt: null
+            arrivedDateTime: null
           },
           {
             id: attendeesList[3].userId,
-            joinTimestamp: expect.any(Date),
+            joinedDateTime: expect.any(Date),
             name: attendeesList[3].name,
             hasArrived: false,
             role: "attending",
-            arrivedAt: null
+            arrivedDateTime: null
           }
         ],
         nextPageCursor: lastPageCursorResponse,
@@ -462,14 +462,14 @@ describe("getAttendeesList endpoint", () => {
             name: attendeesList[0].name,
             hasArrived: false,
             role: "hosting",
-            relations: { youToThem: "not-friends", themToYou: "not-friends" }
+            relations: { fromYouToThem: "not-friends", fromThemToYou: "not-friends" }
           },
           {
             id: attendeesList[3].userId,
             name: attendeesList[3].name,
             hasArrived: false,
             role: "attending",
-            relations: { youToThem: "not-friends", themToYou: "not-friends" }
+            relations: { fromYouToThem: "not-friends", fromThemToYou: "not-friends" }
           }
         ],
         nextPageCursor: lastPageCursorResponse,
@@ -530,14 +530,14 @@ describe("getAttendeesList endpoint", () => {
             name: attendeesList[0].name,
             hasArrived: false,
             role: "hosting",
-            relations: { youToThem: "not-friends", themToYou: "not-friends" }
+            relations: { fromYouToThem: "not-friends", fromThemToYou: "not-friends" }
           },
           {
             id: attendeesList[3].userId,
             name: attendeesList[3].name,
             hasArrived: false,
             role: "attending",
-            relations: { youToThem: "not-friends", themToYou: "not-friends" }
+            relations: { fromYouToThem: "not-friends", fromThemToYou: "not-friends" }
           }
         ],
         nextPageCursor: lastPageCursorResponse,
@@ -576,14 +576,14 @@ describe("getAttendeesList endpoint", () => {
             name: attendeesList[0].name,
             hasArrived: false,
             role: "hosting",
-            relations: { youToThem: "blocked", themToYou: "not-friends" }
+            relations: { fromYouToThem: "blocked", fromThemToYou: "not-friends" }
           },
           {
             id: attendeesList[1].userId,
             name: attendeesList[1].name,
             hasArrived: false,
             role: "attending",
-            relations: { youToThem: "blocked", themToYou: "not-friends" }
+            relations: { fromYouToThem: "blocked", fromThemToYou: "not-friends" }
           }
         ],
         nextPageCursor: getNextPageCursorResp(attendeesList, 1),

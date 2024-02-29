@@ -101,8 +101,8 @@ describe("CreateEvent tests", () => {
   it("create event still is successful if the placemark already exists", async () => {
     const { token } = await createUserFlow()
     addPlacemarkToDB(conn, {
-      lat: testEventInput.latitude,
-      lon: testEventInput.longitude,
+      latitude: testEventInput.latitude,
+      longitude: testEventInput.longitude,
       name: "Sample Location",
       city: "Sample Neighborhood",
       country: "Sample Country",
@@ -132,8 +132,8 @@ describe("CreateEvent tests", () => {
   it("create event still is successful if the location is on a border of two timezones", async () => {
     const { token } = await createUserFlow()
     addPlacemarkToDB(conn, {
-      lat: 43.839319,
-      lon: 87.526148,
+      latitude: 43.839319,
+      longitude: 87.526148,
       name: "Sample Location",
       city: "Sample Neighborhood",
       country: "Sample Country",

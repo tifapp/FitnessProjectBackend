@@ -11,27 +11,34 @@ export interface DBbanned {
   'userId': string;
 }
 export interface DBevent {
-  'color': '#EF6351'|'#CB9CF2'|'#88BDEA'|'#72B01D'|'#F7B2BD'|'#F4845F'|'#F6BD60';
-  'createdAt': Date;
+  'color': string;
+  'createdDateTime': Date;
   'description': string;
-  'endedAt': Date | null;
-  'endTimestamp': Date;
-  'hasEnded': boolean | null;
+  'endDateTime': Date;
+  'endedDateTime': Date | null;
   'hostId': string;
   'id': number;
   'isChatEnabled': boolean;
   'latitude': number;
   'longitude': number;
   'shouldHideAfterStartDate': boolean;
-  'startTimestamp': Date;
+  'startDateTime': Date;
   'title': string;
-  'updatedAt': Date;
+  'updatedDateTime': Date;
 }
 export interface DBeventAttendance {
   'eventId': number;
-  'joinTimestamp': Date | null;
+  'joinedDateTime': Date;
   'role': 'hosting'|'attending';
   'userId': string;
+}
+export interface DBEventAttendeeCountView {
+  'attendeeCount': number;
+  'id': number;
+}
+export interface DBEventAttendeesView {
+  'eventId': number;
+  'userIds': string | null;
 }
 export interface DBeventReports {
   'eventOwnerId': string;
@@ -43,15 +50,16 @@ export interface DBeventReports {
 export interface DBlocation {
   'city': string | null;
   'country': string | null;
+  'createdDateTime': Date;
   'isoCountryCode': string | null;
-  'lat': number;
-  'lon': number;
+  'latitude': number;
+  'longitude': number;
   'name': string | null;
-  'postal_code': string | null;
+  'postalCode': string | null;
   'region': string | null;
   'street': string | null;
-  'street_num': string | null;
-  'timeZone': string;
+  'streetNumber': string | null;
+  'timezoneIdentifier': string;
 }
 export interface DBpushTokens {
   'id': number;
@@ -61,16 +69,16 @@ export interface DBpushTokens {
 }
 export interface DBTifEventView {
   'city': string | null;
-  'color': '#EF6351'|'#CB9CF2'|'#88BDEA'|'#72B01D'|'#F7B2BD'|'#F4845F'|'#F6BD60';
+  'color': string;
   'country': string | null;
-  'createdAt': Date;
+  'createdDateTime': Date;
   'description': string;
   'endDateTime': Date;
-  'endedAt': Date | null;
+  'endedDateTime': Date | null;
   'hasArrived': boolean;
-  'hostHandle': string | null;
+  'hostHandle': string;
   'hostId': string;
-  'hostUsername': string | null;
+  'hostUsername': string;
   'id': number;
   'isChatEnabled': boolean;
   'isoCountryCode': string | null;
@@ -85,19 +93,19 @@ export interface DBTifEventView {
   'streetNumber': string | null;
   'timezoneIdentifier': string | null;
   'title': string;
-  'updatedAt': Date;
+  'updatedDateTime': Date;
 }
 export interface DBuser {
   'bio': string | null;
-  'creationDate': Date;
+  'createdDateTime': Date;
   'handle': string;
   'id': string;
   'name': string;
   'profileImageURL': string | null;
-  'updatedAt': Date | null;
+  'updatedDateTime': Date;
 }
 export interface DBuserArrivals {
-  'arrivedAt': Date;
+  'arrivedDateTime': Date;
   'latitude': number;
   'longitude': number;
   'userId': string;
@@ -106,7 +114,7 @@ export interface DBuserRelations {
   'fromUserId': string;
   'status': 'friends'|'friend-request-pending'|'blocked';
   'toUserId': string;
-  'updatedAt': Date;
+  'updatedDateTime': Date;
 }
 export interface DBuserReports {
   'reportDate': Date;
@@ -121,43 +129,8 @@ export interface DBuserSettings {
   'isEventNotificationsEnabled': boolean;
   'isFriendRequestNotificationsEnabled': boolean;
   'isMentionsNotificationsEnabled': boolean;
-  'lastUpdatedAt': Date | null;
+  'updatedDateTime': Date | null;
   'userId': string;
-}
-export interface DBViewEventAttendeeCount {
-  'attendeeCount': number;
-  'id': number;
-}
-export interface DBViewEventAttendees {
-  'eventId': number;
-  'userIds': string | null;
-}
-export interface DBViewEvents {
-  'city': string | null;
-  'color': '#EF6351'|'#CB9CF2'|'#88BDEA'|'#72B01D'|'#F7B2BD'|'#F4845F'|'#F6BD60';
-  'country': string | null;
-  'createdAt': Date;
-  'description': string;
-  'endedAt': Date | null;
-  'endTimestamp': Date;
-  'handle': string | null;
-  'hasEnded': boolean | null;
-  'hostId': string;
-  'id': number;
-  'isChatEnabled': boolean;
-  'latitude': number;
-  'longitude': number;
-  'name': string | null;
-  'profileImageURL': string | null;
-  'relationHostToUser': 'friends'|'friend-request-pending'|'blocked' | null;
-  'relationUserToHost': 'friends'|'friend-request-pending'|'blocked' | null;
-  'shouldHideAfterStartDate': boolean;
-  'startTimestamp': Date;
-  'street': string | null;
-  'street_num': string | null;
-  'title': string;
-  'updatedAt': Date;
-  'userName': string | null;
 }
 export interface DBcopy_state {
   'id': any;
