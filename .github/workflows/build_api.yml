@@ -97,6 +97,7 @@ jobs:
           shopt -s extglob
           cp -R !(test|.github|dist|*.ts) dist/
           cd dist
+          rm -rf test
           zip -r ../dist.zip .
       
       - name: Set output path
