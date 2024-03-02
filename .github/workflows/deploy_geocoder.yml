@@ -39,7 +39,7 @@ jobs:
 
       - name: Deploy to AWS Lambda
         run: |
-          aws lambda update-function-code --function-name geocodingPipeline --zip-file fileb://geocoding-lambda/dist.zip
+          aws lambda update-function-code --function-name geocodingPipeline --zip-file fileb://dist.zip
           while true; do
               update_status=$(aws lambda get-function --function-name geocodingPipeline | jq -r '.Configuration.LastUpdateStatus')
 
