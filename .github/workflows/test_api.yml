@@ -54,3 +54,5 @@ jobs:
           export NODE_OPTIONS="--max_old_space_size=4096"
           npm run test:ci
 
+  build:
+    uses: ./.github/workflows/build_api.yml
