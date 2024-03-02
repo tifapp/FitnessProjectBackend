@@ -64,8 +64,6 @@ const setupDB = async () => {
   futureEventTestId = futureEventId
 }
 
-const eventLocation = { latitude: 50, longitude: 50 }
-
 describe("getEventsByRegion endpoint tests", () => {
   beforeEach(setupDB)
 
