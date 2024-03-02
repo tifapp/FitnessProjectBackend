@@ -22,7 +22,7 @@ const leaveEvent = (conn: SQLExecutable, userId: string, eventId: number) => {
               removeUserFromAttendeeList(tx, userId, eventId)
             )
             .mapSuccess(({ rowsAffected }) =>
-              rowsAffected > 0 ? { error: "" } : { error: "already-left-event" }
+              rowsAffected > 0 ? "" : "already-left-event"
             )
             .mapFailure((error) => {
               return error
@@ -90,7 +90,7 @@ export const leaveEventRouter = (
     (req, res) =>
       leaveEvent(conn, res.locals.selfId, Number(req.params.eventId))
         .mapSuccess((result) =>
-          res.status(!result.error ? 204 : 400).json(result)
+          res.status(!result ? 204 : 400).json({ error: result })
         )
         .mapFailure((error) =>
           res
