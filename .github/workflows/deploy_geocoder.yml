@@ -38,12 +38,12 @@ jobs:
           fi
 
           aws lambda update-function-configuration \
-          --function-name geocodingPipeline \
-          --environment "Variables={\
-            DATABASE_HOST=${{ secrets.DATABASE_HOST }},\
-            DATABASE_USERNAME=$DB_USERNAME,\
-            DATABASE_PASSWORD=$DB_PASSWORD\
-          }"
+            --function-name geocodingPipeline \
+            --environment "Variables={\
+              DATABASE_HOST=${{ secrets.DATABASE_HOST }},\
+              DATABASE_USERNAME=$DB_USERNAME,\
+              DATABASE_PASSWORD=$DB_PASSWORD\
+            }"
 
       - name: Deploy to AWS Lambda
         run: |
