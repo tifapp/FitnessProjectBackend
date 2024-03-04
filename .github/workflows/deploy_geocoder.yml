@@ -29,13 +29,21 @@ jobs:
       
       - name: Update AWS Lambda env variables
         run: |
+          if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+            DB_USERNAME=${{ secrets.DATABASE_USERNAME }}
+            DB_PASSWORD=${{ secrets.DATABASE_PASSWORD }}
+          else
+            DB_USERNAME=${{ secrets.DEV_DATABASE_USERNAME }}
+            DB_PASSWORD=${{ secrets.DEV_DATABASE_PASSWORD }}
+          fi
+
           aws lambda update-function-configuration \
-            --function-name geocodingPipeline \
-            --environment "Variables={\
-              DATABASE_HOST=${{ secrets.DATABASE_HOST }},\
-              DATABASE_USERNAME=${{ secrets.DATABASE_USERNAME }},\
-              DATABASE_PASSWORD=${{ secrets.DATABASE_PASSWORD }}\
-            }"
+          --function-name lambdaSQLRoute \
+          --environment "Variables={\
+            DATABASE_HOST=${{ secrets.DATABASE_HOST }},\
+            DATABASE_USERNAME=$DB_USERNAME,\
+            DATABASE_PASSWORD=$DB_PASSWORD\
+          }"
 
       - name: Deploy to AWS Lambda
         run: |
