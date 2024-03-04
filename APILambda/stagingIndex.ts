@@ -18,7 +18,7 @@ const stagingEnv: ServerEnvironment = {
 
 const app = createApp()
 addBenchmarking(app)
-addCognitoTokenVerification(app, stagingEnv)
+addCognitoTokenVerification(app)
 addRoutes(app, stagingEnv)
 addEventToRequest(app)
 export const handler = awsServerlessExpress({ app })
