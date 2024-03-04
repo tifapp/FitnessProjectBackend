@@ -107,12 +107,13 @@ export const createEventRouter = (
                 HOST
               ).flatMapSuccess(async () => {
                 try {
-                  await callGeocodingLambda({
+                  const resp = await callGeocodingLambda({
                     longitude:
                     req.body.longitude,
                     latitude:
                     req.body.latitude
                   })
+                  console.debug(JSON.stringify(resp, null, 4))
                 } catch (e) {
                   console.error("Could not create placemark for ", req.body)
                   console.error(e)
