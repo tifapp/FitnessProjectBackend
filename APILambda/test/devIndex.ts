@@ -14,5 +14,5 @@ export const testEnv: ServerEnvironment = {
 }
 
 export const app = createApp()
-addCognitoTokenVerification(app, testEnv)
+addCognitoTokenVerification(app)
 addRoutes(app, testEnv)
