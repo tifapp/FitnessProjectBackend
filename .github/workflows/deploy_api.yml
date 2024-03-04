@@ -112,11 +112,13 @@ jobs:
           TEST_ENV=staging_tests npm run test:ci
   
   build:
+    needs: staging_tests
+    if: ${{ always() }}
     uses: ./.github/workflows/build_api.yml
   
   deploy:
     if: ${{ always() }}
-    needs: [build, staging_tests]
+    needs: build
     runs-on: ubuntu-latest
 
     steps:
