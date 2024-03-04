@@ -64,6 +64,9 @@ export const addCognitoTokenVerification = (
       auth = req.headers?.authorization
     }
 
+    console.debug("Authorization is ")
+    console.debug(auth)
+
     if (!auth || Array.isArray(auth)) {
       // TODO: Change error message to generic message for prod api
       return res.status(401).json({ error: "invalid-headers" })

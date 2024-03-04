@@ -115,8 +115,11 @@ export const createEventRouter = (
                   })
                 } catch (e) {
                   console.error("Could not create placemark for ", req.body)
+                  console.error(e)
+                } finally {
+                  // eslint-disable-next-line no-unsafe-finally
+                  return success()
                 }
-                return success()
               }
               ).mapSuccess(() => ({ insertId }))
             )

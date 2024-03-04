@@ -16,8 +16,8 @@ export default async (): Promise<void> => {
   process.env.TZ = "UTC"
 
   if (testEnvVars.TEST_ENV === "staging_tests") {
-    await setGlobalVariables({ createUser: createCognitoAuthToken, maxUsers: 10 })
+    await setGlobalVariables({ createUser: createCognitoAuthToken, maxUsers: 5 })
   } else {
-    await setGlobalVariables({ createUser: createMockAuthToken, maxUsers: 10 })
+    await setGlobalVariables({ createUser: createMockAuthToken, maxUsers: 5 })
   }
 }
