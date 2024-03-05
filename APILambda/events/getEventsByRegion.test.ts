@@ -6,6 +6,7 @@ import { callGetEventsByRegion } from "../test/helpers/events.js"
 import { testEventInput } from "../test/testEvents.js"
 import { createEventFlow } from "../test/userFlows/events.js"
 import { getAttendeeCount, getAttendees } from "./getEventsByRegion.js"
+import { callEndEvent } from "../test/apiCallers/events.js"
 
 let eventOwnerTestToken: string
 let attendeeTestToken: string
@@ -15,16 +16,20 @@ let futureEventTestId: number
 let ongoingEventTestId: number
 
 const setupDB = async () => {
-  addPlacemarkToDB(conn, {
-    lat: testEventInput.latitude,
-    lon: testEventInput.longitude,
-    name: "Sample Location",
-    city: "Sample Neighborhood",
-    country: "Sample Country",
-    street: "Sample Street",
-    street_num: "1234",
-    unit_number: "5678"
-  }, "Sample/Timezone")
+  addPlacemarkToDB(
+    conn,
+    {
+      lat: testEventInput.latitude,
+      lon: testEventInput.longitude,
+      name: "Sample Location",
+      city: "Sample Neighborhood",
+      country: "Sample Country",
+      street: "Sample Street",
+      street_num: "1234",
+      unit_number: "5678"
+    },
+    "Sample/Timezone"
+  )
 
   const eventLocation = {
     latitude: testEventInput.latitude,
@@ -35,18 +40,21 @@ const setupDB = async () => {
     attendeesList: [attendee],
     host,
     eventIds: [futureEventId, ongoingEventId]
-  } = await createEventFlow([
-    {
-      ...eventLocation,
-      startTimestamp: dayjs().add(12, "hour").toDate(),
-      endTimestamp: dayjs().add(1, "year").toDate()
-    },
-    {
-      ...eventLocation,
-      startTimestamp: dayjs().subtract(12, "hour").toDate(),
-      endTimestamp: dayjs().add(1, "year").toDate()
-    }
-  ], 1)
+  } = await createEventFlow(
+    [
+      {
+        ...eventLocation,
+        startTimestamp: dayjs().add(12, "hour").toDate(),
+        endTimestamp: dayjs().add(1, "year").toDate()
+      },
+      {
+        ...eventLocation,
+        startTimestamp: dayjs().subtract(12, "hour").toDate(),
+        endTimestamp: dayjs().add(1, "year").toDate()
+      }
+    ],
+    1
+  )
 
   attendeeTestToken = attendee.token
   eventOwnerTestToken = host.token
@@ -101,6 +109,19 @@ describe("getEventsByRegion endpoint tests", () => {
 
   it("should remove the events where the host blocks the attendee", async () => {
     await callBlockUser(eventOwnerTestToken, attendeeTestId)
+
+    const events = await callGetEventsByRegion(
+      attendeeTestToken,
+      testEventInput.latitude,
+      testEventInput.longitude,
+      50000
+    )
+    expect(events.body).toHaveLength(0)
+  })
+
+  it("should not return events that have ended", async () => {
+    await callEndEvent(eventOwnerTestToken, futureEventTestId)
+    await callEndEvent(eventOwnerTestToken, ongoingEventTestId)
 
     const events = await callGetEventsByRegion(
       attendeeTestToken,

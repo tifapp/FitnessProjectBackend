@@ -24,7 +24,7 @@ export type DatabaseAttendee = {
   profileImageURL?: string
   handle: string
   arrivalStatus: boolean
-  arrivedAt: Date,
+  arrivedAt: Date
   role: string
 }
 
@@ -35,8 +35,8 @@ export type PaginatedAttendeesResponse = {
 }
 
 export type AttendeesCursorResponse = {
-  userId: string,
-  joinDate: Date | null,
+  userId: string
+  joinDate: Date | null
   arrivedAt: Date | null
 }
 
@@ -84,6 +84,7 @@ export type GetEventByIdEvent = {
   description: string
   startTimestamp: Date
   endTimestamp: Date
+  endedAt: Date
   color: EventColor
   latitude: number
   longitude: number
