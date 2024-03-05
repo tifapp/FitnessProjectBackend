@@ -1,18 +1,14 @@
 import { conn } from "TiFBackendUtils"
 import dayjs from "dayjs"
-import {
-  decodeAttendeesListCursor
-} from "../shared/Cursor.js"
+import { decodeAttendeesListCursor } from "../shared/Cursor.js"
 import { AttendeesCursorResponse } from "../shared/SQL.js"
-import {
-  callGetAttendees,
-  callSetArrival
-} from "../test/apiCallers/events.js"
+import { callGetAttendees, callSetArrival } from "../test/apiCallers/events.js"
 import { callBlockUser } from "../test/apiCallers/users.js"
 import { testEventInput } from "../test/testEvents.js"
 import { createEventFlow } from "../test/userFlows/events.js"
 import { TestUser, createUserFlow } from "../test/userFlows/users.js"
 import { createEvent } from "./createEvent.js"
+import { HOSTING, ATTENDING } from "../shared/Role.js"
 
 const eventLocation = { latitude: 50, longitude: 50 }
 // TODO: should have a universal "lastpagecursor" value
@@ -34,11 +30,20 @@ const paginationLimit = 2
 const createTestAttendeesList = async ({
   numOfAttendees = 1
 }: {
-  numOfAttendees?: number,
+  numOfAttendees?: number
 }) => {
-  const { attendeesList, eventIds: [testEventId], host } = await createEventFlow([{ ...eventLocation }], numOfAttendees)
+  const {
+    attendeesList,
+    eventIds: [testEventId],
+    host
+  } = await createEventFlow([{ ...eventLocation }], numOfAttendees)
 
-  return { attendeeToken: attendeesList?.[0]?.token, attendeesList, testEventId, host }
+  return {
+    attendeeToken: attendeesList?.[0]?.token,
+    attendeesList,
+    testEventId,
+    host
+  }
 }
 
 /**
@@ -54,9 +59,7 @@ const getNextPageCursorResp = (
 ): Omit<AttendeesCursorResponse, "arrivedAt"> => {
   return {
     userId: testAttendees[index].userId,
-    joinDate: index >= testAttendees.length
-      ? null
-      : expect.any(Date)
+    joinDate: index >= testAttendees.length ? null : expect.any(Date)
   }
 }
 
@@ -66,11 +69,7 @@ describe("getAttendeesList endpoint", () => {
       numOfAttendees: 1
     })
 
-    const resp = await callGetAttendees(
-      attendeeToken,
-      testEventId,
-      0
-    )
+    const resp = await callGetAttendees(attendeeToken, testEventId, 0)
 
     expect(resp).toMatchObject({
       status: 400,
@@ -85,11 +84,7 @@ describe("getAttendeesList endpoint", () => {
       numOfAttendees: 1
     })
 
-    const resp = await callGetAttendees(
-      attendeeToken,
-      testEventId,
-      51
-    )
+    const resp = await callGetAttendees(attendeeToken, testEventId, 51)
 
     expect(resp).toMatchObject({
       status: 400,
@@ -102,7 +97,9 @@ describe("getAttendeesList endpoint", () => {
   it("should return 404 if attendee list is empty", async () => {
     const currentUser = await createUserFlow()
 
-    const { value: { insertId } } = await createEvent(
+    const {
+      value: { insertId }
+    } = await createEvent(
       conn,
       {
         ...testEventInput,
@@ -157,9 +154,10 @@ describe("getAttendeesList endpoint", () => {
   })
 
   it("should return 200 after paginating the first page of attendees list", async () => {
-    const { attendeesList, attendeeToken, testEventId, host } = await createTestAttendeesList({
-      numOfAttendees: 3
-    })
+    const { attendeesList, attendeeToken, testEventId, host } =
+      await createTestAttendeesList({
+        numOfAttendees: 3
+      })
 
     const resp = await callGetAttendees(
       attendeeToken,
@@ -178,12 +176,12 @@ describe("getAttendeesList endpoint", () => {
           {
             id: host.userId,
             name: host.name,
-            role: "host"
+            role: HOSTING
           },
           {
             id: attendeesList[0].userId,
             name: attendeesList[0].name,
-            role: "attendee"
+            role: ATTENDING
           }
         ],
         nextPageCursor: getNextPageCursorResp([host, ...attendeesList], 1),
@@ -194,7 +192,10 @@ describe("getAttendeesList endpoint", () => {
 
   it("should return 200 after paginating first page with one attendee", async () => {
     const currentUser = await createUserFlow()
-    const { host, eventIds: [eventId] } = await createEventFlow()
+    const {
+      host,
+      eventIds: [eventId]
+    } = await createEventFlow()
 
     const resp = await callGetAttendees(
       currentUser.token,
@@ -213,7 +214,7 @@ describe("getAttendeesList endpoint", () => {
           {
             id: host.userId,
             name: host.name,
-            role: "host"
+            role: HOSTING
           }
         ],
         nextPageCursor: lastPageCursorResponse,
@@ -223,9 +224,10 @@ describe("getAttendeesList endpoint", () => {
   })
 
   it("should return 200 after paginating middle of page", async () => {
-    const { attendeesList, attendeeToken, testEventId, host } = await createTestAttendeesList({
-      numOfAttendees: 4
-    })
+    const { attendeesList, attendeeToken, testEventId, host } =
+      await createTestAttendeesList({
+        numOfAttendees: 4
+      })
 
     let resp = await callGetAttendees(
       attendeeToken,
@@ -248,13 +250,11 @@ describe("getAttendeesList endpoint", () => {
     expect(resp).toMatchObject({
       status: 200,
       body: {
-        attendees: attendeesList
-          .slice(1, 3)
-          .map(({ userId: id, name }) => ({
-            id,
-            name,
-            role: "attendee"
-          })),
+        attendees: attendeesList.slice(1, 3).map(({ userId: id, name }) => ({
+          id,
+          name,
+          role: ATTENDING
+        })),
         nextPageCursor: getNextPageCursorResp([host, ...attendeesList], 3),
         totalAttendeeCount: 5
       }
@@ -262,9 +262,10 @@ describe("getAttendeesList endpoint", () => {
   })
 
   it("should return 200 after paginating the last page of attendees list", async () => {
-    const { attendeesList, attendeeToken, testEventId } = await createTestAttendeesList({
-      numOfAttendees: 2
-    })
+    const { attendeesList, attendeeToken, testEventId } =
+      await createTestAttendeesList({
+        numOfAttendees: 2
+      })
 
     let resp = await callGetAttendees(
       attendeeToken,
@@ -291,7 +292,7 @@ describe("getAttendeesList endpoint", () => {
           {
             id: attendeesList[attendeesList.length - 1].userId,
             name: attendeesList[attendeesList.length - 1].name,
-            role: "attendee"
+            role: ATTENDING
           }
         ],
         nextPageCursor: lastPageCursorResponse,
@@ -335,9 +336,8 @@ describe("getAttendeesList endpoint", () => {
   })
 
   it("check that attendee list is sorted by role, arrivedAt, then joinTimestamp", async () => {
-    const { attendeeToken, attendeesList, testEventId, host } = await createTestAttendeesList(
-      { numOfAttendees: 3 }
-    )
+    const { attendeeToken, attendeesList, testEventId, host } =
+      await createTestAttendeesList({ numOfAttendees: 3 })
 
     await callSetArrival(attendeesList[1].token, { coordinate: eventLocation })
 
@@ -356,7 +356,9 @@ describe("getAttendeesList endpoint", () => {
     resp.body.attendees.forEach((attendee: any) => {
       attendee.joinTimestamp = new Date(attendee.joinTimestamp)
     })
-    resp.body.attendees[1].arrivedAt = new Date(resp.body.attendees[1].arrivedAt)
+    resp.body.attendees[1].arrivedAt = new Date(
+      resp.body.attendees[1].arrivedAt
+    )
 
     expect(resp).toMatchObject({
       status: 200,
@@ -368,7 +370,7 @@ describe("getAttendeesList endpoint", () => {
             joinTimestamp: expect.any(Date),
             arrivalStatus: false,
             arrivedAt: null,
-            role: "host"
+            role: HOSTING
           },
           {
             id: attendeesList[1].userId,
@@ -376,10 +378,13 @@ describe("getAttendeesList endpoint", () => {
             joinTimestamp: expect.any(Date),
             arrivalStatus: true,
             arrivedAt: expect.any(Date),
-            role: "attendee"
+            role: ATTENDING
           }
         ],
-        nextPageCursor: getNextPageCursorResp([host, attendeesList[1], attendeesList[0], attendeesList[2]], 1),
+        nextPageCursor: getNextPageCursorResp(
+          [host, attendeesList[1], attendeesList[0], attendeesList[2]],
+          1
+        ),
         totalAttendeeCount: 4
       }
     })
@@ -408,7 +413,7 @@ describe("getAttendeesList endpoint", () => {
             id: attendeesList[0].userId,
             joinTimestamp: expect.any(Date),
             name: attendeesList[0].name,
-            role: "attendee",
+            role: ATTENDING,
             arrivalStatus: false,
             arrivedAt: null
           },
@@ -417,7 +422,7 @@ describe("getAttendeesList endpoint", () => {
             joinTimestamp: expect.any(Date),
             name: attendeesList[2].name,
             arrivalStatus: false,
-            role: "attendee",
+            role: ATTENDING,
             arrivedAt: null
           }
         ],
@@ -455,14 +460,14 @@ describe("getAttendeesList endpoint", () => {
             id: host.userId,
             name: host.name,
             arrivalStatus: false,
-            role: "host",
+            role: HOSTING,
             relations: { youToThem: "not-friends", themToYou: "not-friends" }
           },
           {
             id: attendeesList[2].userId,
             name: attendeesList[2].name,
             arrivalStatus: false,
-            role: "attendee",
+            role: ATTENDING,
             relations: { youToThem: "not-friends", themToYou: "not-friends" }
           }
         ],
@@ -523,14 +528,14 @@ describe("getAttendeesList endpoint", () => {
             id: host.userId,
             name: host.name,
             arrivalStatus: false,
-            role: "host",
+            role: HOSTING,
             relations: { youToThem: "not-friends", themToYou: "not-friends" }
           },
           {
             id: attendeesList[2].userId,
             name: attendeesList[2].name,
             arrivalStatus: false,
-            role: "attendee",
+            role: ATTENDING,
             relations: { youToThem: "not-friends", themToYou: "not-friends" }
           }
         ],
@@ -569,14 +574,14 @@ describe("getAttendeesList endpoint", () => {
             id: host.userId,
             name: host.name,
             arrivalStatus: false,
-            role: "host",
+            role: HOSTING,
             relations: { youToThem: "blocked", themToYou: "not-friends" }
           },
           {
             id: attendeesList[0].userId,
             name: attendeesList[0].name,
             arrivalStatus: false,
-            role: "attendee",
+            role: ATTENDING,
             relations: { youToThem: "blocked", themToYou: "not-friends" }
           }
         ],

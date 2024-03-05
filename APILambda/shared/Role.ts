@@ -1,2 +1,3 @@
-export const ATTENDEE = "attendee"
-export const HOST = "host"
+export const ATTENDING = "attending"
+export const HOSTING = "hosting"
+export const NOT_PARTICIPATING = "not-participating"
