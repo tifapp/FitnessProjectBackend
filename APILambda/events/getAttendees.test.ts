@@ -8,7 +8,6 @@ import { testEventInput } from "../test/testEvents.js"
 import { createEventFlow } from "../test/userFlows/events.js"
 import { TestUser, createUserFlow } from "../test/userFlows/users.js"
 import { createEvent } from "./createEvent.js"
-import { HOSTING, ATTENDING } from "../shared/Role.js"
 
 const eventLocation = { latitude: 50, longitude: 50 }
 // TODO: should have a universal "lastpagecursor" value
@@ -176,12 +175,12 @@ describe("getAttendeesList endpoint", () => {
           {
             id: host.userId,
             name: host.name,
-            role: HOSTING
+            role: "hosting"
           },
           {
             id: attendeesList[0].userId,
             name: attendeesList[0].name,
-            role: ATTENDING
+            role: "attending"
           }
         ],
         nextPageCursor: getNextPageCursorResp([host, ...attendeesList], 1),
@@ -214,7 +213,7 @@ describe("getAttendeesList endpoint", () => {
           {
             id: host.userId,
             name: host.name,
-            role: HOSTING
+            role: "hosting"
           }
         ],
         nextPageCursor: lastPageCursorResponse,
@@ -253,7 +252,7 @@ describe("getAttendeesList endpoint", () => {
         attendees: attendeesList.slice(1, 3).map(({ userId: id, name }) => ({
           id,
           name,
-          role: ATTENDING
+          role: "attending"
         })),
         nextPageCursor: getNextPageCursorResp([host, ...attendeesList], 3),
         totalAttendeeCount: 5
@@ -292,7 +291,7 @@ describe("getAttendeesList endpoint", () => {
           {
             id: attendeesList[attendeesList.length - 1].userId,
             name: attendeesList[attendeesList.length - 1].name,
-            role: ATTENDING
+            role: "attending"
           }
         ],
         nextPageCursor: lastPageCursorResponse,
@@ -370,7 +369,7 @@ describe("getAttendeesList endpoint", () => {
             joinTimestamp: expect.any(Date),
             arrivalStatus: false,
             arrivedAt: null,
-            role: HOSTING
+            role: "hosting"
           },
           {
             id: attendeesList[1].userId,
@@ -378,7 +377,7 @@ describe("getAttendeesList endpoint", () => {
             joinTimestamp: expect.any(Date),
             arrivalStatus: true,
             arrivedAt: expect.any(Date),
-            role: ATTENDING
+            role: "attending"
           }
         ],
         nextPageCursor: getNextPageCursorResp(
@@ -413,7 +412,7 @@ describe("getAttendeesList endpoint", () => {
             id: attendeesList[0].userId,
             joinTimestamp: expect.any(Date),
             name: attendeesList[0].name,
-            role: ATTENDING,
+            role: "attending",
             arrivalStatus: false,
             arrivedAt: null
           },
@@ -422,7 +421,7 @@ describe("getAttendeesList endpoint", () => {
             joinTimestamp: expect.any(Date),
             name: attendeesList[2].name,
             arrivalStatus: false,
-            role: ATTENDING,
+            role: "attending",
             arrivedAt: null
           }
         ],
@@ -460,14 +459,14 @@ describe("getAttendeesList endpoint", () => {
             id: host.userId,
             name: host.name,
             arrivalStatus: false,
-            role: HOSTING,
+            role: "hosting",
             relations: { youToThem: "not-friends", themToYou: "not-friends" }
           },
           {
             id: attendeesList[2].userId,
             name: attendeesList[2].name,
             arrivalStatus: false,
-            role: ATTENDING,
+            role: "attending",
             relations: { youToThem: "not-friends", themToYou: "not-friends" }
           }
         ],
@@ -528,14 +527,14 @@ describe("getAttendeesList endpoint", () => {
             id: host.userId,
             name: host.name,
             arrivalStatus: false,
-            role: HOSTING,
+            role: "hosting",
             relations: { youToThem: "not-friends", themToYou: "not-friends" }
           },
           {
             id: attendeesList[2].userId,
             name: attendeesList[2].name,
             arrivalStatus: false,
-            role: ATTENDING,
+            role: "attending",
             relations: { youToThem: "not-friends", themToYou: "not-friends" }
           }
         ],
@@ -574,14 +573,14 @@ describe("getAttendeesList endpoint", () => {
             id: host.userId,
             name: host.name,
             arrivalStatus: false,
-            role: HOSTING,
+            role: "hosting",
             relations: { youToThem: "blocked", themToYou: "not-friends" }
           },
           {
             id: attendeesList[0].userId,
             name: attendeesList[0].name,
             arrivalStatus: false,
-            role: ATTENDING,
+            role: "attending",
             relations: { youToThem: "blocked", themToYou: "not-friends" }
           }
         ],

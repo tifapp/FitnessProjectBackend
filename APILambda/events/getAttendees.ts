@@ -8,7 +8,6 @@ import {
 import { DatabaseAttendee, PaginatedAttendeesResponse } from "../shared/SQL.js"
 import { UserToProfileRelationStatus } from "../user/models.js"
 import { ValidatedRouter } from "../validation.js"
-import { HOSTING } from "../shared/Role.js"
 
 const AttendeesRequestSchema = z.object({
   eventId: z.string()
@@ -116,8 +115,7 @@ const getAttendees = (
   nextPageUserIdCursor: string,
   nextPageJoinDateCursor: Date | null,
   nextPageArrivedAtCursor: Date | null,
-  limit: number,
-  HOSTING: string
+  limit: number
 ) =>
   conn.queryResults<DatabaseAttendeeWithRelation>(
     `SELECT 
@@ -143,13 +141,13 @@ const getAttendees = (
         OR (ua.arrivedAt IS NULL AND :nextPageArrivedAtCursor IS NULL AND ea.joinTimestamp > :nextPageJoinDateCursor)
         OR (ua.arrivedAt IS NULL AND :nextPageArrivedAtCursor IS NULL AND ea.joinTimestamp = :nextPageJoinDateCursor AND u.id > :nextPageUserIdCursor)
       )
-    AND (ea.role <> :HOSTING OR :nextPageUserIdCursor = 'firstPage')
+    AND (ea.role <> 'hosting' OR :nextPageUserIdCursor = 'firstPage')
     AND (ua.longitude = e.longitude AND ua.latitude = e.latitude
       OR ua.arrivedAt IS NULL)
     GROUP BY u.id, ua.arrivedAt
-    HAVING themToYou IS NULL OR MAX(CASE WHEN ur.toUserId = :userId THEN ur.status END) <> 'blocked' OR ea.role = :HOSTING
+    HAVING themToYou IS NULL OR MAX(CASE WHEN ur.toUserId = :userId THEN ur.status END) <> 'blocked' OR ea.role = 'hosting'
     ORDER BY
-    CASE WHEN :nextPageUserIdCursor = 'firstPage' THEN CASE WHEN ea.role = :HOSTING THEN 0 ELSE 1 END ELSE 1 END,
+    CASE WHEN :nextPageUserIdCursor = 'firstPage' THEN CASE WHEN ea.role = 'hosting' THEN 0 ELSE 1 END ELSE 1 END,
     COALESCE(ua.arrivedAt, '9999-12-31 23:59:59.999') ASC,
     ea.joinTimestamp ASC,
     u.id ASC
@@ -161,8 +159,7 @@ const getAttendees = (
       nextPageUserIdCursor,
       nextPageJoinDateCursor,
       nextPageArrivedAtCursor,
-      limit,
-      HOSTING
+      limit
     }
   )
 
@@ -184,8 +181,7 @@ const getAttendeesByEventId = (
         nextPageUserIdCursor,
         nextPageJoinDateCursor,
         nextPageArrivedAtCursor,
-        limit,
-        HOSTING
+        limit
       ),
       getAttendeesCount(conn, eventId, userId)
     ]).then((results) => {
@@ -240,19 +236,19 @@ export const getAttendeesByEventIdRouter = (
 
           return totalAttendeeCount === 0
             ? res
-              .status(404)
-              .send(
-                paginatedAttendeesResponse(
-                  attendees,
-                  req.query.limit,
-                  totalAttendeeCount
+                .status(404)
+                .send(
+                  paginatedAttendeesResponse(
+                    attendees,
+                    req.query.limit,
+                    totalAttendeeCount
+                  )
                 )
-              )
             : attendees.length > 0 &&
-              attendees[0].role === HOSTING &&
+              attendees[0].role === "hosting" &&
               attendees[0].themToYou === "blocked"
-              ? res.status(403).send({ error: "blocked-by-host" })
-              : res
+            ? res.status(403).send({ error: "blocked-by-host" })
+            : res
                 .status(200)
                 .send(
                   paginatedAttendeesResponse(

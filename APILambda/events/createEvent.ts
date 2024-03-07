@@ -5,7 +5,6 @@ import {
 } from "TiFBackendUtils"
 import { z } from "zod"
 import { ServerEnvironment } from "../env.js"
-import { HOSTING } from "../shared/Role.js"
 import { ValidatedRouter } from "../validation.js"
 import { addUserToAttendeeList } from "./joinEventById.js"
 import { EventColorSchema } from "./models.js"
@@ -104,7 +103,7 @@ export const createEventRouter = (
                 tx,
                 res.locals.selfId,
                 parseInt(insertId),
-                HOSTING
+                "hosting"
               ).flatMapSuccess(async () => {
                 try {
                   const resp = await callGeocodingLambda({
