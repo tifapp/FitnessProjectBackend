@@ -32,7 +32,7 @@ export type EventAttendanceFields = {
 }
 
 export type TiFEvent = {
-    id: string
+    id: number
     title: string
     description: string
     attendeeCount: number

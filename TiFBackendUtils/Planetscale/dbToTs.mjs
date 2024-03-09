@@ -18,7 +18,8 @@ const config = {
     }
   },
   typeMap: {
-    boolean: ["tinyint"]
+    boolean: ["tinyint"],
+    number: ["bigint"]
   },
   typeOverrides: {
     "tif.TifEventView.hasArrived": "boolean"

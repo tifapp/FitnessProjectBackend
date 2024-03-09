@@ -3,6 +3,7 @@
 import { LocationCoordinate2D, PromiseResult } from "TiFBackendUtils"
 import dotenv from "dotenv"
 import { z } from "zod"
+import { ValidatedRouteParams } from "./validation.js"
 
 dotenv.config()
 
@@ -46,4 +47,5 @@ export type ServerEnvironment = CreateUserProfileEnvironment & SetArrivalStatusE
   environment: "dev" | "staging" | "prod"
   eventStartWindowInHours: number
   callGeocodingLambda: (location: LocationCoordinate2D) => Promise<unknown>
+  routeCollector?: (pathPrefix: string) => (params: ValidatedRouteParams) => void
 }
