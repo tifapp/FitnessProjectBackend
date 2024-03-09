@@ -1,7 +1,6 @@
 import { LocationCoordinate2D, LocationCoordinates2DSchema, SQLExecutable, conn, failure, success } from "TiFBackendUtils"
 import { z } from "zod"
 import { ServerEnvironment } from "../env.js"
-import { ATTENDEE } from "../shared/Role.js"
 import { ValidatedRouter } from "../validation.js"
 import { getUpcomingEventsByRegion } from "./arrivals/getUpcomingEvents.js"
 import { insertArrival } from "./arrivals/setArrivalStatus.js"
@@ -39,7 +38,7 @@ const joinEvent = (conn: SQLExecutable, userId: string, eventId: number, coordin
               ).mapSuccess(() => ({ isArrived: true }))
               : success(({ isArrived: false })))
               .flatMapSuccess(({ isArrived }) =>
-                addUserToAttendeeList(tx, userId, eventId, ATTENDEE)
+                addUserToAttendeeList(tx, userId, eventId, "attending")
                   .flatMapSuccess(
                     ({ rowsAffected }) =>
                       rowsAffected > 0 ? success({ status: 201 }) : success({ status: 200 })

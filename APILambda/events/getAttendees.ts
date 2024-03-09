@@ -141,13 +141,13 @@ const getAttendees = (
         OR (ua.arrivedAt IS NULL AND :nextPageArrivedAtCursor IS NULL AND ea.joinTimestamp > :nextPageJoinDateCursor)
         OR (ua.arrivedAt IS NULL AND :nextPageArrivedAtCursor IS NULL AND ea.joinTimestamp = :nextPageJoinDateCursor AND u.id > :nextPageUserIdCursor)
       )
-    AND (ea.role <> 'host' OR :nextPageUserIdCursor = 'firstPage')
+    AND (ea.role <> 'hosting' OR :nextPageUserIdCursor = 'firstPage')
     AND (ua.longitude = e.longitude AND ua.latitude = e.latitude
       OR ua.arrivedAt IS NULL)
     GROUP BY u.id, ua.arrivedAt
-    HAVING themToYou IS NULL OR MAX(CASE WHEN ur.toUserId = :userId THEN ur.status END) <> 'blocked' OR ea.role = 'host'
+    HAVING themToYou IS NULL OR MAX(CASE WHEN ur.toUserId = :userId THEN ur.status END) <> 'blocked' OR ea.role = 'hosting'
     ORDER BY
-    CASE WHEN :nextPageUserIdCursor = 'firstPage' THEN CASE WHEN ea.role = 'host' THEN 0 ELSE 1 END ELSE 1 END,
+    CASE WHEN :nextPageUserIdCursor = 'firstPage' THEN CASE WHEN ea.role = 'hosting' THEN 0 ELSE 1 END ELSE 1 END,
     COALESCE(ua.arrivedAt, '9999-12-31 23:59:59.999') ASC,
     ea.joinTimestamp ASC,
     u.id ASC
@@ -236,19 +236,19 @@ export const getAttendeesByEventIdRouter = (
 
           return totalAttendeeCount === 0
             ? res
-              .status(404)
-              .send(
-                paginatedAttendeesResponse(
-                  attendees,
-                  req.query.limit,
-                  totalAttendeeCount
+                .status(404)
+                .send(
+                  paginatedAttendeesResponse(
+                    attendees,
+                    req.query.limit,
+                    totalAttendeeCount
+                  )
                 )
-              )
             : attendees.length > 0 &&
-              attendees[0].role === "host" &&
+              attendees[0].role === "hosting" &&
               attendees[0].themToYou === "blocked"
-              ? res.status(403).send({ error: "blocked-by-host" })
-              : res
+            ? res.status(403).send({ error: "blocked-by-host" })
+            : res
                 .status(200)
                 .send(
                   paginatedAttendeesResponse(
