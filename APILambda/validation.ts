@@ -150,25 +150,35 @@ type ValidatedMethods = {
 
 export type ValidatedRouter = Router & ValidatedMethods
 
-export const createValidatedRouter = (): ValidatedRouter => {
+export type ValidatedRouteParams = {
+  httpMethod: "get" | "delete" | "patch" | "post" | "put",
+  path: string,
+  inputSchema: Partial<ValidationSchemas>
+}
+
+export const createValidatedRouter = (routeCollector?: (params: ValidatedRouteParams) => void): ValidatedRouter => {
   const router = express.Router() as ValidatedRouter
 
   const addRoute = (
-    httpMethod: "get" | "delete" | "patch" | "post" | "put",
-    path: string,
-    schema: Partial<ValidationSchemas>,
+    httpMethod: ValidatedRouteParams["httpMethod"],
+    path: ValidatedRouteParams["path"],
+    inputSchema: ValidatedRouteParams["inputSchema"],
     ...handlers: ValidatedRequestHandler<ValidationSchemas>[]
   ) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    router[httpMethod](path, validateRequest(schema), ...(handlers as any))
+    router[httpMethod](path, validateRequest(inputSchema), ...(handlers as any))
+
+    // for swagger generation
+    routeCollector?.({ httpMethod, path, inputSchema })
+
     return router
   }
 
-  router.getWithValidation = (path, schema, ...handlers) => addRoute("get", path, schema, ...handlers)
-  router.deleteWithValidation = (path, schema, ...handlers) => addRoute("delete", path, schema, ...handlers)
-  router.patchWithValidation = (path, schema, ...handlers) => addRoute("patch", path, schema, ...handlers)
-  router.postWithValidation = (path, schema, ...handlers) => addRoute("post", path, schema, ...handlers)
-  router.putWithValidation = (path, schema, ...handlers) => addRoute("put", path, schema, ...handlers)
+  router.getWithValidation = (path, inputSchema, ...handlers) => addRoute("get", path, inputSchema, ...handlers)
+  router.deleteWithValidation = (path, inputSchema, ...handlers) => addRoute("delete", path, inputSchema, ...handlers)
+  router.patchWithValidation = (path, inputSchema, ...handlers) => addRoute("patch", path, inputSchema, ...handlers)
+  router.postWithValidation = (path, inputSchema, ...handlers) => addRoute("post", path, inputSchema, ...handlers)
+  router.putWithValidation = (path, inputSchema, ...handlers) => addRoute("put", path, inputSchema, ...handlers)
 
   return router
 }
