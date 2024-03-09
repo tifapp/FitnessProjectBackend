@@ -46,11 +46,15 @@ jobs:
           npm ci
           cd ../APILambda
           npm ci
+      
+      - name: Validate openapi specs
+        run: |
+          cd APILambda
+          npx lint-openapi specs.json
 
       - name: Run tests
         run: |
           cd APILambda
-          npx swagger-cli validate ./swagger.json
           export NODE_OPTIONS="--max_old_space_size=4096"
           npm run test:ci
 

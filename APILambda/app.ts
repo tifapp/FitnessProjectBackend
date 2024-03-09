@@ -23,7 +23,7 @@ import { getUserSettingsRouter } from "./user/settings/getUserSettings.js"
 import { updateUserSettingsRouter } from "./user/settings/updateUserSettings.js"
 import { createUnblockUserRouter } from "./user/unblockUser.js"
 import { updateUserProfileRouter } from "./user/updateUserProfile.js"
-import { createValidatedRouter } from "./validation.js"
+import { ValidatedRouter, createValidatedRouter } from "./validation.js"
 
 /**
  * Creates an application instance.
@@ -58,8 +58,7 @@ export const addBenchmarking = (app: Application) => {
   })
 }
 
-const addEventRoutes = (environment: ServerEnvironment) => {
-  const router = createValidatedRouter()
+const addEventRoutes = (router: ValidatedRouter, environment: ServerEnvironment) => {
   createEventRouter(environment, router)
   getChatTokenRouter(environment, router)
   getEventByIdRouter(environment, router)
@@ -74,8 +73,7 @@ const addEventRoutes = (environment: ServerEnvironment) => {
   return router
 }
 
-const addUserRoutes = (environment: ServerEnvironment) => {
-  const router = createValidatedRouter()
+const addUserRoutes = (router: ValidatedRouter, environment: ServerEnvironment) => {
   autocompleteUsersRouter(environment, router)
   createUserProfileRouter(environment, router)
   deleteUserAccountRouter(environment, router)
@@ -98,6 +96,6 @@ const addUserRoutes = (environment: ServerEnvironment) => {
  * @param environment see {@link ServerEnvironment}
  */
 export const addRoutes = (app: Application, environment: ServerEnvironment) => {
-  app.use("/event", addEventRoutes(environment))
-  app.use("/user", addUserRoutes(environment))
+  app.use("/event", addEventRoutes(createValidatedRouter(environment.routeCollector?.("/event")), environment))
+  app.use("/user", addUserRoutes(createValidatedRouter(environment.routeCollector?.("/user")), environment))
 }

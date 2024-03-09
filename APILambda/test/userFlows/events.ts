@@ -26,10 +26,10 @@ export const createEventFlow = async (
   )
 
   const eventIds = eventResponses.map((event) => {
-    if (event.ok) { return parseInt(event.body.id) } else { throw new Error("invalid test event given") }
+    if (event.ok) { return parseInt(event.body.id) } else { console.error(event); throw new Error("invalid test event given") }
   })
 
-  const attendeesList = []
+  const attendeesList: TestUser[] = []
 
   for (let i = 0; i < attendeeCount; i++) {
     const attendee = await createUserFlow()

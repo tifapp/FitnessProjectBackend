@@ -18,7 +18,8 @@ const config = {
     }
   },
   typeMap: {
-    boolean: ["tinyint"]
+    boolean: ["tinyint"],
+    number: ["bigint"]
   },
   // eslint-disable-next-line no-template-curly-in-string
   interfaceNameFormat: "DB${table}"
