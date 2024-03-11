@@ -9,9 +9,9 @@ import {
 } from "../test/apiCallers/events.js"
 import { callBlockUser } from "../test/apiCallers/users.js"
 import { testEventInput } from "../test/testEvents.js"
+import { createEventFlow } from "../test/userFlows/events.js"
 import { createUserFlow } from "../test/userFlows/users.js"
 import { createEvent } from "./createEvent.js"
-import { createEventFlow } from "../test/userFlows/events.js"
 
 const eventLocation = { latitude: 50, longitude: 50 }
 
@@ -178,8 +178,8 @@ describe("Join the event by id tests", () => {
       [
         {
           ...eventLocation,
-          startTimestamp: dayjs().add(12, "hour").toDate(),
-          endTimestamp: dayjs().add(1, "year").toDate()
+          startDateTime: dayjs().add(12, "hour").toDate(),
+          endDateTime: dayjs().add(1, "year").toDate()
         }
       ],
       1

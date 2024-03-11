@@ -9,11 +9,6 @@ import { createEventFlow } from "../test/userFlows/events.js"
 import { createUserFlow } from "../test/userFlows/users.js"
 import { GetEventWhenBlockedResponse } from "./models.js"
 
-// const today = new Date()
-// today.setHours(23, 59, 59, 0)
-// const tomorrow = new Date()
-// tomorrow.setHours(0, 0, 0, 0)
-
 describe("GetSingleEvent tests", () => {
   const eventLocation = {
     latitude: testEventInput.latitude,
@@ -57,7 +52,7 @@ describe("Checks the data returned if the user blocks the host or vice versa is 
     longitude: testEventInput.longitude
   }
 
-  it.only("should return host name and event title if blocked by host", async () => {
+  it("should return host name and event title if blocked by host", async () => {
     const {
       attendeesList: [{ token: attendeeToken, userId: attendeeId }],
       host,
@@ -77,7 +72,7 @@ describe("Checks the data returned if the user blocks the host or vice versa is 
     expectTypeOf(resp.body).toMatchTypeOf<GetEventWhenBlockedResponse>()
   })
 
-  it.only("should return host name and event title if attendee blocked host", async () => {
+  it("should return host name and event title if attendee blocked host", async () => {
     const { attendeesList: [{ token: attendeeToken }], host, eventIds } =
       await createEventFlow([
         {
@@ -134,10 +129,14 @@ describe("Check the user relations return the appropriate relation between the u
 
     expect(resp).toMatchObject({
       status: 200,
-      body: {
-        youToThem: "current-user",
-        themToYou: "current-user"
-      }
+      body: expect.arrayContaining([expect.objectContaining({
+        host: expect.objectContaining({
+          relations: expect.objectContaining({
+            youToThem: "current-user",
+            themToYou: "current-user"
+          })
+        })
+      })])
     })
   })
 })

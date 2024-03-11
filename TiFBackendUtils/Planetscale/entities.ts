@@ -69,8 +69,8 @@ export interface DBTifEventView {
   'hostUsername': string | null;
   'id': string;
   'isChatEnabled': boolean;
-  'latitude': number | null;
-  'longitude': number | null;
+  'latitude': number;
+  'longitude': number;
   'placemarkName': string | null;
   'postalCode': string | null;
   'region': string | null;
