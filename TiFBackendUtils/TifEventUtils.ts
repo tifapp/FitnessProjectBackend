@@ -13,8 +13,8 @@ export const ARRIVAL_RADIUS_IN_METERS = 120
 export type UserHostRelations = "not friends" | "friend-request-pending" | "friends" | "blocked" | "current-user"
 export type TodayOrTomorrow = "Today" | "Tomorrow"
 export type Role = "hosting" | "attending" | "not-participating"
-export type TifEvent = DBTifEventView & Omit<DBuserRelations, "status" | "updatedAt"> &
-{ attendeeCount: number, previewAttendees: DBViewEventAttendees[], userAttendeeStatus: Role, joinDate: Date, themToYou: UserHostRelations, youToThem: UserHostRelations }
+export type DBTifEvent = DBTifEventView & Omit<DBuserRelations, "status" | "updatedAt"> &
+{ attendeeCount: number, previewAttendees: DBViewEventAttendees, userAttendeeStatus: Role, joinDate: Date, themToYou: UserHostRelations, youToThem: UserHostRelations }
 
 export type EventWithAttendeeCount = {
   eventId: number
@@ -45,7 +45,7 @@ export type TiFEvent = {
       }
        todayOrTomorrow: TodayOrTomorrow | null
     }
-    previewAttendees: DBViewEventAttendees[]
+    previewAttendees: DBViewEventAttendees
     location: {
       coordinate: {
         latitude: number,
@@ -71,7 +71,7 @@ export type TiFEvent = {
     }
     chatExpirationTime: Date
     userAttendeeStatus: Role
-    joinDate: Date
+    joinDate: Date | null
     hasArrived: boolean
     updatedAt: Date
     createdAt: Date
@@ -79,8 +79,6 @@ export type TiFEvent = {
   }
 
 const calcSecondsToStart = (event: DBTifEventView & Omit<DBuserRelations, "status" | "updatedAt">) => {
-  // console.log("Start date time ", event.startDateTime)
-  // console.log("Current date milliseconds", new Date().getUTCMilliseconds())
   const millisecondsToStart = event.startDateTime.valueOf() - new Date().valueOf()
   return millisecondsToStart / 1000
 }
@@ -98,7 +96,7 @@ export const calcTodayOrTomorrow = (startDateTime: Date) => {
   }
 }
 
-export const tifEventResponseFromDatabaseEvent = (event: TifEvent) : TiFEvent => {
+export const tifEventResponseFromDatabaseEvent = (event: DBTifEvent) : TiFEvent => {
   return {
     id: event.id,
     title: event.title,
@@ -151,10 +149,10 @@ export const tifEventResponseFromDatabaseEvent = (event: TifEvent) : TiFEvent =>
     chatExpirationTime: event.endedAt !== null
       ? new Date((event.endedAt.getUTCMilliseconds() + SECONDS_IN_DAY) * 1000)
       : new Date((event.endDateTime.getUTCSeconds() + SECONDS_IN_DAY) * 1000),
-    hasArrived: event.hasArrived,
+    hasArrived: event.hasArrived === 1,
     updatedAt: event.updatedAt,
     createdAt: event.createdAt,
-    endedAt: event.endDateTime
+    endedAt: event.endedAt
   }
 }
 
@@ -181,24 +179,29 @@ export const getEventAttendanceFields = (conn: SQLExecutable, userId: string, ev
       LEFT JOIN eventAttendance ea ON ea.userId = :userId AND ea.eventId = e.id
       WHERE 
         e.id IN (:eventIds)
+      GROUP BY id
       `,
     { eventIds, userId }
   )
 }
 
 const setAttendeesPreviewForEvent = (
-  events: TifEvent[],
+  events: DBTifEvent[],
   attendeesPreviews: DBViewEventAttendees[],
   eventsWithAttendeeCount: EventWithAttendeeCount[],
   EventAttendanceFields: EventAttendanceFields[]
 ) => {
+  events.sort((eventA, eventB) => {
+    return eventA.id.localeCompare(eventB.id)
+  })
+
   for (let i = 0; i < events.length; i++) {
-    events[i].previewAttendees = attendeesPreviews
+    events[i].previewAttendees = attendeesPreviews[i]
     events[i].attendeeCount = eventsWithAttendeeCount[i].attendeeCount
       ? eventsWithAttendeeCount[i].attendeeCount
       : 0
     events[i].joinDate = EventAttendanceFields[i].joinDate
-    events[i].userAttendeeStatus = EventAttendanceFields[i].userAttendeeStatus
+    events[i].userAttendeeStatus = EventAttendanceFields[i].userAttendeeStatus ?? "not-participating"
   }
   return events
 }
@@ -221,10 +224,9 @@ HAVING
   )
 }
 
-// Utilize the event to join with the attendees table to get the attendees
-export const getEventAttendeesPreview = (
+export const setEventAttendeesFields = (
   conn: SQLExecutable,
-  events: TifEvent[],
+  events: DBTifEvent[],
   userId: string
 ) => {
   const eventIds = events.map((event) => event.id.toString())
@@ -247,13 +249,12 @@ export const getEventAttendeesPreview = (
       )
   )
 
-  const refactoredEvents = eventsByRegion.mapSuccess((events) => {
-    const eventsRefactored = events.map((event) => tifEventResponseFromDatabaseEvent(event))
-    console.log("Events ", eventsRefactored)
-    return eventsRefactored
-  }
-  )
+  return eventsByRegion.mapSuccess((events) => {
+    return events
+  })
+}
 
-  console.log("Refactored events ", refactoredEvents)
-  return refactoredEvents
+export const refactorEventsToMatchTifEvent = (eventsByRegion: DBTifEvent[]) => {
+  const eventsRefactored = eventsByRegion.map((event) => tifEventResponseFromDatabaseEvent(event))
+  return success(eventsRefactored)
 }

@@ -1,4 +1,4 @@
-import { SQLExecutable, TifEvent, conn, getEventAttendeesPreview, success } from "TiFBackendUtils"
+import { SQLExecutable, DBTifEvent, conn, refactorEventsToMatchTifEvent, setEventAttendeesFields, success } from "TiFBackendUtils"
 import { z } from "zod"
 import { ServerEnvironment } from "../env.js"
 import {
@@ -39,7 +39,7 @@ export const getEventById = (
   userId: string
 ) =>
   conn
-    .queryFirstResult<TifEvent>(
+    .queryFirstResult<DBTifEvent>(
       `
       SELECT TifEventView.*,
         CASE 
@@ -75,9 +75,8 @@ export const getEventByIdRouter = (
     (req, res) =>
       conn.transaction((tx) =>
         getEventById(conn, Number(req.params.eventId), res.locals.selfId)
-          .flatMapSuccess((event) => {
-            console.log("Event returned from getEventById ", event)
-            return userAndRelationsWithId(
+          .flatMapSuccess((event) =>
+            userAndRelationsWithId(
               tx,
               event.hostId,
               res.locals.selfId
@@ -87,10 +86,9 @@ export const getEventByIdRouter = (
                 ? success(res
                   .status(403)
                   .json(getEventWhenBlockedResponse(dbUser, event.title, Number(event.id))))
-                : getEventAttendeesPreview(tx, [event], res.locals.selfId)
+                : setEventAttendeesFields(tx, [event], res.locals.selfId).flatMapSuccess((events) => refactorEventsToMatchTifEvent(events))
                   .mapSuccess((event) => res.status(200).json(event))
             )
-          }
           )
           .mapFailure((error) => res.status(404).json({ error }))
       )

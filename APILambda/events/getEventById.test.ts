@@ -1,7 +1,8 @@
-import { TiFEvent, calcTodayOrTomorrow } from "TiFBackendUtils"
+import { TiFEvent, calcTodayOrTomorrow, conn } from "TiFBackendUtils"
 import { randomInt } from "crypto"
 import dayjs from "dayjs"
 import { expectTypeOf } from "expect-type"
+import { addPlacemarkToDB } from "../../GeocodingLambda/utils.js"
 import { callGetEvent } from "../test/apiCallers/events.js"
 import { callBlockUser } from "../test/apiCallers/users.js"
 import { testEventInput } from "../test/testEvents.js"
@@ -28,20 +29,85 @@ describe("GetSingleEvent tests", () => {
 
   it("should return event details if the event exists", async () => {
     const { token } = await createUserFlow()
+    const today = dayjs()
+    today.set("minute", 59)
+    today.set("second", 59)
+
+    addPlacemarkToDB(
+      conn,
+      {
+        lat: testEventInput.latitude,
+        lon: testEventInput.longitude,
+        name: "Sample Location",
+        city: "Sample Neighborhood",
+        country: "Sample Country",
+        street: "Sample Street",
+        street_num: "1234",
+        unit_number: "5678"
+      },
+      "Sample/Timezone"
+    )
 
     const {
-      eventIds
+      eventIds,
+      host
     } = await createEventFlow([
       {
         ...eventLocation,
-        startDateTime: dayjs().add(12, "hour").toDate(),
+        title: "Fake Event",
+        description: "",
+        startDateTime: today.toDate(),
         endDateTime: dayjs().add(1, "year").toDate()
       }
     ], 1)
 
     const resp = await callGetEvent(token, eventIds[0])
-    console.log("Here is the response body ", resp.body)
     expectTypeOf(resp.body).toMatchTypeOf<TiFEvent>()
+    expect(resp.body).toEqual(
+      expect.arrayContaining([expect.objectContaining({
+        id: eventIds[0],
+        title: "Fake Event",
+        description: "",
+        attendeeCount: 2,
+        time: expect.objectContaining({
+          todayOrTomorrow: "Today"
+        }),
+        location: expect.objectContaining({
+          coordinate: expect.objectContaining({
+            latitude: testEventInput.latitude,
+            longitude: testEventInput.longitude
+          }),
+          placemark: expect.objectContaining({
+            name: "Sample Location",
+            city: "Sample Neighborhood",
+            country: "Sample Country",
+            street: "Sample Street",
+            isoCountryCode: "",
+            streetNum: "1234"
+          }),
+          arrivalRadiusMeters: 120,
+          isInArrivalTrackingPeriod: true
+        }),
+        host: expect.objectContaining({
+          relations: expect.objectContaining({
+            themToYou: null,
+            youToThem: null
+          }),
+          id: host.userId,
+          username: host.name,
+          handle: host.handle,
+          profileImageURL: null
+        }),
+        settings: expect.objectContaining({
+          shouldHideAfterStartDate: true,
+          isChatEnabled: true
+        }),
+        userAttendeeStatus: "not-participating",
+        joinDate: null,
+        hasArrived: false,
+        endedAt: null
+      })])
+    )
     expect(resp.status).toEqual(200)
   })
 })
@@ -95,7 +161,6 @@ describe("Check that the secondsToStart matches with TodayOrTomorrow", () => {
     const today = dayjs()
     today.set("minute", 59)
     today.set("second", 59)
-
     const isToday = calcTodayOrTomorrow(today.toDate())
     expect(isToday).toEqual("Today")
   })
