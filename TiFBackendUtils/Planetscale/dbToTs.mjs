@@ -24,6 +24,8 @@ const config = {
   interfaceNameFormat: "DB${table}"
 }
 
+console.log(JSON.stringify(await sqlts.toObject(config), null, 2))
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const filePath = path.join(__dirname, "./entities.ts")
 

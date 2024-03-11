@@ -51,10 +51,10 @@ export const addCognitoTokenVerification = (
 ) => {
   // TODO: - Verify JWT properly
   app.use(async (req, res, next) => {
-    const auth = req.headers?.authorization
+    const auth = req.headers?.Authorization ?? req.headers?.authorization
 
     console.debug("authorization is ")
-    console.debug(req.headers?.authorization)
+    console.debug(req.headers?.Authorization ?? req.headers?.authorization)
 
     if (!auth || Array.isArray(auth)) {
       // TODO: Change error message to generic message for prod api
