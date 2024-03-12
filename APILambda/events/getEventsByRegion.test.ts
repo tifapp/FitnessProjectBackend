@@ -4,7 +4,7 @@ import { addPlacemarkToDB } from "../../GeocodingLambda/utils.js"
 import { callGetEventsByRegion } from "../test/helpers/events.js"
 import { testEventInput } from "../test/testEvents.js"
 import { createEventFlow } from "../test/userFlows/events.js"
-import { getAttendeeCount, getAttendees } from "./getEventsByRegion.js"
+// import { getAttendeeCount, getAttendees } from "./getEventsByRegion.js"
 import { callEndEvent } from "../test/apiCallers/events.js"
 import { callBlockUser } from "../test/apiCallers/users.js"
 
@@ -15,7 +15,7 @@ let attendeeTestId: string
 let futureEventTestId: number
 let ongoingEventTestId: number
 
-const setupDB = async () => {
+export const setupDB = async () => {
   addPlacemarkToDB(
     conn,
     {
@@ -25,8 +25,7 @@ const setupDB = async () => {
       city: "Sample Neighborhood",
       country: "Sample Country",
       street: "Sample Street",
-      street_num: "1234",
-      unit_number: "5678"
+      streetNumber: "1234"
     },
     "Sample/Timezone"
   )
