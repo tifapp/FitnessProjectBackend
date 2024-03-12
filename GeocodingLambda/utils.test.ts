@@ -23,8 +23,7 @@ describe("SearchForPositionResultToPlacemark", () => {
       city: "Sample Neighborhood",
       country: "Sample Country",
       street: "Sample Street",
-      street_num: "1234",
-      unit_number: "5678"
+      streetNumber: "1234"
     })
   })
 
@@ -39,8 +38,7 @@ describe("SearchForPositionResultToPlacemark", () => {
       city: undefined,
       country: undefined,
       street: undefined,
-      street_num: undefined,
-      unit_number: undefined
+      streetNumber: undefined
     })
   })
 
