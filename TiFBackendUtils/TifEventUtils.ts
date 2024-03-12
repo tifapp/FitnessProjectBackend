@@ -149,6 +149,8 @@ export const tifEventResponseFromDatabaseEvent = (event: DBTifEvent) : TiFEvent 
     chatExpirationTime: event.endedAt !== null
       ? new Date(event.endedAt.valueOf() + SECONDS_IN_DAY * 1000)
       : new Date(event.endDateTime.valueOf() + SECONDS_IN_DAY * 1000),
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
     hasArrived: event.hasArrived === 1,
     updatedAt: event.updatedAt,
     createdAt: event.createdAt,
