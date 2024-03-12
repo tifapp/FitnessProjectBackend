@@ -30,8 +30,7 @@ export const SearchForPositionResultToPlacemark = (
       place?.SubRegion,
     // country: place?.Country, // TODO: Need to get the full country name
     street: place?.Street,
-    streetNum: place?.AddressNumber,
-    unitNumber: place?.UnitNumber,
+    streetNumber: place?.AddressNumber,
     postalCode: place?.PostalCode,
     region: place?.Region,
     isoCountryCode: place?.Country,
@@ -77,7 +76,7 @@ export const addPlacemarkToDB = (conn: SQLExecutable, place: Placemark, timeZone
   conn.queryResults(
     `
     INSERT INTO location (name, city, country, street, street_num, lat, lon, timeZone)
-    VALUES (:name, :city, :country, :street, :street_num, :lat, :lon, :timeZone)
+    VALUES (:name, :city, :country, :street, :streetNumber, :lat, :lon, :timeZone)
     `,
     { timeZone, ...place }
   )

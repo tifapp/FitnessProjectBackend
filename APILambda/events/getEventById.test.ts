@@ -1,8 +1,8 @@
-import { TiFEvent, calcTodayOrTomorrow, conn } from "TiFBackendUtils"
+import { SECONDS_IN_DAY, TiFEvent, calcSecondsToStart, calcTodayOrTomorrow, conn } from "TiFBackendUtils"
 import { randomInt } from "crypto"
 import dayjs from "dayjs"
 import { expectTypeOf } from "expect-type"
-import { addPlacemarkToDB } from "../../GeocodingLambda/utils.js"
+import { addPlacemarkToDB, getTimeZone } from "../../GeocodingLambda/utils.js"
 import { callGetEvent } from "../test/apiCallers/events.js"
 import { callBlockUser } from "../test/apiCallers/users.js"
 import { testEventInput } from "../test/testEvents.js"
@@ -41,73 +41,90 @@ describe("GetSingleEvent tests", () => {
         name: "Sample Location",
         city: "Sample Neighborhood",
         country: "Sample Country",
+        isoCountryCode: "USA",
         street: "Sample Street",
-        street_num: "1234",
-        unit_number: "5678"
+        streetNumber: "1234"
       },
       "Sample/Timezone"
     )
 
+    const endDateTimeForEvent = dayjs().add(1, "year")
+    const eventTimeZone = getTimeZone({ latitude: testEventInput.latitude, longitude: testEventInput.longitude })
+
+    const expectedStartDateTime = new Date(today.valueOf() + SECONDS_IN_DAY * 1000)
+    const expectedEndDateTime = new Date(endDateTimeForEvent.toDate().valueOf() + SECONDS_IN_DAY * 1000)
+    const expectedChatExpirationTime = new Date(expectedEndDateTime.valueOf() + SECONDS_IN_DAY * 1000)
+
     const {
       eventIds,
-      host
+      host,
+      attendeesList
     } = await createEventFlow([
       {
         ...eventLocation,
         title: "Fake Event",
-        description: "",
-        startDateTime: today.toDate(),
-        endDateTime: dayjs().add(1, "year").toDate()
+        description: "This is some random event",
+        startDateTime: expectedStartDateTime,
+        endDateTime: expectedEndDateTime
       }
     ], 1)
 
     const resp = await callGetEvent(token, eventIds[0])
     expectTypeOf(resp.body).toMatchTypeOf<TiFEvent>()
     expect(resp.body).toEqual(
-      expect.arrayContaining([expect.objectContaining({
+      {
         id: eventIds[0],
         title: "Fake Event",
-        description: "",
+        description: "This is some random event",
         attendeeCount: 2,
-        time: expect.objectContaining({
+        time: {
+          secondsToStart: expect.any(Number),
+          timeZoneIdentifier: eventTimeZone,
+          dateRange: {
+            startDateTime: expectedStartDateTime,
+            endDateTime: expectedEndDateTime
+          },
           todayOrTomorrow: "Today"
-        }),
-        location: expect.objectContaining({
-          coordinate: expect.objectContaining({
+        },
+        previewAttendees: attendeesList.map(({ userId }) => userId),
+        location: {
+          coordinate: {
             latitude: testEventInput.latitude,
             longitude: testEventInput.longitude
-          }),
-          placemark: expect.objectContaining({
+          },
+          placemark: {
             name: "Sample Location",
             city: "Sample Neighborhood",
             country: "Sample Country",
             street: "Sample Street",
-            isoCountryCode: "",
-            streetNum: "1234"
-          }),
+            isoCountryCode: "USA",
+            streetNumber: "1234"
+          },
           arrivalRadiusMeters: 120,
           isInArrivalTrackingPeriod: true
-        }),
-        host: expect.objectContaining({
-          relations: expect.objectContaining({
-            themToYou: null,
-            youToThem: null
-          }),
+        },
+        host: {
+          relations: {
+            themToYou: "not-friends",
+            youToThem: "not-friends"
+          },
           id: host.userId,
           username: host.name,
           handle: host.handle,
           profileImageURL: null
-        }),
-        settings: expect.objectContaining({
+        },
+        settings: {
           shouldHideAfterStartDate: true,
           isChatEnabled: true
-        }),
+        },
+        chatExpirationTime: expectedChatExpirationTime,
+        updatedAt: expect.any(Date),
+        createdAt: expect.any(Date),
         userAttendeeStatus: "not-participating",
         joinDate: null,
         hasArrived: false,
         endedAt: null
-      })])
-    )
+      })
     expect(resp.status).toEqual(200)
   })
 })
@@ -173,8 +190,26 @@ describe("Check that the secondsToStart matches with TodayOrTomorrow", () => {
   })
 })
 
+describe("Check that the secondsToStart is accurate", () => {
+  it("should return the positive seconds before an event starts", async () => {
+    jest.useFakeTimers()
+    jest.setSystemTime(new Date("December 17, 1995 03:24:00"))
+    const secondsToStart = calcSecondsToStart(new Date("December 17, 1995 03:25:00"))
+    expect(secondsToStart).toEqual(60)
+    jest.useRealTimers()
+  })
+
+  it("should return the negative seconds after an event starts", async () => {
+    jest.useFakeTimers()
+    jest.setSystemTime(new Date("December 17, 1995 03:25:00"))
+    const secondsToStart = calcSecondsToStart(new Date("December 17, 1995 03:24:00"))
+    expect(secondsToStart).toEqual(-60)
+    jest.useRealTimers()
+  })
+})
+
 describe("Check the user relations return the appropriate relation between the user and host", () => {
-  it("should return 'curent-user' if the user views their own event for the themToYou and youToThem properties", async () => {
+  it("should return 'current-user' if the user views their own event for the themToYou and youToThem properties", async () => {
     const eventLocation = {
       latitude: testEventInput.latitude,
       longitude: testEventInput.longitude
@@ -194,14 +229,14 @@ describe("Check the user relations return the appropriate relation between the u
 
     expect(resp).toMatchObject({
       status: 200,
-      body: expect.arrayContaining([expect.objectContaining({
+      body: expect.objectContaining({
         host: expect.objectContaining({
           relations: expect.objectContaining({
             youToThem: "current-user",
             themToYou: "current-user"
           })
         })
-      })])
+      })
     })
   })
 })

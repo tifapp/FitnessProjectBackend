@@ -41,8 +41,8 @@ describe("CreateEvent tests", () => {
         title: "test event",
         latitude: 36.98,
         longitude: -122.06,
-        startTimestamp: dayjs().subtract(12, "hour").toDate(),
-        endTimestamp: dayjs().add(1, "year").toDate()
+        startDateTime: dayjs().subtract(12, "hour").toDate(),
+        endDateTime: dayjs().add(1, "year").toDate()
       }
     ])
     const resp = await callGetEvent(token, eventIds[0])
@@ -55,7 +55,7 @@ describe("CreateEvent tests", () => {
 
   it("should not allow a user to create an event that ends in the past", async () => {
     const { token } = await createUserFlow()
-    const resp = await callCreateEvent(token, { ...testEventInput, startTimestamp: new Date("2000-01-01"), endTimestamp: new Date("2000-01-02") })
+    const resp = await callCreateEvent(token, { ...testEventInput, startDateTime: new Date("2000-01-01"), endDateTime: new Date("2000-01-02") })
     expect(resp).toMatchObject({
       status: 400,
       body: { error: "invalid-request" }
@@ -71,8 +71,7 @@ describe("CreateEvent tests", () => {
       city: "Sample Neighborhood",
       country: "Sample Country",
       street: "Sample Street",
-      street_num: "1234",
-      unit_number: "5678"
+      streetNumber: "1234"
     }, "Sample/Timezone")
     const {
       eventIds
@@ -81,8 +80,8 @@ describe("CreateEvent tests", () => {
         title: "test event",
         latitude: 43.839319,
         longitude: 87.526148,
-        startTimestamp: new Date("2050-01-01"),
-        endTimestamp: new Date("2050-01-02")
+        startDateTime: new Date("2050-01-01"),
+        endDateTime: new Date("2050-01-02")
       }
     ])
 
@@ -105,8 +104,8 @@ describe("CreateEvent tests", () => {
         // Coordinates for the timezone border of ['Asia/Shanghai', 'Asia/Urumqi']
         latitude: 43.839319,
         longitude: 87.526148,
-        startTimestamp: new Date("2050-01-01"),
-        endTimestamp: new Date("2050-01-02")
+        startDateTime: new Date("2050-01-01"),
+        endDateTime: new Date("2050-01-02")
       }
     ])
 

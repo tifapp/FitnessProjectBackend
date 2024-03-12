@@ -10,11 +10,11 @@ dayjs.extend(duration)
 export const SECONDS_IN_DAY = dayjs.duration(1, "day").asSeconds()
 export const ARRIVAL_RADIUS_IN_METERS = 120
 
-export type UserHostRelations = "not friends" | "friend-request-pending" | "friends" | "blocked" | "current-user"
+export type UserHostRelations = "not-friends" | "friend-request-pending" | "friends" | "blocked" | "current-user"
 export type TodayOrTomorrow = "Today" | "Tomorrow"
 export type Role = "hosting" | "attending" | "not-participating"
 export type DBTifEvent = DBTifEventView & Omit<DBuserRelations, "status" | "updatedAt"> &
-{ attendeeCount: number, previewAttendees: DBViewEventAttendees, userAttendeeStatus: Role, joinDate: Date, themToYou: UserHostRelations, youToThem: UserHostRelations }
+{ attendeeCount: number, previewAttendees: string[], userAttendeeStatus: Role, joinDate: Date, themToYou: UserHostRelations, youToThem: UserHostRelations }
 
 export type EventWithAttendeeCount = {
   eventId: number
@@ -45,7 +45,7 @@ export type TiFEvent = {
       }
        todayOrTomorrow: TodayOrTomorrow | null
     }
-    previewAttendees: DBViewEventAttendees
+    previewAttendees: string[]
     location: {
       coordinate: {
         latitude: number,
@@ -78,8 +78,8 @@ export type TiFEvent = {
     endedAt: Date | null
   }
 
-const calcSecondsToStart = (event: DBTifEventView & Omit<DBuserRelations, "status" | "updatedAt">) => {
-  const millisecondsToStart = event.startDateTime.valueOf() - new Date().valueOf()
+export const calcSecondsToStart = (startDateTime: Date) => {
+  const millisecondsToStart = startDateTime.valueOf() - new Date().valueOf()
   return millisecondsToStart / 1000
 }
 
@@ -103,7 +103,7 @@ export const tifEventResponseFromDatabaseEvent = (event: DBTifEvent) : TiFEvent 
     description: event.description,
     attendeeCount: event.attendeeCount,
     time: {
-      secondsToStart: calcSecondsToStart(event),
+      secondsToStart: calcSecondsToStart(event.startDateTime),
       timeZoneIdentifier: event.timeZoneIdentifier,
       dateRange: {
         startDateTime: event.startDateTime,
@@ -122,13 +122,13 @@ export const tifEventResponseFromDatabaseEvent = (event: DBTifEvent) : TiFEvent 
         country: event.country ?? undefined,
         postalCode: event.postalCode ?? undefined,
         street: event.street ?? undefined,
-        streetNum: event.streetNumber ?? undefined,
+        streetNumber: event.streetNumber ?? undefined,
         region: event.region ?? undefined,
-        isoCountryCode: "",
+        isoCountryCode: event.isoCountryCode ?? undefined,
         city: event.city ?? undefined
       },
       arrivalRadiusMeters: ARRIVAL_RADIUS_IN_METERS,
-      isInArrivalTrackingPeriod: calcSecondsToStart(event) < SECONDS_IN_DAY
+      isInArrivalTrackingPeriod: calcSecondsToStart(event.startDateTime) < SECONDS_IN_DAY
     },
     host: {
       relations: {
@@ -147,8 +147,8 @@ export const tifEventResponseFromDatabaseEvent = (event: DBTifEvent) : TiFEvent 
     userAttendeeStatus: event.userAttendeeStatus,
     joinDate: event.joinDate,
     chatExpirationTime: event.endedAt !== null
-      ? new Date((event.endedAt.getUTCMilliseconds() + SECONDS_IN_DAY) * 1000)
-      : new Date((event.endDateTime.getUTCSeconds() + SECONDS_IN_DAY) * 1000),
+      ? new Date(event.endedAt.valueOf() + SECONDS_IN_DAY * 1000)
+      : new Date(event.endDateTime.valueOf() + SECONDS_IN_DAY * 1000),
     hasArrived: event.hasArrived === 1,
     updatedAt: event.updatedAt,
     createdAt: event.createdAt,
@@ -196,7 +196,7 @@ const setAttendeesPreviewForEvent = (
   })
 
   for (let i = 0; i < events.length; i++) {
-    events[i].previewAttendees = attendeesPreviews[i]
+    events[i].previewAttendees = attendeesPreviews[i].userIds?.split(",") ?? []
     events[i].attendeeCount = eventsWithAttendeeCount[i].attendeeCount
       ? eventsWithAttendeeCount[i].attendeeCount
       : 0

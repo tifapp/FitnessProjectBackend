@@ -22,7 +22,7 @@ export interface Placemark {
   city?: string
   country?: string
   street?: string
-  streetNum?: string
+  streetNumber?: string
   postalCode?: string
   region?: string
   isoCountryCode?: string

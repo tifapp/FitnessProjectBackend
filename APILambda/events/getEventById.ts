@@ -1,4 +1,4 @@
-import { SQLExecutable, DBTifEvent, conn, refactorEventsToMatchTifEvent, setEventAttendeesFields, success } from "TiFBackendUtils"
+import { DBTifEvent, SQLExecutable, conn, refactorEventsToMatchTifEvent, setEventAttendeesFields, success } from "TiFBackendUtils"
 import { z } from "zod"
 import { ServerEnvironment } from "../env.js"
 import {
@@ -42,19 +42,28 @@ export const getEventById = (
     .queryFirstResult<DBTifEvent>(
       `
       SELECT TifEventView.*,
-        CASE 
-        WHEN TifEventView.hostId = :userId THEN "current-user"
-        ELSE UserRelationOfHostToUser.status
-        END AS themToYou,
-        CASE 
-        WHEN TifEventView.hostId = :userId THEN "current-user"
-        ELSE UserRelationOfUserToHost.status
-        END AS youToThem
+       CASE
+           WHEN TifEventView.hostId = :userId THEN 'current-user'
+           ELSE CASE
+                    WHEN UserRelationOfHostToUser.status IS NULL THEN 'not-friends'
+                    ELSE UserRelationOfHostToUser.status
+                END
+       END AS themToYou,
+       CASE
+           WHEN TifEventView.hostId = :userId THEN 'current-user'
+           ELSE CASE
+                    WHEN UserRelationOfUserToHost.status IS NULL THEN 'not-friends'
+                    ELSE UserRelationOfUserToHost.status
+                END
+       END AS youToThem
       FROM TifEventView
-      LEFT JOIN userRelations UserRelationOfHostToUser ON TifEventView.hostId = UserRelationOfHostToUser.fromUserId AND UserRelationOfHostToUser.toUserId = :userId
-      LEFT JOIN userRelations UserRelationOfUserToHost ON UserRelationOfUserToHost.fromUserId = :userId AND UserRelationOfUserToHost.toUserId = TifEventView.hostId
-      WHERE 
-        TifEventView.id = :eventId
+      LEFT JOIN userRelations UserRelationOfHostToUser
+          ON TifEventView.hostId = UserRelationOfHostToUser.fromUserId
+          AND UserRelationOfHostToUser.toUserId = :userId
+      LEFT JOIN userRelations UserRelationOfUserToHost
+          ON UserRelationOfUserToHost.fromUserId = :userId
+          AND UserRelationOfUserToHost.toUserId = TifEventView.hostId
+      WHERE TifEventView.id = :eventId;
   `,
       { eventId, userId }
     )
@@ -87,7 +96,7 @@ export const getEventByIdRouter = (
                   .status(403)
                   .json(getEventWhenBlockedResponse(dbUser, event.title, Number(event.id))))
                 : setEventAttendeesFields(tx, [event], res.locals.selfId).flatMapSuccess((events) => refactorEventsToMatchTifEvent(events))
-                  .mapSuccess((event) => res.status(200).json(event))
+                  .mapSuccess((event) => res.status(200).json(event[0]))
             )
           )
           .mapFailure((error) => res.status(404).json({ error }))

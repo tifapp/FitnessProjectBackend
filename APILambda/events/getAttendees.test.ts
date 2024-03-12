@@ -102,8 +102,8 @@ describe("getAttendeesList endpoint", () => {
       conn,
       {
         ...testEventInput,
-        startTimestamp: dayjs().add(12, "hour").toDate(),
-        endTimestamp: dayjs().add(24, "hour").toDate()
+        startDateTime: dayjs().add(12, "hour").toDate(),
+        endDateTime: dayjs().add(24, "hour").toDate()
       },
       currentUser.userId
     )
@@ -334,7 +334,7 @@ describe("getAttendeesList endpoint", () => {
     })
   })
 
-  it("check that attendee list is sorted by role, arrivedAt, then joinTimestamp", async () => {
+  it("check that attendee list is sorted by role, arrivedAt, then joinDateTime", async () => {
     const { attendeeToken, attendeesList, testEventId, host } =
       await createTestAttendeesList({ numOfAttendees: 3 })
 
