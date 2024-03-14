@@ -71,8 +71,8 @@ export const userAndRelationsWithId = (
   conn.queryFirstResult<DatabaseUserWithRelation>(
     `
       SELECT *, 
-      ur1.status AS themToYouStatus, 
-      ur2.status AS youToThemStatus 
+      CASE WHEN ur1.status IS NULL THEN 'not-friends' ELSE ur1.status END AS themToYouStatus, 
+      CASE WHEN ur2.status IS NULL THEN 'not-friends' ELSE ur2.status END AS youToThemStatus
       FROM user u 
       LEFT JOIN userRelations ur1 ON ur1.fromUserId = u.id
       AND ur1.fromUserId = :userId
