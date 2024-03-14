@@ -35,6 +35,18 @@ export class SuccessResult<Success, Failure> {
   }
 
   /**
+   * Observes the result.
+   *
+   * @param handler a function to observe the value and perform a side effect.
+   */
+  observe (
+    handler: (value: Success) => unknown
+  ) {
+    handler(this.value)
+    return this
+  }
+
+  /**
    * Given the success value, maps this result into an entirely new result.
    */
   flatMapSuccess<NewSuccess, NewFailure> (
@@ -105,6 +117,18 @@ export class FailureResult<Success, Failure> {
 
   constructor (public value: Failure) {
     this.value = value
+  }
+
+  /**
+   * Observes the result.
+   *
+   * @param handler a function to observe the value and perform a side effect.
+   */
+  observe (
+    handler: (value: Failure) => unknown
+  ) {
+    handler(this.value)
+    return this
   }
 
   /**
@@ -181,6 +205,18 @@ export class PromiseResult<Success, Failure> extends Promise<
       throw new TypeError("Promise resolver " + executor + " is not a function")
     }
     super(executor)
+  }
+
+  /**
+   * Waits for the promiseResult to settle, then observes the result.
+   *
+   * @param handler a function to observe the value and perform a side effect.
+   */
+  observe (
+    handler: (value: Success | Failure) => unknown
+  ) {
+    const result = this.then((result) => result.observe(handler))
+    return promiseResult(result)
   }
 
   /**
