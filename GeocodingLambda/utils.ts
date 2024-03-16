@@ -75,8 +75,8 @@ export const checkExistingPlacemarkInDB = (
 export const addPlacemarkToDB = (conn: SQLExecutable, place: Placemark, timeZone: string) =>
   conn.queryResults(
     `
-    INSERT INTO location (name, city, country, street, street_num, lat, lon, timeZone)
-    VALUES (:name, :city, :country, :street, :streetNumber, :lat, :lon, :timeZone)
+    INSERT INTO location (name, city, country, street, street_num, lat, lon, timeZone, isoCountryCode)
+    VALUES (:name, :city, :country, :street, :streetNumber, :lat, :lon, :timeZone, :isoCountryCode)
     `,
     { timeZone, ...place }
   )

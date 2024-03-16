@@ -30,6 +30,7 @@ export const createEventFlow = async (
   })
 
   const attendeesList = []
+  attendeesList.push(host)
 
   for (let i = 0; i < attendeeCount; i++) {
     const attendee = await createUserFlow()

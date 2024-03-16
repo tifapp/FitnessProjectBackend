@@ -97,6 +97,8 @@ export const calcTodayOrTomorrow = (startDateTime: Date) => {
 }
 
 export const tifEventResponseFromDatabaseEvent = (event: DBTifEvent) : TiFEvent => {
+  console.log("ISO country code ", event.isoCountryCode)
+  console.log("Chat expiration time ", new Date(dayjs(event.endDateTime).add(1, "day").toDate()).toUTCString())
   return {
     id: event.id,
     title: event.title,
@@ -147,14 +149,14 @@ export const tifEventResponseFromDatabaseEvent = (event: DBTifEvent) : TiFEvent 
     userAttendeeStatus: event.userAttendeeStatus,
     joinDate: event.joinDate,
     chatExpirationTime: event.endedAt !== null
-      ? new Date(event.endedAt.valueOf() + SECONDS_IN_DAY * 1000)
-      : new Date(event.endDateTime.valueOf() + SECONDS_IN_DAY * 1000),
+      ? new Date(dayjs(event.endedAt).add(1, "day").toDate())
+      : new Date(dayjs(event.endDateTime).add(1, "day").toDate()),
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     hasArrived: event.hasArrived === 1,
-    updatedAt: event.updatedAt,
-    createdAt: event.createdAt,
-    endedAt: event.endedAt
+    updatedAt: new Date(event.updatedAt),
+    createdAt: new Date(event.createdAt),
+    endedAt: event.endedAt !== null ? event.endedAt : null
   }
 }
 

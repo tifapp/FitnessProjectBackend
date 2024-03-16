@@ -1,4 +1,4 @@
-import { SECONDS_IN_DAY, TiFEvent, calcSecondsToStart, calcTodayOrTomorrow, conn } from "TiFBackendUtils"
+import { TiFEvent, calcSecondsToStart, calcTodayOrTomorrow, conn } from "TiFBackendUtils"
 import { randomInt } from "crypto"
 import dayjs from "dayjs"
 import { expectTypeOf } from "expect-type"
@@ -33,6 +33,8 @@ describe("GetSingleEvent tests", () => {
     today.set("minute", 59)
     today.set("second", 59)
 
+    const eventTimeZone = getTimeZone({ latitude: testEventInput.latitude, longitude: testEventInput.longitude })
+
     addPlacemarkToDB(
       conn,
       {
@@ -45,15 +47,12 @@ describe("GetSingleEvent tests", () => {
         street: "Sample Street",
         streetNumber: "1234"
       },
-      "Sample/Timezone"
+      eventTimeZone[0]
     )
 
-    const endDateTimeForEvent = dayjs().add(1, "year")
-    const eventTimeZone = getTimeZone({ latitude: testEventInput.latitude, longitude: testEventInput.longitude })
-
-    const expectedStartDateTime = new Date(today.valueOf() + SECONDS_IN_DAY * 1000)
-    const expectedEndDateTime = new Date(endDateTimeForEvent.toDate().valueOf() + SECONDS_IN_DAY * 1000)
-    const expectedChatExpirationTime = new Date(expectedEndDateTime.valueOf() + SECONDS_IN_DAY * 1000)
+    const expectedStartDateTime = dayjs().startOf("hour").toDate()
+    const expectedEndDateTime = dayjs().add(1, "hour").startOf("hour").toDate()
+    const expectedChatExpirationTime = dayjs(expectedEndDateTime).add(1, "day").startOf("hour").toDate()
 
     const {
       eventIds,
@@ -70,6 +69,7 @@ describe("GetSingleEvent tests", () => {
     ], 1)
 
     const resp = await callGetEvent(token, eventIds[0])
+
     expectTypeOf(resp.body).toMatchTypeOf<TiFEvent>()
     expect(resp.body).toEqual(
       {
@@ -79,10 +79,10 @@ describe("GetSingleEvent tests", () => {
         attendeeCount: 2,
         time: {
           secondsToStart: expect.any(Number),
-          timeZoneIdentifier: eventTimeZone,
+          timeZoneIdentifier: eventTimeZone[0],
           dateRange: {
-            startDateTime: expectedStartDateTime,
-            endDateTime: expectedEndDateTime
+            startDateTime: expectedStartDateTime.toISOString(),
+            endDateTime: expectedEndDateTime.toISOString()
           },
           todayOrTomorrow: "Today"
         },
@@ -117,9 +117,9 @@ describe("GetSingleEvent tests", () => {
           shouldHideAfterStartDate: true,
           isChatEnabled: true
         },
-        chatExpirationTime: expectedChatExpirationTime,
-        updatedAt: expect.any(Date),
-        createdAt: expect.any(Date),
+        chatExpirationTime: expectedChatExpirationTime.toISOString(),
+        updatedAt: expect.any(String),
+        createdAt: expect.any(String),
         userAttendeeStatus: "not-participating",
         joinDate: null,
         hasArrived: false,
