@@ -1,20 +1,7 @@
-import { SQLExecutable, conn } from "TiFBackendUtils"
+import { NullablePartial, SQLExecutable, conn } from "TiFBackendUtils"
 import { ServerEnvironment } from "../../env.js"
 import { ValidatedRouter } from "../../validation.js"
-import { queryUserSettings } from "./getUserSettings.js"
 import { UserSettings, UserSettingsSchema } from "./models.js"
-
-/**
- * The default user settings, which enables all fields.
- */
-export const DEFAULT_USER_SETTINGS = {
-  isAnalyticsEnabled: true,
-  isCrashReportingEnabled: true,
-  isEventNotificationsEnabled: true,
-  isMentionsNotificationsEnabled: true,
-  isChatNotificationsEnabled: true,
-  isFriendRequestNotificationsEnabled: true
-} as const
 
 /**
  * Updates the user's settings with the specified fields in the settings object.
@@ -25,53 +12,17 @@ export const DEFAULT_USER_SETTINGS = {
  * @param userId the id of the user to update settings for
  * @param settings the settings fields to update
  */
-const overwriteUserSettings = (
-  conn: SQLExecutable,
-  userId: string,
-  settings: Partial<UserSettings>
-) =>
-  conn.transaction((tx) =>
-    queryUserSettings(tx, userId)
-      .flatMapSuccess((currentSettings) =>
-        updateUserSettings(tx, userId, {
-          ...currentSettings,
-          ...settings
-        })
-      )
-      .flatMapFailure(() =>
-        insertUserSettings(tx, userId, {
-          ...DEFAULT_USER_SETTINGS,
-          ...settings
-        })
-      )
-  )
-
-const updateUserSettings = (
-  conn: SQLExecutable,
-  userId: string,
-  settings: UserSettings
-) =>
-  conn.queryResults(
-    `
-    UPDATE userSettings 
-    SET 
-      isAnalyticsEnabled = :isAnalyticsEnabled,
-      isCrashReportingEnabled = :isCrashReportingEnabled,
-      isEventNotificationsEnabled = :isEventNotificationsEnabled,
-      isMentionsNotificationsEnabled = :isMentionsNotificationsEnabled,
-      isChatNotificationsEnabled = :isChatNotificationsEnabled,
-      isFriendRequestNotificationsEnabled = :isFriendRequestNotificationsEnabled,
-      lastUpdatedAt = NOW()
-    WHERE 
-      userId = :userId 
-  `,
-    { userId, ...settings }
-  )
-
 const insertUserSettings = (
   conn: SQLExecutable,
   userId: string,
-  settings: UserSettings
+  {
+    isAnalyticsEnabled = null,
+    isCrashReportingEnabled = null,
+    isEventNotificationsEnabled = null,
+    isMentionsNotificationsEnabled = null,
+    isChatNotificationsEnabled = null,
+    isFriendRequestNotificationsEnabled = null
+  }: NullablePartial<UserSettings>
 ) =>
   conn.queryResults(
     `
@@ -85,15 +36,30 @@ const insertUserSettings = (
       isFriendRequestNotificationsEnabled
     ) VALUES (
       :userId, 
-      :isAnalyticsEnabled, 
-      :isCrashReportingEnabled, 
-      :isEventNotificationsEnabled, 
-      :isMentionsNotificationsEnabled,
-      :isChatNotificationsEnabled, 
-      :isFriendRequestNotificationsEnabled
+      COALESCE(:isAnalyticsEnabled, 1), 
+      COALESCE(:isCrashReportingEnabled, 1), 
+      COALESCE(:isEventNotificationsEnabled, 1), 
+      COALESCE(:isMentionsNotificationsEnabled, 1),
+      COALESCE(:isChatNotificationsEnabled, 1), 
+      COALESCE(:isFriendRequestNotificationsEnabled, 1)
     )
+    ON DUPLICATE KEY UPDATE 
+      isAnalyticsEnabled = COALESCE(:isAnalyticsEnabled, isAnalyticsEnabled), 
+      isCrashReportingEnabled = COALESCE(:isCrashReportingEnabled, isCrashReportingEnabled),
+      isEventNotificationsEnabled = COALESCE(:isEventNotificationsEnabled, isEventNotificationsEnabled),
+      isMentionsNotificationsEnabled = COALESCE(:isMentionsNotificationsEnabled, isMentionsNotificationsEnabled),
+      isChatNotificationsEnabled = COALESCE(:isChatNotificationsEnabled, isChatNotificationsEnabled),
+      isFriendRequestNotificationsEnabled = COALESCE(:isFriendRequestNotificationsEnabled, isFriendRequestNotificationsEnabled);    
   `,
-    { userId, ...settings }
+    {
+      userId,
+      isAnalyticsEnabled,
+      isCrashReportingEnabled,
+      isEventNotificationsEnabled,
+      isMentionsNotificationsEnabled,
+      isChatNotificationsEnabled,
+      isFriendRequestNotificationsEnabled
+    }
   )
 
 /**
@@ -112,8 +78,7 @@ export const updateUserSettingsRouter = (
     "/self/settings",
     { bodySchema: UserSettingsSchema.partial() },
     (req, res) =>
-      overwriteUserSettings(conn, res.locals.selfId, req.body)
-        .mapFailure((error) => res.status(500).json({ error }))
+      insertUserSettings(conn, res.locals.selfId, req.body)
         .mapSuccess(() => res.status(204).send())
   )
 }

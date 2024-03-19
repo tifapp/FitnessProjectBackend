@@ -93,7 +93,7 @@ jobs:
               fi
           done
           stageName="staging"
-          aws apigateway put-rest-api --rest-api-id 623qsegfb9 --fail-on-warnings --debug true --mode overwrite --body fileb://APILambda/specs.json
+          aws apigateway put-rest-api --rest-api-id 623qsegfb9 --fail-on-warnings --debug --mode overwrite --body fileb://APILambda/specs.json
           aws apigateway create-deployment --rest-api-id 623qsegfb9 --stage-name $stageName --description 'Deployed'
 
       - name: Install dependencies
