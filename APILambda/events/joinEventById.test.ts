@@ -43,7 +43,7 @@ describe("Join the event by id tests", () => {
         attendees: expect.arrayContaining([
           expect.objectContaining({
             id: attendeeId,
-            arrivalStatus: false
+            hasArrived: false
           })
         ])
       }
@@ -80,7 +80,7 @@ describe("Join the event by id tests", () => {
         attendees: expect.arrayContaining([
           expect.objectContaining({
             id: attendeeId,
-            arrivalStatus: true
+            hasArrived: true
           })
         ])
       }

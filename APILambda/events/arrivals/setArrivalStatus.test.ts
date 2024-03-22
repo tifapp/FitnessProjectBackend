@@ -4,13 +4,13 @@ import { createEventFlow } from "../../test/userFlows/events.js"
 
 const eventLocation = { latitude: 50, longitude: 50 }
 
-describe("SetArrivalStatus tests", () => {
+describe("SetHasArrived tests", () => {
   it("should return upcoming events from the arrived and departed endpoints", async () => {
     // cant mock planetscale time
     const { attendeesList: [attendee], eventIds } = await createEventFlow([{
       ...eventLocation,
-      startTimestamp: dayjs().add(12, "hour").toDate(),
-      endTimestamp: dayjs().add(1, "year").toDate()
+      startDateTime: dayjs().add(12, "hour").toDate(),
+      endDateTime: dayjs().add(1, "year").toDate()
     }], 1)
 
     expect(await callSetArrival(attendee.token, {
@@ -45,7 +45,7 @@ describe("SetArrivalStatus tests", () => {
 
     expect(await callGetEvent(attendee.token, eventIds[0])).toMatchObject({
       body: {
-        arrivalStatus: "arrived"
+        hasArrived: "arrived"
       }
     })
 
@@ -55,7 +55,7 @@ describe("SetArrivalStatus tests", () => {
 
     expect(await callGetEvent(attendee.token, eventIds[0])).toMatchObject({
       body: {
-        arrivalStatus: "not-arrived"
+        hasArrived: "not-arrived"
       }
     })
   })
