@@ -36,7 +36,7 @@ export const setupDB = async () => {
   }
 
   const {
-    attendeesList: [attendee],
+    attendeesList,
     host,
     eventIds: [futureEventId, ongoingEventId]
   } = await createEventFlow([
@@ -52,9 +52,9 @@ export const setupDB = async () => {
     }
   ], 1)
 
-  attendeeTestToken = attendee.token
+  attendeeTestToken = attendeesList[1].token
   eventOwnerTestToken = host.token
-  attendeeTestId = attendee.userId
+  attendeeTestId = attendeesList[1].userId
   eventOwnerTestId = host.userId
   ongoingEventTestId = ongoingEventId
   futureEventTestId = futureEventId

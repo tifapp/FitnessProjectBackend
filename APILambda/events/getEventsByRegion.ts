@@ -27,8 +27,8 @@ export const getEventsByRegion = (
        UserRelationOfHostToUser.status AS themToYou,
        UserRelationOfUserToHost.status AS youToThem
 FROM TifEventView
-LEFT JOIN userRelations UserRelationOfHostToUser ON e.hostId = UserRelationOfHostToUser.fromUserId AND UserRelationOfHostToUser.toUserId = :userId
-LEFT JOIN userRelations UserRelationOfUserToHost ON UserRelationOfUserToHost.fromUserId = :userId AND UserRelationOfUserToHost.toUserId = e.hostId
+LEFT JOIN userRelations UserRelationOfHostToUser ON TifEventView.hostId = UserRelationOfHostToUser.fromUserId AND UserRelationOfHostToUser.toUserId = :userId
+LEFT JOIN userRelations UserRelationOfUserToHost ON UserRelationOfUserToHost.fromUserId = :userId AND UserRelationOfUserToHost.toUserId = TifEventView.hostId
     WHERE 
         ST_Distance_Sphere(POINT(:userLongitude, :userLatitude), POINT(TifEventView.longitude, TifEventView.latitude)) < :radius
         AND TifEventView.endDateTime > NOW()
