@@ -8,20 +8,20 @@ describe("Leave event tests", () => {
 
   it("should return 204 if user leaves the event", async () => {
     const {
-      attendeesList: [attendee],
+      attendeesList,
       eventIds: [eventId]
     } = await createEventFlow(
       [
         {
           ...eventLocation,
-          startTimestamp: dayjs().add(12, "hour").toDate(),
-          endTimestamp: dayjs().add(1, "year").toDate()
+          startDateTime: dayjs().add(12, "hour").toDate(),
+          endDateTime: dayjs().add(1, "year").toDate()
         }
       ],
       1
     )
 
-    const resp = await callLeaveEvent(attendee.token, eventId)
+    const resp = await callLeaveEvent(attendeesList[1].token, eventId)
 
     expect(resp).toMatchObject({
       status: 204
@@ -36,8 +36,8 @@ describe("Leave event tests", () => {
       [
         {
           ...eventLocation,
-          startTimestamp: dayjs().add(12, "hour").toDate(),
-          endTimestamp: dayjs().add(1, "year").toDate()
+          startDateTime: dayjs().add(12, "hour").toDate(),
+          endDateTime: dayjs().add(1, "year").toDate()
         }
       ],
       1
@@ -54,21 +54,21 @@ describe("Leave event tests", () => {
   // use different status message if leaving twice?
   it("should return 400 if user leaves event twice", async () => {
     const {
-      attendeesList: [attendee],
+      attendeesList,
       eventIds
     } = await createEventFlow(
       [
         {
           ...eventLocation,
-          startTimestamp: dayjs().add(12, "hour").toDate(),
-          endTimestamp: dayjs().add(1, "year").toDate()
+          startDateTime: dayjs().add(12, "hour").toDate(),
+          endDateTime: dayjs().add(1, "year").toDate()
         }
       ],
       1
     )
 
-    await callLeaveEvent(attendee.token, eventIds[0])
-    const resp = await callLeaveEvent(attendee.token, eventIds[0])
+    await callLeaveEvent(attendeesList[1].token, eventIds[0])
+    const resp = await callLeaveEvent(attendeesList[1].token, eventIds[0])
 
     expect(resp).toMatchObject({
       status: 400,
@@ -93,8 +93,8 @@ describe("Leave event tests", () => {
       [
         {
           ...eventLocation,
-          startTimestamp: dayjs().add(12, "hour").toDate(),
-          endTimestamp: dayjs().add(1, "year").toDate()
+          startDateTime: dayjs().add(12, "hour").toDate(),
+          endDateTime: dayjs().add(1, "year").toDate()
         }
       ],
       1
@@ -112,20 +112,20 @@ describe("Leave event tests", () => {
     const {
       eventIds,
       host,
-      attendeesList: [attendee]
+      attendeesList
     } = await createEventFlow(
       [
         {
           ...eventLocation,
-          startTimestamp: dayjs().add(12, "hour").toDate(),
-          endTimestamp: dayjs().add(1, "year").toDate()
+          startDateTime: dayjs().add(12, "hour").toDate(),
+          endDateTime: dayjs().add(1, "year").toDate()
         }
       ],
       1
     )
 
     await callEndEvent(host.token, eventIds[0])
-    const resp = await callLeaveEvent(attendee.token, eventIds[0])
+    const resp = await callLeaveEvent(attendeesList[1].token, eventIds[0])
 
     expect(resp).toMatchObject({
       status: 403,
@@ -137,20 +137,20 @@ describe("Leave event tests", () => {
     const {
       eventIds,
       host,
-      attendeesList: [attendee]
+      attendeesList
     } = await createEventFlow(
       [
         {
           ...eventLocation,
-          startTimestamp: dayjs().subtract(1, "year").toDate(),
-          endTimestamp: dayjs().add(12, "hour").toDate()
+          startDateTime: dayjs().subtract(1, "year").toDate(),
+          endDateTime: dayjs().add(12, "hour").toDate()
         }
       ],
       1
     )
 
     await callEndEvent(host.token, eventIds[0])
-    const resp = await callLeaveEvent(attendee.token, eventIds[0])
+    const resp = await callLeaveEvent(attendeesList[1].token, eventIds[0])
 
     expect(resp).toMatchObject({
       status: 403,

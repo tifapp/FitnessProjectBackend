@@ -10,7 +10,7 @@ type EventRegion = {
     longitude: number;
   };
   arrivalRadiusMeters: number;
-  isArrived: boolean;
+  hasArrived: boolean;
 }
 
 const mapEventsToRegions = (events: DatabaseEvent[]): EventRegion[] => {
@@ -23,7 +23,7 @@ const mapEventsToRegions = (events: DatabaseEvent[]): EventRegion[] => {
       eventRegions[key] = {
         eventIds: [],
         coordinate: { latitude: event.latitude, longitude: event.longitude },
-        isArrived: event.hasArrived,
+        hasArrived: event.hasArrived === 1,
         arrivalRadiusMeters: 500 // TODO: Parameterize
       }
     }

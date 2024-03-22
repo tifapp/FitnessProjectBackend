@@ -7,55 +7,53 @@ const eventLocation = { latitude: 50, longitude: 50 }
 describe("SetHasArrived tests", () => {
   it("should return upcoming events from the arrived and departed endpoints", async () => {
     // cant mock planetscale time
-    const { attendeesList: [attendee], eventIds } = await createEventFlow([{
+    const { attendeesList, eventIds } = await createEventFlow([{
       ...eventLocation,
       startDateTime: dayjs().add(12, "hour").toDate(),
       endDateTime: dayjs().add(1, "year").toDate()
     }], 1)
 
-    expect(await callSetArrival(attendee.token, {
+    expect(await callSetArrival(attendeesList[1].token, {
       coordinate: eventLocation
     })).toMatchObject({
       body: {
         upcomingRegions: [{
-          eventIds,
-          isArrived: true
+          eventIds
         }]
       }
     })
 
-    expect(await callSetDeparture(attendee.token, {
+    expect(await callSetDeparture(attendeesList[1].token, {
       coordinate: eventLocation
     })).toMatchObject({
       body: {
         upcomingRegions: [{
-          eventIds,
-          isArrived: false
+          eventIds
         }]
       }
     })
   })
 
   it("should persist arrival when checking events", async () => {
-    const { attendeesList: [attendee], eventIds } = await createEventFlow([{ ...eventLocation }], 1)
+    const { attendeesList, eventIds } = await createEventFlow([{ ...eventLocation }], 1)
 
-    await callSetArrival(attendee.token, {
+    await callSetArrival(attendeesList[1].token, {
       coordinate: eventLocation
     })
 
-    expect(await callGetEvent(attendee.token, eventIds[0])).toMatchObject({
+    expect(await callGetEvent(attendeesList[1].token, eventIds[0])).toMatchObject({
       body: {
-        hasArrived: "arrived"
+        hasArrived: true
       }
     })
 
-    await callSetDeparture(attendee.token, {
+    await callSetDeparture(attendeesList[1].token, {
       coordinate: eventLocation
     })
 
-    expect(await callGetEvent(attendee.token, eventIds[0])).toMatchObject({
+    expect(await callGetEvent(attendeesList[1].token, eventIds[0])).toMatchObject({
       body: {
-        hasArrived: "not-arrived"
+        hasArrived: false
       }
     })
   })

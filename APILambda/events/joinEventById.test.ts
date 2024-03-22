@@ -28,7 +28,7 @@ describe("Join the event by id tests", () => {
     })
     expect(resp).toMatchObject({
       status: 201,
-      body: { id: attendeeId, token: expect.anything(), isArrived: false }
+      body: { id: attendeeId, token: expect.anything(), hasArrived: false }
     })
 
     const attendeesResp = await callGetAttendees(
@@ -65,7 +65,7 @@ describe("Join the event by id tests", () => {
     })
     expect(resp).toMatchObject({
       status: 201,
-      body: { id: attendeeId, token: expect.anything(), isArrived: true }
+      body: { id: attendeeId, token: expect.anything(), hasArrived: true }
     })
 
     const attendeesResp = await callGetAttendees(
@@ -108,7 +108,7 @@ describe("Join the event by id tests", () => {
               latitude: testEventInput.latitude,
               longitude: testEventInput.longitude
             },
-            isArrived: false,
+            hasArrived: false,
             arrivalRadiusMeters: 500
           }
         ]
@@ -173,7 +173,7 @@ describe("Join the event by id tests", () => {
     const {
       eventIds,
       host,
-      attendeesList: [attendee]
+      attendeesList
     } = await createEventFlow(
       [
         {
@@ -186,7 +186,7 @@ describe("Join the event by id tests", () => {
     )
 
     await callEndEvent(host.token, eventIds[0])
-    const resp = await callJoinEvent(attendee.token, eventIds[0])
+    const resp = await callJoinEvent(attendeesList[1].token, eventIds[0])
 
     expect(resp).toMatchObject({
       status: 403,
