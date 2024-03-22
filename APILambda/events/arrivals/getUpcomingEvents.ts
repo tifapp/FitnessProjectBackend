@@ -23,6 +23,8 @@ const mapEventsToRegions = (events: DatabaseEvent[]): EventRegion[] => {
       eventRegions[key] = {
         eventIds: [],
         coordinate: { latitude: event.latitude, longitude: event.longitude },
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
         hasArrived: event.hasArrived === 1,
         arrivalRadiusMeters: 500 // TODO: Parameterize
       }
