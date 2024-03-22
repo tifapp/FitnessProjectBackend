@@ -137,7 +137,7 @@ describe("Checks the data returned if the user blocks the host or vice versa is 
 
   it("should return host name and event title if blocked by host", async () => {
     const {
-      attendeesList: [{ token: attendeeToken, userId: attendeeId }],
+      attendeesList,
       host,
       eventIds
     } = await createEventFlow([
@@ -148,15 +148,15 @@ describe("Checks the data returned if the user blocks the host or vice versa is 
       }
     ], 1)
 
-    await callBlockUser(host.token, attendeeId)
-    const resp = await callGetEvent(attendeeToken, eventIds[0])
+    await callBlockUser(host.token, attendeesList[1].userId)
+    const resp = await callGetEvent(attendeesList[1].token, eventIds[0])
 
     expect(resp.status).toEqual(403)
     expectTypeOf(resp.body).toMatchTypeOf<GetEventWhenBlockedResponse>()
   })
 
   it("should return host name and event title if attendee blocked host", async () => {
-    const { attendeesList: [{ token: attendeeToken }], host, eventIds } =
+    const { attendeesList, host, eventIds } =
       await createEventFlow([
         {
           ...eventLocation,
@@ -165,8 +165,8 @@ describe("Checks the data returned if the user blocks the host or vice versa is 
         }
       ], 1)
 
-    await callBlockUser(attendeeToken, host.userId)
-    const resp = await callGetEvent(attendeeToken, eventIds[0])
+    await callBlockUser(attendeesList[1].token, host.userId)
+    const resp = await callGetEvent(attendeesList[1].token, eventIds[0])
 
     expect(resp.status).toEqual(403)
     expectTypeOf(resp.body).toMatchTypeOf<GetEventWhenBlockedResponse>()
