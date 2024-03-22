@@ -40,7 +40,7 @@ export class SuccessResult<Success, Failure> {
    * @param handler a function to observe the value and perform a side effect.
    */
   observe (
-    handler: (value: Success) => unknown
+    handler: (value: Success) => void
   ) {
     handler(this.value)
     return this
@@ -125,7 +125,7 @@ export class FailureResult<Success, Failure> {
    * @param handler a function to observe the value and perform a side effect.
    */
   observe (
-    handler: (value: Failure) => unknown
+    handler: (value: Failure) => void
   ) {
     handler(this.value)
     return this
@@ -213,7 +213,7 @@ export class PromiseResult<Success, Failure> extends Promise<
    * @param handler a function to observe the value and perform a side effect.
    */
   observe (
-    handler: (value: Success | Failure) => unknown
+    handler: (value: Success | Failure) => void
   ) {
     const result = this.then((result) => result.observe(handler))
     return promiseResult(result)

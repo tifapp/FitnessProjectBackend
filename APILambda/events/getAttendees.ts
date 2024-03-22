@@ -6,7 +6,7 @@ import {
   encodeAttendeesListCursor
 } from "../shared/Cursor.js"
 import { DatabaseAttendee, PaginatedAttendeesResponse } from "../shared/SQL.js"
-import { UserToProfileRelationStatus } from "../user/models.js"
+import { UserRelations } from "../user/userRelationsType.js"
 import { ValidatedRouter } from "../validation.js"
 
 const AttendeesRequestSchema = z.object({
@@ -27,10 +27,7 @@ const CursorRequestSchema = z.object({
     .refine((arg) => arg >= 1 && arg <= 50)
 })
 
-type DatabaseAttendeeWithRelation = DatabaseAttendee & {
-  themToYou: UserToProfileRelationStatus
-  youToThem: UserToProfileRelationStatus
-}
+type DatabaseAttendeeWithRelation = DatabaseAttendee & UserRelations
 
 const mapDatabaseAttendee = (sqlResult: DatabaseAttendeeWithRelation) => {
   return {
@@ -236,19 +233,19 @@ export const getAttendeesByEventIdRouter = (
 
           return totalAttendeeCount === 0
             ? res
-                .status(404)
-                .send(
-                  paginatedAttendeesResponse(
-                    attendees,
-                    req.query.limit,
-                    totalAttendeeCount
-                  )
+              .status(404)
+              .send(
+                paginatedAttendeesResponse(
+                  attendees,
+                  req.query.limit,
+                  totalAttendeeCount
                 )
+              )
             : attendees.length > 0 &&
               attendees[0].role === "hosting" &&
               attendees[0].themToYou === "blocked"
-            ? res.status(403).send({ error: "blocked-by-host" })
-            : res
+              ? res.status(403).send({ error: "blocked-by-host" })
+              : res
                 .status(200)
                 .send(
                   paginatedAttendeesResponse(

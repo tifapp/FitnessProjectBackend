@@ -1,25 +1,26 @@
-import { SQLExecutable, conn, failure, promiseResult, success } from "TiFBackendUtils"
+import { DBuser, SQLExecutable, conn, failure, promiseResult, success } from "TiFBackendUtils"
 import { CreateUserProfileEnvironment } from "../../env.js"
 import { ValidatedRouter } from "../../validation.js"
-import { RegisterUserRequest } from "../SQL.js"
 import { generateUniqueUsername } from "../generateUserHandle.js"
-import { DatabaseUser } from "../models.js"
 
-const checkValidName = (name: string, id: string) => {
+type NewUserDetails = {
+  id: string
+  name: string
+  handle: string
+}
+
+const checkValidName = (name: string) => {
   if (name === "") {
     return failure("invalid-claims" as const)
   }
 
-  return success({
-    id,
-    name
-  })
+  return success()
 }
 
-const userWithHandleOrIdExists = (conn: SQLExecutable, id: string, handle?: string) => {
+const userWithHandleOrIdExists = (conn: SQLExecutable, { id, handle }: NewUserDetails) => {
   return promiseResult(handle ? success() : failure("missing-handle" as const))
     .flatMapSuccess(() => conn
-      .queryFirstResult<DatabaseUser>("SELECT TRUE FROM user WHERE handle = :handle OR id = :id", {
+      .queryFirstResult<DBuser>("SELECT TRUE FROM user WHERE handle = :handle OR id = :id", {
         handle,
         id
       })
@@ -32,29 +33,30 @@ const userWithHandleOrIdExists = (conn: SQLExecutable, id: string, handle?: stri
  * Creates a new user in the database.
  *
  * @param conn see {@link SQLExecutable}
- * @param request see {@link RegisterUserRequest}
+ * @param userDetails see {@link NewUserDetails}
  */
 export const insertUser = (
   conn: SQLExecutable,
-  request: RegisterUserRequest
+  userDetails: NewUserDetails
 ) => conn.queryResults(
   "INSERT INTO user (id, name, handle) VALUES (:id, :name, :handle)",
-  request
+  userDetails
 )
 
 /**
  * Attempts to register a new user in the database.
  *
  * @param conn the query executor to use
- * @param request the initial fields required to create a user
+ * @param userDetails the initial fields required to create a user
  * @returns an object containing the id of the newly registered user
  */
 const createUserProfileTransaction = (
-  request: RegisterUserRequest
+  userDetails: NewUserDetails
 ) =>
   conn.transaction((tx) =>
-    userWithHandleOrIdExists(tx, request.id, request.handle)
-      .flatMapSuccess(() => insertUser(tx, request)).mapSuccess(() => ({ id: request.id, handle: request.handle }))
+    userWithHandleOrIdExists(tx, userDetails)
+      .flatMapSuccess(() => insertUser(tx, userDetails))
+      .withSuccess(userDetails)
   )
 
 export const createUserProfileRouter = (
@@ -62,15 +64,16 @@ export const createUserProfileRouter = (
   router: ValidatedRouter
 ) =>
   router.postWithValidation("/", {}, (_, res) =>
-    promiseResult(checkValidName(res.locals.name, res.locals.selfId))
-      .flatMapSuccess(registerReq =>
+    promiseResult(checkValidName(res.locals.name))
+      .flatMapSuccess(() =>
         generateUniqueUsername(
           conn,
-          registerReq.name
+          res.locals.name
         )
-          .mapSuccess(handle => Object.assign(registerReq, { handle })))
-      .flatMapSuccess(profile => createUserProfileTransaction(profile))
-      .flatMapSuccess(profile => setProfileCreatedAttribute(res.locals.selfId).mapSuccess(() => profile))
+      )
+      .observe(() => {})
+      .flatMapSuccess(handle => createUserProfileTransaction({ id: res.locals.selfId, name: res.locals.name, handle }))
+      .flatMapSuccess(profile => setProfileCreatedAttribute(res.locals.selfId).withSuccess(profile))
       .mapFailure(error => res.status(error === "user-exists" ? 400 : 401).json({ error }))
       .mapSuccess(profile => res.status(201).json(profile))
   )

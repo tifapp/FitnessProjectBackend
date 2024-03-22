@@ -1,7 +1,7 @@
 import { SQLExecutable, conn, failure, success } from "TiFBackendUtils"
 import { z } from "zod"
 import { ValidatedRouter } from "../validation.js"
-import { userWithIdExists } from "./SQL.js"
+import { userWithIdExists } from "./UserExistsChecks.js"
 
 const UnblockUserRequestSchema = z.object({
   userId: z.string().uuid()
@@ -32,10 +32,10 @@ const unblockUser = (
   return conn
     .queryResult(
       `
-    DELETE FROM userRelations
-    WHERE fromUserId = :fromUserId AND toUserId = :toUserId 
-      AND status = 'blocked'
-  `,
+        DELETE FROM userRelations
+        WHERE fromUserId = :fromUserId AND toUserId = :toUserId 
+          AND status = 'blocked'
+      `,
       { fromUserId, toUserId }
     )
     .flatMapSuccess((result) => {
