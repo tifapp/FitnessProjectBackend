@@ -46,7 +46,6 @@ export const callEndEvent = async (
     .send()
 }
 
-
 export const callSetArrival = async (
   bearerToken: string,
   req: SetArrivalStatusInput

@@ -34,6 +34,15 @@ describe("CreateEvent tests", () => {
 
   it("should invoke the aws lambda for creating an event", async () => {
     const { token } = await createUserFlow()
+    addPlacemarkToDB(conn, {
+      lat: 36.98,
+      lon: -122.06,
+      name: "Sample Location",
+      city: "Sample Neighborhood",
+      country: "Sample Country",
+      street: "Sample Street",
+      streetNumber: "1234"
+    }, "Sample/Timezone")
     const {
       eventIds
     } = await createEventFlow([
@@ -48,7 +57,7 @@ describe("CreateEvent tests", () => {
     const resp = await callGetEvent(token, eventIds[0])
     expect(resp).toMatchObject({
       status: 200,
-      body: { id: expect.anything(), city: expect.anything(), country: expect.anything() }
+      body: { id: expect.anything(), location: { placemark: { city: expect.anything(), country: expect.anything() } } }
     })
     expect(parseInt(resp.body.id)).not.toBeNaN()
   })
@@ -95,7 +104,15 @@ describe("CreateEvent tests", () => {
 
   it("create event still is successful if the location is on a border of two timezones", async () => {
     const { token } = await createUserFlow()
-
+    addPlacemarkToDB(conn, {
+      lat: 43.839319,
+      lon: 87.526148,
+      name: "Sample Location",
+      city: "Sample Neighborhood",
+      country: "Sample Country",
+      street: "Sample Street",
+      streetNumber: "1234"
+    }, "Asia/Shanghai")
     const {
       eventIds
     } = await createEventFlow([
@@ -115,6 +132,8 @@ describe("CreateEvent tests", () => {
       status: 200,
       body: { id: expect.anything() }
     })
-    expect(resp.body.timeZone).toEqual("Asia/Shanghai")
+
+    console.log("Here is the response ", resp.body)
+    expect(resp.body.time.timeZoneIdentifier).toEqual("Asia/Shanghai")
   })
 })
