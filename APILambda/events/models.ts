@@ -17,14 +17,14 @@ export type GetEventWhenBlockedResponse = {
     username: string,
     id: string,
     handle: string,
-    profileImageURL?: string,
+    profileImageURL: string | null,
     relations: {
-      themToYou: string | null,
-      youToThem: string | null
+      themToYou: string,
+      youToThem: string
     }
   }
   createdAt: Date,
-  updatedAt: Date | undefined
+  updatedAt: Date | null
 }
 
 /**

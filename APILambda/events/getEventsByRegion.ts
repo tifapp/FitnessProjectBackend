@@ -1,6 +1,6 @@
 import { SQLExecutable, conn } from "TiFBackendUtils"
 import { z } from "zod"
-import { DBTifEvent } from "../../TiFBackendUtils/TifEventUtils.js"
+import { DBTifEvent, refactorEventsToMatchTifEvent, setEventAttendeesFields } from "../../TiFBackendUtils/TifEventUtils.js"
 import { ServerEnvironment } from "../env.js"
 import { ValidatedRouter } from "../validation.js"
 
@@ -62,10 +62,11 @@ export const getEventsByRegionRouter = (
             userLatitude: req.body.userLatitude,
             userLongitude: req.body.userLongitude,
             radius: req.body.radius
-          })// .flatMapSuccess((result) => setEventAttendeesFields(tx, result, res.locals.selfId)).flatMapSuccess((events) => refactorEventsToMatchTifEvent(events))
+          }).flatMapSuccess((result) => setEventAttendeesFields(tx, result, res.locals.selfId).flatMapSuccess((events) => refactorEventsToMatchTifEvent(events))
+            .mapSuccess((result) => {
+              return res.status(200).json(result)
+            })
+          )
         )
-        .mapSuccess((result) => {
-          return res.status(200).json(result)
-        })
   )
 }
