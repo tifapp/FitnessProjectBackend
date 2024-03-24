@@ -97,8 +97,6 @@ export const calcTodayOrTomorrow = (startDateTime: Date) => {
 }
 
 export const tifEventResponseFromDatabaseEvent = (event: DBTifEvent) : TiFEvent => {
-  console.log("ISO country code ", event.isoCountryCode)
-  console.log("Chat expiration time ", new Date(dayjs(event.endDateTime).add(1, "day").toDate()).toUTCString())
   return {
     id: event.id,
     title: event.title,
@@ -196,7 +194,7 @@ const setAttendeesPreviewForEvent = (
   EventAttendanceFields: EventAttendanceFields[]
 ) => {
   events.sort((eventA, eventB) => {
-    return eventA.id.localeCompare(eventB.id)
+    return eventA.id.toString().localeCompare(eventB.id.toString())
   })
 
   for (let i = 0; i < events.length; i++) {
