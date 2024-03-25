@@ -1,12 +1,12 @@
-import { conn } from "TiFBackendUtils"
+import { conn, getAttendeeCount, getAttendees } from "TiFBackendUtils"
 import dayjs from "dayjs"
 import { addPlacemarkToDB } from "../../GeocodingLambda/utils.js"
-import { callBlockUser } from "../test/apiCallers/users.js"
 import { callGetEventsByRegion } from "../test/helpers/events.js"
 import { testEventInput } from "../test/testEvents.js"
 import { createEventFlow } from "../test/userFlows/events.js"
-import { getAttendeeCount, getAttendees } from "./getEventsByRegion.js"
+// import { getAttendeeCount, getAttendees } from "./getEventsByRegion.js"
 import { callEndEvent } from "../test/apiCallers/events.js"
+import { callBlockUser } from "../test/apiCallers/users.js"
 
 let eventOwnerTestToken: string
 let attendeeTestToken: string
@@ -15,7 +15,7 @@ let attendeeTestId: string
 let futureEventTestId: number
 let ongoingEventTestId: number
 
-const setupDB = async () => {
+export const setupDB = async () => {
   addPlacemarkToDB(
     conn,
     {
@@ -25,8 +25,7 @@ const setupDB = async () => {
       city: "Sample Neighborhood",
       country: "Sample Country",
       street: "Sample Street",
-      street_num: "1234",
-      unit_number: "5678"
+      streetNumber: "1234"
     },
     "Sample/Timezone"
   )
@@ -37,28 +36,25 @@ const setupDB = async () => {
   }
 
   const {
-    attendeesList: [attendee],
+    attendeesList,
     host,
     eventIds: [futureEventId, ongoingEventId]
-  } = await createEventFlow(
-    [
-      {
-        ...eventLocation,
-        startTimestamp: dayjs().add(12, "hour").toDate(),
-        endTimestamp: dayjs().add(1, "year").toDate()
-      },
-      {
-        ...eventLocation,
-        startTimestamp: dayjs().subtract(12, "hour").toDate(),
-        endTimestamp: dayjs().add(1, "year").toDate()
-      }
-    ],
-    1
-  )
+  } = await createEventFlow([
+    {
+      ...eventLocation,
+      startDateTime: dayjs().add(12, "hour").toDate(),
+      endDateTime: dayjs().add(1, "year").toDate()
+    },
+    {
+      ...eventLocation,
+      startDateTime: dayjs().subtract(12, "hour").toDate(),
+      endDateTime: dayjs().add(1, "year").toDate()
+    }
+  ], 1)
 
-  attendeeTestToken = attendee.token
+  attendeeTestToken = attendeesList[1].token
   eventOwnerTestToken = host.token
-  attendeeTestId = attendee.userId
+  attendeeTestId = attendeesList[1].userId
   eventOwnerTestId = host.userId
   ongoingEventTestId = ongoingEventId
   futureEventTestId = futureEventId

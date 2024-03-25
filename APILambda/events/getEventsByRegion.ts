@@ -1,11 +1,6 @@
-import { SQLExecutable, conn, success } from "TiFBackendUtils"
+import { DBTifEvent, SQLExecutable, conn, refactorEventsToMatchTifEvent, setEventAttendeesFields } from "TiFBackendUtils"
 import { z } from "zod"
 import { ServerEnvironment } from "../env.js"
-import {
-  EventAttendee,
-  EventWithAttendeeCount,
-  GetEventByRegionEvent
-} from "../shared/SQL.js"
 import { ValidatedRouter } from "../validation.js"
 
 const EventsRequestSchema = z.object({
@@ -21,148 +16,27 @@ type EventsRequestByRegion = {
   radius: number
 }
 
-/**
- * Converts an AWS location search result into placemark format.
- *
- * @param {LatLng} location The latitude and longitude of the search result.
- * @param {Place | undefined} place The location search result from AWS.
- * @returns {Placemark} The location search result in placemark format.
- */
-export const convertEventsByRegionResult = (event: GetEventByRegionEvent) => {
-  return {
-    id: event.id,
-    title: event.title,
-    description: event.description,
-    color: event.color,
-    // Add the event arrival status
-    host: {
-      id: event.hostId,
-      name: event.hostName,
-      handle: event.hostHandle,
-      profileImageURL: event.hostProfileImageURL,
-      haveRelations: {
-        userToHost: event.relationUserToHost,
-        hostToUser: event.relationHostToUser
-      }
-    },
-    coordinates: {
-      latitude: event.latitude,
-      longitude: event.longitude
-    },
-    placemark: {
-      name: event.name,
-      country: event.country,
-      street: event.street,
-      streetNumber: event.street_num,
-      city: event.city
-    },
-    duration: {
-      startTimestamp: event.startTimestamp,
-      endTimestamp: event.endTimestamp
-    },
-    settings: {
-      shouldHideAfterStartDate: event.shouldHideAfterStartDate,
-      isChatEnabled: event.isChatEnabled
-    },
-    attendees: {
-      count: event.totalAttendees,
-      preview: event.attendeesPreview
-    }
-  }
-}
-
 export const getEventsByRegion = (
   conn: SQLExecutable,
   eventsRequest: EventsRequestByRegion
 ) =>
-  conn.queryResults<GetEventByRegionEvent>(
+  conn.queryResults<DBTifEvent>(
     `
-    SELECT * 
-    FROM ViewEvents
-    WHERE ST_Distance_Sphere(POINT(:userLongitude, :userLatitude), POINT(longitude, latitude)) < :radius
-      AND endTimestamp > NOW()
-      AND endedAt IS NULL
-      AND (relationHostToUser IS NULL OR relationHostToUser <> 'blocked')
-      AND (relationUserToHost IS NULL OR relationUserToHost <> 'blocked')
+    SELECT TifEventView.*,
+       UserRelationOfHostToUser.status AS themToYou,
+       UserRelationOfUserToHost.status AS youToThem
+FROM TifEventView
+LEFT JOIN userRelations UserRelationOfHostToUser ON TifEventView.hostId = UserRelationOfHostToUser.fromUserId AND UserRelationOfHostToUser.toUserId = :userId
+LEFT JOIN userRelations UserRelationOfUserToHost ON UserRelationOfUserToHost.fromUserId = :userId AND UserRelationOfUserToHost.toUserId = TifEventView.hostId
+    WHERE 
+        ST_Distance_Sphere(POINT(:userLongitude, :userLatitude), POINT(TifEventView.longitude, TifEventView.latitude)) < :radius
+        AND TifEventView.endDateTime > NOW()
+        AND TifEventView.endedAt IS NULL
+        AND (UserRelationOfHostToUser.status IS NULL OR UserRelationOfHostToUser.status <> 'blocked')
+        AND (UserRelationOfUserToHost.status IS NULL OR UserRelationOfUserToHost.status <> 'blocked')
   `,
     { ...eventsRequest }
   )
-
-export const getAttendees = (conn: SQLExecutable, eventIds: string[]) => {
-  return conn.queryResults<EventAttendee>(
-    `
-    SELECT 
-    eventId,
-    userIds
-FROM 
-    ViewEventAttendees
-WHERE 
-    eventId IN (:eventIds)
-GROUP BY 
-    eventId
-HAVING 
-    COUNT(DISTINCT userIds) <= 3
-  `,
-    { eventIds }
-  )
-}
-
-export const getAttendeeCount = (conn: SQLExecutable, eventIds: string[]) => {
-  return conn.queryResults<EventWithAttendeeCount>(
-    ` SELECT
-          id,
-          attendeeCount
-      FROM
-          ViewEventAttendeeCount
-      WHERE
-        id IN (:eventIds)
-      GROUP BY id`,
-    { eventIds }
-  )
-}
-
-const setAttendeesPreviewForEvent = (
-  events: GetEventByRegionEvent[],
-  attendeesPreviews: EventAttendee[],
-  eventsWithAttendeeCount: EventWithAttendeeCount[]
-) => {
-  for (let i = 0; i < events.length; i++) {
-    events[i].attendeesPreview = attendeesPreviews[i] ?? []
-    events[i].totalAttendees = eventsWithAttendeeCount[i]
-      ? eventsWithAttendeeCount[i].attendeeCount
-      : 0
-  }
-  return events
-}
-
-// Utilize the event to join with the attendees table to get the attendees
-const getEventAttendeesPreview = (
-  conn: SQLExecutable,
-  events: GetEventByRegionEvent[]
-) => {
-  const eventIds = events.map((event) => event.id.toString())
-
-  if (!eventIds.length) {
-    return success([])
-  }
-
-  const eventsByRegion = getAttendees(conn, eventIds).flatMapSuccess(
-    (attendeesPreviews) =>
-      getAttendeeCount(conn, eventIds).mapSuccess((eventsWithAttendeeCount) => {
-        return setAttendeesPreviewForEvent(
-          events,
-          attendeesPreviews,
-          eventsWithAttendeeCount
-        )
-      })
-  )
-
-  const refactoredEventsByRegion = eventsByRegion.mapSuccess((events) =>
-    events.map((event) => convertEventsByRegionResult(event))
-  )
-
-  return refactoredEventsByRegion
-}
 
 /**
  * Creates routes related to event operations.
@@ -187,10 +61,11 @@ export const getEventsByRegionRouter = (
             userLatitude: req.body.userLatitude,
             userLongitude: req.body.userLongitude,
             radius: req.body.radius
-          }).flatMapSuccess((result) => getEventAttendeesPreview(tx, result))
+          }).flatMapSuccess((result) => setEventAttendeesFields(tx, result, res.locals.selfId).flatMapSuccess((events) => refactorEventsToMatchTifEvent(events))
+            .mapSuccess((result) => {
+              return res.status(200).json(result)
+            })
+          )
         )
-        .mapSuccess((result) => {
-          return res.status(200).json(result)
-        })
   )
 }

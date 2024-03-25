@@ -12,8 +12,8 @@ import { EventColorSchema } from "./models.js"
 const CreateEventSchema = z
   .object({
     description: z.string().max(500),
-    startTimestamp: z.string().datetime(),
-    endTimestamp: z
+    startDateTime: z.string().datetime(),
+    endDateTime: z
       .string()
       .datetime()
       .refine(
@@ -34,8 +34,8 @@ const CreateEventSchema = z
   })
   .transform((res) => ({
     ...res,
-    startTimestamp: new Date(res.startTimestamp),
-    endTimestamp: new Date(res.endTimestamp)
+    startDateTime: new Date(res.startDateTime),
+    endDateTime: new Date(res.endDateTime)
   }))
 
 export type CreateEventInput = z.infer<typeof CreateEventSchema>
@@ -73,8 +73,8 @@ INSERT INTO event (
 `,
     {
       ...input,
-      startTimestamp: input.startTimestamp.getTime() / 1000,
-      endTimestamp: input.endTimestamp.getTime() / 1000,
+      startTimestamp: input.startDateTime.getTime() / 1000,
+      endTimestamp: input.endDateTime.getTime() / 1000,
       hostId
     }
   )

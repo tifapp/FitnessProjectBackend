@@ -21,10 +21,12 @@ describe("SearchForPositionResultToPlacemark", () => {
       lon: 56.78,
       name: "Sample Location",
       city: "Sample Neighborhood",
-      country: "Sample Country",
+      country: undefined,
+      isoCountryCode: "Sample Country",
+      postalCode: undefined,
+      region: "Sample Region",
       street: "Sample Street",
-      street_num: "1234",
-      unit_number: "5678"
+      streetNumber: "1234"
     })
   })
 
@@ -39,8 +41,7 @@ describe("SearchForPositionResultToPlacemark", () => {
       city: undefined,
       country: undefined,
       street: undefined,
-      street_num: undefined,
-      unit_number: undefined
+      streetNumber: undefined
     })
   })
 
@@ -73,7 +74,7 @@ describe("SearchForPositionResultToPlacemark", () => {
     } as Place
 
     expect(SearchForPositionResultToPlacemark(coordinate, place).country).toEqual(
-      "Sample Region"
+      undefined
     )
   })
 })

@@ -32,13 +32,13 @@ const createTestAttendeesList = async ({
   numOfAttendees?: number
 }) => {
   const {
+    host,
     attendeesList,
-    eventIds: [testEventId],
-    host
+    eventIds: [testEventId]
   } = await createEventFlow([{ ...eventLocation }], numOfAttendees)
 
   return {
-    attendeeToken: attendeesList?.[0]?.token,
+    attendeeToken: attendeesList?.[1]?.token,
     attendeesList,
     testEventId,
     host
@@ -96,14 +96,16 @@ describe("getAttendeesList endpoint", () => {
   it("should return 404 if attendee list is empty", async () => {
     const currentUser = await createUserFlow()
 
+    // We want to use createEvent, since if we use the create event flow it will automatically add the host to the attendees list
+    // In this test, we want to have the list be empty so that we can check it returns 404
     const {
       value: { insertId }
     } = await createEvent(
       conn,
       {
         ...testEventInput,
-        startTimestamp: dayjs().add(12, "hour").toDate(),
-        endTimestamp: dayjs().add(24, "hour").toDate()
+        startDateTime: dayjs().add(12, "hour").toDate(),
+        endDateTime: dayjs().add(24, "hour").toDate()
       },
       currentUser.userId
     )
@@ -153,7 +155,7 @@ describe("getAttendeesList endpoint", () => {
   })
 
   it("should return 200 after paginating the first page of attendees list", async () => {
-    const { attendeesList, attendeeToken, testEventId, host } =
+    const { attendeesList, attendeeToken, testEventId } =
       await createTestAttendeesList({
         numOfAttendees: 3
       })
@@ -173,17 +175,17 @@ describe("getAttendeesList endpoint", () => {
       body: {
         attendees: [
           {
-            id: host.userId,
-            name: host.name,
+            id: attendeesList[0].userId,
+            name: attendeesList[0].name,
             role: "hosting"
           },
           {
-            id: attendeesList[0].userId,
-            name: attendeesList[0].name,
+            id: attendeesList[1].userId,
+            name: attendeesList[1].name,
             role: "attending"
           }
         ],
-        nextPageCursor: getNextPageCursorResp([host, ...attendeesList], 1),
+        nextPageCursor: getNextPageCursorResp(attendeesList, 1),
         totalAttendeeCount: 4
       }
     })
@@ -223,7 +225,7 @@ describe("getAttendeesList endpoint", () => {
   })
 
   it("should return 200 after paginating middle of page", async () => {
-    const { attendeesList, attendeeToken, testEventId, host } =
+    const { attendeesList, attendeeToken, testEventId } =
       await createTestAttendeesList({
         numOfAttendees: 4
       })
@@ -249,12 +251,12 @@ describe("getAttendeesList endpoint", () => {
     expect(resp).toMatchObject({
       status: 200,
       body: {
-        attendees: attendeesList.slice(1, 3).map(({ userId: id, name }) => ({
+        attendees: attendeesList.slice(2, 4).map(({ userId: id, name }) => ({
           id,
           name,
           role: "attending"
         })),
-        nextPageCursor: getNextPageCursorResp([host, ...attendeesList], 3),
+        nextPageCursor: getNextPageCursorResp(attendeesList, 3),
         totalAttendeeCount: 5
       }
     })
@@ -334,8 +336,8 @@ describe("getAttendeesList endpoint", () => {
     })
   })
 
-  it("check that attendee list is sorted by role, arrivedAt, then joinTimestamp", async () => {
-    const { attendeeToken, attendeesList, testEventId, host } =
+  it("check that attendee list is sorted by role, arrivedAt, then joinDateTime", async () => {
+    const { attendeeToken, attendeesList, testEventId } =
       await createTestAttendeesList({ numOfAttendees: 3 })
 
     await callSetArrival(attendeesList[1].token, { coordinate: eventLocation })
@@ -364,10 +366,10 @@ describe("getAttendeesList endpoint", () => {
       body: {
         attendees: [
           {
-            id: host.userId,
-            name: host.name,
+            id: attendeesList[0].userId,
+            name: attendeesList[0].name,
             joinTimestamp: expect.any(Date),
-            arrivalStatus: false,
+            hasArrived: false,
             arrivedAt: null,
             role: "hosting"
           },
@@ -375,13 +377,13 @@ describe("getAttendeesList endpoint", () => {
             id: attendeesList[1].userId,
             name: attendeesList[1].name,
             joinTimestamp: expect.any(Date),
-            arrivalStatus: true,
+            hasArrived: true,
             arrivedAt: expect.any(Date),
             role: "attending"
           }
         ],
         nextPageCursor: getNextPageCursorResp(
-          [host, attendeesList[1], attendeesList[0], attendeesList[2]],
+          [attendeesList[0], attendeesList[1]],
           1
         ),
         totalAttendeeCount: 4
@@ -409,18 +411,18 @@ describe("getAttendeesList endpoint", () => {
       body: {
         attendees: [
           {
-            id: attendeesList[0].userId,
-            joinTimestamp: expect.any(Date),
-            name: attendeesList[0].name,
-            role: "attending",
-            arrivalStatus: false,
-            arrivedAt: null
-          },
-          {
             id: attendeesList[2].userId,
             joinTimestamp: expect.any(Date),
             name: attendeesList[2].name,
-            arrivalStatus: false,
+            role: "attending",
+            hasArrived: false,
+            arrivedAt: null
+          },
+          {
+            id: attendeesList[3].userId,
+            joinTimestamp: expect.any(Date),
+            name: attendeesList[3].name,
+            hasArrived: false,
             role: "attending",
             arrivedAt: null
           }
@@ -431,13 +433,13 @@ describe("getAttendeesList endpoint", () => {
     })
   })
 
-  it("should return total attendee count and attendees, exluding ones that blocked current user", async () => {
+  it("should return total attendee count and attendees, excluding ones that blocked current user", async () => {
     const currentUser = await createUserFlow()
-    const { attendeesList, testEventId, host } = await createTestAttendeesList({
+    const { attendeesList, testEventId } = await createTestAttendeesList({
       numOfAttendees: 3
     })
 
-    for (let i = 0; i < 2; i++) {
+    for (let i = 1; i < 3; i++) {
       await callBlockUser(attendeesList[i].token, currentUser.userId)
     }
 
@@ -456,16 +458,16 @@ describe("getAttendeesList endpoint", () => {
       body: {
         attendees: [
           {
-            id: host.userId,
-            name: host.name,
-            arrivalStatus: false,
+            id: attendeesList[0].userId,
+            name: attendeesList[0].name,
+            hasArrived: false,
             role: "hosting",
             relations: { youToThem: "not-friends", themToYou: "not-friends" }
           },
           {
-            id: attendeesList[2].userId,
-            name: attendeesList[2].name,
-            arrivalStatus: false,
+            id: attendeesList[3].userId,
+            name: attendeesList[3].name,
+            hasArrived: false,
             role: "attending",
             relations: { youToThem: "not-friends", themToYou: "not-friends" }
           }
@@ -497,15 +499,15 @@ describe("getAttendeesList endpoint", () => {
 
   it("should hide attendees who block the current user even if the current user blocks them", async () => {
     const currentUser = await createUserFlow()
-    const { attendeesList, host, testEventId } = await createTestAttendeesList({
+    const { attendeesList, testEventId } = await createTestAttendeesList({
       numOfAttendees: 3
     })
 
-    for (let i = 0; i < 2; i++) {
+    for (let i = 1; i < 3; i++) {
       await callBlockUser(attendeesList[i].token, currentUser.userId)
     }
 
-    for (let i = 0; i < 2; i++) {
+    for (let i = 1; i < 3; i++) {
       await callBlockUser(currentUser.token, attendeesList[i].userId)
     }
 
@@ -524,16 +526,16 @@ describe("getAttendeesList endpoint", () => {
       body: {
         attendees: [
           {
-            id: host.userId,
-            name: host.name,
-            arrivalStatus: false,
+            id: attendeesList[0].userId,
+            name: attendeesList[0].name,
+            hasArrived: false,
             role: "hosting",
             relations: { youToThem: "not-friends", themToYou: "not-friends" }
           },
           {
-            id: attendeesList[2].userId,
-            name: attendeesList[2].name,
-            arrivalStatus: false,
+            id: attendeesList[3].userId,
+            name: attendeesList[3].name,
+            hasArrived: false,
             role: "attending",
             relations: { youToThem: "not-friends", themToYou: "not-friends" }
           }
@@ -546,13 +548,13 @@ describe("getAttendeesList endpoint", () => {
 
   it("include blocked users in total attendees count when user blocks an attendee or the host", async () => {
     const currentUser = await createUserFlow()
-    const { attendeesList, host, testEventId } = await createTestAttendeesList({
+    const { attendeesList, testEventId } = await createTestAttendeesList({
       numOfAttendees: 3
     })
-    await callBlockUser(currentUser.token, host.userId)
+    await callBlockUser(currentUser.token, attendeesList[0].userId)
 
-    for (let i = 0; i < 2; i++) {
-      await callBlockUser(currentUser.token, attendeesList[0].userId)
+    for (let i = 1; i < 3; i++) {
+      await callBlockUser(currentUser.token, attendeesList[i].userId)
     }
 
     const resp = await callGetAttendees(
@@ -570,21 +572,21 @@ describe("getAttendeesList endpoint", () => {
       body: {
         attendees: [
           {
-            id: host.userId,
-            name: host.name,
-            arrivalStatus: false,
+            id: attendeesList[0].userId,
+            name: attendeesList[0].name,
+            hasArrived: false,
             role: "hosting",
             relations: { youToThem: "blocked", themToYou: "not-friends" }
           },
           {
-            id: attendeesList[0].userId,
-            name: attendeesList[0].name,
-            arrivalStatus: false,
+            id: attendeesList[1].userId,
+            name: attendeesList[1].name,
+            hasArrived: false,
             role: "attending",
             relations: { youToThem: "blocked", themToYou: "not-friends" }
           }
         ],
-        nextPageCursor: getNextPageCursorResp([host, ...attendeesList], 1),
+        nextPageCursor: getNextPageCursorResp(attendeesList, 1),
         totalAttendeeCount: 4
       }
     })

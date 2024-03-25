@@ -14,7 +14,7 @@ export type DatabaseEvent = {
   longitude: number
   shouldHideAfterStartDate: boolean
   isChatEnabled: boolean
-  arrivalStatus: string
+  hasArrived: boolean
 }
 
 export type DatabaseAttendee = {
@@ -23,7 +23,7 @@ export type DatabaseAttendee = {
   joinTimestamp: Date
   profileImageURL?: string
   handle: string
-  arrivalStatus: boolean
+  hasArrived: boolean
   arrivedAt: Date
   role: string
 }

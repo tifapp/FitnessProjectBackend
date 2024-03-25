@@ -10,20 +10,22 @@ type EventRegion = {
     longitude: number;
   };
   arrivalRadiusMeters: number;
-  isArrived: boolean;
+  hasArrived: boolean;
 }
 
 const mapEventsToRegions = (events: DatabaseEvent[]): EventRegion[] => {
   const eventRegions: Record<string, EventRegion> = {}
 
   events.forEach(event => {
-    const key = `${event.arrivalStatus}-${event.latitude}-${event.longitude}`
+    const key = `${event.hasArrived}-${event.latitude}-${event.longitude}`
 
     if (!eventRegions[key]) {
       eventRegions[key] = {
         eventIds: [],
         coordinate: { latitude: event.latitude, longitude: event.longitude },
-        isArrived: event.arrivalStatus === "arrived",
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        hasArrived: event.hasArrived === 1,
         arrivalRadiusMeters: 500 // TODO: Parameterize
       }
     }
@@ -41,9 +43,9 @@ export const getUpcomingEventsByRegion = (conn: SQLExecutable, userId: string) =
     e.*, 
     ua.arrivedAt,
     CASE 
-      WHEN ua.userId IS NOT NULL THEN "arrived"
-      ELSE "not-arrived"
-    END AS arrivalStatus
+      WHEN ua.userId IS NOT NULL THEN TRUE
+      ELSE FALSE
+    END AS hasArrived
   FROM 
     event e
   LEFT JOIN 

@@ -9,9 +9,9 @@ import {
 } from "../test/apiCallers/events.js"
 import { callBlockUser } from "../test/apiCallers/users.js"
 import { testEventInput } from "../test/testEvents.js"
+import { createEventFlow } from "../test/userFlows/events.js"
 import { createUserFlow } from "../test/userFlows/users.js"
 import { createEvent } from "./createEvent.js"
-import { createEventFlow } from "../test/userFlows/events.js"
 
 const eventLocation = { latitude: 50, longitude: 50 }
 
@@ -28,7 +28,7 @@ describe("Join the event by id tests", () => {
     })
     expect(resp).toMatchObject({
       status: 201,
-      body: { id: attendeeId, token: expect.anything(), isArrived: false }
+      body: { id: attendeeId, token: expect.anything(), hasArrived: false }
     })
 
     const attendeesResp = await callGetAttendees(
@@ -43,7 +43,7 @@ describe("Join the event by id tests", () => {
         attendees: expect.arrayContaining([
           expect.objectContaining({
             id: attendeeId,
-            arrivalStatus: false
+            hasArrived: false
           })
         ])
       }
@@ -65,7 +65,7 @@ describe("Join the event by id tests", () => {
     })
     expect(resp).toMatchObject({
       status: 201,
-      body: { id: attendeeId, token: expect.anything(), isArrived: true }
+      body: { id: attendeeId, token: expect.anything(), hasArrived: true }
     })
 
     const attendeesResp = await callGetAttendees(
@@ -80,7 +80,7 @@ describe("Join the event by id tests", () => {
         attendees: expect.arrayContaining([
           expect.objectContaining({
             id: attendeeId,
-            arrivalStatus: true
+            hasArrived: true
           })
         ])
       }
@@ -92,8 +92,8 @@ describe("Join the event by id tests", () => {
     const { token: attendeeToken, userId: attendeeId } = await createUserFlow()
     const event = await callCreateEvent(eventOwnerToken, {
       ...testEventInput,
-      startTimestamp: dayjs().add(12, "hour").toDate(),
-      endTimestamp: dayjs().add(24, "hour").toDate()
+      startDateTime: dayjs().add(12, "hour").toDate(),
+      endDateTime: dayjs().add(24, "hour").toDate()
     })
     const resp = await callJoinEvent(attendeeToken, parseInt(event.body.id))
     expect(resp).toMatchObject({
@@ -108,7 +108,7 @@ describe("Join the event by id tests", () => {
               latitude: testEventInput.latitude,
               longitude: testEventInput.longitude
             },
-            isArrived: false,
+            hasArrived: false,
             arrivalRadiusMeters: 500
           }
         ]
@@ -143,17 +143,11 @@ describe("Join the event by id tests", () => {
     const { token: attendeeToken } = await createUserFlow()
 
     // normally we can't create events in the past so we'll add this ended event to the table directly
-    const {
-      value: { insertId: eventId }
-    } = await createEvent(
-      conn,
-      {
-        ...testEventInput,
-        startTimestamp: dayjs().subtract(2, "month").toDate(),
-        endTimestamp: dayjs().subtract(1, "month").toDate()
-      },
-      eventOwnerId
-    )
+    const { value: { insertId: eventId } } = await createEvent(conn, {
+      ...testEventInput,
+      startDateTime: dayjs().subtract(2, "month").toDate(),
+      endDateTime: dayjs().subtract(1, "month").toDate()
+    }, eventOwnerId)
 
     const resp = await callJoinEvent(attendeeToken, Number(eventId))
 
@@ -179,20 +173,20 @@ describe("Join the event by id tests", () => {
     const {
       eventIds,
       host,
-      attendeesList: [attendee]
+      attendeesList
     } = await createEventFlow(
       [
         {
           ...eventLocation,
-          startTimestamp: dayjs().add(12, "hour").toDate(),
-          endTimestamp: dayjs().add(1, "year").toDate()
+          startDateTime: dayjs().add(12, "hour").toDate(),
+          endDateTime: dayjs().add(1, "year").toDate()
         }
       ],
       1
     )
 
     await callEndEvent(host.token, eventIds[0])
-    const resp = await callJoinEvent(attendee.token, eventIds[0])
+    const resp = await callJoinEvent(attendeesList[1].token, eventIds[0])
 
     expect(resp).toMatchObject({
       status: 403,

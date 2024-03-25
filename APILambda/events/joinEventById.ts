@@ -26,7 +26,7 @@ const joinEvent = (conn: SQLExecutable, userId: string, eventId: number, coordin
   return conn.transaction((tx) =>
     getEventById(tx, eventId, userId)
       .flatMapSuccess((event) =>
-        (new Date() < event.endTimestamp && !event.endedAt // perform in sql?
+        (new Date() < event.endDateTime && !event.endedAt // perform in sql?
           ? isUserNotBlocked(tx, event.hostId, userId)
           : failure("event-has-ended" as const))
           .flatMapSuccess(() =>
@@ -35,9 +35,9 @@ const joinEvent = (conn: SQLExecutable, userId: string, eventId: number, coordin
                 tx,
                 userId,
                 coordinate
-              ).mapSuccess(() => ({ isArrived: true }))
-              : success(({ isArrived: false })))
-              .flatMapSuccess(({ isArrived }) =>
+              ).mapSuccess(() => ({ hasArrived: true }))
+              : success(({ hasArrived: false })))
+              .flatMapSuccess(({ hasArrived }) =>
                 addUserToAttendeeList(tx, userId, eventId, "attending")
                   .flatMapSuccess(
                     ({ rowsAffected }) =>
@@ -47,7 +47,7 @@ const joinEvent = (conn: SQLExecutable, userId: string, eventId: number, coordin
                     checkChatPermissionsTransaction(eventId, userId)
                       .flatMapSuccess((chatPermissions) => getUpcomingEventsByRegion(tx, userId)
                         .mapSuccess(upcomingRegions => (
-                          { ...chatPermissions, status, isArrived, upcomingRegions }
+                          { ...chatPermissions, status, hasArrived, upcomingRegions }
                         ))
                       )
                   )
@@ -99,6 +99,6 @@ export const joinEventRouter = (
             )
             .json({ error })
         )
-        .mapSuccess(({ status, id, tokenRequest, isArrived, upcomingRegions }) => res.status(status).json({ id, token: tokenRequest, isArrived, upcomingRegions }))
+        .mapSuccess(({ status, id, tokenRequest, hasArrived, upcomingRegions }) => res.status(status).json({ id, token: tokenRequest, hasArrived, upcomingRegions }))
   )
 }
