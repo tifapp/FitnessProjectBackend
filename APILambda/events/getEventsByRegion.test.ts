@@ -72,10 +72,10 @@ describe("getEventsByRegion endpoint tests", () => {
     )
 
     expect(respGetEventsByRegion.status).toEqual(200)
-    expect(respGetEventsByRegion.body).toHaveLength(2)
+    expect(respGetEventsByRegion.body.events).toHaveLength(2)
     const eventIds = [
-      respGetEventsByRegion.body[0].id,
-      respGetEventsByRegion.body[1].id
+      respGetEventsByRegion.body.events[0].id,
+      respGetEventsByRegion.body.events[1].id
     ]
     expect(eventIds).toContain(ongoingEventTestId)
     expect(eventIds).toContain(futureEventTestId)
@@ -88,7 +88,7 @@ describe("getEventsByRegion endpoint tests", () => {
       testEventInput.longitude + 10,
       1
     )
-    expect(events.body).toHaveLength(0)
+    expect(events.body.events).toHaveLength(0)
   })
 
   it("should remove the events where the attendee blocks the host", async () => {
@@ -100,7 +100,7 @@ describe("getEventsByRegion endpoint tests", () => {
       testEventInput.longitude,
       50000
     )
-    expect(events.body).toHaveLength(0)
+    expect(events.body.events).toHaveLength(0)
   })
 
   it("should remove the events where the host blocks the attendee", async () => {
@@ -112,7 +112,7 @@ describe("getEventsByRegion endpoint tests", () => {
       testEventInput.longitude,
       50000
     )
-    expect(events.body).toHaveLength(0)
+    expect(events.body.events).toHaveLength(0)
   })
 
   it("should not return events that have ended", async () => {
@@ -125,7 +125,7 @@ describe("getEventsByRegion endpoint tests", () => {
       testEventInput.longitude,
       50000
     )
-    expect(events.body).toHaveLength(0)
+    expect(events.body.events).toHaveLength(0)
   })
 
   describe("tests for attendee count and attendee list queries within getEventsByRegion", () => {
