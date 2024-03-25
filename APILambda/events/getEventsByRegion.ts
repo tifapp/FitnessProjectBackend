@@ -63,7 +63,7 @@ export const getEventsByRegionRouter = (
             radius: req.body.radius
           }).flatMapSuccess((result) => setEventAttendeesFields(tx, result, res.locals.selfId).flatMapSuccess((events) => refactorEventsToMatchTifEvent(events))
             .mapSuccess((result) => {
-              return res.status(200).json(result)
+              return res.status(200).json({ events: result })
             })
           )
         )
