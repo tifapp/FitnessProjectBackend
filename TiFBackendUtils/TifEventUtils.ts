@@ -11,10 +11,11 @@ export const SECONDS_IN_DAY = dayjs.duration(1, "day").asSeconds()
 export const ARRIVAL_RADIUS_IN_METERS = 120
 
 export type UserHostRelations = "not-friends" | "friend-request-pending" | "friends" | "blocked" | "current-user"
-export type TodayOrTomorrow = "Today" | "Tomorrow"
+export type TodayOrTomorrow = "today" | "tomorrow"
 export type Role = "hosting" | "attending" | "not-participating"
+export type Attendee = { id: string, profileImageURL: string | null}
 export type DBTifEvent = DBTifEventView & Omit<DBuserRelations, "status" | "updatedAt"> &
-{ attendeeCount: number, previewAttendees: string[], userAttendeeStatus: Role, joinDate: Date, themToYou: UserHostRelations, youToThem: UserHostRelations }
+{ attendeeCount: number, previewAttendees: Attendee[], userAttendeeStatus: Role, joinDate: Date, themToYou: UserHostRelations, youToThem: UserHostRelations }
 
 export type EventWithAttendeeCount = {
   eventId: number
@@ -36,21 +37,22 @@ export type TiFEvent = {
     title: string
     description: string
     attendeeCount: number
+    color: string
     time: {
       secondsToStart: number
-      timeZoneIdentifier: string | null
       dateRange: {
         startDateTime: Date
         endDateTime: Date
       }
-       todayOrTomorrow: TodayOrTomorrow | null
+      todayOrTomorrow: TodayOrTomorrow | null
     }
-    previewAttendees: string[]
+    previewAttendees: Attendee[]
     location: {
       coordinate: {
         latitude: number,
         longitude: number
       },
+      timezoneIdentifier: string | null,
       placemark: Omit<Placemark, "lat" | "lon"> | null,
       arrivalRadiusMeters: number
       isInArrivalTrackingPeriod: boolean
@@ -69,7 +71,7 @@ export type TiFEvent = {
       shouldHideAfterStartDate: boolean
       isChatEnabled: boolean
     }
-    chatExpirationTime: Date
+    isChatExpired: boolean
     userAttendeeStatus: Role
     joinDate: Date | null
     hasArrived: boolean
@@ -83,14 +85,27 @@ export const calcSecondsToStart = (startDateTime: Date) => {
   return millisecondsToStart / 1000
 }
 
+const isChatExpired = (endedAt: Date | null) => {
+  if (endedAt === null) {
+    return false
+  }
+
+  const chatEndedAt = dayjs(endedAt)
+  const nextDay = chatEndedAt.add(1, "day")
+
+  const diffInHours = nextDay.diff(endedAt, "hour")
+
+  return diffInHours >= 24
+}
+
 export const calcTodayOrTomorrow = (startDateTime: Date) => {
   const currentDate = dayjs()
   const eventDate = dayjs(startDateTime)
 
   if (currentDate.isSame(eventDate, "day")) {
-    return "Today"
+    return "today"
   } else if (eventDate.isSame(currentDate.add(1, "day"), "day")) {
-    return "Tomorrow"
+    return "tomorrow"
   } else {
     return null
   }
@@ -102,9 +117,9 @@ export const tifEventResponseFromDatabaseEvent = (event: DBTifEvent) : TiFEvent 
     title: event.title,
     description: event.description,
     attendeeCount: event.attendeeCount,
+    color: event.color,
     time: {
       secondsToStart: calcSecondsToStart(event.startDateTime),
-      timeZoneIdentifier: event.timeZoneIdentifier,
       dateRange: {
         startDateTime: event.startDateTime,
         endDateTime: event.endDateTime
@@ -127,6 +142,7 @@ export const tifEventResponseFromDatabaseEvent = (event: DBTifEvent) : TiFEvent 
         isoCountryCode: event.isoCountryCode ?? undefined,
         city: event.city ?? undefined
       },
+      timezoneIdentifier: event.timezoneIdentifier,
       arrivalRadiusMeters: ARRIVAL_RADIUS_IN_METERS,
       isInArrivalTrackingPeriod: calcSecondsToStart(event.startDateTime) < SECONDS_IN_DAY
     },
@@ -146,9 +162,7 @@ export const tifEventResponseFromDatabaseEvent = (event: DBTifEvent) : TiFEvent 
     },
     userAttendeeStatus: event.userAttendeeStatus,
     joinDate: event.joinDate,
-    chatExpirationTime: event.endedAt !== null
-      ? new Date(dayjs(event.endedAt).add(1, "day").toDate())
-      : new Date(dayjs(event.endDateTime).add(1, "day").toDate()),
+    isChatExpired: isChatExpired(event.endedAt),
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     hasArrived: event.hasArrived === 1,
@@ -198,7 +212,14 @@ const setAttendeesPreviewForEvent = (
   })
 
   for (let i = 0; i < events.length; i++) {
-    events[i].previewAttendees = attendeesPreviews[i].userIds?.split(",") ?? []
+    events[i].previewAttendees = attendeesPreviews[i].userIds?.split(",")
+      .map(id => (
+        {
+          id,
+          profileImageURL: null
+        }
+      )) ??
+    []
     events[i].attendeeCount = eventsWithAttendeeCount[i].attendeeCount
       ? eventsWithAttendeeCount[i].attendeeCount
       : 0
