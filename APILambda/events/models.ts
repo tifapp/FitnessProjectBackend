@@ -19,8 +19,8 @@ export type GetEventWhenBlockedResponse = {
     handle: string,
     profileImageURL: string | null,
     relations: {
-      themToYou: string,
-      youToThem: string
+      themToYou: string | null,
+      youToThem: string | null
     }
   }
   createdAt: Date,
