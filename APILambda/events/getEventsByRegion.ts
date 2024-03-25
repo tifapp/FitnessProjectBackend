@@ -1,6 +1,5 @@
-import { SQLExecutable, conn } from "TiFBackendUtils"
+import { DBTifEvent, SQLExecutable, conn, refactorEventsToMatchTifEvent, setEventAttendeesFields } from "TiFBackendUtils"
 import { z } from "zod"
-import { DBTifEvent, refactorEventsToMatchTifEvent, setEventAttendeesFields } from "../../TiFBackendUtils/TifEventUtils.js"
 import { ServerEnvironment } from "../env.js"
 import { ValidatedRouter } from "../validation.js"
 
