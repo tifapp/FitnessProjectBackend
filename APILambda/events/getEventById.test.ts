@@ -52,7 +52,6 @@ describe("GetSingleEvent tests", () => {
 
     const expectedStartDateTime = dayjs().startOf("hour").toDate()
     const expectedEndDateTime = dayjs().add(1, "hour").startOf("hour").toDate()
-    const expectedChatExpirationTime = dayjs(expectedEndDateTime).add(1, "day").startOf("hour").toDate()
 
     const {
       eventIds,
@@ -75,18 +74,19 @@ describe("GetSingleEvent tests", () => {
       {
         id: eventIds[0],
         title: "Fake Event",
+        color: "#72B01D",
+        isChatExpired: false,
         description: "This is some random event",
         attendeeCount: 2,
         time: {
           secondsToStart: expect.any(Number),
-          timeZoneIdentifier: eventTimeZone[0],
           dateRange: {
             startDateTime: expectedStartDateTime.toISOString(),
             endDateTime: expectedEndDateTime.toISOString()
           },
-          todayOrTomorrow: "Today"
+          todayOrTomorrow: "today"
         },
-        previewAttendees: attendeesList.map(({ userId }) => userId),
+        previewAttendees: attendeesList.map(({ userId }) => ({ id: userId, profileImageURL: null })),
         location: {
           coordinate: {
             latitude: testEventInput.latitude,
@@ -100,6 +100,7 @@ describe("GetSingleEvent tests", () => {
             isoCountryCode: "USA",
             streetNumber: "1234"
           },
+          timezoneIdentifier: eventTimeZone[0],
           arrivalRadiusMeters: 120,
           isInArrivalTrackingPeriod: true
         },
@@ -117,7 +118,6 @@ describe("GetSingleEvent tests", () => {
           shouldHideAfterStartDate: true,
           isChatEnabled: true
         },
-        chatExpirationTime: expectedChatExpirationTime.toISOString(),
         updatedAt: expect.any(String),
         createdAt: expect.any(String),
         userAttendeeStatus: "not-participating",
@@ -179,14 +179,14 @@ describe("Check that the secondsToStart matches with TodayOrTomorrow", () => {
     today.set("minute", 59)
     today.set("second", 59)
     const isToday = calcTodayOrTomorrow(today.toDate())
-    expect(isToday).toEqual("Today")
+    expect(isToday).toEqual("today")
   })
 
   it("should return 'Tomorrow' if the secondsToStart is greater than or equal to SECONDS_IN_DAY", async () => {
     const tomorrow = dayjs().add(1, "day")
 
     const isTomorrow = calcTodayOrTomorrow(tomorrow.toDate())
-    expect(isTomorrow).toEqual("Tomorrow")
+    expect(isTomorrow).toEqual("tomorrow")
   })
 })
 
