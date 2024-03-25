@@ -93,7 +93,7 @@ jobs:
               fi
           done
           stageName="staging"
-          aws apigateway put-rest-api --rest-api-id 623qsegfb9 --mode merge --parameters basepath=prepend --body fileb://APILambda/swagger.json
+          aws apigateway put-rest-api --rest-api-id 623qsegfb9 --fail-on-warnings --debug true --mode overwrite --body fileb://APILambda/specs.json
           aws apigateway create-deployment --rest-api-id 623qsegfb9 --stage-name $stageName --description 'Deployed'
 
       - name: Install dependencies
@@ -142,6 +142,10 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
       
+      - name: Upload api spec to S3
+        run: |
+          aws s3 cp ./APILambda/specs.json s3://${{ secrets.S3_API_SPECS_BUCKET_NAME }}/specs.json
+      
       - name: Update AWS Lambda env variables
         run: |
           if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
@@ -188,5 +192,5 @@ jobs:
           else
             stageName="staging"
           fi
-          aws apigateway put-rest-api --rest-api-id 623qsegfb9 --mode merge --parameters basepath=prepend --body fileb://APILambda/swagger.json
+          aws apigateway put-rest-api --rest-api-id 623qsegfb9 --fail-on-warnings --mode overwrite --body fileb://APILambda/specs.json
           aws apigateway create-deployment --rest-api-id 623qsegfb9 --stage-name $stageName --description 'Deployed'
