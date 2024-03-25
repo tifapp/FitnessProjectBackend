@@ -20,13 +20,15 @@ export const createEventFlow = async (
   }
 
   const eventResponses = await Promise.all(
-    eventInputs.map((details) =>
-      callCreateEvent(host.token, { ...testEventInput, ...details })
+    eventInputs.map((details) => {
+      console.log({ ...testEventInput, ...details })
+      return callCreateEvent(host.token, { ...testEventInput, ...details })
+    }
     )
   )
 
   const eventIds = eventResponses.map((event, i) => {
-    if (event.ok) { return parseInt(event.body.id) } else { console.error(eventInputs[i]); console.error(event); throw new Error("invalid test event given") }
+    if (event.ok) { return parseInt(event.body.id) } else { console.error(eventInputs[i]); console.error(event.body); throw new Error("invalid test event given") }
   })
 
   const attendeesList: TestUser[] = []
