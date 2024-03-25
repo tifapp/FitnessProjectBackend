@@ -28,7 +28,7 @@ describe("Join the event by id tests", () => {
     })
     expect(resp).toMatchObject({
       status: 201,
-      body: { id: attendeeId, token: expect.anything(), hasArrived: false }
+      body: { id: parseInt(event.body.id), token: expect.anything(), hasArrived: false }
     })
 
     const attendeesResp = await callGetAttendees(
@@ -65,7 +65,7 @@ describe("Join the event by id tests", () => {
     })
     expect(resp).toMatchObject({
       status: 201,
-      body: { id: attendeeId, token: expect.anything(), hasArrived: true }
+      body: { id: parseInt(event.body.id), token: expect.anything(), hasArrived: true }
     })
 
     const attendeesResp = await callGetAttendees(
@@ -89,7 +89,7 @@ describe("Join the event by id tests", () => {
 
   it("should return 201 when the user is able to successfully join the event", async () => {
     const { token: eventOwnerToken } = await createUserFlow()
-    const { token: attendeeToken, userId: attendeeId } = await createUserFlow()
+    const { token: attendeeToken } = await createUserFlow()
     const event = await callCreateEvent(eventOwnerToken, {
       ...testEventInput,
       startDateTime: dayjs().add(12, "hour").toDate(),
@@ -99,7 +99,7 @@ describe("Join the event by id tests", () => {
     expect(resp).toMatchObject({
       status: 201,
       body: {
-        id: attendeeId,
+        id: parseInt(event.body.id),
         token: expect.anything(),
         upcomingRegions: [
           {
@@ -159,13 +159,13 @@ describe("Join the event by id tests", () => {
 
   it("should return 200 when the user tries to join an event twice", async () => {
     const { token: eventOwnerToken } = await createUserFlow()
-    const { token: attendeeToken, userId: attendeeId } = await createUserFlow()
+    const { token: attendeeToken } = await createUserFlow()
     const event = await callCreateEvent(eventOwnerToken, testEventInput)
     await callJoinEvent(attendeeToken, parseInt(event.body.id))
     const resp = await callJoinEvent(attendeeToken, parseInt(event.body.id))
     expect(resp).toMatchObject({
       status: 200,
-      body: { id: attendeeId, token: expect.anything() } // should be event id not user id?
+      body: { id: parseInt(event.body.id), token: expect.anything() }
     })
   })
 

@@ -76,7 +76,7 @@ export const checkChatPermissionsTransaction = (
 
       const tokenRequest = await createTokenRequest(permissions, userId)
 
-      return success({ id: userId, tokenRequest })
+      return success({ id: eventId, tokenRequest })
     })
 
 const eventRequestSchema = z.object({
