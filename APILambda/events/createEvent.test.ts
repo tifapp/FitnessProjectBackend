@@ -133,6 +133,6 @@ describe("CreateEvent tests", () => {
       body: { id: expect.anything() }
     })
 
-    expect(resp.body.time.timezoneIdentifier).toEqual("Asia/Shanghai")
+    expect(resp.body.location.timezoneIdentifier).toEqual("Asia/Shanghai")
   })
 })
