@@ -29,7 +29,7 @@ export const createEventFlow = async (
     if (event.ok) { return parseInt(event.body.id) } else { console.error(eventInputs[i]); console.error(event); throw new Error("invalid test event given") }
   })
 
-  const attendeesList = []
+  const attendeesList: TestUser[] = []
   attendeesList.push(host)
 
   for (let i = 0; i < attendeeCount; i++) {
