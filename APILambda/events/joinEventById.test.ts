@@ -159,13 +159,13 @@ describe("Join the event by id tests", () => {
 
   it("should return 200 when the user tries to join an event twice", async () => {
     const { token: eventOwnerToken } = await createUserFlow()
-    const { token: attendeeToken, userId: attendeeId } = await createUserFlow()
+    const { token: attendeeToken } = await createUserFlow()
     const event = await callCreateEvent(eventOwnerToken, testEventInput)
     await callJoinEvent(attendeeToken, parseInt(event.body.id))
     const resp = await callJoinEvent(attendeeToken, parseInt(event.body.id))
     expect(resp).toMatchObject({
       status: 200,
-      body: { id: attendeeId, token: expect.anything() } // should be event id not user id?
+      body: { id: event.body.id, token: expect.anything() } // should be event id not user id?
     })
   })
 
