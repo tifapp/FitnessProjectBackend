@@ -23,8 +23,20 @@ export const getEventsByRegion = (
   conn.queryResults<DBTifEvent>(
     `
     SELECT TifEventView.*,
-       UserRelationOfHostToUser.status AS themToYou,
-       UserRelationOfUserToHost.status AS youToThem
+    CASE
+        WHEN TifEventView.hostId = :userId THEN 'current-user'
+        ELSE CASE
+                 WHEN UserRelationOfHostToUser.status IS NULL THEN 'not-friends'
+                 ELSE UserRelationOfHostToUser.status
+             END
+    END AS themToYou,
+    CASE
+        WHEN TifEventView.hostId = :userId THEN 'current-user'
+        ELSE CASE
+                 WHEN UserRelationOfUserToHost.status IS NULL THEN 'not-friends'
+                 ELSE UserRelationOfUserToHost.status
+             END
+    END AS youToThem
 FROM TifEventView
 LEFT JOIN userRelations UserRelationOfHostToUser ON TifEventView.hostId = UserRelationOfHostToUser.fromUserId AND UserRelationOfHostToUser.toUserId = :userId
 LEFT JOIN userRelations UserRelationOfUserToHost ON UserRelationOfUserToHost.fromUserId = :userId AND UserRelationOfUserToHost.toUserId = TifEventView.hostId
