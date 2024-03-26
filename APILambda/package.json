@@ -23,6 +23,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "TiFShared": "git+https://github.com/tifapp/TiFShared.git#release",
     "@aws-sdk/client-cognito-identity-provider": "^3.515.0",
     "@vendia/serverless-express": "^4.10.3",
     "ably": "^1.2.42",

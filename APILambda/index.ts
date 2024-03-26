@@ -1,8 +1,8 @@
 import awsServerlessExpress from "@vendia/serverless-express"
 import {
-  LocationCoordinate2D,
   invokeAWSLambda
 } from "TiFBackendUtils"
+import { LocationCoordinate2D } from "TiFShared/domain-models/LocationCoordinate2D.js"
 import { addBenchmarking, addRoutes, createApp } from "./app.js"
 import { addCognitoTokenVerification } from "./auth.js"
 import { ServerEnvironment } from "./env.js"

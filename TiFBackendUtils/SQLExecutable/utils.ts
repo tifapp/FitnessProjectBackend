@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // TODO: Replace with backend utils
 import { Connection } from "@planetscale/database"
-import { AwaitableResult, failure, promiseResult, success } from "../result.js"
+import { AwaitableResult, failure, promiseResult, success } from "TiFShared/lib/Result.js"
 
 /**
  * An interface for performing commonly used operations on a SQL database
