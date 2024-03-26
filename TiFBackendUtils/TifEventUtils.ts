@@ -1,10 +1,10 @@
+import { success } from "TiFShared/lib/Result.js"
 import dayjs from "dayjs"
 import duration from "dayjs/plugin/duration.js"
 import { MySQLExecutableDriver } from "./MySQLDriver/index.js"
 import { UserRelationship } from "./TiFUserUtils/UserRelationships.js"
 import { DBEventAttendeeCountView, DBEventAttendeesView, DBTifEventView, DBevent, DBeventAttendance, DBuserRelations } from "./entities.js"
 import { Placemark } from "./location.js"
-import { success } from "./result.js"
 dayjs.extend(duration)
 
 // Get the total seconds in the duration

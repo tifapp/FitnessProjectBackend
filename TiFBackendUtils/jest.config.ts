@@ -4,7 +4,6 @@ export default {
   transform: {
     "^.+\\.(t|j)s?$": "@swc/jest"
   },
-  transformIgnorePatterns: ["/node_modules/(?!@planetscale)"],
   moduleNameMapper: {
     "^(\\.{1,2}/.*)\\.js$": "$1"
   }

@@ -11,6 +11,7 @@
     "node-fetch": "^3.3.2"
   },
   "peerDependencies": {
+    "TiFShared": "git+https://github.com/tifapp/TiFShared.git#release",
     "@aws-sdk/client-eventbridge": "^3.515.0",
     "@aws-sdk/client-lambda": "^3.518.0",
     "dotenv": "^16.3.1",
