@@ -1,6 +1,6 @@
-import npmExecHelper from './lambdatostaginghelper.js';
+import NpmExecHelper from './lambdatostaginghelper.js';
 
-const npmExecInstance = new npmExecHelper();
+const npmExecInstance = new NpmExecHelper();
 
 const handleError = (output, errorMessage, dir = "../TiFBackendUtils") => {
     if (output !== 0) {
