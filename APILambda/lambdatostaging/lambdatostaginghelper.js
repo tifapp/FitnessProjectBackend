@@ -15,8 +15,6 @@ const TIFBACKENDUTILS_DIR = "../TiFBackendUtils";
 const APILAMBDA_DIR = "../APILambda";
 
 export default class npmExecHelper {
-    constructor() { }
-
     deleteDistFolderContent(dir = TIFBACKENDUTILS_DIR) {
         let result;
 
