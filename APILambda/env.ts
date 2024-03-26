@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 // Env variables
-import { LocationCoordinate2D, PromiseResult } from "TiFBackendUtils"
+import { LocationCoordinate2D } from "TiFShared/domain-models/LocationCoordinate2D.js"
+import { PromiseResult } from "TiFShared/lib/Result.js"
 import dotenv from "dotenv"
 import { z } from "zod"
 

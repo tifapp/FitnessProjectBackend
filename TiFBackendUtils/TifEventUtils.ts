@@ -1,9 +1,9 @@
+import { success } from "TiFShared/lib/Result.js"
 import dayjs from "dayjs"
 import duration from "dayjs/plugin/duration.js"
 import { DBTifEventView, DBViewEventAttendees, DBuserRelations } from "./Planetscale/entities.js"
 import { SQLExecutable } from "./SQLExecutable/utils.js"
 import { Placemark } from "./location.js"
-import { success } from "./result.js"
 dayjs.extend(duration)
 
 // Get the total seconds in the duration
