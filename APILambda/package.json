@@ -9,6 +9,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "deploylambda": "node lambdatostaging/lambdatostaging.js",
     "dbtots": "node ../TiFBackendUtils/Planetscale/dbToTs.mjs",
     "genapispecs": "ts-node --esm ./genapispecs.mjs && npx lint-openapi specs.json",
     "build": "npx tsc",
