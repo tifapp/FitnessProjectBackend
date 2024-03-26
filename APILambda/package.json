@@ -9,6 +9,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "deploylambda": "node lambdatostaging/lambdatostaging.js",
     "dbtots": "node ../TiFBackendUtils/Planetscale/dbToTs.mjs",
     "build": "npx tsc",
     "start": "node dist/index.js",
