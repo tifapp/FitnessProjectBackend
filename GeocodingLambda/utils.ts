@@ -18,7 +18,7 @@ const locationClient = new LocationClient({ region: process.env.AWS_REGION })
  */
 export const SearchForPositionResultToPlacemark = (
   location: LocationCoordinate2D,
-  place: Place
+  place?: Place
 ): Placemark => {
   return {
     lat: location.latitude,
@@ -34,7 +34,8 @@ export const SearchForPositionResultToPlacemark = (
     postalCode: place?.PostalCode,
     region: place?.Region,
     isoCountryCode: place?.Country,
-    country: undefined
+    country: undefined,
+    timezone: place?.TimeZone?.Name
   }
 }
 
@@ -49,9 +50,7 @@ export const SearchClosestAddressToCoordinates = async (
       Language: "en-US"
     })
   )
-  if (!response.Results?.[0]?.Place) {
-    throw new Error()
-  }
+
   return SearchForPositionResultToPlacemark(
     location,
     response.Results?.[0]?.Place

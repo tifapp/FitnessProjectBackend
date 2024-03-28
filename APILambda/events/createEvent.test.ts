@@ -32,17 +32,9 @@ describe("CreateEvent tests", () => {
     expect(attendee).toMatchObject({ eventId: parseInt(eventResponses[0].body.id), userId: host.userId })
   })
 
-  it("should invoke the aws lambda for creating an event", async () => {
+  it("should save the address matching the given coordinates", async () => {
     const { token } = await createUserFlow()
-    addPlacemarkToDB(conn, {
-      lat: 36.98,
-      lon: -122.06,
-      name: "Sample Location",
-      city: "Sample Neighborhood",
-      country: "Sample Country",
-      street: "Sample Street",
-      streetNumber: "1234"
-    }, "Sample/Timezone")
+
     const {
       eventIds
     } = await createEventFlow([
@@ -57,7 +49,42 @@ describe("CreateEvent tests", () => {
     const resp = await callGetEvent(token, eventIds[0])
     expect(resp).toMatchObject({
       status: 200,
-      body: { id: expect.anything(), location: { placemark: { city: expect.anything(), country: expect.anything() } } }
+      body: {
+        id: expect.anything(),
+        location: {
+          placemark: {
+            city: "Westside",
+            isoCountryCode: "USA",
+            name: "115 Tosca Ter, Santa Cruz, CA 95060-2352, United States",
+            postalCode: "95060-2352",
+            street: "Tosca Ter",
+            streetNumber: "115"
+          },
+          timezoneIdentifier: "America/Los_Angeles"
+        }
+      }
+    })
+    expect(parseInt(resp.body.id)).not.toBeNaN()
+  })
+
+  it("should not fail if a valid address for the given coordinates can't be found", async () => {
+    const { token } = await createUserFlow()
+
+    const {
+      eventIds
+    } = await createEventFlow([
+      {
+        title: "test event",
+        latitude: 25,
+        longitude: 25,
+        startDateTime: dayjs().subtract(12, "hour").toDate(),
+        endDateTime: dayjs().add(1, "year").toDate()
+      }
+    ])
+    const resp = await callGetEvent(token, eventIds[0])
+    expect(resp).toMatchObject({
+      status: 200,
+      body: { id: expect.anything(), location: { placemark: {}, timezoneIdentifier: "Africa/Tripoli" } }
     })
     expect(parseInt(resp.body.id)).not.toBeNaN()
   })

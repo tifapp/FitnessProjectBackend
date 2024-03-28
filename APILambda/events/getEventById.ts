@@ -95,7 +95,7 @@ export const getEventByIdRouter = (
                 ? success(res
                   .status(403)
                   .json(getEventWhenBlockedResponse(dbUser, event.title, Number(event.id))))
-                : setEventAttendeesFields(tx, [event], res.locals.selfId).flatMapSuccess((events) => refactorEventsToMatchTifEvent(events))
+                : setEventAttendeesFields(tx, [event], res.locals.selfId).flatMapSuccess((events) => refactorEventsToMatchTifEvent(events))// TODO: if no timezone, return error
                   .mapSuccess((event) => res.status(200).json(event[0]))
             )
           )
