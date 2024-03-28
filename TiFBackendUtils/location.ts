@@ -26,4 +26,5 @@ export interface Placemark {
   postalCode?: string | null,
   region?: string | null,
   isoCountryCode?: string | null
+  timezone?: string | null,
 }

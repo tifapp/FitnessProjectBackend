@@ -34,7 +34,10 @@ export const handler: any = exponentialFunctionBackoff<
         }).then(placemark => success(placemark))
       ))
     .flatMapSuccess((placemark: Placemark) => {
-      const timeZone = getTimeZone({ latitude, longitude })[0]
+      const timeZone = placemark.timezone ?? getTimeZone({ latitude, longitude })[0]
+      if (!timeZone) { // should we throw if no address exists? ex. pacific ocean
+        throw new Error(`Could not find timezone for ${JSON.stringify(location)}.`)
+      }
       return addPlacemarkToDB(conn, placemark, timeZone)
     })
     .mapSuccess(() => "placemark-successfully-inserted" as const)
