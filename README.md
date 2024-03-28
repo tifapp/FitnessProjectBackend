@@ -108,7 +108,7 @@ To add a new route, follow these steps:
 
 4. Update `app.ts` file to include reference to your newly created route from `<your_data_type>.ts` file.
 
-5. Add the newly created route to `swagger.json` file.
+5. Ensure `specs.json` file is updated upon committing.
 
 ```plaintext
 APILambda

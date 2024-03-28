@@ -18,7 +18,7 @@ export interface DBevent {
   'endTimestamp': Date;
   'hasEnded': boolean | null;
   'hostId': string;
-  'id': string;
+  'id': number;
   'isChatEnabled': boolean;
   'latitude': number;
   'longitude': number;
@@ -28,14 +28,14 @@ export interface DBevent {
   'updatedAt': Date;
 }
 export interface DBeventAttendance {
-  'eventId': string;
+  'eventId': number;
   'joinTimestamp': Date | null;
   'role': 'hosting'|'attending';
   'userId': string;
 }
 export interface DBeventReports {
   'eventOwnerId': string;
-  'eventReported': string;
+  'eventReported': number;
   'reportDate': Date;
   'reportingReason': 'Spam'|'Harassment'|'Hate Speech'|'Violence'|'Scam or fraud'|'Suicide or self-harm'|'False information'|'Sale of illegal or regulated goods'|'Other';
   'userReporting': string;
@@ -54,7 +54,7 @@ export interface DBlocation {
   'timeZone': string;
 }
 export interface DBpushTokens {
-  'id': string;
+  'id': number;
   'platformName': 'apple'|'android';
   'pushToken': any | null;
   'userId': string;
@@ -71,7 +71,7 @@ export interface DBTifEventView {
   'hostHandle': string | null;
   'hostId': string;
   'hostUsername': string | null;
-  'id': string;
+  'id': number;
   'isChatEnabled': boolean;
   'isoCountryCode': string | null;
   'latitude': number;
@@ -111,8 +111,8 @@ export interface DBuserRelations {
 export interface DBuserReports {
   'reportDate': Date;
   'reportingReason': 'Spam'|'Harassment'|'Hate Speech'|'Violence'|'Scam or fraud'|'Suicide or self-harm'|'False information'|'Sale of illegal or regulated goods'|'Other';
-  'userReported': string;
-  'userReporting': string;
+  'userReported': number;
+  'userReporting': number;
 }
 export interface DBuserSettings {
   'isAnalyticsEnabled': boolean;
@@ -125,11 +125,11 @@ export interface DBuserSettings {
   'userId': string;
 }
 export interface DBViewEventAttendeeCount {
-  'attendeeCount': string;
-  'id': string;
+  'attendeeCount': number;
+  'id': number;
 }
 export interface DBViewEventAttendees {
-  'eventId': string;
+  'eventId': number;
   'userIds': string | null;
 }
 export interface DBViewEvents {
@@ -143,7 +143,7 @@ export interface DBViewEvents {
   'handle': string | null;
   'hasEnded': boolean | null;
   'hostId': string;
-  'id': string;
+  'id': number;
   'isChatEnabled': boolean;
   'latitude': number;
   'longitude': number;
@@ -167,14 +167,14 @@ export interface DBcopy_state {
 }
 export interface DBdt_participant {
   'dtid': string;
-  'id': string;
+  'id': number;
   'keyspace': string;
   'shard': string;
 }
 export interface DBdt_state {
   'dtid': string;
-  'state': string;
-  'time_created': string;
+  'state': number;
+  'time_created': number;
 }
 export interface DBheartbeat {
   'keyspaceShard': string;
@@ -183,18 +183,18 @@ export interface DBheartbeat {
 }
 export interface DBpost_copy_action {
   'action': Object;
-  'id': string;
+  'id': number;
   'table_name': string;
   'vrepl_id': number;
 }
 export interface DBredo_state {
   'dtid': string;
-  'state': string;
-  'time_created': string;
+  'state': number;
+  'time_created': number;
 }
 export interface DBredo_statement {
   'dtid': string;
-  'id': string;
+  'id': number;
   'statement': any;
 }
 export interface DBreparent_journal {
@@ -205,7 +205,7 @@ export interface DBreparent_journal {
 }
 export interface DBresharding_journal {
   'db_name': string | null;
-  'id': string;
+  'id': number;
   'val': any | null;
 }
 export interface DBschema_migrations {
@@ -220,7 +220,7 @@ export interface DBschema_migrations {
   'cutover_attempts': any;
   'ddl_action': string;
   'dropped_no_default_column_names': string;
-  'eta_seconds': string;
+  'eta_seconds': number;
   'expanded_column_names': string;
   'force_cutover': any;
   'id': any;
@@ -250,7 +250,7 @@ export interface DBschema_migrations {
   'removed_unique_key_names': string;
   'removed_unique_keys': any;
   'requested_timestamp': Date;
-  'retain_artifacts_seconds': string;
+  'retain_artifacts_seconds': number;
   'retries': any;
   'reverted_uuid': string;
   'revertible_notes': string;
@@ -261,18 +261,18 @@ export interface DBschema_migrations {
   'stage': string;
   'started_timestamp': Date | null;
   'strategy': string;
-  'table_rows': string;
+  'table_rows': number;
   'tablet': string;
   'tablet_failure': any;
   'user_throttle_ratio': number;
-  'vitess_liveness_indicator': string;
+  'vitess_liveness_indicator': number;
 }
 export interface DBschema_version {
   'ddl': any | null;
   'id': number;
   'pos': string;
   'schemax': any;
-  'time_updated': string;
+  'time_updated': number;
 }
 export interface DBschemacopy {
   'character_set_name': string | null;
@@ -286,7 +286,7 @@ export interface DBschemacopy {
 }
 export interface DBtables {
   'CREATE_STATEMENT': string | null;
-  'CREATE_TIME': string | null;
+  'CREATE_TIME': number | null;
   'TABLE_NAME': string;
   'TABLE_SCHEMA': string;
 }
@@ -294,7 +294,7 @@ export interface DBvdiff {
   'completed_at': Date | null;
   'created_at': Date;
   'db_name': string | null;
-  'id': string;
+  'id': number;
   'keyspace': string | null;
   'last_error': string | null;
   'liveness_timestamp': Date | null;
@@ -316,10 +316,10 @@ export interface DBvdiff_table {
   'lastpk': string | null;
   'mismatch': boolean;
   'report': Object | null;
-  'rows_compared': string;
+  'rows_compared': number;
   'state': string | null;
   'table_name': string;
-  'table_rows': string;
+  'table_rows': number;
   'updated_at': Date;
   'vdiff_id': string;
 }
@@ -335,28 +335,28 @@ export interface DBvreplication {
   'db_name': string;
   'defer_secondary_keys': boolean;
   'id': number;
-  'max_replication_lag': string;
-  'max_tps': string;
+  'max_replication_lag': number;
+  'max_tps': number;
   'message': string | null;
   'pos': string;
-  'rows_copied': string;
+  'rows_copied': number;
   'source': any;
   'state': string;
   'stop_pos': string | null;
   'tablet_types': string | null;
   'tags': string;
-  'time_heartbeat': string;
-  'time_throttled': string;
-  'time_updated': string;
-  'transaction_timestamp': string;
+  'time_heartbeat': number;
+  'time_throttled': number;
+  'time_updated': number;
+  'transaction_timestamp': number;
   'workflow': string | null;
   'workflow_sub_type': number;
   'workflow_type': number;
 }
 export interface DBvreplication_log {
-  'count': string;
+  'count': number;
   'created_at': Date | null;
-  'id': string;
+  'id': number;
   'message': string;
   'state': string;
   'type': string;
