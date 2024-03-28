@@ -2,6 +2,7 @@ import fs from "fs";
 import shell from "shelljs";
 import AdmZip from 'adm-zip';
 import AWS from 'aws-sdk';
+import path from 'path';
 import { config } from 'dotenv';
 config();
 
@@ -20,23 +21,30 @@ export default class npmExecHelper {
 
         if (!fs.existsSync(dir)) {
             console.log(`${dir} does not exist.`);
-            return;
+            return 1;
+        }
+        const distPath = `${dir}/dist`;
+        const parentDir = path.basename(path.dirname(distPath));
+
+        if (parentDir !== 'APILambda' && parentDir !== 'TiFBackendUtils') {
+            console.log(`The parent directory of 'dist' folder should be either 'APILambda' or 'TiFBackendUtils'.`);
+            return 1;
         }
 
-        console.log(`Deleting all contents from ${dir}/dist`);
-        result = shell.rm('-rf', `${dir}/dist/*`);
+        console.log(`Deleting all contents from ${distPath}`);
+        result = shell.rm('-rf', distPath);
         if (this.handleShellError(result)) {
             return result.code;
         }
-        console.log(`Deleted contents successfully from ${dir}/dist`);
+        console.log(`Deleted contents successfully from ${distPath}`);
 
-        if (fs.existsSync(`${dir}/dist.zip`)) {
-            console.log(`Deleting ${dir}/dist.zip`);
-            result = shell.rm('-rf', `${dir}/dist.zip`);
+        if (fs.existsSync(`${distPath}.zip`)) {
+            console.log(`Deleting ${distPath}.zip`);
+            result = shell.rm('-rf', `${distPath}.zip`);
             if (this.handleShellError(result)) {
                 return result.code;
             }
-            console.log(`Deleted ${dir}/dist.zip successfully`);
+            console.log(`Deleted ${distPath}.zip successfully`);
         }
     }
 
