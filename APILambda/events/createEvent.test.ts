@@ -32,17 +32,10 @@ describe("CreateEvent tests", () => {
     expect(attendee).toMatchObject({ eventId: parseInt(eventResponses[0].body.id), userId: host.userId })
   })
 
-  it("should invoke the aws lambda for creating an event", async () => {
+  it.only("should invoke the aws lambda for creating an event", async () => {
+    await createUserFlow()
     const { token } = await createUserFlow()
-    addPlacemarkToDB(conn, {
-      lat: 36.98,
-      lon: -122.06,
-      name: "Sample Location",
-      city: "Sample Neighborhood",
-      country: "Sample Country",
-      street: "Sample Street",
-      streetNumber: "1234"
-    }, "Sample/Timezone")
+
     const {
       eventIds
     } = await createEventFlow([
@@ -50,11 +43,13 @@ describe("CreateEvent tests", () => {
         title: "test event",
         latitude: 36.98,
         longitude: -122.06,
-        startDateTime: dayjs().subtract(12, "hour").toDate(),
+        startDateTime: dayjs().add(12, "hour").toDate(),
         endDateTime: dayjs().add(1, "year").toDate()
       }
     ])
     const resp = await callGetEvent(token, eventIds[0])
+    console.log("resp is ")
+    console.log(resp.body)
     expect(resp).toMatchObject({
       status: 200,
       body: { id: expect.anything(), location: { placemark: { city: expect.anything(), country: expect.anything() } } }

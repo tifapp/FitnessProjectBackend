@@ -82,7 +82,7 @@ export const validateRequest =
         next()
       } catch (error) {
         if (error instanceof z.ZodError) {
-          // console.log("failed to validate request ", error)
+          console.log("failed to validate request ", error)
           return res.status(400).json({ error: "invalid-request" })
         } else {
           // console.error("Error in validation middleware: ", error)

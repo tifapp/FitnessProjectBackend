@@ -1,4 +1,3 @@
-import { app } from "./devIndex.js"
 import { testEnvVars } from "./testEnv.js"
 
 /**
@@ -6,6 +5,4 @@ import { testEnvVars } from "./testEnv.js"
  *
  * @returns an express app instance suitable for testing
  */
-export const testApp = testEnvVars.TEST_ENV === "staging_tests"
-  ? testEnvVars.API_ENDPOINT
-  : app
+export const testApp = testEnvVars.API_ENDPOINT
