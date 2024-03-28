@@ -3,7 +3,7 @@
   "info": {
     "title": "tifRestAPI",
     "description": "API used for the TiF mobile app",
-    "version": "2024-03-28T02:19:48.793Z"
+    "version": "2024-03-28T02:46:15.698Z"
   },
   "servers": [
     {
@@ -145,7 +145,7 @@
     "/event/chat/{eventId}": {
       "get": {
         "x-amazon-apigateway-integration": {
-          "httpMethod": "GET",
+          "httpMethod": "POST",
           "uri": "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:213277979580:function:lambdaSQLRoute:dev/invocations",
           "responses": {
             "default": {
@@ -177,7 +177,7 @@
     "/event/details/{eventId}": {
       "get": {
         "x-amazon-apigateway-integration": {
-          "httpMethod": "GET",
+          "httpMethod": "POST",
           "uri": "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:213277979580:function:lambdaSQLRoute:dev/invocations",
           "responses": {
             "default": {
@@ -286,7 +286,7 @@
     "/event/leave/{eventId}": {
       "delete": {
         "x-amazon-apigateway-integration": {
-          "httpMethod": "DELETE",
+          "httpMethod": "POST",
           "uri": "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:213277979580:function:lambdaSQLRoute:dev/invocations",
           "responses": {
             "default": {
@@ -466,7 +466,7 @@
     "/event/upcoming": {
       "get": {
         "x-amazon-apigateway-integration": {
-          "httpMethod": "GET",
+          "httpMethod": "POST",
           "uri": "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:213277979580:function:lambdaSQLRoute:dev/invocations",
           "responses": {
             "default": {
@@ -477,12 +477,18 @@
           "contentHandling": "CONVERT_TO_TEXT",
           "type": "aws_proxy"
         },
+        "responses": {
+          "200": {
+            "description": "Object with user data.",
+            "content": {}
+          }
+        }
       }
     },
     "/event/attendees/{eventId}": {
       "get": {
         "x-amazon-apigateway-integration": {
-          "httpMethod": "GET",
+          "httpMethod": "POST",
           "uri": "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:213277979580:function:lambdaSQLRoute:dev/invocations",
           "responses": {
             "default": {
@@ -599,7 +605,7 @@
     "/user/self": {
       "delete": {
         "x-amazon-apigateway-integration": {
-          "httpMethod": "DELETE",
+          "httpMethod": "POST",
           "uri": "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:213277979580:function:lambdaSQLRoute:dev/invocations",
           "responses": {
             "default": {
@@ -619,7 +625,7 @@
       },
       "get": {
         "x-amazon-apigateway-integration": {
-          "httpMethod": "GET",
+          "httpMethod": "POST",
           "uri": "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:213277979580:function:lambdaSQLRoute:dev/invocations",
           "responses": {
             "default": {
@@ -639,7 +645,7 @@
       },
       "patch": {
         "x-amazon-apigateway-integration": {
-          "httpMethod": "PATCH",
+          "httpMethod": "POST",
           "uri": "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:213277979580:function:lambdaSQLRoute:dev/invocations",
           "responses": {
             "default": {
@@ -682,7 +688,7 @@
     "/user/self/settings": {
       "get": {
         "x-amazon-apigateway-integration": {
-          "httpMethod": "GET",
+          "httpMethod": "POST",
           "uri": "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:213277979580:function:lambdaSQLRoute:dev/invocations",
           "responses": {
             "default": {
@@ -702,7 +708,7 @@
       },
       "patch": {
         "x-amazon-apigateway-integration": {
-          "httpMethod": "PATCH",
+          "httpMethod": "POST",
           "uri": "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:213277979580:function:lambdaSQLRoute:dev/invocations",
           "responses": {
             "default": {
@@ -753,7 +759,7 @@
     "/user/{userId}": {
       "get": {
         "x-amazon-apigateway-integration": {
-          "httpMethod": "GET",
+          "httpMethod": "POST",
           "uri": "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:213277979580:function:lambdaSQLRoute:dev/invocations",
           "responses": {
             "default": {
@@ -818,7 +824,7 @@
     "/user/block/{userId}": {
       "patch": {
         "x-amazon-apigateway-integration": {
-          "httpMethod": "PATCH",
+          "httpMethod": "POST",
           "uri": "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:213277979580:function:lambdaSQLRoute:dev/invocations",
           "responses": {
             "default": {
@@ -849,7 +855,7 @@
       },
       "delete": {
         "x-amazon-apigateway-integration": {
-          "httpMethod": "DELETE",
+          "httpMethod": "POST",
           "uri": "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:213277979580:function:lambdaSQLRoute:dev/invocations",
           "responses": {
             "default": {
