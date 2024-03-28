@@ -1,21 +1,20 @@
 import { randomUUID } from "crypto"
-import {
-  callRegisterPushToken
-} from "../test/apiCallers/users.js"
-import { withEmptyResponseBody } from "../test/assertions.js"
+import { callRegisterPushToken } from "../test/apiCallers/users.js"
 import { createUserFlow } from "../test/userFlows/users.js"
 
 describe("RegisterPushToken tests", () => {
+  const TEST_SUCCESS_RESPONSE = {
+    status: 201,
+    body: { status: "inserted" }
+  }
+
   it("should 201 when registering a new push token", async () => {
     const { token: userToken } = await createUserFlow()
     const resp = await callRegisterPushToken(
       userToken,
       registerPushTokenBody(randomUUID())
     )
-    expect(withEmptyResponseBody(resp)).toMatchObject({
-      status: 201,
-      body: ""
-    })
+    expect(resp).toMatchObject(TEST_SUCCESS_RESPONSE)
   })
 
   it("should 400 when registering an existing push token on the same platform", async () => {
@@ -39,10 +38,7 @@ describe("RegisterPushToken tests", () => {
       token,
       registerPushTokenBody(randomUUID())
     )
-    expect(withEmptyResponseBody(resp)).toMatchObject({
-      status: 201,
-      body: ""
-    })
+    expect(resp).toMatchObject(TEST_SUCCESS_RESPONSE)
   })
 
   const registerPushTokenBody = (pushToken: string) => ({

@@ -18,10 +18,13 @@ export type LocationCoordinate2D = Readonly<
 export interface Placemark {
   lat: number
   lon: number
-  name: string
-  city: string
-  country: string
-  street: string
-  street_num: string // camelCase
-  unit_number: string // camelCase
+  name?: string | null,
+  city?: string | null,
+  country?: string | null,
+  street?: string | null,
+  streetNumber?: string | null,
+  postalCode?: string | null,
+  region?: string | null,
+  isoCountryCode?: string | null
+  timezone?: string | null,
 }

@@ -6,9 +6,9 @@ export type DatabaseUser = {
   name: string
   handle: string // userhandle class
   bio?: string
-  profileImageURL?: string // url type
+  profileImageURL: string | null// url type
   creationDate: Date
-  updatedAt?: Date
+  updatedAt: Date | null
 }
 
 /**

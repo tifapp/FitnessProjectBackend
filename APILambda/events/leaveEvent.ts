@@ -1,7 +1,8 @@
-import { SQLExecutable, conn } from "TiFBackendUtils"
+import { SQLExecutable, conn, failure } from "TiFBackendUtils"
 import { z } from "zod"
 import { ServerEnvironment } from "../env.js"
 import { ValidatedRouter } from "../validation.js"
+import { GetEventByIdEvent } from "../shared/SQL.js"
 
 const leaveEventSchema = z.object({
   eventId: z.string()
@@ -10,26 +11,54 @@ const leaveEventSchema = z.object({
 // TODO: Handle adding co-host to event if main host decides to leave
 const leaveEvent = (conn: SQLExecutable, userId: string, eventId: number) => {
   return conn.transaction((tx) =>
-    isHostUserFromOwnEvent(tx, userId, eventId)
-      .inverted()
-      .flatMapSuccess(() => removeUserFromAttendeeList(tx, userId, eventId))
-      .mapSuccess(({ rowsAffected }) => (rowsAffected > 0 ? 204 : 200))
-      .mapFailure(() => 400)
+    getEvent(tx, eventId)
+      .flatMapFailure(() => {
+        return failure("event-not-found")
+      })
+      .flatMapSuccess((event) => {
+        if (!event.endedAt) {
+          return isHostUserNotFromOwnEvent(tx, userId, eventId)
+            .flatMapSuccess(() =>
+              removeUserFromAttendeeList(tx, userId, eventId)
+            )
+            .mapSuccess(({ rowsAffected }) =>
+              rowsAffected > 0 ? "" : "already-left-event"
+            )
+            .mapFailure((error) => {
+              return error
+            })
+        } else if (event.endedAt <= event.startTimestamp) {
+          return failure("event-has-been-cancelled" as const)
+        } else {
+          return failure("event-has-ended" as const)
+        }
+      })
   )
 }
 
-const isHostUserFromOwnEvent = (
+const getEvent = (conn: SQLExecutable, eventId: number) =>
+  conn.queryFirstResult<GetEventByIdEvent>(
+    "SELECT * FROM event WHERE id = :eventId;",
+    {
+      eventId
+    }
+  )
+
+const isHostUserNotFromOwnEvent = (
   conn: SQLExecutable,
   userId: string,
   eventId: number
 ) =>
-  conn.queryFirstResult(
-    "SELECT hostId FROM event WHERE id = :eventId AND hostId = :userId",
-    {
-      userId,
-      eventId
-    }
-  )
+  conn
+    .queryFirstResult(
+      "SELECT hostId FROM event WHERE id = :eventId AND hostId = :userId",
+      {
+        userId,
+        eventId
+      }
+    )
+    .inverted()
+    .withFailure("co-host-not-found" as const)
 
 const removeUserFromAttendeeList = (
   conn: SQLExecutable,
@@ -37,8 +66,9 @@ const removeUserFromAttendeeList = (
   eventId: number
 ) =>
   conn.queryResult(
-    `DELETE FROM eventAttendance 
-    WHERE userId = :userId and eventId = :eventId`,
+    `DELETE ea FROM eventAttendance AS ea
+    JOIN event AS e ON ea.eventId = e.id
+    WHERE ea.userId = :userId AND ea.eventId = :eventId AND e.endedAt IS NULL`,
     { userId, eventId }
   )
 
@@ -59,9 +89,19 @@ export const leaveEventRouter = (
     { pathParamsSchema: leaveEventSchema },
     (req, res) =>
       leaveEvent(conn, res.locals.selfId, Number(req.params.eventId))
-        .mapSuccess((result) => res.status(result).json())
+        .mapSuccess((result) =>
+          res.status(!result ? 204 : 400).json({ error: result })
+        )
         .mapFailure((error) =>
-          res.status(error).json({ error: "co-host-not-found" })
+          res
+            .status(
+              error === "co-host-not-found"
+                ? 400
+                : error === "event-not-found"
+                ? 404
+                : 403
+            )
+            .json({ error: error })
         )
   )
 }

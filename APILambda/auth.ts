@@ -1,6 +1,5 @@
 import { Application } from "express"
 import { z } from "zod"
-import { ServerEnvironment } from "./env.js"
 
 export type ResponseContext = {
   selfId: string,
@@ -48,15 +47,14 @@ const TransformedAuthClaimsSchema = AuthClaimsSchema.transform((res) => ({
  * Adds AWS cognito token verification to an app.
  */
 export const addCognitoTokenVerification = (
-  app: Application, // try a "usable" interface for middlewares
-  env: ServerEnvironment
+  app: Application // try a "usable" interface for middlewares
 ) => {
   // TODO: - Verify JWT properly
   app.use(async (req, res, next) => {
-    let auth = req.headers?.Authorization
-    if (env.environment === "dev") {
-      auth = req.headers?.authorization
-    }
+    const auth = req.headers?.Authorization ?? req.headers?.authorization
+
+    console.debug("authorization is ")
+    console.debug(req.headers?.Authorization ?? req.headers?.authorization)
 
     if (!auth || Array.isArray(auth)) {
       // TODO: Change error message to generic message for prod api

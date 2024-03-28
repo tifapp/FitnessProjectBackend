@@ -18,6 +18,7 @@ jobs:
       AWS_REGION: ${{ secrets.AWS_REGION }}
       AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
       ABLY_KEY: ${{ secrets.ABLY_KEY }}
+      COGNITO_USER_POOL_ID: ${{ secrets.COGNITO_USER_POOL_ID }}
       AWS_LAMBDA_FUNCTION_NAME: lambdaSQLRoute
 
     steps:
@@ -40,13 +41,22 @@ jobs:
         run: |
           cd TiFBackendUtils
           npm ci
+          npm run dbtots
+          cd ../GeocodingLambda
+          npm ci
           cd ../APILambda
           npm ci
+      
+      - name: Validate openapi specs
+        run: |
+          cd APILambda
+          npx lint-openapi specs.json
 
       - name: Run tests
         run: |
           cd APILambda
-          npx swagger-cli validate ./swagger.json
           export NODE_OPTIONS="--max_old_space_size=4096"
           npm run test:ci
 
+  build:
+    uses: ./.github/workflows/build_api.yml

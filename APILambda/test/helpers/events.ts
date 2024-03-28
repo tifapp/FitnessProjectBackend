@@ -1,5 +1,4 @@
 import request from "supertest"
-// import { CreateEventInput } from "../../events/index.js"
 import { testApp } from "../testApp.js"
 
 export const callCreateEvent = async (

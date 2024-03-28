@@ -1,6 +1,7 @@
 import Ably from "ably"
+import { envVars } from "./env.js"
 
-const rest = new Ably.Rest({ key: process.env.ABLY_KEY })
+const rest = new Ably.Rest({ key: envVars.ABLY_KEY })
 
 export type ChatPermissions = Exclude<
   Ably.Types.TokenParams["capability"],

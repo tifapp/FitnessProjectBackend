@@ -69,14 +69,14 @@ export const checkChatPermissionsTransaction = (
     .flatMapSuccess(async (event) => {
       const permissions = determineChatPermissions(
         event.hostId,
-        event.endTimestamp,
+        event.endDateTime,
         userId,
         eventId
       )
 
       const tokenRequest = await createTokenRequest(permissions, userId)
 
-      return success({ id: userId, tokenRequest })
+      return success({ id: eventId, tokenRequest })
     })
 
 const eventRequestSchema = z.object({

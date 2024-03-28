@@ -1,55 +1,51 @@
 import { CreateEventInput } from "../../events/createEvent.js"
 import { callCreateEvent, callJoinEvent } from "../apiCallers/events.js"
 import { testEventInput } from "../testEvents.js"
-import { createUserFlow } from "./users.js"
+import { TestUser, createUserFlow } from "./users.js"
 
 export const createEventFlow = async (
-  eventInput: Partial<CreateEventInput>[]
+  eventInputs: Partial<CreateEventInput>[] = [{}],
+  attendeeCount: number = 0
 ): Promise<{
-  attendeeToken: string
-  attendeeId: string
-  attendeeName: string
-  attendeeHandle: string
-  hostToken: string
-  hostId: string
-  hostName: string
-  hostHandle: string
+  attendeesList: TestUser[]
+  host: TestUser
+   // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   eventResponses: any
   eventIds: number[]
 }> => {
-  const {
-    token: hostToken,
-    userId: hostId,
-    handle: hostHandle,
-    name: hostName
-  } = await createUserFlow()
-  const {
-    token: attendeeToken,
-    userId: attendeeId,
-    handle: attendeeHandle,
-    name: attendeeName
-  } = await createUserFlow()
+  const host = await createUserFlow()
 
-  const eventPromises = await Promise.all(
-    eventInput.map((details) =>
-      callCreateEvent(hostToken, { ...testEventInput, ...details })
+  if (eventInputs.length < 1) {
+    throw new Error("need at least one test event input")
+  }
+
+  const eventResponses = await Promise.all(
+    eventInputs.map((details) =>
+      callCreateEvent(host.token, { ...testEventInput, ...details })
     )
   )
 
-  const eventIds = eventPromises.map((event) => parseInt(event.body.id))
+  const eventIds = eventResponses.map((event, i) => {
+    if (event.ok) { return parseInt(event.body.id) } else { console.error(eventInputs[i]); console.error(event); throw new Error("invalid test event given") }
+  })
 
-  await Promise.all(
-    eventIds.map((eventId) => callJoinEvent(attendeeToken, eventId))
-  )
+  const attendeesList: TestUser[] = []
+  attendeesList.push(host)
+
+  for (let i = 0; i < attendeeCount; i++) {
+    const attendee = await createUserFlow()
+
+    attendeesList.push(attendee)
+
+    await Promise.all(
+      eventIds.map((eventId) => callJoinEvent(attendee.token, eventId))
+    )
+  }
 
   return {
-    attendeeToken,
-    attendeeId,
-    attendeeName,
-    attendeeHandle,
-    hostId,
-    hostToken,
-    hostHandle,
-    hostName,
+    attendeesList,
+    host,
+    eventResponses,
     eventIds
   }
 }

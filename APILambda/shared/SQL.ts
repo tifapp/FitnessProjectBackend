@@ -14,7 +14,30 @@ export type DatabaseEvent = {
   longitude: number
   shouldHideAfterStartDate: boolean
   isChatEnabled: boolean
-  arrivalStatus: string
+  hasArrived: boolean
+}
+
+export type DatabaseAttendee = {
+  id: string
+  name: string
+  joinTimestamp: Date
+  profileImageURL?: string
+  handle: string
+  hasArrived: boolean
+  arrivedAt: Date
+  role: string
+}
+
+export type PaginatedAttendeesResponse = {
+  nextPageCursor: string
+  totalAttendeeCount: number
+  attendees: DatabaseAttendee[]
+}
+
+export type AttendeesCursorResponse = {
+  userId: string
+  joinDate: Date | null
+  arrivedAt: Date | null
 }
 
 export type EventAttendee = {
@@ -34,6 +57,34 @@ export type GetEventByRegionEvent = {
   description: string
   startTimestamp: Date
   endTimestamp: Date
+  color: EventColor
+  latitude: number
+  longitude: number
+  shouldHideAfterStartDate: boolean
+  isChatEnabled: boolean
+  relationUserToHost: string
+  relationHostToUser: string
+  name: string
+  city: string
+  country: string
+  street: string
+  street_num: number
+  totalAttendees: number
+  attendeesPreview: EventAttendee
+  hostName: string
+  hostHandle: string
+  hostProfileImageURL: string
+}
+
+export type GetEventByIdEvent = {
+  id: number
+  arrivedAt: string
+  hostId: string
+  title: string
+  description: string
+  startTimestamp: Date
+  endTimestamp: Date
+  endedAt: Date
   color: EventColor
   latitude: number
   longitude: number

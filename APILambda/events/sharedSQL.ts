@@ -1,4 +1,4 @@
-import { Placemark, SQLExecutable, conn } from "TiFBackendUtils"
+import { SQLExecutable, conn } from "TiFBackendUtils"
 
 export const isUserInEvent = (
   conn: SQLExecutable,
@@ -24,15 +24,6 @@ export const isUserNotBlocked = (
     )
     .inverted()
     .withFailure("user-is-blocked" as const)
-
-export const addPlacemarkToDB = (place: Placemark) =>
-  conn.queryResults(
-    `
-    INSERT INTO location (name, city, country, street, street_num, lat, lon)
-    VALUES (:name, :city, :country, :street, :street_num, :lat, :lon)
-    `,
-    place
-  )
 
 export const addUserToEventAttendance = (userId: string, eventId: number) =>
   conn.queryResults(

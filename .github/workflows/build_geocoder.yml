@@ -1,0 +1,97 @@
+name: Build Geocoding Lambda
+
+on:
+  workflow_call:
+    outputs:
+      zip-path:
+        description: "Geocoding Lambda zip"
+        value: ${{ jobs.build.outputs.zip-path }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    outputs:
+      zip-path: ${{ steps.set-output.outputs.zip-path }}
+
+    env:
+      DATABASE_HOST: ${{ secrets.DATABASE_HOST }}
+      DATABASE_USERNAME: ${{ secrets.DEV_DATABASE_USERNAME }}
+      DATABASE_PASSWORD: ${{ secrets.DEV_DATABASE_PASSWORD }}
+      AWS_REGION: ${{ secrets.AWS_REGION }}
+      AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      ABLY_KEY: ${{ secrets.ABLY_KEY }}
+      AWS_LAMBDA_FUNCTION_NAME: 'lambdaSQLRoute'
+      COGNITO_CLIENT_APP_ID: ${{ secrets.COGNITO_CLIENT_APP_ID }}
+      COGNITO_USER_POOL_ID: ${{ secrets.COGNITO_USER_POOL_ID }}
+      API_ENDPOINT: 'https://623qsegfb9.execute-api.us-west-2.amazonaws.com/staging'
+      SLACK_APP_ID: ${{ secrets.SLACK_APP_ID }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v2
+        with:
+          node-version: '18'
+
+      - name: Install backend utils dependencies
+        run: |
+          cd TiFBackendUtils
+          npm ci
+      
+      - name: Build backend utils js
+        run: |
+          cd TiFBackendUtils
+          npm run build
+      
+      - name: Remove backend utils dev dependencies
+        run: |
+          cd TiFBackendUtils
+          jq 'del(.scripts.postinstall)' package.json > temp.json && mv temp.json package.json
+          npm ci --omit=dev
+      
+      - name: Package backend utils
+        run: |
+          cd TiFBackendUtils
+          shopt -s extglob
+          cp -R !(test|.github|dist|*.ts) dist/
+          cd dist
+          npm pack
+
+      - name: Install dependencies
+        run: |
+          cd GeocodingLambda
+          npm ci
+          npm install ../TiFBackendUtils/dist/TiFBackendUtils-1.0.0.tgz
+      
+      - name: Build the project
+        run: |
+          cd GeocodingLambda
+          npm run build
+      
+      - name: Remove dev dependencies
+        run: |
+          cd GeocodingLambda
+          npm ci --omit=dev
+
+      - name: Zip the project
+        run: |
+          cd GeocodingLambda
+          shopt -s extglob
+          cp -R !(test|.github|dist|*.ts) dist/
+          cd dist
+          zip -r ../dist.zip .
+      
+      - name: Set output path
+        id: set-output
+        run: echo "::set-output name=zip-path::./GeocodingLambda/dist.zip"
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: geocoding-lambda
+          path: ./GeocodingLambda/dist.zip

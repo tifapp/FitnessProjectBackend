@@ -18,17 +18,18 @@ export const exponentialFunctionBackoff = <T extends Retryable, U>(
 ) => {
   // retryAsync: (date, T) => U
   return async (event: T) => {
+    const parsedEvent = typeof event === "string" ? JSON.parse(event) : event // event may be received as a string when triggered with lambda.invoke()?
     try {
-      return await asyncFunc(event)
+      return await asyncFunc(parsedEvent)
     } catch (e) {
       console.error(e)
-      const retries = event.retries ?? 0
+      const retries = parsedEvent.retries ?? 0
       if (retries < maxRetries) {
         const retryDelay = Math.pow(2, retries)
         const retryDate = new Date()
         retryDate.setHours(retryDate.getHours() + retryDelay)
 
-        const newEvent = { ...event, retries: retries + 1 }
+        const newEvent = { ...parsedEvent, retries: retries + 1 }
         return retryAsyncFunc(retryDate.toISOString(), newEvent)
       } else {
         throw e
