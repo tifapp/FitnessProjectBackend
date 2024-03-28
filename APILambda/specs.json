@@ -3,11 +3,16 @@
   "info": {
     "title": "tifRestAPI",
     "description": "API used for the TiF mobile app",
-    "version": "2024-03-09T03:20:28.485Z"
+    "version": "2024-03-28T02:19:48.793Z"
   },
   "servers": [
     {
-      "url": "https://623qsegfb9.execute-api.us-west-2.amazonaws.com"
+      "url": "https://623qsegfb9.execute-api.us-west-2.amazonaws.com/{basePath}",
+      "variables": {
+        "basePath": {
+          "default": "staging"
+        }
+      }
     }
   ],
   "components": {
@@ -39,11 +44,11 @@
                     "type": "string",
                     "maxLength": 500
                   },
-                  "startTimestamp": {
+                  "startDateTime": {
                     "type": "string",
                     "format": "date-time"
                   },
-                  "endTimestamp": {
+                  "endDateTime": {
                     "type": "string",
                     "format": "date-time"
                   },
@@ -116,8 +121,8 @@
                 },
                 "required": [
                   "description",
-                  "startTimestamp",
-                  "endTimestamp",
+                  "startDateTime",
+                  "endDateTime",
                   "color",
                   "title",
                   "shouldHideAfterStartDate",
@@ -472,12 +477,6 @@
           "contentHandling": "CONVERT_TO_TEXT",
           "type": "aws_proxy"
         },
-        "responses": {
-          "200": {
-            "description": "Object with user data.",
-            "content": {}
-          }
-        }
       }
     },
     "/event/attendees/{eventId}": {

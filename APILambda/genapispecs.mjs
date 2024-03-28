@@ -60,10 +60,11 @@ addRoutes(app, {
         }
       },
       "x-amazon-apigateway-integration": {
-        httpMethod: httpMethod.toUpperCase(),
+        httpMethod: "POST", // "For Lambda integrations, you must use the HTTP method of POST for the integration request" https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html
         uri: `${testEnvVars.API_SPECS_LAMBDA_ID}:dev/invocations`,
         responses: {
           default: {
+            // TODO: Generate responses
             statusCode: "200"
           }
         },
@@ -85,7 +86,12 @@ const specs = generator.generateDocument({
     version: new Date()
   },
   servers: [{
-    url: testEnvVars.API_SPECS_ENDPOINT
+    url: `${testEnvVars.API_SPECS_ENDPOINT}/{basePath}`,
+    variables: {
+      basePath: {
+        default: "staging"
+      }
+    }
   }]
 })
 
