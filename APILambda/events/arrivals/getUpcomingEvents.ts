@@ -1,7 +1,6 @@
-import { SQLExecutable, conn } from "TiFBackendUtils"
-import { ServerEnvironment } from "../../env.js"
-import { DatabaseEvent } from "../../shared/SQL.js"
-import { ValidatedRouter } from "../../validation.js"
+import { SQLExecutable, UpcomingEvent, conn } from "TiFBackendUtils";
+import { ServerEnvironment } from "../../env.js";
+import { ValidatedRouter } from "../../validation.js";
 
 type EventRegion = {
   eventIds: number[];
@@ -13,7 +12,7 @@ type EventRegion = {
   hasArrived: boolean;
 }
 
-const mapEventsToRegions = (events: DatabaseEvent[]): EventRegion[] => {
+const mapEventsToRegions = (events: UpcomingEvent[]): EventRegion[] => {
   const eventRegions: Record<string, EventRegion> = {}
 
   events.forEach(event => {
@@ -30,18 +29,18 @@ const mapEventsToRegions = (events: DatabaseEvent[]): EventRegion[] => {
       }
     }
 
-    eventRegions[key].eventIds.push(parseInt(event.id))
+    eventRegions[key].eventIds.push(event.id)
   })
 
   return Object.values(eventRegions)
 }
 
 // TODO: 24 hour window should be parameterized based on env variable
-export const getUpcomingEventsByRegion = (conn: SQLExecutable, userId: string) => conn.queryResults<DatabaseEvent>(
+export const getUpcomingEventsByRegion = (conn: SQLExecutable, userId: string) => conn.queryResults<UpcomingEvent>(
   `
   SELECT 
     e.*, 
-    ua.arrivedAt,
+    ua.arrivedDateTime,
     CASE 
       WHEN ua.userId IS NOT NULL THEN TRUE
       ELSE FALSE
@@ -56,12 +55,12 @@ export const getUpcomingEventsByRegion = (conn: SQLExecutable, userId: string) =
     eventAttendance ea ON e.id = ea.eventId AND ea.userId = :userId
   WHERE 
     (
-      TIMESTAMPDIFF(HOUR, NOW(), e.startTimestamp) BETWEEN 0 AND 24
+      TIMESTAMPDIFF(HOUR, NOW(), e.startDateTime) BETWEEN 0 AND 24
       OR 
-      (e.startTimestamp <= NOW() AND NOW() <= e.endTimestamp)
+      (e.startDateTime <= NOW() AND NOW() <= e.endDateTime)
     )
   ORDER BY 
-    e.startTimestamp ASC
+    e.startDateTime ASC
   LIMIT 100;
   `,
   { userId }

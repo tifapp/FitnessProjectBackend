@@ -29,12 +29,12 @@ const rolesMap: Record<Role, ChatPermissions> = {
 // Create a method get the user's role
 const determineRole = (
   hostId: string,
-  endTimestamp: Date,
+  endDateTime: Date,
   userId: string
 ): Role => {
   if (hostId === userId) {
     return "admin"
-  } else if (new Date() <= new Date(endTimestamp)) {
+  } else if (new Date() <= new Date(endDateTime)) {
     return "attendee"
   } else {
     return "viewer"
@@ -43,11 +43,11 @@ const determineRole = (
 
 export const determineChatPermissions = (
   hostId: string,
-  endTimestamp: Date,
+  endDateTime: Date,
   userId: string,
   eventId: number
 ): ChatPermissions => {
-  const role = determineRole(hostId, endTimestamp, userId)
+  const role = determineRole(hostId, endDateTime, userId)
 
   const permissions = rolesMap[role]
 

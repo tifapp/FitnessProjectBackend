@@ -1,8 +1,7 @@
-import { SQLExecutable, UserHandle, conn } from "TiFBackendUtils"
+import { DBuser, SQLExecutable, UserHandle, conn } from "TiFBackendUtils"
 import { z } from "zod"
 import { ServerEnvironment } from "../env.js"
 import { ValidatedRouter, withValidatedRequest } from "../validation.js"
-import { DatabaseUser } from "./models.js"
 
 const AutocompleteUsersRequestSchema = z.object({
   query: z.object({
@@ -37,12 +36,12 @@ const autocompleteUsers = (
   conn: SQLExecutable,
   baseHandle: UserHandle,
   limit: number
-) => conn.queryResults<Pick<DatabaseUser, "id" | "name" | "handle">>(
+) => conn.queryResults<Pick<DBuser, "id" | "name" | "handle">>(
   `
     SELECT id, name, handle 
     FROM user u 
     WHERE LOWER(u.handle) LIKE CONCAT(LOWER(:handle), '%') 
-    ORDER BY u.handle ASC, u.creationDate ASC
+    ORDER BY u.handle ASC, u.createdDateTime ASC
     LIMIT :limit
     `,
   { handle: baseHandle.rawValue, limit }

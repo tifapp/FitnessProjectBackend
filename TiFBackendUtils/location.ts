@@ -16,8 +16,8 @@ export type LocationCoordinate2D = Readonly<
 >
 
 export interface Placemark {
-  lat: number
-  lon: number
+  latitude: number
+  longitude: number
   name?: string | null,
   city?: string | null,
   country?: string | null,
@@ -26,5 +26,5 @@ export interface Placemark {
   postalCode?: string | null,
   region?: string | null,
   isoCountryCode?: string | null
-  timezone?: string | null,
+  timezoneIdentifier?: string | null,
 }

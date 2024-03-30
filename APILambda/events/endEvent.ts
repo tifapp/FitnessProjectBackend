@@ -11,10 +11,10 @@ const endEventByHost = (conn: SQLExecutable, hostId: string, eventId: number) =>
   conn
     .queryResult(
       `UPDATE event 
-    SET endedAt = NOW()
+    SET endedDateTime = NOW()
     WHERE event.id = :eventId
         AND event.hostId = :hostId
-        AND endedAt IS NULL;`,
+        AND endedDateTime IS NULL;`,
       { eventId, hostId }
     )
     .flatMapSuccess((result) => {

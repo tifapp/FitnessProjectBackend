@@ -1,5 +1,4 @@
-import { DBuserSettings, SQLExecutable, success } from "TiFBackendUtils"
-import { userWithIdExists } from "../SQL.js"
+import { DBuserSettings, SQLExecutable, success, userWithIdExists } from "TiFBackendUtils"
 
 /**
  * The default user settings, which enables all fields.

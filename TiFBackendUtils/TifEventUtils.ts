@@ -1,7 +1,8 @@
 import dayjs from "dayjs"
 import duration from "dayjs/plugin/duration.js"
-import { DBTifEventView, DBViewEventAttendees, DBuserRelations } from "./Planetscale/entities.js"
+import { DBEventAttendeeCountView, DBEventAttendeesView, DBTifEventView, DBevent, DBeventAttendance, DBuserRelations } from "./Planetscale/entities.js"
 import { SQLExecutable } from "./SQLExecutable/utils.js"
+import { UserRelationship } from "./TiFUserUtils/UserRelationships.js"
 import { Placemark } from "./location.js"
 import { success } from "./result.js"
 dayjs.extend(duration)
@@ -10,27 +11,13 @@ dayjs.extend(duration)
 export const SECONDS_IN_DAY = dayjs.duration(1, "day").asSeconds()
 export const ARRIVAL_RADIUS_IN_METERS = 120
 
+export type UpcomingEvent = DBevent & {hasArrived: boolean}
 export type UserHostRelations = "not-friends" | "friend-request-pending" | "friends" | "blocked" | "current-user"
 export type TodayOrTomorrow = "today" | "tomorrow"
-export type Role = "hosting" | "attending" | "not-participating"
+export type UserAttendeeStatus = DBeventAttendance["role"] | "not-participating"
 export type Attendee = { id: string, profileImageURL: string | null}
-export type DBTifEvent = DBTifEventView & Omit<DBuserRelations, "status" | "updatedAt"> &
-{ attendeeCount: number, previewAttendees: Attendee[], userAttendeeStatus: Role, joinDate: Date, themToYou: UserHostRelations, youToThem: UserHostRelations }
-
-export type EventWithAttendeeCount = {
-  eventId: number
-  attendeeCount: number
-}
-
-export type EventAttendee = {
-    userId: string
-    eventId: number
-  }
-
-export type EventAttendanceFields = {
-  joinDate: Date
-  userAttendeeStatus: Role
-}
+export type DBTifEvent = DBTifEventView & Omit<DBuserRelations, "status" | "updatedDateTime"> &
+{ attendeeCount: number, previewAttendees: Attendee[], userAttendeeStatus: UserAttendeeStatus, joinedDateTime: Date } & UserRelationship
 
 export type TiFEvent = {
     id: number
@@ -53,14 +40,14 @@ export type TiFEvent = {
         longitude: number
       },
       timezoneIdentifier: string | null,
-      placemark: Omit<Placemark, "lat" | "lon"> | null,
+      placemark: Omit<Placemark, "latitude" | "longitude"> | null,
       arrivalRadiusMeters: number
       isInArrivalTrackingPeriod: boolean
     }
     host: {
       relations: {
-        themToYou: UserHostRelations
-        youToThem: UserHostRelations
+        fromThemToYou: UserHostRelations
+        fromYouToThem: UserHostRelations
       }
       id: string
       username: string | null
@@ -72,12 +59,12 @@ export type TiFEvent = {
       isChatEnabled: boolean
     }
     isChatExpired: boolean
-    userAttendeeStatus: Role
-    joinDate: Date | null
+    userAttendeeStatus: UserAttendeeStatus
+    joinedDateTime: Date | null
     hasArrived: boolean
-    updatedAt: Date
-    createdAt: Date
-    endedAt: Date | null
+    updatedDateTime: Date
+    createdDateTime: Date
+    endedDateTime: Date | null
   }
 
 export const calcSecondsToStart = (startDateTime: Date) => {
@@ -85,15 +72,15 @@ export const calcSecondsToStart = (startDateTime: Date) => {
   return millisecondsToStart / 1000
 }
 
-const isChatExpired = (endedAt: Date | null) => {
-  if (endedAt === null) {
+const isChatExpired = (endedDateTime: Date | null) => {
+  if (endedDateTime === null) {
     return false
   }
 
-  const chatEndedAt = dayjs(endedAt)
-  const nextDay = chatEndedAt.add(1, "day")
+  const chatEndedDateendedDateTime = dayjs(endedDateTime)
+  const nextDay = chatEndedDateendedDateTime.add(1, "day")
 
-  const diffInHours = nextDay.diff(endedAt, "hour")
+  const diffInHours = nextDay.diff(endedDateTime, "hour")
 
   return diffInHours >= 24
 }
@@ -148,8 +135,8 @@ export const tifEventResponseFromDatabaseEvent = (event: DBTifEvent) : TiFEvent 
     },
     host: {
       relations: {
-        themToYou: event.themToYou,
-        youToThem: event.youToThem
+        fromThemToYou: event.fromThemToYou,
+        fromYouToThem: event.fromYouToThem
       },
       id: event.hostId,
       username: event.hostUsername,
@@ -161,23 +148,23 @@ export const tifEventResponseFromDatabaseEvent = (event: DBTifEvent) : TiFEvent 
       isChatEnabled: event.isChatEnabled
     },
     userAttendeeStatus: event.userAttendeeStatus,
-    joinDate: event.joinDate,
-    isChatExpired: isChatExpired(event.endedAt),
+    joinedDateTime: event.joinedDateTime,
+    isChatExpired: isChatExpired(event.endedDateTime),
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     hasArrived: event.hasArrived === 1,
-    updatedAt: new Date(event.updatedAt),
-    createdAt: new Date(event.createdAt),
-    endedAt: event.endedAt !== null ? event.endedAt : null
+    updatedDateTime: new Date(event.updatedDateTime),
+    createdDateTime: new Date(event.createdDateTime),
+    endedDateTime: event.endedDateTime !== null ? event.endedDateTime : null
   }
 }
 
 export const getAttendeeCount = (conn: SQLExecutable, eventIds: string[]) => {
-  return conn.queryResults<EventWithAttendeeCount>(
+  return conn.queryResults<DBEventAttendeeCountView>(
     ` SELECT
         attendeeCount
       FROM
-        ViewEventAttendeeCount
+        EventAttendeeCountView
       WHERE
         id IN (:eventIds)
       GROUP BY id`,
@@ -186,10 +173,10 @@ export const getAttendeeCount = (conn: SQLExecutable, eventIds: string[]) => {
 }
 
 export const getEventAttendanceFields = (conn: SQLExecutable, userId: string, eventIds: string[]) => {
-  return conn.queryResults<EventAttendanceFields>(
+  return conn.queryResults<DBeventAttendance>(
     ` SELECT
-        ea.joinTimestamp AS joinDate,
-        ea.role AS userAttendeeStatus
+        ea.joinedDateTime AS joinedDateTime,
+        ea.role AS role
       FROM
           event e
       LEFT JOIN eventAttendance ea ON ea.userId = :userId AND ea.eventId = e.id
@@ -203,9 +190,9 @@ export const getEventAttendanceFields = (conn: SQLExecutable, userId: string, ev
 
 const setAttendeesPreviewForEvent = (
   events: DBTifEvent[],
-  attendeesPreviews: DBViewEventAttendees[],
-  eventsWithAttendeeCount: EventWithAttendeeCount[],
-  EventAttendanceFields: EventAttendanceFields[]
+  attendeesPreviews: DBEventAttendeesView[],
+  eventsWithAttendeeCount: DBEventAttendeeCountView[],
+  EventAttendanceFields: DBeventAttendance[]
 ) => {
   events.sort((eventA, eventB) => {
     return eventA.id.toString().localeCompare(eventB.id.toString())
@@ -223,25 +210,25 @@ const setAttendeesPreviewForEvent = (
     events[i].attendeeCount = eventsWithAttendeeCount[i].attendeeCount
       ? eventsWithAttendeeCount[i].attendeeCount
       : 0
-    events[i].joinDate = EventAttendanceFields[i].joinDate
-    events[i].userAttendeeStatus = EventAttendanceFields[i].userAttendeeStatus ?? "not-participating"
+    events[i].joinedDateTime = EventAttendanceFields[i].joinedDateTime
+    events[i].userAttendeeStatus = EventAttendanceFields[i].role ?? "not-participating"
   }
   return events
 }
 
 export const getAttendees = (conn: SQLExecutable, eventIds: string[]) => {
-  return conn.queryResults<DBViewEventAttendees>(
+  return conn.queryResults<DBEventAttendeesView>(
     `
     SELECT 
-      ViewEventAttendees.userIds
+      EventAttendeesView.userIds
 FROM 
-  ViewEventAttendees
+  EventAttendeesView
 WHERE 
-  ViewEventAttendees.eventId IN (:eventIds)
+  EventAttendeesView.eventId IN (:eventIds)
 GROUP BY 
-  ViewEventAttendees.eventId
+  EventAttendeesView.eventId
 HAVING 
-    COUNT(DISTINCT ViewEventAttendees.userIds) <= 3
+    COUNT(DISTINCT EventAttendeesView.userIds) <= 3
   `,
     { eventIds }
   )
@@ -275,9 +262,4 @@ export const setEventAttendeesFields = (
   return eventsByRegion.mapSuccess((events) => {
     return events
   })
-}
-
-export const refactorEventsToMatchTifEvent = (eventsByRegion: DBTifEvent[]) => {
-  const eventsRefactored = eventsByRegion.map((event) => tifEventResponseFromDatabaseEvent(event))
-  return success(eventsRefactored)
 }

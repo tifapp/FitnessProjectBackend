@@ -1,12 +1,10 @@
-import { SQLExecutable, conn, promiseResult, success } from "TiFBackendUtils"
+import { DBeventAttendance, DBuser, DBuserArrivals, ExtractSuccess, SQLExecutable, UserRelationship, conn, promiseResult, success } from "TiFBackendUtils"
 import { z } from "zod"
 import { ServerEnvironment } from "../env.js"
 import {
   decodeAttendeesListCursor,
   encodeAttendeesListCursor
 } from "../shared/Cursor.js"
-import { DatabaseAttendee, PaginatedAttendeesResponse } from "../shared/SQL.js"
-import { UserToProfileRelationStatus } from "../user/models.js"
 import { ValidatedRouter } from "../validation.js"
 
 const AttendeesRequestSchema = z.object({
@@ -15,8 +13,8 @@ const AttendeesRequestSchema = z.object({
 
 const DecodedCursorValidationSchema = z.object({
   userId: z.string(),
-  joinDate: z.date().nullable(),
-  arrivedAt: z.date().nullable()
+  joinedDateTime: z.date().nullable(),
+  arrivedDateTime: z.date().nullable()
 })
 
 const CursorRequestSchema = z.object({
@@ -27,54 +25,107 @@ const CursorRequestSchema = z.object({
     .refine((arg) => arg >= 1 && arg <= 50)
 })
 
-type DatabaseAttendeeWithRelation = DatabaseAttendee & {
-  themToYou: UserToProfileRelationStatus
-  youToThem: UserToProfileRelationStatus
-}
-
-const mapDatabaseAttendee = (sqlResult: DatabaseAttendeeWithRelation) => {
-  return {
-    id: sqlResult.id,
-    name: sqlResult.name,
-    joinTimestamp: sqlResult.joinTimestamp,
-    profileImageURL: sqlResult.profileImageURL,
-    handle: sqlResult.handle,
-    arrivedAt: sqlResult.arrivedAt,
-    hasArrived: !!sqlResult.hasArrived,
-    role: sqlResult.role,
-    relations: {
-      youToThem: sqlResult.youToThem ?? "not-friends",
-      themToYou: sqlResult.themToYou ?? "not-friends"
+// TODO: use index as cursor instead of userid+joindate
+const getTiFAttendees = (
+  conn: SQLExecutable,
+  eventId: number,
+  userId: string,
+  nextPageUserIdCursor: string,
+  nextPageJoinDateCursor: Date | null,
+  nextPageArrivedDateTimeCursor: Date | null,
+  limit: number
+) =>
+  conn.queryResults<DBeventAttendance & DBuserArrivals & UserRelationship & Pick<DBuser, "id" | "name" | "profileImageURL" | "handle"> & {hasArrived: boolean}>(
+    `SELECT 
+    u.id, 
+    u.profileImageURL, 
+    u.name, 
+    u.handle, 
+    ea.joinedDateTime,
+    ua.arrivedDateTime,
+    ea.role,
+    MAX(CASE WHEN ur.fromUserId = :userId THEN ur.status END) AS fromYouToThem,
+    MAX(CASE WHEN ur.toUserId = :userId THEN ur.status END) AS fromThemToYou,
+    CASE WHEN ua.arrivedDateTime IS NOT NULL THEN true ELSE false END AS hasArrived
+    FROM user AS u 
+    INNER JOIN eventAttendance AS ea ON u.id = ea.userId 
+    INNER JOIN event AS e ON ea.eventId = e.id
+    LEFT JOIN userArrivals AS ua ON ua.userId = u.id
+    LEFT JOIN userRelations AS ur ON (ur.fromUserId = u.id AND ur.toUserId = :userId)
+                                OR (ur.fromUserId = :userId AND ur.toUserId = u.id)
+    WHERE e.id = :eventId
+    AND (:nextPageUserIdCursor = 'firstPage' 
+      OR (ua.arrivedDateTime > :nextPageArrivedDateTimeCursor OR (ua.arrivedDateTime IS NULL AND :nextPageArrivedDateTimeCursor IS NOT NULL))
+        OR (ua.arrivedDateTime IS NULL AND :nextPageArrivedDateTimeCursor IS NULL AND ea.joinedDateTime > :nextPageJoinDateCursor)
+        OR (ua.arrivedDateTime IS NULL AND :nextPageArrivedDateTimeCursor IS NULL AND ea.joinedDateTime = :nextPageJoinDateCursor AND u.id > :nextPageUserIdCursor)
+      )
+    AND (ea.role <> 'hosting' OR :nextPageUserIdCursor = 'firstPage')
+    AND (ua.longitude = e.longitude AND ua.latitude = e.latitude
+      OR ua.arrivedDateTime IS NULL)
+    GROUP BY u.id, ua.arrivedDateTime
+    HAVING fromThemToYou IS NULL OR MAX(CASE WHEN ur.toUserId = :userId THEN ur.status END) <> 'blocked' OR ea.role = 'hosting'
+    ORDER BY
+    CASE WHEN :nextPageUserIdCursor = 'firstPage' THEN CASE WHEN ea.role = 'hosting' THEN 0 ELSE 1 END ELSE 1 END,
+    COALESCE(ua.arrivedDateTime, '9999-12-31 23:59:59.999') ASC,
+    ea.joinedDateTime ASC,
+    u.id ASC
+    LIMIT :limit;
+  `,
+    {
+      eventId,
+      userId,
+      nextPageUserIdCursor,
+      nextPageJoinDateCursor,
+      nextPageArrivedDateTimeCursor,
+      limit
     }
-  }
+  ).mapSuccess((attendees) => attendees.map((attendee) => ({
+    id: attendee.id,
+    name: attendee.name,
+    joinedDateTime: attendee.joinedDateTime,
+    profileImageURL: attendee.profileImageURL,
+    handle: attendee.handle,
+    arrivedDateTime: attendee.arrivedDateTime,
+    hasArrived: !!attendee.hasArrived,
+    role: attendee.role,
+    relations: {
+      fromYouToThem: attendee.fromYouToThem ?? "not-friends",
+      fromThemToYou: attendee.fromThemToYou ?? "not-friends"
+    }
+  })))
+
+export type TiFEventAttendee = ExtractSuccess<ReturnType<typeof getTiFAttendees>>[number] // TODO: Get type from shared package schema
+
+export type PaginatedAttendeesResponse = {
+  nextPageCursor: string
+  totalAttendeeCount: number
+  attendees: TiFEventAttendee[]
 }
 
 const paginatedAttendeesResponse = (
-  attendees: DatabaseAttendeeWithRelation[],
+  attendees: TiFEventAttendee[],
   limit: number,
   totalAttendeeCount: number
 ): PaginatedAttendeesResponse => {
-  const mappedAttendees = attendees.map(mapDatabaseAttendee)
-
-  const hasMoreAttendees = mappedAttendees.length > limit
+  const hasMoreAttendees = attendees.length > limit
 
   const nextPageUserIdCursor = hasMoreAttendees
-    ? mappedAttendees[limit - 1].id
+    ? attendees[limit - 1].id
     : "lastPage"
   const nextPageJoinDateCursor = hasMoreAttendees
-    ? mappedAttendees[limit - 1].joinTimestamp
+    ? attendees[limit - 1].joinedDateTime
     : null
-  const nextPageArrivedAtCursor = hasMoreAttendees
-    ? mappedAttendees[limit - 1].arrivedAt
+  const nextPageArrivedDateTimeCursor = hasMoreAttendees
+    ? attendees[limit - 1].arrivedDateTime
     : null
 
   let paginatedAttendees = []
-  paginatedAttendees = mappedAttendees.slice(0, limit)
+  paginatedAttendees = attendees.slice(0, limit)
 
   const encondedNextPageCursor = encodeAttendeesListCursor({
     userId: nextPageUserIdCursor,
-    joinDate: nextPageJoinDateCursor,
-    arrivedAt: nextPageArrivedAtCursor
+    joinedDateTime: nextPageJoinDateCursor,
+    arrivedDateTime: nextPageArrivedDateTimeCursor
   })
 
   return {
@@ -96,71 +147,15 @@ const getAttendeesCount = (
           user AS u 
           INNER JOIN eventAttendance AS ea ON u.id = ea.userId 
           INNER JOIN event AS e ON ea.eventId = e.id
-          LEFT JOIN userRelations AS themToYouStatus ON themToYouStatus.fromUserId = u.id AND themToYouStatus.toUserId = :userId
-          LEFT JOIN userRelations AS youToThemStatus ON youToThemStatus.fromUserId = :userId AND youToThemStatus.toUserId = u.id
+          LEFT JOIN userRelations AS fromThemToYou ON fromThemToYou.fromUserId = u.id AND fromThemToYou.toUserId = :userId
+          LEFT JOIN userRelations AS fromYouToThem ON fromYouToThem.fromUserId = :userId AND fromYouToThem.toUserId = u.id
       WHERE 
           e.id = :eventId
           AND (
-              (themToYouStatus.status IS NULL OR (themToYouStatus.status != 'blocked' AND themToYouStatus.toUserId = :userId))
+              (fromThemToYou.status IS NULL OR (fromThemToYou.status != 'blocked' AND fromThemToYou.toUserId = :userId))
           );
     `,
     { eventId, userId }
-  )
-
-// TODO: use index as cursor instead of userid+joindate
-const getAttendees = (
-  conn: SQLExecutable,
-  eventId: number,
-  userId: string,
-  nextPageUserIdCursor: string,
-  nextPageJoinDateCursor: Date | null,
-  nextPageArrivedAtCursor: Date | null,
-  limit: number
-) =>
-  conn.queryResults<DatabaseAttendeeWithRelation>(
-    `SELECT 
-    u.id, 
-    u.profileImageURL, 
-    u.name, 
-    u.handle, 
-    ea.joinTimestamp,
-    ua.arrivedAt,
-    ea.role,
-    MAX(CASE WHEN ur.fromUserId = :userId THEN ur.status END) AS youToThem,
-    MAX(CASE WHEN ur.toUserId = :userId THEN ur.status END) AS themToYou,
-    CASE WHEN ua.arrivedAt IS NOT NULL THEN true ELSE false END AS hasArrived
-    FROM user AS u 
-    INNER JOIN eventAttendance AS ea ON u.id = ea.userId 
-    INNER JOIN event AS e ON ea.eventId = e.id
-    LEFT JOIN userArrivals AS ua ON ua.userId = u.id
-    LEFT JOIN userRelations AS ur ON (ur.fromUserId = u.id AND ur.toUserId = :userId)
-                                OR (ur.fromUserId = :userId AND ur.toUserId = u.id)
-    WHERE e.id = :eventId
-    AND (:nextPageUserIdCursor = 'firstPage' 
-      OR (ua.arrivedAt > :nextPageArrivedAtCursor OR (ua.arrivedAt IS NULL AND :nextPageArrivedAtCursor IS NOT NULL))
-        OR (ua.arrivedAt IS NULL AND :nextPageArrivedAtCursor IS NULL AND ea.joinTimestamp > :nextPageJoinDateCursor)
-        OR (ua.arrivedAt IS NULL AND :nextPageArrivedAtCursor IS NULL AND ea.joinTimestamp = :nextPageJoinDateCursor AND u.id > :nextPageUserIdCursor)
-      )
-    AND (ea.role <> 'hosting' OR :nextPageUserIdCursor = 'firstPage')
-    AND (ua.longitude = e.longitude AND ua.latitude = e.latitude
-      OR ua.arrivedAt IS NULL)
-    GROUP BY u.id, ua.arrivedAt
-    HAVING themToYou IS NULL OR MAX(CASE WHEN ur.toUserId = :userId THEN ur.status END) <> 'blocked' OR ea.role = 'hosting'
-    ORDER BY
-    CASE WHEN :nextPageUserIdCursor = 'firstPage' THEN CASE WHEN ea.role = 'hosting' THEN 0 ELSE 1 END ELSE 1 END,
-    COALESCE(ua.arrivedAt, '9999-12-31 23:59:59.999') ASC,
-    ea.joinTimestamp ASC,
-    u.id ASC
-    LIMIT :limit;
-  `,
-    {
-      eventId,
-      userId,
-      nextPageUserIdCursor,
-      nextPageJoinDateCursor,
-      nextPageArrivedAtCursor,
-      limit
-    }
   )
 
 const getAttendeesByEventId = (
@@ -169,18 +164,18 @@ const getAttendeesByEventId = (
   userId: string,
   nextPageUserIdCursor: string,
   nextPageJoinDateCursor: Date | null,
-  nextPageArrivedAtCursor: Date | null,
+  nextPageArrivedDateTimeCursor: Date | null,
   limit: number
 ) => {
   return promiseResult(
     Promise.all([
-      getAttendees(
+      getTiFAttendees(
         conn,
         eventId,
         userId,
         nextPageUserIdCursor,
         nextPageJoinDateCursor,
-        nextPageArrivedAtCursor,
+        nextPageArrivedDateTimeCursor,
         limit
       ),
       getAttendeesCount(conn, eventId, userId)
@@ -208,14 +203,14 @@ export const getAttendeesByEventIdRouter = (
       querySchema: CursorRequestSchema
     },
     (req, res) => {
-      const { userId, joinDate, arrivedAt } = decodeAttendeesListCursor(
+      const { userId, joinedDateTime, arrivedDateTime } = decodeAttendeesListCursor(
         req.query.nextPage
       )
 
       const decodedValues = DecodedCursorValidationSchema.parse({
         userId,
-        joinDate,
-        arrivedAt
+        joinedDateTime,
+        arrivedDateTime
       })
 
       return conn.transaction((tx) =>
@@ -224,8 +219,8 @@ export const getAttendeesByEventIdRouter = (
           Number(req.params.eventId),
           res.locals.selfId,
           decodedValues.userId,
-          decodedValues.joinDate,
-          decodedValues.arrivedAt,
+          decodedValues.joinedDateTime,
+          decodedValues.arrivedDateTime,
           req.query.limit + 1 // Add 1 to handle checking last page
         ).mapSuccess((results) => {
           const attendees = results.attendees
@@ -236,19 +231,19 @@ export const getAttendeesByEventIdRouter = (
 
           return totalAttendeeCount === 0
             ? res
-                .status(404)
-                .send(
-                  paginatedAttendeesResponse(
-                    attendees,
-                    req.query.limit,
-                    totalAttendeeCount
-                  )
+              .status(404)
+              .send(
+                paginatedAttendeesResponse(
+                  attendees,
+                  req.query.limit,
+                  totalAttendeeCount
                 )
+              )
             : attendees.length > 0 &&
               attendees[0].role === "hosting" &&
-              attendees[0].themToYou === "blocked"
-            ? res.status(403).send({ error: "blocked-by-host" })
-            : res
+              attendees[0].relations.fromThemToYou === "blocked"
+              ? res.status(403).send({ error: "blocked-by-host" })
+              : res
                 .status(200)
                 .send(
                   paginatedAttendeesResponse(

@@ -7,7 +7,6 @@ import { z } from "zod"
 import { ServerEnvironment } from "../env.js"
 import { ValidatedRouter } from "../validation.js"
 import { addUserToAttendeeList } from "./joinEventById.js"
-import { EventColorSchema } from "./models.js"
 
 const CreateEventSchema = z
   .object({
@@ -21,11 +20,11 @@ const CreateEventSchema = z
           return new Date(date) > new Date()
         },
         {
-          message: "endTimestamp must be in the future"
+          message: "endDateTime must be in the future"
           // TODO: add minimum duration check
         }
       ),
-    color: EventColorSchema,
+    color: z.string(), // TODO: Use ColorString from shared package
     title: z.string().max(50),
     shouldHideAfterStartDate: z.boolean(),
     isChatEnabled: z.boolean(),
@@ -51,8 +50,8 @@ INSERT INTO event (
   hostId,
   title, 
   description, 
-  startTimestamp, 
-  endTimestamp, 
+  startDateTime, 
+  endDateTime, 
   color, 
   shouldHideAfterStartDate, 
   isChatEnabled, 
@@ -62,8 +61,8 @@ INSERT INTO event (
   :hostId,
   :title, 
   :description, 
-  FROM_UNIXTIME(:startTimestamp), 
-  FROM_UNIXTIME(:endTimestamp), 
+  FROM_UNIXTIME(:startDateTime), 
+  FROM_UNIXTIME(:endDateTime), 
   :color, 
   :shouldHideAfterStartDate, 
   :isChatEnabled, 
@@ -73,8 +72,8 @@ INSERT INTO event (
 `,
     {
       ...input,
-      startTimestamp: input.startDateTime.getTime() / 1000,
-      endTimestamp: input.endDateTime.getTime() / 1000,
+      startDateTime: input.startDateTime.getTime() / 1000,
+      endDateTime: input.endDateTime.getTime() / 1000,
       hostId
     }
   )

@@ -3,7 +3,7 @@
   "info": {
     "title": "tifRestAPI",
     "description": "API used for the TiF mobile app",
-    "version": "2024-03-28T02:46:15.698Z"
+    "version": "2024-03-29T07:59:33.709Z"
   },
   "servers": [
     {
@@ -53,50 +53,7 @@
                     "format": "date-time"
                   },
                   "color": {
-                    "anyOf": [
-                      {
-                        "type": "string",
-                        "enum": [
-                          "#EF6351"
-                        ]
-                      },
-                      {
-                        "type": "string",
-                        "enum": [
-                          "#CB9CF2"
-                        ]
-                      },
-                      {
-                        "type": "string",
-                        "enum": [
-                          "#88BDEA"
-                        ]
-                      },
-                      {
-                        "type": "string",
-                        "enum": [
-                          "#72B01D"
-                        ]
-                      },
-                      {
-                        "type": "string",
-                        "enum": [
-                          "#F7B2BD"
-                        ]
-                      },
-                      {
-                        "type": "string",
-                        "enum": [
-                          "#F4845F"
-                        ]
-                      },
-                      {
-                        "type": "string",
-                        "enum": [
-                          "#F6BD60"
-                        ]
-                      }
-                    ]
+                    "type": "string"
                   },
                   "title": {
                     "type": "string",

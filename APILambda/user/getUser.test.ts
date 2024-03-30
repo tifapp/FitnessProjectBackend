@@ -33,7 +33,7 @@ describe("GetUser tests", () => {
 })
 
 describe("Get blocked user's profile name only", () => {
-  it("should return blocked user's profile name and themToYou status of blocked", async () => {
+  it("should return blocked user's profile name and fromThemToYou status of blocked", async () => {
     const { token, userId, name, handle } = await createUserFlow()
     const { token: blockedToken, userId: blockedUserId } = await createUserFlow()
 
@@ -45,7 +45,7 @@ describe("Get blocked user's profile name only", () => {
       body: {
         name,
         handle,
-        relations: { themToYou: "blocked" }
+        relations: { fromThemToYou: "blocked" }
       }
     })
   })
