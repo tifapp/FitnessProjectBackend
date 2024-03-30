@@ -167,7 +167,7 @@ const getAttendeesByEventId = (
   nextPageArrivedDateTimeCursor: Date | null,
   limit: number
 ) => {
-  return promiseResult(
+  return promiseResult( // make util
     Promise.all([
       getTiFAttendees(
         conn,

@@ -8,6 +8,9 @@ import { ServerEnvironment } from "../env.js"
 import { ValidatedRouter } from "../validation.js"
 import { addUserToAttendeeList } from "./joinEventById.js"
 
+let eventId = 0
+eventId = 1
+
 const CreateEventSchema = z
   .object({
     description: z.string().max(500),
@@ -97,7 +100,7 @@ export const createEventRouter = (
       return conn
         .transaction((tx) =>
           createEvent(tx, req.body, res.locals.selfId)
-            .flatMapSuccess(({ insertId }) =>
+            .flatMapSuccess(({ insertId }) => // make passthrough util, similar to observe but it actually waits for the inner function to complete and become success
               addUserToAttendeeList(
                 tx,
                 res.locals.selfId,
@@ -120,11 +123,11 @@ export const createEventRouter = (
                   return success()
                 }
               }
-              ).mapSuccess(() => ({ insertId }))
+              ).mapSuccess(() => ({ eventId }))
             )
         )
         .mapFailure((error) => res.status(500).json({ error }))
-        .mapSuccess(({ insertId }) => res.status(201).json({ id: insertId }))
+        .mapSuccess(({ eventId }) => res.status(201).json({ id: eventId }))
     }
   )
 }
