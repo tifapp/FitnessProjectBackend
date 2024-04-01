@@ -10,7 +10,7 @@
       "url": "https://623qsegfb9.execute-api.us-west-2.amazonaws.com/{basePath}",
       "variables": {
         "basePath": {
-          "default": "staging"
+          "default": "dev"
         }
       }
     }

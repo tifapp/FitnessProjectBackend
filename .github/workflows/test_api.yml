@@ -60,3 +60,70 @@ jobs:
 
   build:
     uses: ./.github/workflows/build_api.yml
+  
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v2
+        with:
+          node-version: '18'
+
+      - name: Download Artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: api-lambda
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+      
+      - name: Update AWS Lambda env variables
+        run: |
+          if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+            DB_USERNAME=${{ secrets.DATABASE_USERNAME }}
+            DB_PASSWORD=${{ secrets.DATABASE_PASSWORD }}
+          else
+            DB_USERNAME=${{ secrets.DEV_DATABASE_USERNAME }}
+            DB_PASSWORD=${{ secrets.DEV_DATABASE_PASSWORD }}
+          fi
+
+          aws lambda update-function-configuration \
+            --function-name lambdaSQLRoute \
+            --environment "Variables={\
+              DATABASE_HOST=${{ secrets.DATABASE_HOST }},\
+              DATABASE_USERNAME=$DB_USERNAME,\
+              DATABASE_PASSWORD=$DB_PASSWORD,\
+              ABLY_KEY=${{ secrets.ABLY_KEY }},\
+              SLACK_APP_ID=${{ secrets.SLACK_APP_ID }},\
+              COGNITO_USER_POOL_ID=${{ secrets.COGNITO_USER_POOL_ID }}\
+            }"
+
+      - name: Deploy to AWS Lambda
+        run: |
+          aws lambda update-function-code --function-name lambdaSQLRoute --zip-file fileb://dist.zip
+          while true; do
+              update_status=$(aws lambda get-function --function-name lambdaSQLRoute | jq -r '.Configuration.LastUpdateStatus')
+
+              if [[ "$update_status" == "Successful" ]]; then
+                  echo "Update completed successfully."
+                  break
+              elif [[ "$update_status" == "Failed" ]]; then
+                  echo "Update failed."
+                  exit 1
+              else
+                  echo "Update in progress. Waiting..."
+                  sleep 10
+              fi
+          done
+          stageName="dev"
+          aws apigateway put-rest-api --rest-api-id 623qsegfb9 --fail-on-warnings --debug --mode overwrite --body fileb://APILambda/specs.json
+          aws apigateway create-deployment --rest-api-id 623qsegfb9 --stage-name $stageName --description 'Deployed'
