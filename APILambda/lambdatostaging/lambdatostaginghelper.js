@@ -112,11 +112,7 @@ export default class npmExecHelper {
     try {
       console.log("2. Building backend utils js")
 
-      let result = shell.cd(TIFBACKENDUTILS_DIR)
-      if (this.handleShellError(result)) {
-        return result.code
-      }
-      result = shell.exec("npm run build")
+      const result = shell.cd(TIFBACKENDUTILS_DIR)
       if (this.handleShellError(result)) {
         return result.code
       }
@@ -138,19 +134,12 @@ export default class npmExecHelper {
 
       shell.config.globOptions.extglob = true
 
-      result = shell.cp("-R", ["!(test|.github|dist|*.ts)", "dist/"])
+      result = shell.exec("npm ci --omit=dev")
       if (this.handleShellError(result)) {
         return result.code
       }
-      result = shell.cd("./dist")
-      if (this.handleShellError(result)) {
-        return result.code
-      }
-      result = shell.exec("npm pack")
-      if (this.handleShellError(result)) {
-        return result.code
-      }
-      result = shell.cd("..")
+
+      result = shell.cd("../APILambda")
       if (this.handleShellError(result)) {
         return result.code
       }
@@ -166,28 +155,17 @@ export default class npmExecHelper {
     try {
       console.log("4. Installing api lambda dependencies")
 
-      let result = shell.cd("../GeocodingLambda")
+      let result = shell.exec("npm ci")
+      if (this.handleShellError(result)) {
+        return result.code
+      }
+
+      result = shell.exec("npm run build")
       if (this.handleShellError(result)) {
         return result.code
       }
 
       result = shell.exec("npm ci --omit=dev")
-      if (this.handleShellError(result)) {
-        return result.code
-      }
-
-      result = shell.cd("../APILambda")
-      if (this.handleShellError(result)) {
-        return result.code
-      }
-
-      result = shell.exec("npm ci")
-
-      if (this.handleShellError(result)) {
-        return result.code
-      }
-
-      result = shell.exec("npm ci ../TiFBackendUtils/dist/TiFBackendUtils-1.0.0.tgz")
       if (this.handleShellError(result)) {
         return result.code
       }
@@ -203,43 +181,30 @@ export default class npmExecHelper {
     try {
       console.log("5. Run build API Lambda zip")
 
-      let result = shell.cd(APILAMBDA_DIR)
-      if (this.handleShellError(result)) {
-        return result.code
-      }
-      result = shell.exec("npm run build")
-      if (this.handleShellError(result)) {
-        return result.code
-      }
-
-      result = shell.exec("npm ci --omit=dev")
-      if (this.handleShellError(result)) {
-        return result.code
-      }
-
       shell.config.globOptions.extglob = true
 
+      let result = shell.cp("-R", "node_modules", "dist/")
       if (this.handleShellError(result)) {
         return result.code
       }
-
-      result = shell.cp("-R", ["!(test|.github|dist|lambdatostaging|*.ts)", "dist/"])
-      if (this.handleShellError(result)) {
-        return result.code
-      }
-      result = shell.cd("dist")
-      if (this.handleShellError(result)) {
-        return result.code
-      }
-
-      result = shell.rm("-rf", "test")
+      result = shell.cp("*.json", "dist/")
       if (this.handleShellError(result)) {
         return result.code
       }
 
       const zip = new AdmZip()
-      zip.addLocalFolder(".", "dist")
-      zip.writeZip("../dist.zip", (err) => {
+      const folderPath = "./dist"
+      fs.readdirSync(folderPath).forEach(file => {
+        const filePath = path.join(folderPath, file)
+        const stat = fs.statSync(filePath)
+        if (stat.isDirectory()) {
+          zip.addLocalFolder(filePath, file)
+        } else if (!file.endsWith(".ts")) {
+          zip.addLocalFile(filePath, "")
+        }
+      })
+
+      zip.writeZip("./dist.zip", (err) => {
         if (err) {
           console.error("Error writing zip file:", err)
           return 1
@@ -248,15 +213,6 @@ export default class npmExecHelper {
         }
       })
 
-      result = shell.cd("..")
-      if (this.handleShellError(result)) {
-        return result.code
-      }
-
-      result = shell.exec("npm ci")
-      if (this.handleShellError(result)) {
-        return result.code
-      }
       return 0
     } catch (error) {
       console.error("Error:", error)
@@ -288,7 +244,7 @@ export default class npmExecHelper {
       }
 
       try {
-        await lambda.updateFunctionCode(updateFunctionCodeParams).promise()
+        await lambda.updateFunctionCode(updateFunctionCodeParams)
         console.log("Successfully updated lambda")
       } catch (err) {
         console.error(err)
@@ -296,7 +252,7 @@ export default class npmExecHelper {
       }
 
       try {
-        await apigateway.putRestApi(putRestApiParams).promise()
+        await apigateway.putRestApi(putRestApiParams)
         console.log("Successfully added spec file")
       } catch (err) {
         console.error(err)
@@ -304,7 +260,7 @@ export default class npmExecHelper {
       }
 
       try {
-        await apigateway.createDeployment(createDeploymentParams).promise()
+        await apigateway.createDeployment(createDeploymentParams)
         console.log("Successfully deployed")
       } catch (err) {
         console.error(err)
