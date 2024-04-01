@@ -61,16 +61,16 @@ jobs:
   build_for_tests:
     needs: test
     uses: ./.github/workflows/build_api.yml
+    secrets: inherit
     with:
       stage: "test"
-      secrets: inherit
   
   deploy_for_tests:
     needs: build_for_tests
     uses: ./.github/workflows/deploy_api.yml
+    secrets: inherit
     with:
       stage: "dev"
-      secrets: inherit
   
   test_on_dev:
     runs-on: ubuntu-latest
@@ -92,6 +92,14 @@ jobs:
       SLACK_APP_ID: ${{ secrets.SLACK_APP_ID }}
     
     steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Setup Node.js environment
+      uses: actions/setup-node@v2
+      with:
+        node-version: '18'
+        
     - name: Install dependencies
       run: |
         cd TiFBackendUtils
@@ -110,13 +118,13 @@ jobs:
   build:
     needs: test_on_dev
     uses: ./.github/workflows/build_api.yml
+    secrets: inherit
     with:
       stage: "dev"
-      secrets: inherit
   
   deploy:
     needs: build
     uses: ./.github/workflows/deploy_api.yml
+    secrets: inherit
     with:
       stage: "dev"
-      secrets: inherit

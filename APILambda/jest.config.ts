@@ -15,7 +15,7 @@ export default {
   },
   globalSetup: "./test/jestSetup.ts",
   // globalTeardown: "./test/jestTeardown.ts",
-  testTimeout: 20000,
+  testTimeout: 15000,
   setupFilesAfterEnv: ["./test/setupHooks.ts"],
   watchPlugins: [
     "jest-watch-typeahead/filename",
