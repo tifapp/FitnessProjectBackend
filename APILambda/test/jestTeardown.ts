@@ -3,7 +3,7 @@ import { testEnvVars } from "./testEnv"
 
 export default async (): Promise<void> => {
   console.log(process.memoryUsage())
-  if (testEnvVars.TEST_ENV === "staging_tests") {
+  if (testEnvVars.API_ENDPOINT) {
     // delete cognito users
   }
 }

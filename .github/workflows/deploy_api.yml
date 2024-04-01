@@ -1,134 +1,14 @@
-name: Build and Deploy API to AWS Lambda
+name: Deploy API to AWS
 
 on:
-  push:
-    branches:
-      - main
-      - development 
+  workflow_call:
+    inputs:
+      stage:
+        required: true
+        type: string
 
-jobs:
-  build_staging:
-    uses: ./.github/workflows/build_api.yml
-    with:
-      staging: true
-
-  staging_tests:
-    if: github.ref == 'refs/heads/development'
-    needs: build_staging
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    
-    env:
-      DATABASE_HOST: ${{ secrets.DATABASE_HOST }}
-      DATABASE_USERNAME: ${{ secrets.DEV_DATABASE_USERNAME }}
-      DATABASE_PASSWORD: ${{ secrets.DEV_DATABASE_PASSWORD }}
-      AWS_REGION: ${{ secrets.AWS_REGION }}
-      AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
-      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      ABLY_KEY: ${{ secrets.ABLY_KEY }}
-      AWS_LAMBDA_FUNCTION_NAME: 'lambdaSQLRoute'
-      COGNITO_CLIENT_APP_ID: ${{ secrets.COGNITO_CLIENT_APP_ID }}
-      COGNITO_USER_POOL_ID: ${{ secrets.COGNITO_USER_POOL_ID }}
-      API_ENDPOINT: 'https://623qsegfb9.execute-api.us-west-2.amazonaws.com/staging'
-      SLACK_APP_ID: ${{ secrets.SLACK_APP_ID }}
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-        
-      - name: Setup Node.js environment
-        uses: actions/setup-node@v2
-        with:
-          node-version: '18'
-
-      - name: Download Artifact
-        uses: actions/download-artifact@v2
-        with:
-          name: api-lambda
-
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
-      
-      - name: Update AWS Lambda env variables
-        run: |
-          if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
-            DB_USERNAME=${{ secrets.DATABASE_USERNAME }}
-            DB_PASSWORD=${{ secrets.DATABASE_PASSWORD }}
-          else
-            DB_USERNAME=${{ secrets.DEV_DATABASE_USERNAME }}
-            DB_PASSWORD=${{ secrets.DEV_DATABASE_PASSWORD }}
-          fi
-
-          aws lambda update-function-configuration \
-            --function-name lambdaSQLRoute \
-            --environment "Variables={\
-              DATABASE_HOST=${{ secrets.DATABASE_HOST }},\
-              DATABASE_USERNAME=$DB_USERNAME,\
-              DATABASE_PASSWORD=$DB_PASSWORD,\
-              ABLY_KEY=${{ secrets.ABLY_KEY }},\
-              SLACK_APP_ID=${{ secrets.SLACK_APP_ID }},\
-              COGNITO_USER_POOL_ID=${{ secrets.COGNITO_USER_POOL_ID }}\
-            }"
-
-      - name: Deploy to AWS Lambda
-        run: |
-          aws lambda update-function-code --function-name lambdaSQLRoute --zip-file fileb://dist.zip
-          while true; do
-              update_status=$(aws lambda get-function --function-name lambdaSQLRoute | jq -r '.Configuration.LastUpdateStatus')
-
-              if [[ "$update_status" == "Successful" ]]; then
-                  echo "Update completed successfully."
-                  break
-              elif [[ "$update_status" == "Failed" ]]; then
-                  echo "Update failed."
-                  exit 1
-              else
-                  echo "Update in progress. Waiting..."
-                  sleep 10
-              fi
-          done
-          VERSION_NUMBER=$(aws lambda publish-version --function-name lambdaSQLRoute | jq -r '.Version')
-          if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
-            stageName="prod"
-            sed -i 's/:dev/:prod/g' APILambda/specs.json
-            sed -i 's/\"dev\"/\"prod\"/g' APILambda/specs.json
-          else
-            stageName="staging"
-            sed -i 's/:dev/:staging/g' APILambda/specs.json
-            sed -i 's/\"dev\"/\"staging\"/g' APILambda/specs.json
-          fi
-          aws lambda update-alias --function-name lambdaSQLRoute --name $stageName --function-version $VERSION_NUMBER
-          aws apigateway put-rest-api --rest-api-id 623qsegfb9 --fail-on-warnings --debug --mode overwrite --body fileb://APILambda/specs.json
-          aws apigateway create-deployment --rest-api-id 623qsegfb9 --stage-name $stageName --description 'Deployed'
-
-      - name: Install dependencies
-        run: |
-          cd TiFBackendUtils
-          npm ci
-          cd ../GeocodingLambda
-          npm ci
-          cd ../APILambda
-          npm ci
-
-      - name: Authenticate with AWS Cognito and run tests
-        run: |
-          cd APILambda
-          export NODE_OPTIONS="--max_old_space_size=4096"
-          TEST_ENV=staging_tests npm run test:ci
-  
-  build:
-    needs: staging_tests
-    if: ${{ always() }}
-    uses: ./.github/workflows/build_api.yml
-  
+jobs:  
   deploy:
-    if: ${{ always() }}
-    needs: build
     runs-on: ubuntu-latest
 
     steps:
@@ -158,7 +38,7 @@ jobs:
       
       - name: Update AWS Lambda env variables
         run: |
-          if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+          if [[ "${{ inputs.stage }}" == "prod" ]]; then
             DB_USERNAME=${{ secrets.DATABASE_USERNAME }}
             DB_PASSWORD=${{ secrets.DATABASE_PASSWORD }}
           else
@@ -195,13 +75,14 @@ jobs:
               fi
           done
           VERSION_NUMBER=$(aws lambda publish-version --function-name lambdaSQLRoute | jq -r '.Version')
-          if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
-            stageName="prod"
+          if [[ "${{ inputs.stage }}" == "prod" ]]; then
             sed -i 's/:dev/:prod/g' APILambda/specs.json
-          else
-            stageName="staging"
+            sed -i 's/\"dev\"/\"prod\"/g' APILambda/specs.json
+            aws lambda update-alias --function-name lambdaSQLRoute --name ${{ inputs.stage }} --function-version $VERSION_NUMBER
+          else if [[ "${{ inputs.stage }}" == "staging" ]]; then
             sed -i 's/:dev/:staging/g' APILambda/specs.json
+            sed -i 's/\"dev\"/\"staging\"/g' APILambda/specs.json
+            aws lambda update-alias --function-name lambdaSQLRoute --name ${{ inputs.stage }} --function-version $VERSION_NUMBER
           fi
-          aws lambda update-alias --function-name lambdaSQLRoute --name $stageName --function-version $VERSION_NUMBER
-          aws apigateway put-rest-api --rest-api-id 623qsegfb9 --fail-on-warnings --mode overwrite --body fileb://APILambda/specs.json
-          aws apigateway create-deployment --rest-api-id 623qsegfb9 --stage-name $stageName --description 'Deployed'
+          aws apigateway put-rest-api --rest-api-id 623qsegfb9 --fail-on-warnings --debug --mode overwrite --body fileb://APILambda/specs.json
+          aws apigateway create-deployment --rest-api-id 623qsegfb9 --stage-name ${{ inputs.stage }} --description '${{ github.sha }}'
