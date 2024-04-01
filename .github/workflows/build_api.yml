@@ -62,15 +62,14 @@ jobs:
         run: |
           cd TiFBackendUtils
           shopt -s extglob
-          cp -R !(test|.github|dist|*.ts) dist/
+          cp -R node_modules dist/
+          cp *.json dist/
           cd dist
           npm pack
 
       - name: Install dependencies
         run: |
-          cd GeocodingLambda
-          npm ci
-          cd ../APILambda
+          cd APILambda
           npm ci
           npm install ../TiFBackendUtils/dist/TiFBackendUtils-1.0.0.tgz
       
@@ -95,9 +94,9 @@ jobs:
         run: |
           cd APILambda
           shopt -s extglob
-          cp -R !(test|.github|dist|*.ts) dist/
+          cp -R node_modules dist/
+          cp *.json dist/
           cd dist
-          rm -rf test
           zip -r ../dist.zip .
       
       - name: Set output path

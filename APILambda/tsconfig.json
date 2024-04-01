@@ -3,7 +3,7 @@
     "module": "esnext",
     "target": "es2020",
     "strict": true,
-    "declaration": true,
+    "declaration": false,
     "outDir": "dist",
     "removeComments": true,
     "allowJs": true,
