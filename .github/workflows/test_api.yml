@@ -59,15 +59,18 @@ jobs:
           npm run test:ci
 
   build_for_tests:
+    needs: test
     uses: ./.github/workflows/build_api.yml
     with:
       stage: "test"
+      secrets: inherit
   
   deploy_for_tests:
     needs: build_for_tests
     uses: ./.github/workflows/deploy_api.yml
     with:
       stage: "dev"
+      secrets: inherit
   
   test_on_dev:
     runs-on: ubuntu-latest
@@ -109,9 +112,11 @@ jobs:
     uses: ./.github/workflows/build_api.yml
     with:
       stage: "dev"
+      secrets: inherit
   
   deploy:
     needs: build
     uses: ./.github/workflows/deploy_api.yml
     with:
       stage: "dev"
+      secrets: inherit
