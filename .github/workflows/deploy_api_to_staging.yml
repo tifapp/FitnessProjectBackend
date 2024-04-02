@@ -8,12 +8,14 @@ on:
 jobs:
   build_for_tests:
     uses: ./.github/workflows/build_api.yml
+    secrets: inherit
     with:
       stage: "test"
   
   deploy_for_tests:
     needs: build_for_tests
     uses: ./.github/workflows/deploy_api.yml
+    secrets: inherit
     with:
       stage: "staging"
   
@@ -56,11 +58,13 @@ jobs:
     needs: test_on_staging
     if: ${{ always() }}
     uses: ./.github/workflows/build_api.yml
+    secrets: inherit
     with:
       stage: "staging"
   
   deploy:
     needs: build
     uses: ./.github/workflows/deploy_api.yml
+    secrets: inherit
     with:
       stage: "staging"

@@ -7,12 +7,14 @@ on:
 
 jobs:
   build:
-    uses: ./.github/workflows/build_api.yml
+    uses: ./.github/workflows/build_api.yml    
+    secrets: inherit
     with:
       stage: "prod"
   
   deploy:
     needs: build
     uses: ./.github/workflows/deploy_api.yml
+    secrets: inherit
     with:
       stage: "prod"
