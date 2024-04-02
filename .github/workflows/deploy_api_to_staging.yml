@@ -39,6 +39,14 @@ jobs:
       SLACK_APP_ID: ${{ secrets.SLACK_APP_ID }}
     
     steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Setup Node.js environment
+      uses: actions/setup-node@v2
+      with:
+        node-version: '18'
+
     - name: Install dependencies
       run: |
         cd TiFBackendUtils
