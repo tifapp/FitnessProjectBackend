@@ -57,6 +57,7 @@ jobs:
               COGNITO_USER_POOL_ID=${{ secrets.COGNITO_USER_POOL_ID }}\
             }"
 
+      # Ensure the given lambda stage has the same permissions as the $LATEST
       - name: Deploy to AWS Lambda
         run: |
           aws lambda update-function-code --function-name lambdaSQLRoute --zip-file fileb://dist.zip
@@ -75,13 +76,13 @@ jobs:
               fi
           done
           if [[ "${{ inputs.stage }}" == "prod" ]]; then
-            VERSION_NUMBER=$(aws lambda publish-version --function-name lambdaSQLRoute | jq -r '.Version')
+            VERSION_NUMBER=$(aws lambda publish-version --function-name lambdaSQLRoute --description '${{ inputs.stage }} commit: ${{ github.sha }}' | jq -r '.Version')
             sed -i 's/:dev/:prod/g' APILambda/specs.json
             sed -i 's/\"dev\"/\"prod\"/g' APILambda/specs.json
             aws lambda update-alias --function-name lambdaSQLRoute --name ${{ inputs.stage }} --function-version $VERSION_NUMBER
             echo "Updated lambda alias successfully"
           elif [[ "${{ inputs.stage }}" == "staging" ]]; then
-            VERSION_NUMBER=$(aws lambda publish-version --function-name lambdaSQLRoute | jq -r '.Version')
+            VERSION_NUMBER=$(aws lambda publish-version --function-name lambdaSQLRoute --description '${{ inputs.stage }} commit: ${{ github.sha }}' | jq -r '.Version')
             sed -i 's/:dev/:staging/g' APILambda/specs.json
             sed -i 's/\"dev\"/\"staging\"/g' APILambda/specs.json
             aws lambda update-alias --function-name lambdaSQLRoute --name ${{ inputs.stage }} --function-version $VERSION_NUMBER
@@ -89,5 +90,5 @@ jobs:
           fi
           aws apigateway put-rest-api --rest-api-id 623qsegfb9 --fail-on-warnings --debug --mode overwrite --body fileb://APILambda/specs.json
           echo "Updated api specs successfully"
-          aws apigateway create-deployment --rest-api-id 623qsegfb9 --stage-name ${{ inputs.stage }} --description '${{ github.sha }}'
+          aws apigateway create-deployment --rest-api-id 623qsegfb9 --stage-name ${{ inputs.stage }} --description '${{ inputs.stage }} commit: ${{ github.sha }}'
           echo "Created api deployment successfully"
