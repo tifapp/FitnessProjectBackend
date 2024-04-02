@@ -35,7 +35,8 @@ export const handler: any = exponentialFunctionBackoff<
         }).then(placemark => success(placemark))
       ))
     .flatMapSuccess((placemark: Placemark) => {
-      const timezoneIdentifier = placemark.timezoneIdentifier ?? getTimeZone({ latitude, longitude })[0]
+      // rely on geo-tz timezone instead of AWS timezone to align with front-end data
+      const timezoneIdentifier = getTimeZone({ latitude, longitude })[0]
       if (!timezoneIdentifier) { // should we throw if no address exists? ex. pacific ocean
         throw new Error(`Could not find timezone for ${JSON.stringify(location)}.`)
       }

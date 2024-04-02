@@ -3,9 +3,9 @@ name: Build API Lambda
 on:
   workflow_call:
     inputs:
-      staging:
-        required: false
-        type: boolean
+      stage:
+        required: true
+        type: string
     outputs:
       zip-path:
         description: "API Lambda zip"
@@ -17,21 +17,6 @@ jobs:
     
     outputs:
       zip-path: ${{ steps.set-output.outputs.zip-path }}
-
-    env:
-      DATABASE_HOST: ${{ secrets.DATABASE_HOST }}
-      DATABASE_USERNAME: ${{ secrets.DEV_DATABASE_USERNAME }}
-      DATABASE_PASSWORD: ${{ secrets.DEV_DATABASE_PASSWORD }}
-      AWS_REGION: ${{ secrets.AWS_REGION }}
-      AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
-      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      ABLY_KEY: ${{ secrets.ABLY_KEY }}
-      AWS_LAMBDA_FUNCTION_NAME: 'lambdaSQLRoute'
-      COGNITO_CLIENT_APP_ID: ${{ secrets.COGNITO_CLIENT_APP_ID }}
-      COGNITO_USER_POOL_ID: ${{ secrets.COGNITO_USER_POOL_ID }}
-      API_ENDPOINT: 'https://623qsegfb9.execute-api.us-west-2.amazonaws.com/staging'
-      SLACK_APP_ID: ${{ secrets.SLACK_APP_ID }}
 
     steps:
       - name: Checkout code
@@ -74,7 +59,7 @@ jobs:
           npm install ../TiFBackendUtils/dist/TiFBackendUtils-1.0.0.tgz
       
       - name: Use staging index
-        if: inputs.staging == true
+        if: inputs.stage == 'test'
         run: |
           cd APILambda
           rm -f index.ts

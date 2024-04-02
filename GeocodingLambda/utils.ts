@@ -5,7 +5,9 @@ import {
 } from "@aws-sdk/client-location"
 import { SQLExecutable } from "TiFBackendUtils/SQLExecutable/index.js"
 import { LocationCoordinate2D, Placemark } from "TiFBackendUtils/location.js"
-import { find } from "geo-tz"
+// https://github.com/evansiroky/node-geo-tz/commit/1b11eda7824a1e6dbc0b0ff65bfea1f50c20d3fa
+// eslint-disable-next-line import/extensions
+import { find } from "geo-tz/dist/find-now"
 
 const locationClient = new LocationClient({ region: process.env.AWS_REGION })
 
