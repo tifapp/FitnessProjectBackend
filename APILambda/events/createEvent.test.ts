@@ -84,7 +84,7 @@ describe("CreateEvent tests", () => {
     const resp = await callGetEvent(token, eventIds[0])
     expect(resp).toMatchObject({
       status: 200,
-      body: { id: expect.anything(), location: { placemark: {}, timezoneIdentifier: "Africa/Tripoli" } }
+      body: { id: expect.anything(), location: { placemark: {}, timezoneIdentifier: "Africa/Cairo" } }
     })
     expect(parseInt(resp.body.id)).not.toBeNaN()
   })
