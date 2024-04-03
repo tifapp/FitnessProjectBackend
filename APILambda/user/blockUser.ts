@@ -1,8 +1,7 @@
-import { SQLExecutable, conn } from "TiFBackendUtils"
+import { SQLExecutable, conn, userWithIdExists } from "TiFBackendUtils"
+import { z } from "zod"
 import { userNotFoundResponse } from "../shared/Responses.js"
 import { ValidatedRouter } from "../validation.js"
-import { userWithIdExists } from "./SQL.js"
-import { z } from "zod"
 
 const BlockUserRequestSchema = z.object({
   userId: z.string().uuid()
@@ -44,8 +43,7 @@ const blockUser = (
     .flatMapSuccess(() => {
       return conn.queryResults(
         `
-      UPDATE userRelations
-      SET status = 'not-friends'
+      DELETE FROM userRelations
       WHERE fromUserId = :toUserId AND toUserId = :fromUserId AND status != 'blocked';
       `,
         { fromUserId, toUserId }

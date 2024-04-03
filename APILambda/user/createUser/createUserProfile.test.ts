@@ -1,6 +1,8 @@
-import { callPostUser } from "../test/apiCallers/users.js"
+import { callPostUser } from "../../test/apiCallers/users.js"
+import { testEnvVars } from "../../test/testEnv.js"
 
-describe("Create User Profile tests", () => {
+// TODO: Remove after we get company email so we can have unlimited test users
+(testEnvVars.API_ENDPOINT?.endsWith("dev") ? describe.skip : describe)("Create User Profile tests", () => {
   // TODO: Move to separate unit test file for auth middleware
   it("should 401 when no token is passed", async () => {
     const resp = await callPostUser()

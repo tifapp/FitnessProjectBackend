@@ -1,0 +1,20 @@
+name: Build and Deploy API to AWS Lambda
+
+on:
+  push:
+    branches:
+      - main 
+
+jobs:
+  build:
+    uses: ./.github/workflows/build_api.yml    
+    secrets: inherit
+    with:
+      stage: "prod"
+  
+  deploy:
+    needs: build
+    uses: ./.github/workflows/deploy_api.yml
+    secrets: inherit
+    with:
+      stage: "prod"

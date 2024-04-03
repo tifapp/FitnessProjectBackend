@@ -1,6 +1,6 @@
 import { LocationCoordinate2D, LocationCoordinates2DSchema, SQLExecutable, conn, failure, success } from "TiFBackendUtils"
 import { z } from "zod"
-import { ServerEnvironment } from "../../env.js"
+import { ServerEnvironment, SetArrivalStatusEnvironment } from "../../env.js"
 import { ValidatedRouter } from "../../validation.js"
 import { getUpcomingEventsByRegion } from "./getUpcomingEvents.js"
 
@@ -49,9 +49,9 @@ export const deleteMaxArrivals = (
     .flatMapSuccess((arrivalCount) => arrivalCount > arrivalsLimit
       ? conn.queryFirstResult<{userId: string, latitude: number, longitude: number}>(
         `
-        SELECT arrivedAt FROM userArrivals 
+        SELECT arrivedDateTime FROM userArrivals 
         WHERE userId = :userId 
-        ORDER BY arrivedAt ASC 
+        ORDER BY arrivedDateTime ASC 
         LIMIT 1 
       `,
         { userId }
@@ -78,26 +78,25 @@ export const insertArrival = (
       `
         INSERT INTO userArrivals (userId, latitude, longitude)
         VALUES (:userId, :latitude, :longitude)
-        ON DUPLICATE KEY UPDATE arrivedAt = CURRENT_TIMESTAMP;    
+        ON DUPLICATE KEY UPDATE arrivedDateTime = CURRENT_TIMESTAMP;    
       `,
       { userId, latitude: coordinate.latitude, longitude: coordinate.longitude }
     )
 
 const setArrivalStatusTransaction = (
-  environment: ServerEnvironment,
+  { maxArrivals }: SetArrivalStatusEnvironment,
   userId: string,
   request: SetArrivalStatusInput
 ) =>
   conn.transaction((tx) => deleteOldArrivals(tx, userId, request.coordinate)
-    .flatMapSuccess(() => deleteMaxArrivals(tx, userId, environment.maxArrivals))
+    .flatMapSuccess(() => deleteMaxArrivals(tx, userId, maxArrivals))
     .flatMapSuccess(() =>
       insertArrival(
         tx,
         userId,
         request.coordinate
       ))
-    .flatMapSuccess(() => getUpcomingEventsByRegion(tx, userId))
-  )
+    .flatMapSuccess(() => getUpcomingEventsByRegion(tx, userId)))
     .mapSuccess((eventRegions) => ({ status: 200, upcomingRegions: eventRegions }))
 
 export const setArrivalStatusRouter = (

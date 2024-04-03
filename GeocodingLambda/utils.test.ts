@@ -1,5 +1,5 @@
 import { Place } from "@aws-sdk/client-location"
-import { SearchForPositionResultToPlacemark } from "./locationUtils.js"
+import { SearchForPositionResultToPlacemark } from "./utils.js"
 
 describe("SearchForPositionResultToPlacemark", () => {
   test("Should convert a Place object to a Placemark correctly", () => {
@@ -17,14 +17,16 @@ describe("SearchForPositionResultToPlacemark", () => {
     } as Place
 
     expect(SearchForPositionResultToPlacemark(coordinate, place)).toEqual({
-      lat: 12.34,
-      lon: 56.78,
+      latitude: 12.34,
+      longitude: 56.78,
       name: "Sample Location",
       city: "Sample Neighborhood",
-      country: "Sample Country",
+      country: undefined,
+      isoCountryCode: "Sample Country",
+      postalCode: undefined,
+      region: "Sample Region",
       street: "Sample Street",
-      street_num: "1234",
-      unit_number: "5678"
+      streetNumber: "1234"
     })
   })
 
@@ -33,14 +35,13 @@ describe("SearchForPositionResultToPlacemark", () => {
     const place = {} as Place
 
     expect(SearchForPositionResultToPlacemark(coordinate, place)).toEqual({
-      lat: 12.34,
-      lon: 56.78,
-      name: "Unknown Location",
-      city: "Unknown Place",
-      country: "Unknown Country",
-      street: "Unknown Address",
-      street_num: "",
-      unit_number: ""
+      latitude: 12.34,
+      longitude: 56.78,
+      name: undefined,
+      city: undefined,
+      country: undefined,
+      street: undefined,
+      streetNumber: undefined
     })
   })
 
@@ -73,7 +74,7 @@ describe("SearchForPositionResultToPlacemark", () => {
     } as Place
 
     expect(SearchForPositionResultToPlacemark(coordinate, place).country).toEqual(
-      "Sample Region"
+      undefined
     )
   })
 })

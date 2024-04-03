@@ -27,10 +27,10 @@ describe("GetSelf tests", () => {
       body: expect.objectContaining({
         id: userId,
         bio: null,
-        updatedAt: null,
         profileImageURL: null
       })
     })
-    expect(Date.parse(resp.body.creationDate)).not.toBeNaN()
+    expect(Date.parse(resp.body.createdDateTime)).not.toBeNaN()
+    expect(Date.parse(resp.body.updatedDateTime)).not.toBeNaN()
   })
 })

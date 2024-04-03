@@ -13,8 +13,8 @@ describe("Insert event CheckConstraint test", () => {
         conn,
         {
           ...testEventInput,
-          startTimestamp: new Date(1000),
-          endTimestamp: new Date(0)
+          startDateTime: new Date(1000),
+          endDateTime: new Date(0)
         },
         randomUUID()
       )

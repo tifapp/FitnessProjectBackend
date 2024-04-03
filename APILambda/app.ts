@@ -4,14 +4,16 @@ import { getUpcomingEventsByRegionRouter } from "./events/arrivals/getUpcomingEv
 import { setArrivalStatusRouter } from "./events/arrivals/setArrivalStatus.js"
 import { setDepartureRouter } from "./events/arrivals/setDeparture.js"
 import { createEventRouter } from "./events/createEvent.js"
+import { getAttendeesByEventIdRouter } from "./events/getAttendees.js"
 import { getChatTokenRouter } from "./events/getChatToken.js"
 import { getEventByIdRouter } from "./events/getEventById.js"
 import { getEventsByRegionRouter } from "./events/getEventsByRegion.js"
 import { joinEventRouter } from "./events/joinEventById.js"
 import { leaveEventRouter } from "./events/leaveEvent.js"
+import { endEventRouter } from "./events/endEvent.js"
 import { autocompleteUsersRouter } from "./user/autocompleteUsers.js"
 import { createBlockUserRouter } from "./user/blockUser.js"
-import { createUserProfileRouter } from "./user/createUserProfile.js"
+import { createUserProfileRouter } from "./user/createUser/createUserProfile.js"
 import { deleteUserAccountRouter } from "./user/deleteUserAccount.js"
 import { getSelfRouter } from "./user/getSelf.js"
 import { getUserRouter } from "./user/getUser.js"
@@ -21,7 +23,7 @@ import { getUserSettingsRouter } from "./user/settings/getUserSettings.js"
 import { updateUserSettingsRouter } from "./user/settings/updateUserSettings.js"
 import { createUnblockUserRouter } from "./user/unblockUser.js"
 import { updateUserProfileRouter } from "./user/updateUserProfile.js"
-import { createValidatedRouter } from "./validation.js"
+import { ValidatedRouter, createValidatedRouter } from "./validation.js"
 
 /**
  * Creates an application instance.
@@ -36,6 +38,7 @@ export const createApp = () => {
   return app
 }
 
+// instead of here, should be aggregated in the jest suite
 export const addBenchmarking = (app: Application) => {
   app.use((req, res, next) => {
     const start = Date.now()
@@ -55,22 +58,22 @@ export const addBenchmarking = (app: Application) => {
   })
 }
 
-const addEventRoutes = (environment: ServerEnvironment) => {
-  const router = createValidatedRouter()
+const addEventRoutes = (router: ValidatedRouter, environment: ServerEnvironment) => {
   createEventRouter(environment, router)
   getChatTokenRouter(environment, router)
   getEventByIdRouter(environment, router)
   joinEventRouter(environment, router)
   leaveEventRouter(environment, router)
+  endEventRouter(environment, router)
   setArrivalStatusRouter(environment, router)
   setDepartureRouter(environment, router)
   getUpcomingEventsByRegionRouter(environment, router)
+  getAttendeesByEventIdRouter(environment, router)
   getEventsByRegionRouter(environment, router)
   return router
 }
 
-const addUserRoutes = (environment: ServerEnvironment) => {
-  const router = createValidatedRouter()
+const addUserRoutes = (router: ValidatedRouter, environment: ServerEnvironment) => {
   autocompleteUsersRouter(environment, router)
   createUserProfileRouter(environment, router)
   deleteUserAccountRouter(environment, router)
@@ -93,6 +96,6 @@ const addUserRoutes = (environment: ServerEnvironment) => {
  * @param environment see {@link ServerEnvironment}
  */
 export const addRoutes = (app: Application, environment: ServerEnvironment) => {
-  app.use("/event", addEventRoutes(environment))
-  app.use("/user", addUserRoutes(environment))
+  app.use("/event", addEventRoutes(createValidatedRouter(environment.routeCollector?.("/event")), environment))
+  app.use("/user", addUserRoutes(createValidatedRouter(environment.routeCollector?.("/user")), environment))
 }

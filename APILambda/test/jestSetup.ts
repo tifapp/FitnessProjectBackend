@@ -1,10 +1,8 @@
 /* eslint-disable import/extensions */ // todo: allow ts imports here
-import dotenv from "dotenv"
 import { TestUser, TestUserInput } from "../global"
-import { createCognitoAuthToken } from "./createCognitoUsers"
+import { createCognitoAuthToken, createCognitoTestAuthToken } from "./createCognitoUsers"
 import { createMockAuthToken } from "./createMockUsers"
-
-dotenv.config()
+import { testEnvVars } from "./testEnv"
 
 const setGlobalVariables = async ({ createUser, maxUsers }: {createUser: (user?: TestUserInput) => Promise<TestUser>, maxUsers: number}) => {
   global.registerUser = createUser
@@ -17,9 +15,11 @@ const setGlobalVariables = async ({ createUser, maxUsers }: {createUser: (user?:
 export default async (): Promise<void> => {
   process.env.TZ = "UTC"
 
-  if (process.env.TEST_ENV === "staging") {
-    await setGlobalVariables({ createUser: createCognitoAuthToken, maxUsers: 10 })
+  if (testEnvVars.API_ENDPOINT?.endsWith("dev")) { // TODO: Remove after we get company email so we can have unlimited test users
+    await setGlobalVariables({ createUser: createCognitoTestAuthToken, maxUsers: 5 })
+  } else if (testEnvVars.API_ENDPOINT?.endsWith("staging")) {
+    await setGlobalVariables({ createUser: createCognitoAuthToken, maxUsers: 5 })
   } else {
-    await setGlobalVariables({ createUser: createMockAuthToken, maxUsers: 10 })
+    await setGlobalVariables({ createUser: createMockAuthToken, maxUsers: 5 })
   }
 }

@@ -1,7 +1,6 @@
-import { SQLExecutable, conn } from "TiFBackendUtils"
-import { ServerEnvironment } from "../../env.js"
-import { DatabaseEvent } from "../../shared/SQL.js"
-import { ValidatedRouter } from "../../validation.js"
+import { SQLExecutable, UpcomingEvent, conn } from "TiFBackendUtils";
+import { ServerEnvironment } from "../../env.js";
+import { ValidatedRouter } from "../../validation.js";
 
 type EventRegion = {
   eventIds: number[];
@@ -10,40 +9,42 @@ type EventRegion = {
     longitude: number;
   };
   arrivalRadiusMeters: number;
-  isArrived: boolean;
+  hasArrived: boolean;
 }
 
-const mapEventsToRegions = (events: DatabaseEvent[]): EventRegion[] => {
+const mapEventsToRegions = (events: UpcomingEvent[]): EventRegion[] => {
   const eventRegions: Record<string, EventRegion> = {}
 
   events.forEach(event => {
-    const key = `${event.arrivalStatus}-${event.latitude}-${event.longitude}`
+    const key = `${event.hasArrived}-${event.latitude}-${event.longitude}`
 
     if (!eventRegions[key]) {
       eventRegions[key] = {
         eventIds: [],
         coordinate: { latitude: event.latitude, longitude: event.longitude },
-        isArrived: event.arrivalStatus === "arrived",
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        hasArrived: event.hasArrived === 1,
         arrivalRadiusMeters: 500 // TODO: Parameterize
       }
     }
 
-    eventRegions[key].eventIds.push(parseInt(event.id))
+    eventRegions[key].eventIds.push(event.id)
   })
 
   return Object.values(eventRegions)
 }
 
 // TODO: 24 hour window should be parameterized based on env variable
-export const getUpcomingEventsByRegion = (conn: SQLExecutable, userId: string) => conn.queryResults<DatabaseEvent>(
+export const getUpcomingEventsByRegion = (conn: SQLExecutable, userId: string) => conn.queryResults<UpcomingEvent>(
   `
   SELECT 
     e.*, 
-    ua.arrivedAt,
+    ua.arrivedDateTime,
     CASE 
-      WHEN ua.userId IS NOT NULL THEN "arrived"
-      ELSE "not-arrived"
-    END AS arrivalStatus
+      WHEN ua.userId IS NOT NULL THEN TRUE
+      ELSE FALSE
+    END AS hasArrived
   FROM 
     event e
   LEFT JOIN 
@@ -54,12 +55,12 @@ export const getUpcomingEventsByRegion = (conn: SQLExecutable, userId: string) =
     eventAttendance ea ON e.id = ea.eventId AND ea.userId = :userId
   WHERE 
     (
-      TIMESTAMPDIFF(HOUR, NOW(), e.startTimestamp) BETWEEN 0 AND 24
+      TIMESTAMPDIFF(HOUR, NOW(), e.startDateTime) BETWEEN 0 AND 24
       OR 
-      (e.startTimestamp <= NOW() AND NOW() <= e.endTimestamp)
+      (e.startDateTime <= NOW() AND NOW() <= e.endDateTime)
     )
   ORDER BY 
-    e.startTimestamp ASC
+    e.startDateTime ASC
   LIMIT 100;
   `,
   { userId }

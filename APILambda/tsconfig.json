@@ -3,7 +3,7 @@
     "module": "esnext",
     "target": "es2020",
     "strict": true,
-    "declaration": true,
+    "declaration": false,
     "outDir": "dist",
     "removeComments": true,
     "allowJs": true,
@@ -15,6 +15,7 @@
   "exclude": [
     "**/*.test.ts",
     "**/*.spec.ts",
-    "node_modules"
+    "node_modules",
+    "test"
   ]
 }

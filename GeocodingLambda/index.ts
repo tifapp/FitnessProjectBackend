@@ -4,30 +4,43 @@
 
 import {
   LocationCoordinate2D,
+  Placemark,
   Result,
   Retryable,
-  SearchClosestAddressToCoordinates,
+  conn,
   exponentialFunctionBackoff,
+  promiseResult,
   success
 } from "TiFBackendUtils"
-import { addPlacemarkToDB, checkExistingPlacemarkInDB } from "./utils.js"
+import { SearchClosestAddressToCoordinates, addPlacemarkToDB, checkExistingPlacemarkInDB, getTimeZone } from "./utils.js"
 
-interface LocationSearchRequest extends Retryable {
-  coordinate: LocationCoordinate2D
-}
+interface LocationSearchRequest extends Retryable, LocationCoordinate2D {}
 
 // TODO: Fix handler type, fix util dependencies
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const handler: any = exponentialFunctionBackoff<
   LocationSearchRequest,
   Result<"placemark-successfully-inserted", "placemark-already-exists">
->(
-  async (event: LocationSearchRequest) =>
-    checkExistingPlacemarkInDB({
-      latitude: parseFloat(event.coordinate.latitude.toFixed(10)),
-      longitude: parseFloat(event.coordinate.longitude.toFixed(10))
+>(async ({ latitude, longitude }: LocationCoordinate2D) =>
+  checkExistingPlacemarkInDB(conn, {
+    // WARN: remember to keep precision in sync with the type of lat/lon in the db
+    latitude: parseFloat(latitude.toFixed(7)),
+    longitude: parseFloat(longitude.toFixed(7))
+  })
+    .flatMapSuccess(() =>
+      promiseResult(
+        SearchClosestAddressToCoordinates({
+          latitude,
+          longitude
+        }).then(placemark => success(placemark))
+      ))
+    .flatMapSuccess((placemark: Placemark) => {
+      // rely on geo-tz timezone instead of AWS timezone to align with front-end data
+      const timezoneIdentifier = getTimeZone({ latitude, longitude })[0]
+      if (!timezoneIdentifier) { // should we throw if no address exists? ex. pacific ocean
+        throw new Error(`Could not find timezone for ${JSON.stringify(location)}.`)
+      }
+      return addPlacemarkToDB(conn, placemark, timezoneIdentifier)
     })
-      .flatMapSuccess(async () => success(await SearchClosestAddressToCoordinates(event.coordinate)))
-      .flatMapSuccess((placemark) => addPlacemarkToDB(placemark))
-      .mapSuccess(() => "placemark-successfully-inserted" as const)
+    .mapSuccess(() => "placemark-successfully-inserted" as const)
 )

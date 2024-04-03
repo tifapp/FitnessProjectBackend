@@ -1,35 +1,59 @@
-import { SQLExecutable, conn, failure, success } from "TiFBackendUtils"
+import { LocationCoordinate2D, LocationCoordinates2DSchema, SQLExecutable, conn, failure, success } from "TiFBackendUtils"
 import { z } from "zod"
 import { ServerEnvironment } from "../env.js"
 import { ValidatedRouter } from "../validation.js"
+import { getUpcomingEventsByRegion } from "./arrivals/getUpcomingEvents.js"
+import { insertArrival } from "./arrivals/setArrivalStatus.js"
 import { checkChatPermissionsTransaction } from "./getChatToken.js"
 import { getEventById } from "./getEventById.js"
 import { isUserNotBlocked } from "./sharedSQL.js"
 
-const joinEventSchema = z.object({
+const joinEventParamsSchema = z.object({
   eventId: z.string()
 })
 
-const joinEvent = (conn: SQLExecutable, userId: string, eventId: number) => {
+const joinEventBodySchema = z
+  .object({
+    region: z.object({
+      coordinate: LocationCoordinates2DSchema,
+      arrivalRadiusMeters: z.number()
+    })
+  }).optional()
+
+export type JoinEventInput = z.infer<typeof joinEventBodySchema>
+
+const joinEvent = (conn: SQLExecutable, userId: string, eventId: number, coordinate?: LocationCoordinate2D) => {
   return conn.transaction((tx) =>
-    getEventById(conn, eventId, userId)
+    getEventById(tx, eventId, userId)
       .flatMapSuccess((event) =>
-        isUserNotBlocked(tx, event.hostId, userId).withSuccess(event)
-      )
-      .flatMapSuccess((event) =>
-        new Date() < event.endTimestamp // perform in sql?
-          ? addUserToAttendeeList(tx, userId, eventId).flatMapSuccess(
-            ({ rowsAffected }) =>
-              rowsAffected > 0 ? success(201) : success(200)
+        (new Date() < event.endDateTime && !event.endedDateTime // perform in sql?
+          ? isUserNotBlocked(tx, event.hostId, userId)
+          : failure("event-has-ended" as const))
+          .flatMapSuccess(() =>
+            (coordinate && event.longitude === coordinate.longitude && event.latitude === coordinate.latitude
+              ? insertArrival(
+                tx,
+                userId,
+                coordinate
+              ).mapSuccess(() => ({ hasArrived: true }))
+              : success(({ hasArrived: false })))
+              .flatMapSuccess(({ hasArrived }) =>
+                addUserToAttendeeList(tx, userId, eventId, "attending")
+                  .flatMapSuccess(
+                    ({ rowsAffected }) =>
+                      rowsAffected > 0 ? success({ status: 201 }) : success({ status: 200 })
+                  )
+                  .flatMapSuccess(({ status }) =>
+                    checkChatPermissionsTransaction(eventId, userId)
+                      .flatMapSuccess((chatPermissions) => getUpcomingEventsByRegion(tx, userId)
+                        .mapSuccess(upcomingRegions => (
+                          { ...chatPermissions, status, hasArrived, upcomingRegions }
+                        ))
+                      )
+                  )
+              )
           )
-          : failure("event-has-ended" as const)
-      )
-      .flatMapSuccess((status) =>
-        checkChatPermissionsTransaction(eventId, userId)
-          .mapSuccess(chatPermissions => (
-            { ...chatPermissions, status }
-          )
-          )
+
       )
   )
 }
@@ -39,11 +63,12 @@ const joinEvent = (conn: SQLExecutable, userId: string, eventId: number) => {
 export const addUserToAttendeeList = (
   conn: SQLExecutable,
   userId: string,
-  eventId: number
+  eventId: number,
+  role: string
 ) =>
   conn.queryResult(
-    "INSERT IGNORE INTO eventAttendance (userId, eventId) VALUES (:userId, :eventId)",
-    { userId, eventId }
+    "INSERT IGNORE INTO eventAttendance (userId, eventId, role) VALUES (:userId, :eventId, :role)",
+    { userId, eventId, role }
   )
 
 /**
@@ -60,9 +85,9 @@ export const joinEventRouter = (
    */
   router.postWithValidation(
     "/join/:eventId",
-    { pathParamsSchema: joinEventSchema },
+    { pathParamsSchema: joinEventParamsSchema, bodySchema: joinEventBodySchema },
     (req, res) =>
-      joinEvent(conn, res.locals.selfId, Number(req.params.eventId))
+      joinEvent(conn, res.locals.selfId, Number(req.params.eventId), req.body?.region?.coordinate)
         .mapFailure((error) =>
           res
             .status(
@@ -74,6 +99,6 @@ export const joinEventRouter = (
             )
             .json({ error })
         )
-        .mapSuccess((event) => res.status(event.status).json({ id: event.id, token: event.tokenRequest }))
+        .mapSuccess(({ status, id, tokenRequest, hasArrived, upcomingRegions }) => res.status(status).json({ id, token: tokenRequest, hasArrived, upcomingRegions }))
   )
 }

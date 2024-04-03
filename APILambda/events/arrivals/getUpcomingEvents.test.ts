@@ -17,50 +17,50 @@ describe("getUpcomingEvents tests", () => {
   it("should return 200 with an array of events if the user has upcoming events", async () => {
     const eventLocation = { latitude: 50, longitude: 50 }
 
-    const { attendeeToken, hostToken, eventIds: [, arrivedTestEventId, ongoingTestEventId, notArrivedTestEventId] } = await createEventFlow([
+    const { attendeesList, host, eventIds: [arrivedTestEventId, ongoingTestEventId, notArrivedTestEventId] } = await createEventFlow([
       {
         ...eventLocation,
-        startTimestamp: dayjs().add(1, "month").toDate(),
-        endTimestamp: dayjs().add(1, "year").toDate()
+        startDateTime: dayjs().add(12, "hour").toDate(),
+        endDateTime: dayjs().add(1, "year").toDate()
       },
       {
         ...eventLocation,
-        startTimestamp: dayjs().add(12, "hour").toDate(),
-        endTimestamp: dayjs().add(1, "year").toDate()
-      },
-      {
-        ...eventLocation,
-        startTimestamp: dayjs().subtract(12, "hour").toDate(),
-        endTimestamp: dayjs().add(1, "year").toDate()
+        startDateTime: dayjs().subtract(12, "hour").toDate(),
+        endDateTime: dayjs().add(1, "year").toDate()
       },
       {
         latitude: 25,
         longitude: 25,
-        startTimestamp: dayjs().add(12, "hour").toDate(),
-        endTimestamp: dayjs().add(1, "year").toDate()
+        startDateTime: dayjs().add(12, "hour").toDate(),
+        endDateTime: dayjs().add(1, "year").toDate()
+      },
+      {
+        ...eventLocation,
+        startDateTime: dayjs().add(1, "month").toDate(),
+        endDateTime: dayjs().add(1, "year").toDate()
       }
-    ])
+    ], 1)
 
     // unrelated event that should not appear in upcoming list
-    await callCreateEvent(hostToken,
+    await callCreateEvent(host.token,
       {
         ...testEventInput,
         ...eventLocation,
-        startTimestamp: dayjs().add(12, "hour").toDate(),
-        endTimestamp: dayjs().add(1, "year").toDate()
+        startDateTime: dayjs().add(12, "hour").toDate(),
+        endDateTime: dayjs().add(1, "year").toDate()
       }
     )
 
-    await callSetArrival(attendeeToken, {
+    await callSetArrival(attendeesList[1].token, {
       coordinate: eventLocation
     })
 
-    expect(await callGetUpcomingEvents(attendeeToken)).toMatchObject({
+    expect(await callGetUpcomingEvents(attendeesList[1].token)).toMatchObject({
       status: 200,
       body: {
         upcomingRegions: [{
           arrivalRadiusMeters: 500,
-          isArrived: true,
+          hasArrived: true,
           eventIds: [
             ongoingTestEventId,
             arrivedTestEventId
@@ -72,7 +72,7 @@ describe("getUpcomingEvents tests", () => {
         },
         {
           arrivalRadiusMeters: 500,
-          isArrived: false,
+          hasArrived: false,
           eventIds: [
             notArrivedTestEventId
           ],

@@ -28,8 +28,8 @@ describe("Update Settings tests", () => {
       body: ""
     })
 
-    const settings1LastUpdatedAt = await callGetSettings(token).then(
-      (resp) => new Date(resp.body.lastUpdatedAt)
+    const settings1UpdatedDateTime = await callGetSettings(token).then(
+      (resp) => new Date(resp.body.updatedDateTime)
     )
 
     const updateResp2 = await callPatchSettings(token, {
@@ -50,13 +50,35 @@ describe("Update Settings tests", () => {
         isMentionsNotificationsEnabled: true,
         isChatNotificationsEnabled: false,
         isFriendRequestNotificationsEnabled: true,
-        lastUpdatedAt: expect.anything()
+        updatedDateTime: expect.anything()
       })
     })
-    const settings2LastUpdatedAt = new Date(settings2Resp.body.lastUpdatedAt)
-    expect(settings2LastUpdatedAt.getTime()).toBeGreaterThanOrEqual(
-      settings1LastUpdatedAt.getTime()
+    const settings2UpdatedDateTime = new Date(settings2Resp.body.updatedDateTime)
+    expect(settings2UpdatedDateTime.getTime()).toBeGreaterThanOrEqual(
+      settings1UpdatedDateTime.getTime()
     )
+
+    const updateResp3 = await callPatchSettings(token, {
+      isCrashReportingEnabled: true
+    })
+    expect(withEmptyResponseBody(updateResp3)).toMatchObject({
+      status: 204,
+      body: ""
+    })
+
+    const settings3Resp = await callGetSettings(token)
+    expect(settings3Resp).toMatchObject({
+      status: 200,
+      body: expect.objectContaining({
+        isAnalyticsEnabled: true,
+        isCrashReportingEnabled: true,
+        isEventNotificationsEnabled: true,
+        isMentionsNotificationsEnabled: true,
+        isChatNotificationsEnabled: false,
+        isFriendRequestNotificationsEnabled: true,
+        updatedDateTime: expect.anything()
+      })
+    })
   })
 
   it("should 400 for an invalid settings body", async () => {

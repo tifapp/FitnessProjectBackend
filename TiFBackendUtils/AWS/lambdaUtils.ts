@@ -1,10 +1,11 @@
-import AWS from "aws-sdk"
+import { EventBridge } from "@aws-sdk/client-eventbridge"
+import { InvocationType, Lambda } from "@aws-sdk/client-lambda"
 import dotenv from "dotenv"
 
 dotenv.config()
 
-const eventbridge = new AWS.EventBridge({ apiVersion: "2023-04-20" })
-const lambda = new AWS.Lambda()
+const eventbridge = new EventBridge({ apiVersion: "2023-04-20" })
+const lambda = new Lambda()
 
 const createCronExpressions = (dateString: string) => {
   const date = new Date(dateString)
@@ -32,7 +33,7 @@ export const scheduleAWSLambda = async (
     Name: ruleName,
     ScheduleExpression: cronExpression
   }
-  await eventbridge.putRule(ruleParams).promise()
+  await eventbridge.putRule(ruleParams)
   const targetParams = {
     Rule: ruleName,
     Targets: [
@@ -43,18 +44,14 @@ export const scheduleAWSLambda = async (
       }
     ]
   }
-  return await eventbridge.putTargets(targetParams).promise()
+  return await eventbridge.putTargets(targetParams)
 }
 
 export const invokeAWSLambda = async (
   lambdaName: string,
   targetLambdaParams?: unknown
-) => {
-  const params = {
-    FunctionName: lambdaName,
-    InvocationType: "Event",
-    Payload: JSON.stringify(targetLambdaParams)
-  }
-
-  return await lambda.invoke(params).promise()
-}
+) => lambda.invoke({
+  FunctionName: lambdaName,
+  InvocationType: InvocationType.RequestResponse,
+  Payload: JSON.stringify(targetLambdaParams)
+})

@@ -2,6 +2,7 @@ import request from "supertest"
 import { SetArrivalStatusInput } from "../../events/arrivals/setArrivalStatus.js"
 import { SetDepartureInput } from "../../events/arrivals/setDeparture.js"
 import { CreateEventInput } from "../../events/createEvent.js"
+import { JoinEventInput } from "../../events/joinEventById.js"
 import { testApp } from "../testApp.js"
 
 export const callCreateEvent = async (
@@ -16,12 +17,13 @@ export const callCreateEvent = async (
 
 export const callJoinEvent = async (
   bearerToken: string,
-  eventId: number
+  eventId: number,
+  req?: JoinEventInput
 ) => {
   return await request(testApp)
     .post(`/event/join/${eventId}`)
     .set("Authorization", bearerToken)
-    .send()
+    .send(req)
 }
 
 export const callLeaveEvent = async (
@@ -30,6 +32,16 @@ export const callLeaveEvent = async (
 ) => {
   return await request(testApp)
     .delete(`/event/leave/${eventId}`)
+    .set("Authorization", bearerToken)
+    .send()
+}
+
+export const callEndEvent = async (
+  bearerToken: string,
+  eventId: number
+) => {
+  return await request(testApp)
+    .post(`/event/end/${eventId}`)
     .set("Authorization", bearerToken)
     .send()
 }
@@ -76,6 +88,19 @@ export const callGetEventChatToken = async (
 ) => {
   return await request(testApp)
     .get(`/event/chat/${eventId}`)
+    .set("Authorization", bearerToken)
+    .send()
+}
+
+export const callGetAttendees = async (
+  bearerToken: string,
+  eventId: number,
+  limit: number,
+  nextPage?: string
+) => {
+  return await request(testApp)
+    .get(`/event/attendees/${eventId}`)
+    .query({ nextPage, limit })
     .set("Authorization", bearerToken)
     .send()
 }
