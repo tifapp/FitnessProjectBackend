@@ -5,7 +5,16 @@ on:
     branches:
       - development 
 
-jobs:
+jobs:      
+  build_geocoder:
+    uses: ./.github/workflows/build_geocoder.yml
+
+  deploy_geocoder:
+    needs: build_geocoder
+    uses: ./.github/workflows/deploy_geocoder.yml
+    with:
+      stage: "staging"
+
   build_for_tests:
     uses: ./.github/workflows/build_api.yml
     secrets: inherit

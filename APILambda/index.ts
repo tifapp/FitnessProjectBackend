@@ -16,7 +16,7 @@ const env: ServerEnvironment = {
   maxArrivals: 100,
   setProfileCreatedAttribute,
   callGeocodingLambda: (location: LocationCoordinate2D) =>
-    invokeAWSLambda("geocodingPipeline", location)
+    invokeAWSLambda("geocodingPipeline", location) // NEED TO POINT THIS TO PROD
 }
 
 const app = createApp()

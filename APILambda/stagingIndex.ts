@@ -10,7 +10,7 @@ import { setProfileCreatedAttribute } from "./user/createUser/setCognitoAttribut
 const stagingEnv: ServerEnvironment = {
   setProfileCreatedAttribute,
   callGeocodingLambda: (location: LocationCoordinate2D) =>
-    invokeAWSLambda("geocodingPipeline", location),
+    invokeAWSLambda("geocodingPipeline", location), // NEED TO POINT THIS TO STAGING
   environment: "staging",
   maxArrivals: 4,
   eventStartWindowInHours: 1

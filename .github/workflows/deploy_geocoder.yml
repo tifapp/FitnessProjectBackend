@@ -1,10 +1,11 @@
 name: Build and Deploy Geocoding Pipeline to AWS Lambda
 
 on:
-  push:
-    branches:
-      - main
-      - development 
+  workflow_call:
+    inputs:
+      stage:
+        required: true
+        type: string
 
 jobs:
   build:
@@ -69,10 +70,10 @@ jobs:
                   sleep 10
               fi
           done
-          if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
-            stageName="prod"
+          if [[ "${{ inputs.stage }}" == "prod" ]]; then
             VERSION_NUMBER=$(aws lambda publish-version --function-name geocodingPipeline | jq -r '.Version')
-            aws lambda update-alias --function-name geocodingPipeline --name prod --function-version $VERSION_NUMBER
-          else
-            stageName="staging"
+            aws lambda update-alias --function-name geocodingPipeline --name ${{ inputs.stage }} --function-version $VERSION_NUMBER
+          elif [[ "${{ inputs.stage }}" == "staging" ]]; then
+            VERSION_NUMBER=$(aws lambda publish-version --function-name geocodingPipeline | jq -r '.Version')
+            aws lambda update-alias --function-name geocodingPipeline --name ${{ inputs.stage }} --function-version $VERSION_NUMBER
           fi
