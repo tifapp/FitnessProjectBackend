@@ -1,7 +1,8 @@
 {
   "scripts": {
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,md}\"",
-    "prepare": "husky"
+    "prepare": "husky",
+    "postinstall": "cd TiFBackendUtils && npm install && cd .. && cd APILambda && npm install && cd .. && cd GeocodingLambda && npm install && cd .."
   },
   "devDependencies": {
     "@types/jest": "^29.5.5",
