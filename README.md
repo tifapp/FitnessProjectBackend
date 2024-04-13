@@ -1,3 +1,5 @@
+## [View Database Schema](schema.md) ##
+
 Todo: Add aws section
 Todo: Add section for testing locally
 Todo: Add table of contents
