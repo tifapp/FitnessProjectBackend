@@ -1,9 +1,4 @@
-import {
-  DBuserSettings,
-  SQLExecutable,
-  success,
-  userWithIdExists
-} from "TiFBackendUtils"
+import { SQLExecutable, success, userWithIdExists } from "TiFBackendUtils"
 import { DEFAULT_USER_SETTINGS, UserSettings } from "./models.js"
 
 /**
