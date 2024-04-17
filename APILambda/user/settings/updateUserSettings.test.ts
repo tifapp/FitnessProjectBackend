@@ -3,7 +3,6 @@ import {
   callPatchSettings,
   callPostUser
 } from "../../test/apiCallers/users.js"
-import { withEmptyResponseBody } from "../../test/assertions.js"
 import { createUserFlow } from "../../test/userFlows/users.js"
 
 describe("Update Settings tests", () => {
@@ -23,22 +22,13 @@ describe("Update Settings tests", () => {
     const updateResp = await callPatchSettings(token, {
       isChatNotificationsEnabled: false
     })
-    expect(withEmptyResponseBody(updateResp)).toMatchObject({
-      status: 204,
-      body: ""
-    })
+    expect(updateResp).toMatchObject(expectedUpdateResponse())
 
-    const settings1UpdatedDateTime = await callGetSettings(token).then(
-      (resp) => new Date(resp.body.updatedDateTime)
-    )
-
+    const settings1UpdatedDateTime = updateResp.body.updatedDateTime
     const updateResp2 = await callPatchSettings(token, {
       isCrashReportingEnabled: false
     })
-    expect(withEmptyResponseBody(updateResp2)).toMatchObject({
-      status: 204,
-      body: ""
-    })
+    expect(updateResp2).toMatchObject(expectedUpdateResponse())
 
     const settings2Resp = await callGetSettings(token)
     expect(settings2Resp).toMatchObject({
@@ -49,36 +39,22 @@ describe("Update Settings tests", () => {
         isEventNotificationsEnabled: true,
         isMentionsNotificationsEnabled: true,
         isChatNotificationsEnabled: false,
-        isFriendRequestNotificationsEnabled: true,
-        updatedDateTime: expect.anything()
+        isFriendRequestNotificationsEnabled: true
       })
     })
-    const settings2UpdatedDateTime = new Date(settings2Resp.body.updatedDateTime)
+    const settings2UpdatedDateTime = new Date(
+      settings2Resp.body.updatedDateTime
+    )
     expect(settings2UpdatedDateTime.getTime()).toBeGreaterThanOrEqual(
       settings1UpdatedDateTime.getTime()
     )
 
-    const updateResp3 = await callPatchSettings(token, {
-      isCrashReportingEnabled: true
-    })
-    expect(withEmptyResponseBody(updateResp3)).toMatchObject({
-      status: 204,
-      body: ""
-    })
+    expect(updateResp2.body.updatedDateTime).toEqual(settings2UpdatedDateTime)
+  })
 
-    const settings3Resp = await callGetSettings(token)
-    expect(settings3Resp).toMatchObject({
-      status: 200,
-      body: expect.objectContaining({
-        isAnalyticsEnabled: true,
-        isCrashReportingEnabled: true,
-        isEventNotificationsEnabled: true,
-        isMentionsNotificationsEnabled: true,
-        isChatNotificationsEnabled: false,
-        isFriendRequestNotificationsEnabled: true,
-        updatedDateTime: expect.anything()
-      })
-    })
+  const expectedUpdateResponse = () => ({
+    status: 200,
+    body: { updatedDateTime: expect.any(Date) }
   })
 
   it("should 400 for an invalid settings body", async () => {

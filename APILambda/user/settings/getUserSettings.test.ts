@@ -1,6 +1,4 @@
-import {
-  callGetSettings
-} from "../../test/apiCallers/users.js"
+import { callGetSettings } from "../../test/apiCallers/users.js"
 import { createUserFlow } from "../../test/userFlows/users.js"
 
 describe("Get Settings tests", () => {
@@ -23,7 +21,8 @@ describe("Get Settings tests", () => {
         isEventNotificationsEnabled: true,
         isMentionsNotificationsEnabled: true,
         isChatNotificationsEnabled: true,
-        isFriendRequestNotificationsEnabled: true
+        isFriendRequestNotificationsEnabled: true,
+        updatedDateTime: expect.any(Date)
       }
     })
   })

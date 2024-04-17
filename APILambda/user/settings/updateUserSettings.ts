@@ -1,7 +1,18 @@
-import { NullablePartial, SQLExecutable, conn } from "TiFBackendUtils"
+import {
+  DBuserSettings,
+  NullablePartial,
+  RequireNotNull,
+  SQLExecutable,
+  conn
+} from "TiFBackendUtils"
 import { ServerEnvironment } from "../../env.js"
 import { ValidatedRouter } from "../../validation.js"
 import { UserSettings, UserSettingsSchema } from "./models.js"
+
+type DBUserSettingsUpdatedDateTime = Pick<
+  RequireNotNull<DBuserSettings>,
+  "updatedDateTime"
+>
 
 /**
  * Updates the user's settings with the specified fields in the settings object.
@@ -24,43 +35,57 @@ const insertUserSettings = (
     isFriendRequestNotificationsEnabled = null
   }: NullablePartial<UserSettings>
 ) =>
-  conn.queryResults(
-    `
-    INSERT INTO userSettings (
-      userId, 
-      isAnalyticsEnabled, 
-      isCrashReportingEnabled,
-      isEventNotificationsEnabled, 
-      isMentionsNotificationsEnabled, 
-      isChatNotificationsEnabled, 
-      isFriendRequestNotificationsEnabled
-    ) VALUES (
-      :userId, 
-      COALESCE(:isAnalyticsEnabled, 1), 
-      COALESCE(:isCrashReportingEnabled, 1), 
-      COALESCE(:isEventNotificationsEnabled, 1), 
-      COALESCE(:isMentionsNotificationsEnabled, 1),
-      COALESCE(:isChatNotificationsEnabled, 1), 
-      COALESCE(:isFriendRequestNotificationsEnabled, 1)
-    )
-    ON DUPLICATE KEY UPDATE 
-      isAnalyticsEnabled = COALESCE(:isAnalyticsEnabled, isAnalyticsEnabled), 
-      isCrashReportingEnabled = COALESCE(:isCrashReportingEnabled, isCrashReportingEnabled),
-      isEventNotificationsEnabled = COALESCE(:isEventNotificationsEnabled, isEventNotificationsEnabled),
-      isMentionsNotificationsEnabled = COALESCE(:isMentionsNotificationsEnabled, isMentionsNotificationsEnabled),
-      isChatNotificationsEnabled = COALESCE(:isChatNotificationsEnabled, isChatNotificationsEnabled),
-      isFriendRequestNotificationsEnabled = COALESCE(:isFriendRequestNotificationsEnabled, isFriendRequestNotificationsEnabled);    
-  `,
-    {
-      userId,
-      isAnalyticsEnabled,
-      isCrashReportingEnabled,
-      isEventNotificationsEnabled,
-      isMentionsNotificationsEnabled,
-      isChatNotificationsEnabled,
-      isFriendRequestNotificationsEnabled
-    }
-  )
+  conn.transaction((tx) => {
+    return tx
+      .queryResults(
+        `
+      INSERT INTO userSettings (
+        userId,
+        isAnalyticsEnabled,
+        isCrashReportingEnabled,
+        isEventNotificationsEnabled,
+        isMentionsNotificationsEnabled,
+        isChatNotificationsEnabled,
+        isFriendRequestNotificationsEnabled,
+        updatedDateTime
+      ) VALUES (
+        :userId,
+        COALESCE(:isAnalyticsEnabled, 1),
+        COALESCE(:isCrashReportingEnabled, 1),
+        COALESCE(:isEventNotificationsEnabled, 1),
+        COALESCE(:isMentionsNotificationsEnabled, 1),
+        COALESCE(:isChatNotificationsEnabled, 1),
+        COALESCE(:isFriendRequestNotificationsEnabled, 1),
+        NOW()
+      )
+      ON DUPLICATE KEY UPDATE
+        isAnalyticsEnabled = COALESCE(:isAnalyticsEnabled, isAnalyticsEnabled),
+        isCrashReportingEnabled = COALESCE(:isCrashReportingEnabled, isCrashReportingEnabled),
+        isEventNotificationsEnabled = COALESCE(:isEventNotificationsEnabled, isEventNotificationsEnabled),
+        isMentionsNotificationsEnabled = COALESCE(:isMentionsNotificationsEnabled, isMentionsNotificationsEnabled),
+        isChatNotificationsEnabled = COALESCE(:isChatNotificationsEnabled, isChatNotificationsEnabled),
+        isFriendRequestNotificationsEnabled = COALESCE(:isFriendRequestNotificationsEnabled, isFriendRequestNotificationsEnabled)
+        updatedDateTime = NOW();
+    `,
+        {
+          userId,
+          isAnalyticsEnabled,
+          isCrashReportingEnabled,
+          isEventNotificationsEnabled,
+          isMentionsNotificationsEnabled,
+          isChatNotificationsEnabled,
+          isFriendRequestNotificationsEnabled
+        }
+      )
+      .flatMapSuccess(() => {
+        return tx
+          .queryFirstResult<DBUserSettingsUpdatedDateTime>(
+            "SELECT updatedDateTime FROM userSettings WHERE userId = :userId",
+            { userId }
+          )
+          .mapSuccess((row) => row.updatedDateTime ?? new Date())
+      })
+  })
 
 /**
  * Creates routes related to user operations.
@@ -79,6 +104,9 @@ export const updateUserSettingsRouter = (
     { bodySchema: UserSettingsSchema.partial() },
     (req, res) =>
       insertUserSettings(conn, res.locals.selfId, req.body)
-        .mapSuccess(() => res.status(204).send())
+        .mapSuccess((updatedDateTime) => {
+          return res.status(200).json({ updatedDateTime }).send()
+        })
+        .mapFailure(() => res.status(500).send())
   )
 }
