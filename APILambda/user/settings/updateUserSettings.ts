@@ -1,5 +1,4 @@
 import {
-  DBuserSettings,
   NullablePartial,
   RequireNotNull,
   SQLExecutable,
@@ -8,9 +7,18 @@ import {
 import { ServerEnvironment } from "../../env.js"
 import { ValidatedRouter } from "../../validation.js"
 import { UserSettings, UserSettingsSchema } from "./models.js"
+import { z } from "zod"
+
+const UpdateUserSettingsRequestSchema = UserSettingsSchema.omit({
+  updatedDateTime: true
+}).partial()
+
+type UpdateUserSettingsRequest = NullablePartial<
+  z.infer<typeof UpdateUserSettingsRequestSchema>
+>
 
 type DBUserSettingsUpdatedDateTime = Pick<
-  RequireNotNull<DBuserSettings>,
+  RequireNotNull<UserSettings>,
   "updatedDateTime"
 >
 
@@ -33,7 +41,7 @@ const insertUserSettings = (
     isMentionsNotificationsEnabled = null,
     isChatNotificationsEnabled = null,
     isFriendRequestNotificationsEnabled = null
-  }: NullablePartial<UserSettings>
+  }: UpdateUserSettingsRequest
 ) =>
   conn.transaction((tx) => {
     return tx
@@ -101,7 +109,7 @@ export const updateUserSettingsRouter = (
    */
   router.patchWithValidation(
     "/self/settings",
-    { bodySchema: UserSettingsSchema.partial() },
+    { bodySchema: UpdateUserSettingsRequestSchema },
     (req, res) =>
       insertUserSettings(conn, res.locals.selfId, req.body)
         .mapSuccess((updatedDateTime) => {

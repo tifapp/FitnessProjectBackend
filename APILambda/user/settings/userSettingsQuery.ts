@@ -1,16 +1,10 @@
-import { DBuserSettings, SQLExecutable, success, userWithIdExists } from "TiFBackendUtils"
-
-/**
- * The default user settings, which enables all fields.
- */
-const DEFAULT_USER_SETTINGS = {
-  isAnalyticsEnabled: true,
-  isCrashReportingEnabled: true,
-  isEventNotificationsEnabled: true,
-  isMentionsNotificationsEnabled: true,
-  isChatNotificationsEnabled: true,
-  isFriendRequestNotificationsEnabled: true
-} as const
+import {
+  DBuserSettings,
+  SQLExecutable,
+  success,
+  userWithIdExists
+} from "TiFBackendUtils"
+import { DEFAULT_USER_SETTINGS, UserSettings } from "./models.js"
 
 /**
  * Queries a given user's settings. If the user has never edited their settings,
@@ -21,14 +15,15 @@ const DEFAULT_USER_SETTINGS = {
  * @returns a result that indicates that the user is not found, or their current settings
  */
 export const queryUserSettings = (conn: SQLExecutable, userId: string) =>
-  userWithIdExists(conn, userId).flatMapSuccess(() =>
-    conn.queryFirstResult<DBuserSettings>(
-      `
+  userWithIdExists(conn, userId)
+    .flatMapSuccess(() =>
+      conn.queryFirstResult<UserSettings>(
+        `
     SELECT *
     FROM userSettings
     WHERE userId = :userId
   `,
-      { userId }
+        { userId }
+      )
     )
-  )
     .flatMapFailure(() => success(DEFAULT_USER_SETTINGS))
