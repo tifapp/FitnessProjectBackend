@@ -83,7 +83,7 @@ const insertUserSettings = (
             "SELECT updatedDateTime FROM userSettings WHERE userId = :userId",
             { userId }
           )
-          .mapSuccess((row) => row.updatedDateTime ?? new Date())
+          .mapSuccess((row) => row.updatedDateTime)
       })
   })
 
