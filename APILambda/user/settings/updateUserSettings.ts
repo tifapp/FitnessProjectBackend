@@ -64,8 +64,8 @@ const insertUserSettings = (
         isEventNotificationsEnabled = COALESCE(:isEventNotificationsEnabled, isEventNotificationsEnabled),
         isMentionsNotificationsEnabled = COALESCE(:isMentionsNotificationsEnabled, isMentionsNotificationsEnabled),
         isChatNotificationsEnabled = COALESCE(:isChatNotificationsEnabled, isChatNotificationsEnabled),
-        isFriendRequestNotificationsEnabled = COALESCE(:isFriendRequestNotificationsEnabled, isFriendRequestNotificationsEnabled)
-        updatedDateTime = NOW();
+        isFriendRequestNotificationsEnabled = COALESCE(:isFriendRequestNotificationsEnabled, isFriendRequestNotificationsEnabled),
+        updatedDateTime = NOW()
     `,
         {
           userId,
