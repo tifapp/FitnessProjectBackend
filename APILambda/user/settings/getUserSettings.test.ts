@@ -22,7 +22,7 @@ describe("Get Settings tests", () => {
         isMentionsNotificationsEnabled: true,
         isChatNotificationsEnabled: true,
         isFriendRequestNotificationsEnabled: true,
-        updatedDateTime: expect.any(Date)
+        updatedDateTime: expect.any(String)
       }
     })
   })

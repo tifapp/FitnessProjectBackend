@@ -24,7 +24,7 @@ describe("Update Settings tests", () => {
     })
     expect(updateResp).toMatchObject(expectedUpdateResponse())
 
-    const settings1UpdatedDateTime = updateResp.body.updatedDateTime
+    const settings1UpdatedDateTime = new Date(updateResp.body.updatedDateTime)
     const updateResp2 = await callPatchSettings(token, {
       isCrashReportingEnabled: false
     })
