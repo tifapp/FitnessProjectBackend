@@ -49,12 +49,14 @@ describe("Update Settings tests", () => {
       settings1UpdatedDateTime.getTime()
     )
 
-    expect(updateResp2.body.updatedDateTime).toEqual(settings2UpdatedDateTime)
+    expect(settings2UpdatedDateTime).toEqual(
+      new Date(updateResp2.body.updatedDateTime)
+    )
   })
 
   const expectedUpdateResponse = () => ({
     status: 200,
-    body: { updatedDateTime: expect.any(Date) }
+    body: { updatedDateTime: expect.any(String) }
   })
 
   it("should 400 for an invalid settings body", async () => {
