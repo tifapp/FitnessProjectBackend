@@ -1,9 +1,10 @@
 name: Build and Deploy API to AWS Lambda
 
 on:
-  push:
+  pull_request:
+    types: [opened, synchronize]
     branches:
-      - development 
+      - main
 
 jobs:
   build_for_tests:
