@@ -51,6 +51,8 @@
         ]
       }
     ],
+    "no-global-assign": "error",
+    "no-var": "error",
     "semi": ["error", "never"],
     "quotes": ["error", "double"],
     "no-unused-vars": "warn",
