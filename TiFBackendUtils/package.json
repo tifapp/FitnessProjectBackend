@@ -5,6 +5,7 @@
   "description": "",
   "main": "index.js",
   "dependencies": {
+    "@aws-sdk/client-rds-data": "^3.556.0",
     "@planetscale/database": "^1.7.0",
     "dayjs": "^1.11.10",
     "node-fetch": "^3.3.2"
