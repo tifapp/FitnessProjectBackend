@@ -16,6 +16,7 @@
     "zod": "^3.22.4"
   },
   "scripts": {
+    "pr": "cd .. && npm run pr",
     "dbtots": "node --loader ts-node/esm dbToTs.ts",
     "build": "npx tsc",
     "test": "jest",

@@ -11,6 +11,7 @@
     "TiFBackendUtils": "file:../TiFBackendUtils"
   },
   "scripts": {
+    "pr": "cd .. && npm run pr",
     "dbtots": "node --loader ts-node/esm ../TiFBackendUtils/dbToTs.ts",
     "build": "npx tsc",
     "test": "jest",
