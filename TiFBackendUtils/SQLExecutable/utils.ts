@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // TODO: Replace with backend utils
-import { Connection } from "@planetscale/database"
+import mysql, { ResultSetHeader } from "mysql2/promise.js"
 import { AwaitableResult, failure, promiseResult, success } from "../result.js"
 
 /**
@@ -10,16 +10,15 @@ import { AwaitableResult, failure, promiseResult, success } from "../result.js"
  * transaction or not.
  */
 
-type QueryResult = {
+type ExecuteResult = {
   insertId: string
   rowsAffected: number
 }
 
 export class SQLExecutable {
-  private conn: Connection // Define the appropriate type for your database connection
+  private conn: Promise<mysql.Connection>
 
-  constructor (connection: Connection) {
-    // Use the appropriate type for the connection
+  constructor (connection: Promise<mysql.Connection>) {
     this.conn = connection
   }
 
@@ -39,24 +38,30 @@ export class SQLExecutable {
    * ```
    */
 
-  private async execute<Value> (
+  private async query<Value> (
     query: string,
     args: object | any[] | null = null
   ): Promise<Value[]> {
     // Use this.conn to execute the query and return the result rows
     // This will be the only function to directly use the database library's execute method.
-    const result = await this.conn.execute(query, args)
-    return result.rows as Value[]
+    const conn = await this.conn
+    const [rows] = await conn.query(query, args)
+    return rows as Value[]
   }
 
-  private async executeAndReturnQueryResult (
+  private async execute (
     query: string,
     args: object | any[] | null = null
-  ): Promise<QueryResult> {
+  ): Promise<ExecuteResult> {
     // Use this.conn to execute the query and return the result rows
     // This will be the only function to directly use the database library's execute method.
-    const result = await this.conn.execute(query, args)
-    return { ...result }
+    console.log("trying execution")
+    const conn = await this.conn
+    const [result] = await conn.execute<ResultSetHeader>(query, args)
+    return {
+      insertId: result.insertId.toString(),
+      rowsAffected: result.affectedRows
+    }
   }
 
   /**
@@ -64,7 +69,7 @@ export class SQLExecutable {
    */
   queryResult (query: string, args: object | any[] | null = null) {
     return promiseResult(
-      this.executeAndReturnQueryResult(query, args).then((queryResult) =>
+      this.execute(query, args).then((queryResult) =>
         success(queryResult)
       )
     )
@@ -75,7 +80,7 @@ export class SQLExecutable {
    */
   queryResults<Value> (query: string, args: object | any[] | null = null) {
     return promiseResult(
-      this.execute<Value>(query, args).then((result) => success(result))
+      this.query<Value>(query, args).then((result) => success(result))
     )
   }
 
@@ -85,7 +90,19 @@ export class SQLExecutable {
   transaction<SuccessValue, ErrorValue> (
     query: (tx: SQLExecutable) => AwaitableResult<SuccessValue, ErrorValue>
   ) {
-    return promiseResult(this.conn.transaction(async () => query(this)))
+    console.log("trying transaction")
+    return promiseResult((async () => {
+      const conn = await this.conn
+      try {
+        await conn.beginTransaction()
+        const result = await query(this)
+        await conn.commit()
+        return result
+      } catch (error) {
+        await conn.rollback()
+        throw error
+      }
+    })())
   }
 
   // ==================
@@ -100,7 +117,7 @@ export class SQLExecutable {
    */
   queryHasResults (query: string, args: object | any[] | null = null) {
     return promiseResult(
-      this.execute(query, args).then((results) => {
+      this.query(query, args).then((results) => {
         const hasResults = results.length > 0
         return hasResults ? success(hasResults) : failure(hasResults)
       })
@@ -120,7 +137,7 @@ export class SQLExecutable {
    */
   queryFirstResult<Value> (query: string, args: object | any[] | null = null) {
     return promiseResult(
-      this.execute<Value>(query, args).then((results) =>
+      this.query<Value>(query, args).then((results) =>
         results[0] ? success(results[0]) : failure("no-results" as const)
       )
     )

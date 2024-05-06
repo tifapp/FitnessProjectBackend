@@ -7,7 +7,7 @@ on:
       - development
 
 jobs:
-  test:
+  test: #should only run once!
     runs-on: ubuntu-latest
     timeout-minutes: 10
     
@@ -30,12 +30,16 @@ jobs:
         with:
           node-version: '18'
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1
+      - name: Start local server
+        run: |
+          # Command to start your server, e.g., Python Flask, Node.js app, etc.
+          python -m http.server 8000 &
+          sleep 5 # Wait for server to start
+
+      - name: Start ngrok
+        uses: ngrok/ngrok-tunnel-action@latest
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
+          port: 8000  
           
       - name: Install dependencies
         run: |
@@ -99,6 +103,13 @@ jobs:
       uses: actions/setup-node@v2
       with:
         node-version: '18'
+    
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ secrets.AWS_REGION }}
         
     - name: Install dependencies
       run: |

@@ -1,6 +1,5 @@
 import { conn } from "TiFBackendUtils"
 import dayjs from "dayjs"
-import { AttendeesCursorResponse } from "../shared/Attendee.js"
 import { decodeAttendeesListCursor } from "../shared/Cursor.js"
 import { callGetAttendees, callSetArrival } from "../test/apiCallers/events.js"
 import { callBlockUser } from "../test/apiCallers/users.js"
@@ -55,7 +54,7 @@ const createTestAttendeesList = async ({
 const getNextPageCursorResp = (
   testAttendees: Array<TestUser>,
   index: number
-): Omit<AttendeesCursorResponse, "arrivedDateTime"> => {
+): Omit<unknown, "arrivedDateTime"> => {
   return {
     userId: testAttendees[index].userId,
     joinedDateTime: index >= testAttendees.length ? null : expect.any(Date)
@@ -64,6 +63,7 @@ const getNextPageCursorResp = (
 
 describe("getAttendeesList endpoint", () => {
   it("should return 400 if limit is less than one", async () => {
+    console.log("trying 400 test")
     const { attendeeToken, testEventId } = await createTestAttendeesList({
       numOfAttendees: 1
     })
