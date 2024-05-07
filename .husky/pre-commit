@@ -1,1 +1,0 @@
-cd ./APILambda && npm run dbtots && npm run genapispecs
