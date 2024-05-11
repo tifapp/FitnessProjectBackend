@@ -69,7 +69,7 @@ CONSTRAINT event_must_exist FOREIGN KEY (eventId) REFERENCES event (id)
 
 const eventAttendeeCountViewSQL =
 `
-CREATE VIEW IF NOT EXISTS EventAttendeeCountView 
+CREATE VIEW EventAttendeeCountView 
 AS SELECT E.id AS id, 
 COUNT(A.eventId) AS attendeeCount
 FROM (eventAttendance AS A JOIN event AS E ON E.id = A.eventId) 
@@ -78,7 +78,7 @@ GROUP BY A.eventId;
 
 const eventAttendeesViewSQL =
 `
-CREATE VIEW IF NOT EXISTS EventAttendeesView 
+CREATE VIEW EventAttendeesView 
 AS SELECT ea1.eventId AS eventId,
 GROUP_CONCAT(DISTINCT ea1.userId 
 ORDER BY ea1.joinedDateTime ASC SEPARATOR ',') AS userIds 
@@ -132,7 +132,7 @@ CONSTRAINT device_owner_must_exist FOREIGN KEY (userId) REFERENCES user (id)
 
 const TifEventViewSQL =
 `
-CREATE VIEW IF NOT EXISTS TifEventView 
+CREATE VIEW TifEventView 
 AS SELECT e.id AS id, 
 e.color AS color, 
 e.description AS description,
