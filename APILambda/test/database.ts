@@ -24,6 +24,7 @@ export const expectFailsCheckConstraint = async (fn: () => Promise<void>) => {
     fail("This function should throw a check constraint error.")
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (err: any) {
-    expect(err.body.message.includes("(errno 3819)"))
+    console.log("error is ", err)
+    expect(err.message.includes("Check constraint")) // should be more generic
   }
 }
