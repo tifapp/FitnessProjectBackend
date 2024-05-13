@@ -174,8 +174,3 @@ export class SQLExecutable {
     )
   }
 }
-
-// Usage
-// const dbConnection = ...;  // Initialize or import your database connection
-// const sqlExec = new SQLExecutable(dbConnection);
-// sqlExec.queryHasResults("SELECT * FROM users");
