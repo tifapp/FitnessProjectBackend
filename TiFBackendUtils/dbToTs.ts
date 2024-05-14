@@ -76,4 +76,5 @@ fs.writeFile(filePath, tsString, (err) => {
   } else {
     console.log("Schema generated successfully")
   }
+  conn.closeConnection()
 })

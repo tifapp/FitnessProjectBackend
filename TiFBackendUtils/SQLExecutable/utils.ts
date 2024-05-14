@@ -22,6 +22,11 @@ export class SQLExecutable {
     this.conn = connection
   }
 
+  async closeConnection () {
+    const conn = await this.conn
+    conn.end()
+  }
+
   // ==================
   // Implementation-Dependent Methods
   // ==================

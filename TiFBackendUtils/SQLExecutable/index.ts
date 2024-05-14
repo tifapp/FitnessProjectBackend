@@ -34,5 +34,4 @@ async function createDatabaseConnection () {
   }
 }
 
-console.log("trying connection")
 export const conn = new SQLExecutable(createDatabaseConnection())
