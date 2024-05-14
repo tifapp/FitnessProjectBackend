@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // TODO: Replace with backend utils
-import mysql, { ResultSetHeader } from "mysql2/promise.js"
+import mysql, { ResultSetHeader, RowDataPacket } from "mysql2/promise.js"
 import { AwaitableResult, failure, promiseResult, success } from "../result.js"
 
 /**
@@ -13,6 +13,24 @@ import { AwaitableResult, failure, promiseResult, success } from "../result.js"
 type ExecuteResult = {
   insertId: string
   rowsAffected: number
+}
+
+const typecasts: Record<string, (value: string | null) => unknown> = {
+  INT64: (value) => parseInt(value ?? "0"),
+  INT8: (value) => parseInt(value ?? "0") > 0,
+  DATETIME: (value) => { return value ? new Date(value) : value },
+  DECIMAL: (value) => { return value ? parseFloat(value) : value }
+}
+
+const castTypes = (rows: RowDataPacket[]): RowDataPacket[] => {
+  return rows.map(row => {
+    for (const key in row) {
+      if (typecasts[key]) {
+        row[key] = typecasts[key](row[key])
+      }
+    }
+    return row
+  })
 }
 
 export class SQLExecutable {
@@ -51,7 +69,9 @@ export class SQLExecutable {
     // This will be the only function to directly use the database library's execute method.
     const conn = await this.conn
     const [rows] = await conn.query(query, args)
-    return rows as Value[]
+    console.log("rows are ")
+    console.log(rows)
+    return castTypes(rows as RowDataPacket[]) as Value[]
   }
 
   private async execute (
