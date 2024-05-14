@@ -1,13 +1,12 @@
-import { SQLDriverInterface } from "../SQLExecutable/SQLDriverInterface.js"
-import { SQLExecutable } from "../SQLExecutable/utils.js"
-import { AwaitableResult, promiseResult } from "../result.js"
+import { Connection } from "@planetscale/database"
+import { QueryResult, SQLDriverInterface } from "../SQLExecutable/SQLDriverInterface.js"
+import { AwaitableResult, PromiseResult, promiseResult } from "../result.js"
+export class PlanetScaleSQLDriver implements SQLDriverInterface {
+  private conn: Connection // Define the appropriate type for your database connection
 
-export class SQLDriver {
-  private driver: SQLDriverInterface // Define the appropriate type for your database connection
-
-  constructor (driver: SQLDriverInterface) {
+  constructor (connection: Connection) {
     // Use the appropriate type for the connection
-    this.driver = driver
+    this.conn = connection
   }
 
   /**
@@ -22,13 +21,13 @@ export class SQLDriver {
    * ```
    */
 
-  private async execute<Value> (
+  async execute<Value> (
     query: string,
     args: object | null
   ): Promise<Value[]> {
     // Use this.conn to execute the query and return the result rows
     // This will be the only function to directly use the database library's execute method.
-    const result = await this.driver.execute(query, args)
+    const result = await this.conn.execute(query, args)
     return result.rows as Value[]
   }
 
@@ -36,13 +35,13 @@ export class SQLDriver {
   // Implementation-Dependent Methods
   // ==================
 
-  private async executeAndReturnQueryResult (
+  async executeAndReturnQueryResult (
     query: string,
     args: object | null
   ): Promise<QueryResult> {
     // Use this.conn to execute the query and return the result rows
     // This will be the only function to directly use the database library's execute method.
-    const result = await this.driver.execute(query, args)
+    const result = await this.conn.execute(query, args)
     return { ...result }
   }
 
@@ -50,8 +49,8 @@ export class SQLDriver {
    * Performs an idempotent transaction and returns the result of the transaction wrapped in a {@link PromiseResult}.
    */
   transaction<SuccessValue, ErrorValue> (
-    query: (tx: SQLExecutable) => AwaitableResult<SuccessValue, ErrorValue>
-  ) {
-    return promiseResult(this.driver.transaction(async () => query(this.driver)))
+    query: (tx: SQLDriverInterface) => AwaitableResult<SuccessValue, ErrorValue>
+  ): PromiseResult<SuccessValue, ErrorValue> {
+    return promiseResult(this.conn.transaction(async () => query(this)))
   }
 }

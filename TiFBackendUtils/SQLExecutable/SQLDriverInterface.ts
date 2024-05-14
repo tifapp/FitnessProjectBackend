@@ -5,10 +5,9 @@
  * transaction or not.
  */
 
-import { AwaitableResult } from "../result"
-import { SQLExecutable } from "./utils"
+import { AwaitableResult, PromiseResult } from "../result.js"
 
-type QueryResult = {
+export type QueryResult = {
     insertId: string
     rowsAffected: number
   }
@@ -25,6 +24,6 @@ export interface SQLDriverInterface {
     ): Promise<QueryResult>
 
     transaction<SuccessValue, ErrorValue> (
-        query: (tx: SQLExecutable) => AwaitableResult<SuccessValue, ErrorValue>
-      ) : void
+        query: (tx: SQLDriverInterface) => AwaitableResult<SuccessValue, ErrorValue>
+      ) : PromiseResult<SuccessValue, ErrorValue>
 }
