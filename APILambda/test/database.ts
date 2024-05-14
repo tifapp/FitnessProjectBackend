@@ -3,16 +3,16 @@ import { fail } from "assert"
 
 export const resetDB = async () => {
   await Promise.allSettled([
-    conn.queryResults("DELETE FROM eventAttendance"),
-    conn.queryResults("DELETE FROM location"),
-    conn.queryResults("DELETE FROM pushTokens"),
-    conn.queryResults("DELETE FROM userRelations"),
-    conn.queryResults("DELETE FROM userSettings"),
-    conn.queryResults("DELETE FROM userArrivals"),
-    conn.queryResults("DELETE FROM location")
+    conn.executeResult("DELETE FROM eventAttendance"),
+    conn.executeResult("DELETE FROM location"),
+    conn.executeResult("DELETE FROM pushTokens"),
+    conn.executeResult("DELETE FROM userRelations"),
+    conn.executeResult("DELETE FROM userSettings"),
+    conn.executeResult("DELETE FROM userArrivals"),
+    conn.executeResult("DELETE FROM location")
   ])
-  await conn.queryResults("DELETE FROM event")
-  await conn.queryResults("DELETE FROM user")
+  await conn.executeResult("DELETE FROM event")
+  await conn.executeResult("DELETE FROM user")
 }
 
 /**

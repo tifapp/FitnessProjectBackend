@@ -24,10 +24,10 @@ export const queryUserSettings = (conn: SQLExecutable, userId: string) =>
   userWithIdExists(conn, userId).flatMapSuccess(() =>
     conn.queryFirstResult<DBuserSettings>(
       `
-    SELECT *
-    FROM userSettings
-    WHERE userId = :userId
-  `,
+        SELECT *
+        FROM userSettings
+        WHERE userId = :userId
+      `,
       { userId }
     )
   )

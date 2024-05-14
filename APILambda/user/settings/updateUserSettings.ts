@@ -24,7 +24,7 @@ const insertUserSettings = (
     isFriendRequestNotificationsEnabled = null
   }: NullablePartial<UserSettings>
 ) =>
-  conn.queryResults(
+  conn.executeResult(
     `
     INSERT INTO userSettings (
       userId, 

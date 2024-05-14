@@ -36,7 +36,7 @@ const autocompleteUsers = (
   conn: SQLExecutable,
   baseHandle: UserHandle,
   limit: number
-) => conn.queryResults<Pick<DBuser, "id" | "name" | "handle">>(
+) => conn.queryResult<Pick<DBuser, "id" | "name" | "handle">>(
   `
     SELECT id, name, handle 
     FROM user u 

@@ -35,7 +35,7 @@ const config = {
   interfaceNameFormat: "DB${table}"
 }
 
-const tableNames = (await conn.queryResults<{
+const tableNames = (await conn.queryResult<{
   "Tables_in_tif": string
 }>("SHOW TABLES;")).value.map(name => `DB${name.Tables_in_tif}`)
 

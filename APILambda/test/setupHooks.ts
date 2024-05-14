@@ -222,24 +222,24 @@ global.beforeEach(async () => {
 
 global.beforeAll(async () => {
   await conn.transaction(async (tx) => {
-    await tx.queryResult(createUserTableSQL)
-    return await tx.queryResult(createEventTableSQL)
+    await tx.executeResult(createUserTableSQL)
+    return await tx.executeResult(createEventTableSQL)
   })
 
   await Promise.allSettled(
     [
-      conn.queryResult(bannedUserTableSQL),
-      conn.queryResult(eventAttendanceTableSQL),
-      conn.queryResult(eventAttendeeCountViewSQL),
-      conn.queryResult(eventAttendeesViewSQL),
-      conn.queryResult(eventReportsViewSQL),
-      conn.queryResult(locationTableSQL),
-      conn.queryResult(pushTokensSQL),
-      conn.queryResult(TifEventViewSQL),
-      conn.queryResult(createUserArrivalsTableSQL),
-      conn.queryResult(userRelationsTableSQL),
-      conn.queryResult(userReportsTableSQL),
-      conn.queryResult(userSettingsTableSQL)
+      conn.executeResult(bannedUserTableSQL),
+      conn.executeResult(eventAttendanceTableSQL),
+      conn.executeResult(eventAttendeeCountViewSQL),
+      conn.executeResult(eventAttendeesViewSQL),
+      conn.executeResult(eventReportsViewSQL),
+      conn.executeResult(locationTableSQL),
+      conn.executeResult(pushTokensSQL),
+      conn.executeResult(TifEventViewSQL),
+      conn.executeResult(createUserArrivalsTableSQL),
+      conn.executeResult(userRelationsTableSQL),
+      conn.executeResult(userReportsTableSQL),
+      conn.executeResult(userSettingsTableSQL)
     ]
   )
 }

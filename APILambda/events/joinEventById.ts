@@ -66,7 +66,7 @@ export const addUserToAttendeeList = (
   eventId: number,
   role: string
 ) =>
-  conn.queryResult(
+  conn.executeResult(
     "INSERT IGNORE INTO eventAttendance (userId, eventId, role) VALUES (:userId, :eventId, :role)",
     { userId, eventId, role }
   )

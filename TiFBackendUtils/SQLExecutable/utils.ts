@@ -33,6 +33,10 @@ const castTypes = (rows: RowDataPacket[]): RowDataPacket[] => {
   })
 }
 
+const isResultSetHeader = (result: any): result is ResultSetHeader => {
+  return "insertId" in result && "affectedRows" in result
+}
+
 export class SQLExecutable {
   private conn: Promise<mysql.Connection>
 
@@ -69,9 +73,11 @@ export class SQLExecutable {
     // This will be the only function to directly use the database library's execute method.
     const conn = await this.conn
     const [rows] = await conn.query(query, args)
-    console.log("rows are ")
-    console.log(rows)
-    return castTypes(rows as RowDataPacket[]) as Value[]
+    if (Array.isArray(rows)) {
+      return castTypes(rows as RowDataPacket[]) as Value[]
+    } else {
+      throw new Error("Query did not return an array of rows.")
+    }
   }
 
   private async execute (
@@ -83,19 +89,23 @@ export class SQLExecutable {
     console.log("trying execution")
     const conn = await this.conn
     const [result] = await conn.execute<ResultSetHeader>(query, args)
-    return {
-      insertId: result.insertId.toString(),
-      rowsAffected: result.affectedRows
+    if (isResultSetHeader(result)) {
+      return {
+        insertId: result.insertId.toString(),
+        rowsAffected: result.affectedRows
+      }
+    } else {
+      throw new Error("Execution did not return a ResultSetHeader.")
     }
   }
 
   /**
    * Runs the given SQL query and returns a success result containing the insertId of the query.
    */
-  queryResult (query: string, args: object | any[] | null = null) {
+  executeResult (query: string, args: object | any[] | null = null) {
     return promiseResult(
-      this.execute(query, args).then((queryResult) =>
-        success(queryResult)
+      this.execute(query, args).then((executeResult) =>
+        success(executeResult)
       )
     )
   }
@@ -103,7 +113,7 @@ export class SQLExecutable {
   /**
    * Runs the given SQL query and returns a success result containing the result of the query.
    */
-  queryResults<Value> (query: string, args: object | any[] | null = null) {
+  queryResult<Value> (query: string, args: object | any[] | null = null) {
     return promiseResult(
       this.query<Value>(query, args).then((result) => success(result))
     )

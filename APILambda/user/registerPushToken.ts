@@ -1,6 +1,6 @@
+import { SQLExecutable, conn, failure, success } from "TiFBackendUtils"
 import { z } from "zod"
 import { ValidatedRouter } from "../validation.js"
-import { SQLExecutable, conn, failure, success } from "TiFBackendUtils"
 
 const PushTokenPlatformNameSchema = z.union([
   z.literal("apple"),
@@ -41,7 +41,7 @@ const tryInsertPushToken = (
   }
 ) => {
   return conn
-    .queryResult(
+    .executeResult(
       `
       INSERT IGNORE INTO pushTokens (userId, pushToken, platformName) 
       VALUES (:userId, :pushToken, :platformName)
