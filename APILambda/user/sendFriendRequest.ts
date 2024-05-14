@@ -80,7 +80,7 @@ const makeFriends = (
   fromUserId: string,
   toUserId: string
 ) =>
-  conn.queryResults(
+  conn.queryResult(
     `
     UPDATE userRelations 
     SET status = 'friends' 
@@ -94,7 +94,7 @@ const addPendingFriendRequest = (
   senderId: string,
   receiverId: string
 ) =>
-  conn.queryResults(
+  conn.queryResult(
     `
     INSERT INTO userRelations (fromUserId, toUserId, status) 
     VALUES (:senderId, :receiverId, 'friend-request-pending')

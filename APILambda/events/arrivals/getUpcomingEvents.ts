@@ -36,7 +36,7 @@ const mapEventsToRegions = (events: UpcomingEvent[]): EventRegion[] => {
 }
 
 // TODO: 24 hour window should be parameterized based on env variable
-export const getUpcomingEventsByRegion = (conn: SQLExecutable, userId: string) => conn.queryResults<UpcomingEvent>(
+export const getUpcomingEventsByRegion = (conn: SQLExecutable, userId: string) => conn.queryResult<UpcomingEvent>(
   `
   SELECT 
     e.*, 

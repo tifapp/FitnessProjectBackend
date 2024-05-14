@@ -15,10 +15,6 @@ type ExecuteResult = {
   rowsAffected: number
 }
 
-const isResultSetHeader = (result: any): result is ResultSetHeader => {
-  return "insertId" in result && "affectedRows" in result
-}
-
 const typecasts: Record<string, (value: string | null) => unknown> = {
   INT64: (value) => parseInt(value ?? "0"),
   INT8: (value) => parseInt(value ?? "0") > 0,
@@ -35,6 +31,10 @@ const castTypes = (rows: RowDataPacket[]): RowDataPacket[] => {
     }
     return row
   })
+}
+
+const isResultSetHeader = (result: any): result is ResultSetHeader => {
+  return "insertId" in result && "affectedRows" in result
 }
 
 export class SQLExecutable {

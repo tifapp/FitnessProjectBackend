@@ -29,7 +29,7 @@ const unblockUser = (
   toUserId: string
 ) => {
   return conn
-    .queryResult(
+    .executeResult(
       `
         DELETE FROM userRelations
         WHERE fromUserId = :fromUserId AND toUserId = :toUserId 

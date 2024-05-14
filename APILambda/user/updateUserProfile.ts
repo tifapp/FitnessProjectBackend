@@ -53,7 +53,7 @@ const updateProfile = (
   { handle = null, name = null, bio = null }: NullablePartial<EditableProfileFields>
 ) =>
   conn
-    .queryResults(
+    .queryResult(
       `UPDATE user 
       SET 
       name = COALESCE(:name, name),

@@ -3,16 +3,16 @@ import { fail } from "assert"
 
 export const resetDB = async () => {
   await Promise.allSettled([
-    conn.queryResults("DELETE FROM eventAttendance"),
-    conn.queryResults("DELETE FROM location"),
-    conn.queryResults("DELETE FROM pushTokens"),
-    conn.queryResults("DELETE FROM userRelations"),
-    conn.queryResults("DELETE FROM userSettings"),
-    conn.queryResults("DELETE FROM userArrivals"),
-    conn.queryResults("DELETE FROM location")
+    conn.executeResult("DELETE FROM eventAttendance"),
+    conn.executeResult("DELETE FROM location"),
+    conn.executeResult("DELETE FROM pushTokens"),
+    conn.executeResult("DELETE FROM userRelations"),
+    conn.executeResult("DELETE FROM userSettings"),
+    conn.executeResult("DELETE FROM userArrivals"),
+    conn.executeResult("DELETE FROM location")
   ])
-  await conn.queryResults("DELETE FROM event")
-  await conn.queryResults("DELETE FROM user")
+  await conn.executeResult("DELETE FROM event")
+  await conn.executeResult("DELETE FROM user")
 }
 
 /**
@@ -24,6 +24,7 @@ export const expectFailsCheckConstraint = async (fn: () => Promise<void>) => {
     fail("This function should throw a check constraint error.")
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (err: any) {
-    expect(err.body.message.includes("(errno 3819)"))
+    console.log("error is ", err)
+    expect(err.message.includes("Check constraint")) // should be more generic
   }
 }

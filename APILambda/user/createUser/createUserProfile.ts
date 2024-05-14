@@ -38,7 +38,7 @@ const userWithHandleOrIdExists = (conn: SQLExecutable, { id, handle }: NewUserDe
 export const insertUser = (
   conn: SQLExecutable,
   userDetails: NewUserDetails
-) => conn.queryResults(
+) => conn.executeResult(
   "INSERT INTO user (id, name, handle) VALUES (:id, :name, :handle)",
   userDetails
 )

@@ -1,7 +1,7 @@
 import { Placemark, conn, failure, success } from "TiFBackendUtils"
 import { handler } from "./index.js"
 
-const resetDB = async () => conn.queryResults("DELETE FROM location")
+const resetDB = async () => conn.executeResult("DELETE FROM location")
 const testLocation = { latitude: 36.99813840222285, longitude: -122.05564377465653 }
 const storedLocation = { latitude: 36.9981384, longitude: -122.0556438 } // SQL has limited precision
 

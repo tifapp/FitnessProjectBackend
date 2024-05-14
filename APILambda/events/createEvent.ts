@@ -44,7 +44,7 @@ export const createEvent = (
   input: CreateEventInput,
   hostId: string
 ) =>
-  conn.queryResult(
+  conn.executeResult(
     `
 INSERT INTO event (
   hostId,

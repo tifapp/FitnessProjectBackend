@@ -35,7 +35,7 @@ const config = {
   interfaceNameFormat: "DB${table}"
 }
 
-const tableNames = (await conn.queryResults<{
+const tableNames = (await conn.queryResult<{
   "Tables_in_tif": string
 }>("SHOW TABLES;")).value.map(name => `DB${name.Tables_in_tif}`)
 
@@ -43,7 +43,7 @@ const DB = await sqlts.toObject(config)
 const TiFDBTables = DB.tables.filter(table => tableNames.includes(`${table.interfaceName}`))
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const filePath = path.join(__dirname, "./Planetscale/entities.ts")
+const filePath = path.join(__dirname, "./entities.ts")
 
 const tsString = await sqlts.fromObject({ tables: TiFDBTables, enums: DB.enums }, config)
 
@@ -76,4 +76,5 @@ fs.writeFile(filePath, tsString, (err) => {
   } else {
     console.log("Schema generated successfully")
   }
+  conn.closeConnection()
 })

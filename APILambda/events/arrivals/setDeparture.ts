@@ -33,7 +33,7 @@ export const deleteArrival = (
   coordinate: LocationCoordinate2D
 ) =>
   conn
-    .queryResults( // TO DECIDE: if event length limit or limit in how far in advance event can be scheduled, then we can also delete outdated arrivals
+    .queryResult( // TO DECIDE: if event length limit or limit in how far in advance event can be scheduled, then we can also delete outdated arrivals
       `
         DELETE FROM userArrivals
         WHERE userId = :userId
