@@ -1,5 +1,3 @@
-import { planetScaleExecutableDriver } from "../Planetscale/utils.js"
-import { SQLExecutable } from "./utils.js"
-export { SQLExecutable }
+import { mySQLDriver } from "../LocalSQL/index.js"
 
-export const conn = new SQLExecutable(planetScaleExecutableDriver)
+export const conn = mySQLDriver

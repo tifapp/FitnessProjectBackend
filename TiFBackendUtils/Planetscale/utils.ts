@@ -1,7 +1,7 @@
 import { Field, cast, connect } from "@planetscale/database"
 import fetch from "node-fetch"
 import { envVars } from "./env.js"
-import { PlanetScaleSQLDriver } from "./PlanetScaleDriver.js"
+import { PlanetScaleSQLExecutableDriver } from "./PlanetScaleDriver.js"
 
 const tiFCasts: Record<string, (value: string | null) => unknown> = {
   INT64: (value) => parseInt(value ?? "0"), // TODO: Use BigInt primitive and find a way to serialize
@@ -33,4 +33,4 @@ const planetscaleConnection = connect({
   password: envVars.DATABASE_PASSWORD
 })
 
-export const planetScaleExecutableDriver = new PlanetScaleSQLDriver(planetscaleConnection)
+export const planetScaleExecutableDriver = new PlanetScaleSQLExecutableDriver(planetscaleConnection)

@@ -1,11 +1,17 @@
 import { Connection } from "@planetscale/database"
-import { QueryResult, SQLDriverInterface } from "../SQLExecutable/SQLDriverInterface.js"
+import { SQLDriverAbstract } from "../SQLExecutable/SQLDriverAbstract.js"
 import { AwaitableResult, PromiseResult, promiseResult } from "../result.js"
-export class PlanetScaleSQLDriver implements SQLDriverInterface {
+
+export type QueryResult = {
+    insertId: string
+    rowsAffected: number
+  }
+export class PlanetScaleSQLExecutableDriver extends SQLDriverAbstract {
   private conn: Connection // Define the appropriate type for your database connection
 
   constructor (connection: Connection) {
     // Use the appropriate type for the connection
+    super()
     this.conn = connection
   }
 
@@ -35,7 +41,7 @@ export class PlanetScaleSQLDriver implements SQLDriverInterface {
   // Implementation-Dependent Methods
   // ==================
 
-  async executeAndReturnQueryResult (
+  async executeResult (
     query: string,
     args: object | null
   ): Promise<QueryResult> {
@@ -49,7 +55,7 @@ export class PlanetScaleSQLDriver implements SQLDriverInterface {
    * Performs an idempotent transaction and returns the result of the transaction wrapped in a {@link PromiseResult}.
    */
   transaction<SuccessValue, ErrorValue> (
-    query: (tx: SQLDriverInterface) => AwaitableResult<SuccessValue, ErrorValue>
+    query: (tx: PlanetScaleSQLExecutableDriver) => AwaitableResult<SuccessValue, ErrorValue>
   ): PromiseResult<SuccessValue, ErrorValue> {
     return promiseResult(this.conn.transaction(async () => query(this)))
   }
