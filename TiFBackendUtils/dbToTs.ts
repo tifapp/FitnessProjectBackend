@@ -43,7 +43,7 @@ const DB = await sqlts.toObject(config)
 const TiFDBTables = DB.tables.filter(table => tableNames.includes(`${table.interfaceName}`))
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const filePath = path.join(__dirname, "./Planetscale/entities.ts")
+const filePath = path.join(__dirname, "./entities.ts")
 
 const tsString = await sqlts.fromObject({ tables: TiFDBTables, enums: DB.enums }, config)
 

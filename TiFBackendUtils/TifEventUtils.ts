@@ -1,8 +1,8 @@
 import dayjs from "dayjs"
 import duration from "dayjs/plugin/duration.js"
-import { DBEventAttendeeCountView, DBEventAttendeesView, DBTifEventView, DBevent, DBeventAttendance, DBuserRelations } from "./Planetscale/entities.js"
 import { SQLExecutable } from "./SQLExecutable/utils.js"
 import { UserRelationship } from "./TiFUserUtils/UserRelationships.js"
+import { DBEventAttendeeCountView, DBEventAttendeesView, DBTifEventView, DBevent, DBeventAttendance, DBuserRelations } from "./entities.js"
 import { Placemark } from "./location.js"
 import { success } from "./result.js"
 dayjs.extend(duration)
