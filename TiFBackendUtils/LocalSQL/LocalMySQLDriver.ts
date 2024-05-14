@@ -36,6 +36,7 @@ export class LocalMySQLExecutableDriver extends SQLDriverAbstract {
   async closeConnection () {
     const conn = await this.conn
     conn.end()
+    return "Connection is closed"
   }
 
   // ==================
