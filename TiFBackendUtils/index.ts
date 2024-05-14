@@ -8,4 +8,3 @@ export * from "./entities.js"
 export * from "./location.js"
 export * from "./result.js"
 export * from "./types/index.js"
-
