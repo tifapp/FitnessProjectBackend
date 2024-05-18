@@ -50,9 +50,12 @@ jobs:
 
     - name: Install dependencies
       run: |
+        cd TiFBackendUtils
         npm ci
-      env:
-        CI: true
+        cd ../GeocodingLambda
+        npm ci
+        cd ../APILambda
+        npm ci
 
     - name: Authenticate with AWS Cognito and run tests
       run: |

@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // TODO: Replace with backend utils
-import mysql, { ResultSetHeader, RowDataPacket } from "mysql2/promise.js"
+import mysql, { FieldPacket, ResultSetHeader, RowDataPacket } from "mysql2/promise.js"
 import { AwaitableResult, failure, promiseResult, success } from "../result.js"
 
 /**
@@ -15,20 +15,22 @@ type ExecuteResult = {
   rowsAffected: number
 }
 
-const typecasts: Record<string, (value: string | null) => unknown> = {
-  INT64: (value) => parseInt(value ?? "0"),
-  INT8: (value) => parseInt(value ?? "0") > 0,
-  DATETIME: (value) => { return value ? new Date(value) : value },
-  DECIMAL: (value) => { return value ? parseFloat(value) : value }
+const typecasts: Record<number, (value: string | null) => unknown> = {
+  3: (value) => parseInt(value ?? "0") > 0, // INT or LONG as BOOLEAN
+  1: (value) => parseInt(value ?? "0") > 0, // TINYINT as BOOLEAN
+  12: (value) => value ? new Date(value) : value, // DATETIME
+  246: (value) => value ? parseFloat(value) : value // NEWDECIMAL (DECIMAL/NUMERIC)
 }
 
-const castTypes = (rows: RowDataPacket[]): RowDataPacket[] => {
+const castTypes = (rows: RowDataPacket[], fields: FieldPacket[]): RowDataPacket[] => {
   return rows.map(row => {
-    for (const key in row) {
-      if (typecasts[key]) {
-        row[key] = typecasts[key](row[key])
+    fields.forEach(field => {
+      const type = field.type
+      const key = field.name
+      if (type !== undefined && typecasts[type]) {
+        row[key] = typecasts[type](row[key])
       }
-    }
+    })
     return row
   })
 }
@@ -69,14 +71,12 @@ export class SQLExecutable {
     query: string,
     args: object | any[] | null = null
   ): Promise<Value[]> {
-    // Use this.conn to execute the query and return the result rows
-    // This will be the only function to directly use the database library's execute method.
     const conn = await this.conn
-    const [rows] = await conn.query(query, args)
-    if (Array.isArray(rows)) {
-      return castTypes(rows as RowDataPacket[]) as Value[]
+    const [rows, fields] = await conn.query(query, args)
+    if (Array.isArray(rows) && Array.isArray(fields)) {
+      return castTypes(rows as RowDataPacket[], fields) as Value[]
     } else {
-      throw new Error("Query did not return an array of rows.")
+      throw new Error("Query did not return an array of rows and fields.")
     }
   }
 
@@ -84,9 +84,6 @@ export class SQLExecutable {
     query: string,
     args: object | any[] | null = null
   ): Promise<ExecuteResult> {
-    // Use this.conn to execute the query and return the result rows
-    // This will be the only function to directly use the database library's execute method.
-    console.log("trying execution")
     const conn = await this.conn
     const [result] = await conn.execute<ResultSetHeader>(query, args)
     if (isResultSetHeader(result)) {
@@ -125,7 +122,6 @@ export class SQLExecutable {
   transaction<SuccessValue, ErrorValue> (
     query: (tx: SQLExecutable) => AwaitableResult<SuccessValue, ErrorValue>
   ) {
-    console.log("trying transaction")
     return promiseResult((async () => {
       const conn = await this.conn
       try {

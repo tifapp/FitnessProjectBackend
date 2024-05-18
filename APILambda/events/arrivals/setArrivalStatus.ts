@@ -20,7 +20,7 @@ export const deleteOldArrivals = (
   coordinate: LocationCoordinate2D
 ) =>
   conn
-    .queryResult( // TO DECIDE: if event length limit or limit in how far in advance event can be scheduled, then we can also delete outdated arrivals
+    .executeResult( // TO DECIDE: if event length limit or limit in how far in advance event can be scheduled, then we can also delete outdated arrivals
       `
         DELETE FROM userArrivals
         WHERE userId = :userId
@@ -58,7 +58,7 @@ export const deleteMaxArrivals = (
       )
       : failure())
     .flatMapSuccess((arrival) =>
-      conn.queryResult(`
+      conn.executeResult(`
         DELETE FROM userArrivals 
         WHERE userId = :userId 
         AND latitude = :latitude 

@@ -24,7 +24,9 @@ async function createDatabaseConnection () {
       user: envVars.DATABASE_USERNAME,
       password: envVars.DATABASE_PASSWORD,
       database: envVars.DATABASE_NAME,
-      namedPlaceholders: true
+      timezone: "Z",
+      namedPlaceholders: true,
+      decimalNumbers: true
     })
     console.log("Successfully connected to the database.")
     return connection

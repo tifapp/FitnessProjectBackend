@@ -63,7 +63,6 @@ const getNextPageCursorResp = (
 
 describe("getAttendeesList endpoint", () => {
   it("should return 400 if limit is less than one", async () => {
-    console.log("trying 400 test")
     const { attendeeToken, testEventId } = await createTestAttendeesList({
       numOfAttendees: 1
     })
@@ -96,8 +95,8 @@ describe("getAttendeesList endpoint", () => {
   it("should return 404 if attendee list is empty", async () => {
     const currentUser = await createUserFlow()
 
-    // We want to use createEvent, since if we use the create event flow it will automatically add the host to the attendees list
-    // In this test, we want to have the list be empty so that we can check it returns 404
+    // In this test, we want to create an event with an empty attendees list, so we must use createEvent directly.
+    // if we use the create event flow the host will be added to the attendees list.
     const {
       value: { insertId }
     } = await createEvent(

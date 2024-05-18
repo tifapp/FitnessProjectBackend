@@ -30,7 +30,7 @@ const blockUser = (
   return userWithIdExists(conn, toUserId)
     .withFailure("user-not-found" as const)
     .flatMapSuccess(() => {
-      return conn.queryResult(
+      return conn.executeResult(
         `
       INSERT INTO userRelations (fromUserId, toUserId, status)
       VALUES (:fromUserId, :toUserId, 'blocked')
@@ -41,7 +41,7 @@ const blockUser = (
       )
     })
     .flatMapSuccess(() => {
-      return conn.queryResult(
+      return conn.executeResult(
         `
       DELETE FROM userRelations
       WHERE fromUserId = :toUserId AND toUserId = :fromUserId AND status != 'blocked';

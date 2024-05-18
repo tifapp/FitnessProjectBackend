@@ -226,7 +226,7 @@ global.beforeAll(async () => {
     return await tx.executeResult(createEventTableSQL)
   })
 
-  await Promise.allSettled(
+  const createTableResult = await Promise.allSettled(
     [
       conn.executeResult(bannedUserTableSQL),
       conn.executeResult(eventAttendanceTableSQL),
@@ -235,12 +235,14 @@ global.beforeAll(async () => {
       conn.executeResult(eventReportsViewSQL),
       conn.executeResult(locationTableSQL),
       conn.executeResult(pushTokensSQL),
-      conn.executeResult(TifEventViewSQL),
       conn.executeResult(createUserArrivalsTableSQL),
       conn.executeResult(userRelationsTableSQL),
       conn.executeResult(userReportsTableSQL),
-      conn.executeResult(userSettingsTableSQL)
+      conn.executeResult(userSettingsTableSQL),
+      conn.executeResult(TifEventViewSQL)
     ]
   )
+
+  console.log(createTableResult)
 }
 )
