@@ -3,7 +3,7 @@
     "pr": "node --loader ts-node/esm ./TiFBackendUtils/node_modules/TiFShared/npm-scripts/auto-pr.ts",
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,md}\"",
     "prepare": "husky",
-    "postinstall": "cd TiFBackendUtils && npm install && cd .. && cd APILambda && npm install && cd .. && cd GeocodingLambda && npm install && cd .."
+    "postinstall": "node postinstall.mjs"
   },
   "devDependencies": {
     "@types/jest": "^29.5.5",
