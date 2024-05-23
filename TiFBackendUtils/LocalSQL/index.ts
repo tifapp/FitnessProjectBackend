@@ -35,4 +35,5 @@ async function createDatabaseConnection () {
   }
 }
 
-export const mySQLDriver = new LocalMySQLExecutableDriver(createDatabaseConnection())
+export const sqlConn = createDatabaseConnection()
+export const mySQLDriver = new LocalMySQLExecutableDriver(sqlConn)

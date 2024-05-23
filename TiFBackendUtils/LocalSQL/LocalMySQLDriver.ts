@@ -1,7 +1,11 @@
 import { ResultSetHeader, RowDataPacket } from "mysql2"
 import mysql from "mysql2/promise.js"
-import { ExecuteResult, SQLDriverAbstract } from "../SQLExecutable/SQLDriverAbstract.js"
-import { AwaitableResult, promiseResult } from "../result.js"
+import { AwaitableResult, failure, promiseResult, success } from "../result.js"
+
+type ExecuteResult = {
+  insertId: string
+  affectedRows: number
+}
 
 const isResultSetHeader = (result: ResultSetHeader): result is ResultSetHeader => {
   return "insertId" in result && "affectedRows" in result
@@ -25,18 +29,16 @@ const castTypes = (rows: RowDataPacket[]): RowDataPacket[] => {
   })
 }
 
-export class LocalMySQLExecutableDriver extends SQLDriverAbstract {
+export class LocalMySQLExecutableDriver {
   private conn: Promise<mysql.Connection>
 
   constructor (connection: Promise<mysql.Connection>) {
-    super()
     this.conn = connection
   }
 
   async closeConnection () {
     const conn = await this.conn
     conn.end()
-    return "Connection is closed"
   }
 
   // ==================
@@ -49,13 +51,13 @@ export class LocalMySQLExecutableDriver extends SQLDriverAbstract {
   ): Promise<ExecuteResult> {
     // Use this.conn to execute the query and return the result rows
     // This will be the only function to directly use the database library's execute method.
-    console.log("trying execution")
     const conn = await this.conn
     const [result] = await conn.execute<ResultSetHeader>(query, args)
+    console.log("Result ", result)
     if (isResultSetHeader(result)) {
       return {
         insertId: result.insertId.toString(),
-        rowsAffected: result.affectedRows
+        affectedRows: result.affectedRows
       }
     } else {
       throw new Error("Execution did not return a ResultSetHeader.")
@@ -63,10 +65,30 @@ export class LocalMySQLExecutableDriver extends SQLDriverAbstract {
   }
 
   /**
+   * Runs the given SQL query and returns a success result containing the insertId of the query.
+   */
+  executeResult (query: string, args: object | null = null) {
+    return promiseResult(
+      this.execute(query, args).then((executeResult) =>
+        success(executeResult)
+      )
+    )
+  }
+
+  /**
+   * Runs the given SQL query and returns a success result containing the result of the query.
+   */
+  queryResult<Value> (query: string, args: object | null = null) {
+    return promiseResult(
+      this.query<Value>(query, args).then((result) => success(result))
+    )
+  }
+
+  /**
    * Performs an idempotent transaction and returns the result of the transaction wrapped in a {@link PromiseResult}.
    */
   transaction<SuccessValue, ErrorValue> (
-    querySQLTransaction: (tx: SQLDriverAbstract) => AwaitableResult<SuccessValue, ErrorValue>
+    querySQLTransaction: (tx: LocalMySQLExecutableDriver) => AwaitableResult<SuccessValue, ErrorValue>
   ) {
     console.log("trying transaction")
     return promiseResult((async () => {
@@ -77,6 +99,7 @@ export class LocalMySQLExecutableDriver extends SQLDriverAbstract {
         await conn.commit()
         return result
       } catch (error) {
+        console.log("Rollback called")
         await conn.rollback()
         throw error
       }
@@ -108,5 +131,43 @@ export class LocalMySQLExecutableDriver extends SQLDriverAbstract {
     } else {
       throw new Error("Query did not return an array of rows.")
     }
+  }
+
+  // ==================
+  // Generic Methods
+  // ==================
+
+  /**
+   * Returns the first result of a query in a typesafe manner.
+   *
+   * @example
+   * ```ts
+   * type User = { id: string, ... }
+   *
+   * const result? = await queryFirst<User>(conn, "SELECT * FROM user");
+   * console.log(result?.id) // ✅ Typesafe
+   * ```
+   */
+  queryFirstResult (query: string, args: object | null = null) {
+    return promiseResult(
+      this.query(query, args).then((results) =>
+        results[0] ? success(results[0]) : failure("no-results" as const)
+      )
+    )
+  }
+
+  /**
+   * Runs a query an returns a success result if the query returns 1 or more rows.
+   *
+   * You should not query specific data with this method, instead use a `"SELECT TRUE"`
+   * if you need to perform a select.
+   */
+  queryHasResults (query: string, args: object | null = null) {
+    return promiseResult(
+      this.query(query, args).then((results) => {
+        const hasResults = results.length > 0
+        return hasResults ? success(hasResults) : failure(hasResults)
+      })
+    )
   }
 }

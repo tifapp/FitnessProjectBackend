@@ -6,11 +6,6 @@
  */
 import { AwaitableResult, PromiseResult, failure, promiseResult, success } from "../result.js"
 
-export type ExecuteResult = {
-  insertId: string
-  rowsAffected: number
-}
-
 export abstract class SQLDriverAbstract {
   abstract execute (
         query: string,

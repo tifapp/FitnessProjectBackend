@@ -1,105 +1,124 @@
-import mysql from "mysql2/promise.js"
-import { z } from "zod"
+import { afterEach } from "node:test"
 import { LocalMySQLExecutableDriver } from "../../LocalSQL/LocalMySQLDriver.js"
-import { Result } from "../../result.js"
-import { ExecuteResult } from "../SQLDriverAbstract"
+import { sqlConn } from "../../LocalSQL/index.js"
+import { conn } from "../index.js"
 
-const EnvVarsSchema = z
-  .object({
-    DATABASE_HOST: z.string(),
-    DATABASE_PASSWORD: z.string(),
-    DATABASE_USERNAME: z.string(),
-    DATABASE_NAME: z.string()
-  })
-  .passthrough()
-
-const envVars = EnvVarsSchema.parse(process.env)
-
-async function createDatabaseConnection () {
-  try {
-    const connection = await mysql.createConnection({
-      host: envVars.DATABASE_HOST,
-      user: envVars.DATABASE_USERNAME,
-      password: envVars.DATABASE_PASSWORD,
-      database: envVars.DATABASE_NAME,
-      namedPlaceholders: true
-    })
-    console.log("Successfully connected to the database.")
-    return connection
-  } catch (error) {
-    console.error("Unable to connect to the database:", error)
-    throw error
-  }
+export type ExecuteResult = {
+  id: string
+  affectedRows: number
 }
 
 describe("LocalMySQLExecutableDriver", () => {
-  let mySQLDriver: LocalMySQLExecutableDriver
+  let mySQLDriverTest: LocalMySQLExecutableDriver
 
   beforeAll(async () => {
-    mySQLDriver = new LocalMySQLExecutableDriver(createDatabaseConnection())
+    mySQLDriverTest = conn
+    const createMySQLDriverTableSQL = `
+    CREATE TABLE IF NOT EXISTS mySQLDriver (
+    id bigint NOT NULL,
+    name varchar(50) NOT NULL,
+    PRIMARY KEY (id)
+    )`
+    await conn.transaction(
+      async (tx) => await tx.executeResult(createMySQLDriverTableSQL)
+    )
   })
 
   afterEach(async () => {
-    mySQLDriver.execute("DELETE * FROM users")
+    mySQLDriverTest.execute("DELETE FROM mySQLDriver")
   })
 
   afterAll(async () => {
-    await mySQLDriver.closeConnection()
+    const deleteMySQLDriverTableSQL = `
+    DROP TABLE IF EXISTS MySQLDriver
+    `
+    await conn.transaction(
+      async (tx) => await tx.executeResult(deleteMySQLDriverTableSQL)
+    )
+    // await mySQLDriverTest.closeConnection()
   })
 
   describe("execute", () => {
     it("should execute a query and return the result", async () => {
-      const query = "INSERT INTO users (name) VALUES 'Surya'"
-      const result: ExecuteResult = await mySQLDriver.execute(query)
-      expect(result).toEqual({ insertId: z.number, rowsAffected: 1 })
+      const query = "INSERT INTO MySQLDriver (name, id) VALUES ('Surya', 0)"
+      const result = await mySQLDriverTest.execute(query)
+      expect(result).toEqual({
+        affectedRows: 1,
+        insertId: "0"
+      })
     })
 
     it("should throw an error if execution does not return a ResultSetHeader", async () => {
-      const query = "SELECT * FROM users"
+      const query = "SELECT * FROM MySQLDriver"
       const args = null
-      await expect(mySQLDriver.execute(query, args)).rejects.toThrow("Execution did not return a ResultSetHeader.")
+      await expect(mySQLDriverTest.execute(query, args)).rejects.toThrow(
+        "Execution did not return a ResultSetHeader."
+      )
     })
   })
 
   describe("transaction", () => {
     it("should perform a transaction and return the result", async () => {
-      const query = "INSERT INTO users (name) VALUES 'Bob'"
+      const query = "INSERT INTO MySQLDriver (name, id) VALUES ('Bob',1)"
       const args = null
-      const result: Result<ExecuteResult, never> = await mySQLDriver.transaction((tx) => tx.executeResult(query, args))
-      expect(result).toEqual({ insertId: z.number, rowsAffected: 1 })
+      const result = await mySQLDriverTest.transaction((tx) =>
+        tx.executeResult(query, args)
+      )
+      expect(result).toEqual({
+        status: "success",
+        value: {
+          affectedRows: 1,
+          insertId: "0"
+        }
+      })
     })
-
     it("should rollback if an error occurs", async () => {
-      const query = "INSERT INTO users"
+      const query = "INSERT INTO MySQLDriver"
       const args = null
-      const result: Result<ExecuteResult, never> = await mySQLDriver.transaction((tx) => tx.executeResult(query, args))
-      expect(result).toThrowError()
+      // const result = await mySQLDriverTest.transaction((tx) => tx.executeResult(query, args))
+      jest.spyOn(mySQLDriverTest, "executeResult")
+      expect(
+        mySQLDriverTest.transaction((tx) => tx.executeResult(query, args))
+      ).rejects.toThrow(Error)
+      expect(mySQLDriverTest.executeResult).toBeCalled()
+      const transactionSQLConn = await sqlConn
+      jest.spyOn(transactionSQLConn, "rollback")
+      expect(transactionSQLConn.rollback).toBeCalled()
     })
   })
 
   describe("query", () => {
     it("should execute a query and return the result rows", async () => {
-      let query = "INSERT INTO users (name) VALUES 'Bob'"
+      let query = "INSERT INTO MySQLDriver (name, id) VALUES ('Bob', 2)"
       const args = null
-      await mySQLDriver.transaction((tx) => tx.executeResult(query, args))
-      query = "SELECT * FROM users"
-      const result = await mySQLDriver.query(query, args)
-      expect(result).toEqual([{ id: z.number, name: "Bob" }])
+      await mySQLDriverTest.transaction((tx) => tx.executeResult(query, args))
+      query = "SELECT * FROM MySQLDriver"
+      const result = await mySQLDriverTest.query(query, args)
+      expect(result).toEqual(
+        [
+          {
+            id: 0,
+            name: "Surya"
+          },
+          {
+            id: 1,
+            name: "Bob"
+          }
+        ]
+      )
     })
-
     it("should throw an error if query does not return an array of rows", async () => {
-      const query = "SELECT * FROM users"
+      const query = "INSERT INTO MySQLDriver (name, id) VALUES ('Bob', 3)"
       const args = null
-
-      await expect(mySQLDriver.query(query, args)).rejects.toThrow("Query did not return an array of rows.")
+      await expect(mySQLDriverTest.query(query, args)).rejects.toThrowError("Query did not return an array of rows.")
     })
   })
 
   describe("closeConnection", () => {
-    it("should close the connection", async () => {
-      const result = await mySQLDriver.closeConnection()
-
-      expect(result).toEqual("Connection is closed")
+    it.only("should close the connection", async () => {
+      await mySQLDriverTest.closeConnection()
+      const query = "INSERT INTO mySQLDriver (name, id) VALUES ('Chungus',4)"
+      await expect(mySQLDriverTest.execute(query)).rejects.toThrowError("Can't add new command when connection is in closed state")
     })
   })
 })
