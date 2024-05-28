@@ -13,26 +13,29 @@ type EventRegion = {
 }
 
 const mapEventsToRegions = (events: UpcomingEvent[]): EventRegion[] => {
-  const eventRegions: Record<string, EventRegion> = {}
+  const eventRegions = new Map<string, EventRegion>();
 
   events.forEach(({ id, hasArrived, latitude, longitude }) => {
-    const key = `${hasArrived}-${latitude}-${longitude}`
+    const key = `${hasArrived}-${latitude}-${longitude}`;
 
-    if (!eventRegions[key]) {
-      eventRegions[key] = {
+    if (!eventRegions.has(key)) {
+      eventRegions.set(key, {
         eventIds: [],
         coordinate: { latitude, longitude },
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         hasArrived: hasArrived === 1 || hasArrived === true, // hasArrived should be treated as int, but is treated as bigint if it occurs in a transaction after TiFEventView
         arrivalRadiusMeters: 500 // TODO: Parameterize
-      }
+      });
     }
 
-    eventRegions[key].eventIds.push(id)
-  })
+    const existingRegion = eventRegions.get(key);
+    if (existingRegion) {
+      existingRegion.eventIds.push(id);
+    }
+  });
 
-  return Object.values(eventRegions)
+  return Array.from(eventRegions.values());
 }
 
 // TODO: 24 hour window should be parameterized based on env variable
