@@ -10,13 +10,30 @@ jobs:
   test:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: yourpassword
+          MYSQL_DATABASE: tif
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -u root --password=yourpassword"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
     
     env:
-      DATABASE_HOST: ${{ secrets.DATABASE_HOST }}
-      DATABASE_USERNAME: ${{ secrets.DEV_DATABASE_USERNAME }}
-      DATABASE_PASSWORD: ${{ secrets.DEV_DATABASE_PASSWORD }}
+      DATABASE_HOST: 127.0.0.1
+      DATABASE_USERNAME: root
+      DATABASE_PASSWORD: yourpassword
+      DATABASE_NAME: tif
       AWS_REGION: ${{ secrets.AWS_REGION }}
       AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       ABLY_KEY: ${{ secrets.ABLY_KEY }}
       COGNITO_USER_POOL_ID: ${{ secrets.COGNITO_USER_POOL_ID }}
       AWS_LAMBDA_FUNCTION_NAME: lambdaSQLRoute
@@ -25,17 +42,14 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
+      - name: Verify MySQL connection
+        run: |
+          mysql --host=127.0.0.1 --user=root --password=yourpassword -e "SHOW DATABASES;" 
+
       - name: Setup Node.js environment
         uses: actions/setup-node@v2
         with:
           node-version: '18'
-
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
           
       - name: Install dependencies
         run: |
@@ -97,6 +111,13 @@ jobs:
       uses: actions/setup-node@v2
       with:
         node-version: '18'
+    
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ secrets.AWS_REGION }}
         
     - name: Install dependencies
       run: |

@@ -35,7 +35,7 @@ const getTiFAttendees = (
   nextPageArrivedDateTimeCursor: Date | null,
   limit: number
 ) =>
-  conn.queryResults<DBeventAttendance & DBuserArrivals & UserRelationship & Pick<DBuser, "id" | "name" | "profileImageURL" | "handle"> & {hasArrived: boolean}>(
+  conn.queryResult<DBeventAttendance & DBuserArrivals & UserRelationship & Pick<DBuser, "id" | "name" | "profileImageURL" | "handle"> & {hasArrived: boolean}>(
     `SELECT 
     u.id, 
     u.profileImageURL, 

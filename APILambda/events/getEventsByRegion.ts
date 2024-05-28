@@ -20,7 +20,7 @@ export const getEventsByRegion = (
   conn: SQLExecutable,
   eventsRequest: EventsRequestByRegion
 ) =>
-  conn.queryResults<DBTifEvent>(
+  conn.queryResult<DBTifEvent>(
     `
     SELECT TifEventView.*,
     CASE

@@ -85,7 +85,7 @@ export const addPlacemarkToDB = (conn: SQLExecutable, {
   region = null,
   isoCountryCode = null
 }: Placemark, timezoneIdentifier: string) =>
-  conn.queryResults(
+  conn.executeResult(
     `
         INSERT INTO location (name, city, country, street, streetNumber, postalCode, latitude, longitude, timezoneIdentifier, isoCountryCode)
         VALUES (:name, :city, :country, :street, :streetNumber, :postalCode, :latitude, :longitude, :timezoneIdentifier, :isoCountryCode)

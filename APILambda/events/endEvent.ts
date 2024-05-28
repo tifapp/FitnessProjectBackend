@@ -9,7 +9,7 @@ const endEventParamsSchema = z.object({
 
 const endEventByHost = (conn: SQLExecutable, hostId: string, eventId: number) =>
   conn
-    .queryResult(
+    .executeResult(
       `UPDATE event 
     SET endedDateTime = NOW()
     WHERE event.id = :eventId

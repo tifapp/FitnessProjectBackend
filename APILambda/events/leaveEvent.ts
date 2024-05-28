@@ -64,7 +64,7 @@ const removeUserFromAttendeeList = (
   userId: string,
   eventId: number
 ) =>
-  conn.queryResult(
+  conn.executeResult(
     `DELETE ea FROM eventAttendance AS ea
     JOIN event AS e ON ea.eventId = e.id
     WHERE ea.userId = :userId AND ea.eventId = :eventId AND e.endedDateTime IS NULL`,

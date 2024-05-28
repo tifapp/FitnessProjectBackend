@@ -26,7 +26,7 @@ export const isUserNotBlocked = (
     .withFailure("user-is-blocked" as const)
 
 export const addUserToEventAttendance = (userId: string, eventId: number) =>
-  conn.queryResults(
+  conn.queryResult(
     `
     INSERT INTO eventAttendance (userId, eventId)
     VALUES (:userId, :eventId)

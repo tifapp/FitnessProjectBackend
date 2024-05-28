@@ -1,8 +1,8 @@
 import dayjs from "dayjs"
 import duration from "dayjs/plugin/duration.js"
-import { DBEventAttendeeCountView, DBEventAttendeesView, DBTifEventView, DBevent, DBeventAttendance, DBuserRelations } from "./Planetscale/entities.js"
 import { SQLExecutable } from "./SQLExecutable/utils.js"
 import { UserRelationship } from "./TiFUserUtils/UserRelationships.js"
+import { DBEventAttendeeCountView, DBEventAttendeesView, DBTifEventView, DBevent, DBeventAttendance, DBuserRelations } from "./entities.js"
 import { Placemark } from "./location.js"
 import { success } from "./result.js"
 dayjs.extend(duration)
@@ -160,7 +160,7 @@ export const tifEventResponseFromDatabaseEvent = (event: DBTifEvent) : TiFEvent 
 }
 
 export const getAttendeeCount = (conn: SQLExecutable, eventIds: string[]) => {
-  return conn.queryResults<DBEventAttendeeCountView>(
+  return conn.queryResult<DBEventAttendeeCountView>(
     ` SELECT
         attendeeCount
       FROM
@@ -173,7 +173,7 @@ export const getAttendeeCount = (conn: SQLExecutable, eventIds: string[]) => {
 }
 
 export const getEventAttendanceFields = (conn: SQLExecutable, userId: string, eventIds: string[]) => {
-  return conn.queryResults<DBeventAttendance>(
+  return conn.queryResult<DBeventAttendance>(
     ` SELECT
         ea.joinedDateTime AS joinedDateTime,
         ea.role AS role
@@ -217,7 +217,7 @@ const setAttendeesPreviewForEvent = (
 }
 
 export const getAttendees = (conn: SQLExecutable, eventIds: string[]) => {
-  return conn.queryResults<DBEventAttendeesView>(
+  return conn.queryResult<DBEventAttendeesView>(
     `
     SELECT 
       EventAttendeesView.userIds

@@ -1,42 +1,45 @@
-import { SQLExecutable, UpcomingEvent, conn } from "TiFBackendUtils";
-import { ServerEnvironment } from "../../env.js";
-import { ValidatedRouter } from "../../validation.js";
+import { SQLExecutable, UpcomingEvent, conn } from "TiFBackendUtils"
+import { ServerEnvironment } from "../../env.js"
+import { ValidatedRouter } from "../../validation.js"
 
 type EventRegion = {
-  eventIds: number[];
+  eventIds: number[]
   coordinate: {
-    latitude: number;
-    longitude: number;
-  };
-  arrivalRadiusMeters: number;
-  hasArrived: boolean;
+    latitude: number
+    longitude: number
+  }
+  arrivalRadiusMeters: number
+  hasArrived: boolean
 }
 
 const mapEventsToRegions = (events: UpcomingEvent[]): EventRegion[] => {
-  const eventRegions: Record<string, EventRegion> = {}
+  const eventRegions = new Map<string, EventRegion>();
 
-  events.forEach(event => {
-    const key = `${event.hasArrived}-${event.latitude}-${event.longitude}`
+  events.forEach(({ id, hasArrived, latitude, longitude }) => {
+    const key = `${hasArrived}-${latitude}-${longitude}`;
 
-    if (!eventRegions[key]) {
-      eventRegions[key] = {
+    if (!eventRegions.has(key)) {
+      eventRegions.set(key, {
         eventIds: [],
-        coordinate: { latitude: event.latitude, longitude: event.longitude },
+        coordinate: { latitude, longitude },
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
-        hasArrived: event.hasArrived === 1,
+        hasArrived: hasArrived === 1 || hasArrived === true, // hasArrived should be treated as int, but is treated as bigint if it occurs in a transaction after TiFEventView
         arrivalRadiusMeters: 500 // TODO: Parameterize
-      }
+      });
     }
 
-    eventRegions[key].eventIds.push(event.id)
-  })
+    const existingRegion = eventRegions.get(key);
+    if (existingRegion) {
+      existingRegion.eventIds.push(id);
+    }
+  });
 
-  return Object.values(eventRegions)
+  return Array.from(eventRegions.values());
 }
 
 // TODO: 24 hour window should be parameterized based on env variable
-export const getUpcomingEventsByRegion = (conn: SQLExecutable, userId: string) => conn.queryResults<UpcomingEvent>(
+export const getUpcomingEventsByRegion = (conn: SQLExecutable, userId: string) => conn.queryResult<UpcomingEvent>(
   `
   SELECT 
     e.*, 
