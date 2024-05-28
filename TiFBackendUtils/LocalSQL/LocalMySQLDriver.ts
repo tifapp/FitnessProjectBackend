@@ -53,7 +53,6 @@ export class LocalMySQLExecutableDriver {
     // This will be the only function to directly use the database library's execute method.
     const conn = await this.conn
     const [result] = await conn.execute<ResultSetHeader>(query, args)
-    console.log("Result ", result)
     if (isResultSetHeader(result)) {
       return {
         insertId: result.insertId.toString(),

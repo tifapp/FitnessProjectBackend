@@ -18,7 +18,7 @@ const EnvVarsSchema = z
 
 const envVars = EnvVarsSchema.parse(process.env)
 
-async function createDatabaseConnection () {
+export async function createDatabaseConnection () {
   try {
     const connection = await mysql.createConnection({
       host: envVars.DATABASE_HOST,
