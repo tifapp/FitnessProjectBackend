@@ -53,13 +53,11 @@ jobs:
           
       - name: Install dependencies
         run: |
+          npm ci
           cd TiFBackendUtils
-          npm ci
           npm run dbtots
-          cd ../GeocodingLambda
-          npm ci
-          cd ../APILambda
-          npm ci
+        env:
+          CI: true
       
       - name: Validate openapi specs
         run: |
@@ -123,12 +121,9 @@ jobs:
         
     - name: Install dependencies
       run: |
-        cd TiFBackendUtils
         npm ci
-        cd ../GeocodingLambda
-        npm ci
-        cd ../APILambda
-        npm ci
+      env:
+        CI: true
 
     - name: Authenticate with AWS Cognito and run tests
       run: |
