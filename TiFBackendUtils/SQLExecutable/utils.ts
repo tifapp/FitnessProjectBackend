@@ -40,14 +40,14 @@ const isResultSetHeader = (result: any): result is ResultSetHeader => {
 }
 
 export class SQLExecutable {
-  private conn: Promise<mysql.Connection>
+  private useConnection: () =>  Promise<mysql.Connection>
 
-  constructor (connection: Promise<mysql.Connection>) {
-    this.conn = connection
+  constructor (useConnection: () => Promise<mysql.Connection>) {
+    this.useConnection = useConnection
   }
 
   async closeConnection () {
-    const conn = await this.conn
+    const conn = await this.useConnection()
     conn.end()
   }
 
@@ -71,7 +71,7 @@ export class SQLExecutable {
     query: string,
     args: object | any[] | null = null
   ): Promise<Value[]> {
-    const conn = await this.conn
+    const conn = await this.useConnection()
     const [rows, fields] = await conn.query(query, args)
     if (Array.isArray(rows) && Array.isArray(fields)) {
       return castTypes(rows as RowDataPacket[], fields) as Value[]
@@ -84,7 +84,7 @@ export class SQLExecutable {
     query: string,
     args: object | any[] | null = null
   ): Promise<ExecuteResult> {
-    const conn = await this.conn
+    const conn = await this.useConnection()
     const [result] = await conn.execute<ResultSetHeader>(query, args)
     if (isResultSetHeader(result)) {
       return {
@@ -123,7 +123,7 @@ export class SQLExecutable {
     query: (tx: SQLExecutable) => AwaitableResult<SuccessValue, ErrorValue>
   ) {
     return promiseResult((async () => {
-      const conn = await this.conn
+      const conn = await this.useConnection()
       try {
         await conn.beginTransaction()
         const result = await query(this)

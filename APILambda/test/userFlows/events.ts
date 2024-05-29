@@ -1,6 +1,7 @@
 import { CreateEventInput } from "../../events/createEvent.js"
 import { callCreateEvent, callJoinEvent } from "../apiCallers/events.js"
 import { delay } from "../helpers/delay.js"
+import { testEnvVars } from "../testEnv.js"
 import { testEventInput } from "../testEvents.js"
 import { TestUser, createUserFlow } from "./users.js"
 
@@ -39,7 +40,7 @@ export const createEventFlow = async (
 
     for (const eventId of eventIds) {
       // delay needed for test attendees to be properly sorted by join time
-      await delay(1000)
+      if (!testEnvVars.API_ENDPOINT) { await delay(1000) }
       await callJoinEvent(attendee.token, eventId)
     }
   }

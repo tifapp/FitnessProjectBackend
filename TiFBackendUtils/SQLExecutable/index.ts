@@ -1,60 +1,67 @@
-import dotenv from "dotenv"
-import mysql from "mysql2/promise.js"
-import { z } from "zod"
-import { SQLExecutable } from "./utils.js"
-export { SQLExecutable }
+import dotenv from 'dotenv';
+import mysql from 'mysql2/promise.js';
+import { z } from 'zod';
+import { SQLExecutable } from './utils.js';
 
-dotenv.config()
+export { SQLExecutable };
 
-const EnvVarsSchema = z
-  .object({
-    DATABASE_HOST: z.string(),
-    DATABASE_PASSWORD: z.string(),
-    DATABASE_USERNAME: z.string()
-  })
-  .passthrough()
+dotenv.config();
 
-const envVars = EnvVarsSchema.parse(process.env)
+const EnvVarsSchema = z.object({
+  DATABASE_HOST: z.string(),
+  DATABASE_NAME: z.string(),
+  DATABASE_PASSWORD: z.string(),
+  DATABASE_USERNAME: z.string(),
+}).passthrough();
 
-const dbName = 'tif'
+const envVars = EnvVarsSchema.parse(process.env);
 
-async function createDatabaseConnection () {
-  try {
-    const connection = await mysql.createConnection({
-      host: envVars.DATABASE_HOST,
-      user: envVars.DATABASE_USERNAME,
-      password: envVars.DATABASE_PASSWORD,
-      database: dbName,
-      timezone: "Z",
-      namedPlaceholders: true,
-      decimalNumbers: true
-    })
-    console.log("Successfully connected to the database.")
-    return connection
-  } catch (error) {
-    console.error("Unable to connect to the database:", error)
-    throw error
+let connection: mysql.Connection;
+
+const createConnection = async (connectionConfig: Partial<mysql.ConnectionOptions> = {database: envVars.DATABASE_NAME}) => {
+  return mysql.createConnection({
+    host: envVars.DATABASE_HOST,
+    user: envVars.DATABASE_USERNAME,
+    password: envVars.DATABASE_PASSWORD,
+    database: undefined,
+    timezone: 'Z',
+    namedPlaceholders: true,
+    decimalNumbers: true,
+    ...connectionConfig
+  });
+};
+
+const useConnection = async () => {
+  if (!connection) {
+    connection = await createConnection();
   }
-}
 
-const connectionPromise = createDatabaseConnection()
+  try {
+    await connection.ping();
+    console.log('Connection is still alive');
+  } catch (error) {
+    console.log('Connection lost, creating a new one');
+    connection = await createConnection();
+  }
 
-export const conn = new SQLExecutable(connectionPromise)
+  return connection;
+};
+
+export const conn = new SQLExecutable(useConnection);
 
 export const recreateDatabase = async () => {
-  const connection = await connectionPromise;
+  const connection = await createConnection({database: undefined});
 
   try {
-    await connection.changeUser({ database: undefined });
+    console.log(`Going to reset the database ${envVars.DATABASE_NAME}`);
 
-    await connection.query(`DROP DATABASE ${dbName}`);
-
-    await connection.query(`CREATE DATABASE ${dbName}`);
-
-    await connection.changeUser({ database: dbName });
+    await connection.query(`DROP DATABASE IF EXISTS \`${envVars.DATABASE_NAME}\``);
+    await connection.query(`CREATE DATABASE \`${envVars.DATABASE_NAME}\``);
 
     console.log('Reset the database successfully');
   } catch (error) {
     console.error('An error occurred:', error);
+  } finally {
+    await connection.end();
   }
 };

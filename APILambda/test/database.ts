@@ -216,24 +216,27 @@ const recreateTables = async () => {
     return await tx.executeResult(createEventTableSQL)
   })
 
-  const createTableResult = await Promise.allSettled(
+  await Promise.allSettled(
     [
       conn.executeResult(bannedUserTableSQL),
       conn.executeResult(eventAttendanceTableSQL),
-      conn.executeResult(eventAttendeeCountViewSQL),
-      conn.executeResult(eventAttendeesViewSQL),
-      conn.executeResult(eventReportsViewSQL),
       conn.executeResult(locationTableSQL),
       conn.executeResult(pushTokensSQL),
       conn.executeResult(createUserArrivalsTableSQL),
       conn.executeResult(userRelationsTableSQL),
       conn.executeResult(userReportsTableSQL),
       conn.executeResult(userSettingsTableSQL),
-      conn.executeResult(TifEventViewSQL)
     ]
   )
 
-  console.log(createTableResult)
+  await Promise.allSettled(
+    [
+      await conn.executeResult(eventAttendeeCountViewSQL),
+      await conn.executeResult(eventAttendeesViewSQL),
+      await conn.executeResult(eventReportsViewSQL),
+      await conn.executeResult(TifEventViewSQL)
+    ]
+  )
 }
 
 export const resetDB = async () => {
