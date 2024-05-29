@@ -1,6 +1,6 @@
 export * from "./AWS/index.js"
+export * from "./LocalSQL/dbConnection.js"
 export * from "./Retryable/utils.js"
-export * from "./SQLExecutable/index.js"
 export * from "./TiFUserUtils/index.js"
 export * from "./TifEventUtils.js"
 export * from "./UserHandle.js"

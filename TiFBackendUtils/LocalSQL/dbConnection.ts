@@ -1,7 +1,9 @@
 import dotenv from "dotenv"
 import mysql from "mysql2/promise.js"
 import { z } from "zod"
-import { LocalMySQLExecutableDriver } from "../LocalSQL/LocalMySQLDriver.js"
+import { MySQLExecutableDriver } from "../LocalSQL/MySQLDriver.js"
+import { SQLExecutable } from "../SQLExecutable/utils.js"
+export { SQLExecutable }
 
 dotenv.config()
 
@@ -54,4 +56,4 @@ export async function createDatabaseConnection () {
 }
 
 export const sqlConn = createDatabaseConnection()
-export const conn = new LocalMySQLExecutableDriver(sqlConn)
+export const conn = new MySQLExecutableDriver(sqlConn)

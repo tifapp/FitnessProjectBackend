@@ -1,4 +1,4 @@
-import { LocalMySQLExecutableDriver } from "../../LocalSQL/LocalMySQLDriver.js"
+import { MySQLExecutableDriver } from "../../LocalSQL/MySQLDriver.js"
 import { conn, createDatabaseConnection } from "../../LocalSQL/dbConnection.js"
 
 export type ExecuteResult = {
@@ -6,7 +6,7 @@ export type ExecuteResult = {
   affectedRows: number
 }
 
-describe("LocalMySQLExecutableDriver", () => {
+describe("MySQLExecutableDriver", () => {
   beforeAll(async () => {
     const createMySQLDriverTableSQL = `
     CREATE TABLE IF NOT EXISTS mySQLDriver (
@@ -30,7 +30,7 @@ describe("LocalMySQLExecutableDriver", () => {
 
   describe("execute", () => {
     it("should execute a query and return the result", async () => {
-      const mySQLDriverTest = new LocalMySQLExecutableDriver(createDatabaseConnection())
+      const mySQLDriverTest = new MySQLExecutableDriver(createDatabaseConnection())
       await mySQLDriverTest.execute("DELETE FROM mySQLDriver")
       const query = "INSERT INTO MySQLDriver (name, id) VALUES ('Surya',0)"
       const result = await mySQLDriverTest.execute(query)
@@ -42,7 +42,7 @@ describe("LocalMySQLExecutableDriver", () => {
     })
 
     it("should throw an error if execution does not return a ResultSetHeader", async () => {
-      const mySQLDriverTest = new LocalMySQLExecutableDriver(createDatabaseConnection())
+      const mySQLDriverTest = new MySQLExecutableDriver(createDatabaseConnection())
       await mySQLDriverTest.execute("DELETE FROM mySQLDriver")
       const query = "SELECT * FROM MySQLDriver"
       const args = null
@@ -55,7 +55,7 @@ describe("LocalMySQLExecutableDriver", () => {
 
   describe("transaction", () => {
     it("should perform a transaction and return the result", async () => {
-      const mySQLDriverTest = new LocalMySQLExecutableDriver(createDatabaseConnection())
+      const mySQLDriverTest = new MySQLExecutableDriver(createDatabaseConnection())
       await mySQLDriverTest.execute("DELETE FROM mySQLDriver")
       const query = "INSERT INTO MySQLDriver (name, id) VALUES ('Bob',0)"
       const args = null
@@ -72,7 +72,7 @@ describe("LocalMySQLExecutableDriver", () => {
       await mySQLDriverTest.closeConnection()
     })
     it("should rollback if an error occurs", async () => {
-      const mySQLDriverTest = new LocalMySQLExecutableDriver(createDatabaseConnection())
+      const mySQLDriverTest = new MySQLExecutableDriver(createDatabaseConnection())
       await mySQLDriverTest.execute("DELETE FROM mySQLDriver")
       const query = "INSERT INTO MySQLDriver"
       const args = null
@@ -85,7 +85,7 @@ describe("LocalMySQLExecutableDriver", () => {
 
   describe("query", () => {
     it("should execute a query and return the result rows", async () => {
-      const mySQLDriverTest = new LocalMySQLExecutableDriver(createDatabaseConnection())
+      const mySQLDriverTest = new MySQLExecutableDriver(createDatabaseConnection())
       await mySQLDriverTest.execute("DELETE FROM mySQLDriver")
       let query = "INSERT INTO MySQLDriver (name, id) VALUES ('Bob', 0)"
       const args = null
@@ -103,7 +103,7 @@ describe("LocalMySQLExecutableDriver", () => {
       await mySQLDriverTest.closeConnection()
     })
     it("should throw an error if query does not return an array of rows", async () => {
-      const mySQLDriverTest = new LocalMySQLExecutableDriver(createDatabaseConnection())
+      const mySQLDriverTest = new MySQLExecutableDriver(createDatabaseConnection())
       await mySQLDriverTest.execute("DELETE FROM mySQLDriver")
       const query = "INSERT INTO MySQLDriver (name, id) VALUES ('Bob', 0)"
       const args = null
@@ -114,7 +114,7 @@ describe("LocalMySQLExecutableDriver", () => {
 
   describe("closeConnection", () => {
     it("should close the connection", async () => {
-      const mySQLDriverTest = new LocalMySQLExecutableDriver(createDatabaseConnection())
+      const mySQLDriverTest = new MySQLExecutableDriver(createDatabaseConnection())
       await mySQLDriverTest.execute("DELETE FROM mySQLDriver")
       await mySQLDriverTest.closeConnection()
       const query = "INSERT INTO mySQLDriver (name, id) VALUES ('Chungus',1)"

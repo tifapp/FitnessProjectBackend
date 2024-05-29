@@ -3,7 +3,7 @@ import {
   Place,
   SearchPlaceIndexForPositionCommand
 } from "@aws-sdk/client-location"
-import { SQLExecutable } from "TiFBackendUtils/SQLExecutable/index.js"
+import { SQLExecutable } from "TiFBackendUtils"
 import { LocationCoordinate2D, Placemark } from "TiFBackendUtils/location.js"
 // https://github.com/evansiroky/node-geo-tz/commit/1b11eda7824a1e6dbc0b0ff65bfea1f50c20d3fa
 // eslint-disable-next-line import/extensions

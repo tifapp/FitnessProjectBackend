@@ -29,7 +29,7 @@ const castTypes = (rows: RowDataPacket[]): RowDataPacket[] => {
   })
 }
 
-export class LocalMySQLExecutableDriver {
+export class MySQLExecutableDriver {
   private conn: Promise<mysql.Connection>
 
   constructor (connection: Promise<mysql.Connection>) {
@@ -87,7 +87,7 @@ export class LocalMySQLExecutableDriver {
    * Performs an idempotent transaction and returns the result of the transaction wrapped in a {@link PromiseResult}.
    */
   transaction<SuccessValue, ErrorValue> (
-    querySQLTransaction: (tx: LocalMySQLExecutableDriver) => AwaitableResult<SuccessValue, ErrorValue>
+    querySQLTransaction: (tx: MySQLExecutableDriver) => AwaitableResult<SuccessValue, ErrorValue>
   ) {
     console.log("trying transaction")
     return promiseResult((async () => {
