@@ -3,7 +3,7 @@ import { conn, createDatabaseConnection } from "../../LocalSQL/dbConnection.js"
 
 export type ExecuteResult = {
   id: string
-  affectedRows: number
+  rowsAffected: number
 }
 
 describe("MySQLExecutableDriver", () => {
@@ -23,7 +23,7 @@ describe("MySQLExecutableDriver", () => {
 
   afterAll(async () => {
     const deleteMySQLDriverTableSQL = `
-    DROP TABLE IF EXISTS MySQLDriver
+    DROP TABLE IF EXISTS mySQLDriver
     `
     await conn.transaction(
       async (tx) => await tx.executeResult(deleteMySQLDriverTableSQL)
@@ -44,7 +44,7 @@ describe("MySQLExecutableDriver", () => {
       const query = "INSERT INTO MySQLDriver (name, id) VALUES ('Surya',0)"
       const result = await mySQLDriverTest.execute(query)
       expect(result).toEqual({
-        affectedRows: 1,
+        rowsAffected: 1,
         insertId: "0"
       })
     })
@@ -70,7 +70,7 @@ describe("MySQLExecutableDriver", () => {
       expect(result).toEqual({
         status: "success",
         value: {
-          affectedRows: 1,
+          rowsAffected: 1,
           insertId: "0"
         }
       })
