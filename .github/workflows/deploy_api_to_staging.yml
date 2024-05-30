@@ -26,6 +26,9 @@ jobs:
     needs: deploy_for_tests
     
     env:
+      CA_PEM: ${{ secrets.CA_PEM }}
+      DATABASE_PORT: ${{ secrets.DATABASE_PORT }}
+      DATABASE_NAME: ${{ secrets.DATABASE_NAME }}
       DATABASE_HOST: ${{ secrets.DATABASE_HOST }}
       DATABASE_USERNAME: ${{ secrets.DEV_DATABASE_USERNAME }}
       DATABASE_PASSWORD: ${{ secrets.DEV_DATABASE_PASSWORD }}

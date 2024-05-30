@@ -2,6 +2,7 @@
 // TODO: Replace with backend utils
 import mysql, { FieldPacket, ResultSetHeader, RowDataPacket } from "mysql2/promise.js"
 import { AwaitableResult, failure, promiseResult, success } from "../result.js"
+import { createConnection } from "./index.js"
 
 /**
  * An interface for performing commonly used operations on a SQL database
@@ -40,10 +41,25 @@ const isResultSetHeader = (result: any): result is ResultSetHeader => {
 }
 
 export class SQLExecutable {
-  private useConnection: () =>  Promise<mysql.Connection>
+  private connection?: mysql.Connection
 
-  constructor (useConnection: () => Promise<mysql.Connection>) {
-    this.useConnection = useConnection
+  private async isOpenConnection () {  
+    if (!this.connection) {
+      throw new Error("connection closed")
+    }
+      
+    await this.connection?.ping();
+  }
+  
+  private async useConnection () {
+    try {
+      await this.isOpenConnection();
+    } catch (error) {
+      this.connection = await createConnection();
+    }
+
+    // undefined connection paths are caught
+    return this.connection!;
   }
 
   async closeConnection () {

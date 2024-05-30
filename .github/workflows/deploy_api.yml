@@ -50,6 +50,9 @@ jobs:
             --function-name lambdaSQLRoute \
             --environment "Variables={\
               DATABASE_HOST=${{ secrets.DATABASE_HOST }},\
+              DATABASE_NAME=${{ secrets.DATABASE_NAME }},\
+              DATABASE_PORT=${{ secrets.DATABASE_PORT }},\
+              CA_PEM=${{ secrets.CA_PEM }},\
               DATABASE_USERNAME=$DB_USERNAME,\
               DATABASE_PASSWORD=$DB_PASSWORD,\
               ABLY_KEY=${{ secrets.ABLY_KEY }},\

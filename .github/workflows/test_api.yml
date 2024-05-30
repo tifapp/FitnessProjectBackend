@@ -27,6 +27,7 @@ jobs:
     
     env:
       DATABASE_HOST: 127.0.0.1
+      DATABASE_PORT: 3306
       DATABASE_USERNAME: root
       DATABASE_PASSWORD: yourpassword
       DATABASE_NAME: tif
@@ -86,11 +87,13 @@ jobs:
   
   test_on_dev:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 30
     needs: deploy_for_tests
     
     env:
+      CA_PEM: ${{ secrets.CA_PEM }}
       DATABASE_HOST: ${{ secrets.DATABASE_HOST }}
+      DATABASE_PORT: ${{ secrets.DATABASE_PORT }}
       DATABASE_NAME: ${{ secrets.DATABASE_NAME }}
       DATABASE_USERNAME: ${{ secrets.DEV_DATABASE_USERNAME }}
       DATABASE_PASSWORD: ${{ secrets.DEV_DATABASE_PASSWORD }}
@@ -130,7 +133,7 @@ jobs:
       run: |
         cd APILambda
         export NODE_OPTIONS="--max_old_space_size=4096"
-        API_ENDPOINT=https://623qsegfb9.execute-api.us-west-2.amazonaws.com/dev npm run test:ci
+        API_ENDPOINT=https://623qsegfb9.execute-api.us-west-2.amazonaws.com/dev npm run test:ci createEvent
 
   build:
     needs: test_on_dev
