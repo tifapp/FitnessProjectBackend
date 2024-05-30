@@ -1,4 +1,4 @@
-import { DBTifEvent, SQLExecutable, TiFEvent, conn, setEventAttendeesFields, success, tifEventResponseFromDatabaseEvent } from "TiFBackendUtils"
+import { DBTifEvent, MySQLExecutableDriver, TiFEvent, conn, setEventAttendeesFields, success, tifEventResponseFromDatabaseEvent } from "TiFBackendUtils"
 import { z } from "zod"
 import { ServerEnvironment } from "../env.js"
 import { ValidatedRouter } from "../validation.js"
@@ -29,7 +29,7 @@ const getEventWhenBlockedResponse = (
 })
 
 export const getEventById = (
-  conn: SQLExecutable,
+  conn: MySQLExecutableDriver,
   eventId: number,
   userId: string
 ) =>

@@ -39,7 +39,7 @@ const isResultSetHeader = (result: any): result is ResultSetHeader => {
   return "insertId" in result && "affectedRows" in result
 }
 
-export class SQLExecutable {
+export class MySQLExecutableDriver {
   private conn: Promise<mysql.Connection>
 
   constructor (connection: Promise<mysql.Connection>) {
@@ -120,7 +120,7 @@ export class SQLExecutable {
    * Performs an idempotent transaction and returns the result of the transaction wrapped in a {@link PromiseResult}.
    */
   transaction<SuccessValue, ErrorValue> (
-    query: (tx: SQLExecutable) => AwaitableResult<SuccessValue, ErrorValue>
+    query: (tx: MySQLExecutableDriver) => AwaitableResult<SuccessValue, ErrorValue>
   ) {
     return promiseResult((async () => {
       const conn = await this.conn
@@ -177,5 +177,5 @@ export class SQLExecutable {
 
 // Usage
 // const dbConnection = ...;  // Initialize or import your database connection
-// const sqlExec = new SQLExecutable(dbConnection);
+// const sqlExec = new MySQLExecutableDriver(dbConnection);
 // sqlExec.queryHasResults("SELECT * FROM users");

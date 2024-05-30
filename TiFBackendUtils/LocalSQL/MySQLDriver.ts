@@ -4,7 +4,7 @@ import { AwaitableResult, failure, promiseResult, success } from "../result.js"
 
 type ExecuteResult = {
   insertId: string
-  affectedRows: number
+  rowsAffected: number
 }
 
 const isResultSetHeader = (result: ResultSetHeader): result is ResultSetHeader => {
@@ -47,7 +47,7 @@ export class MySQLExecutableDriver {
 
   async execute (
     query: string,
-    args: object | null = null
+    args: object | (number | string)[] | null = null
   ): Promise<ExecuteResult> {
     // Use this.conn to execute the query and return the result rows
     // This will be the only function to directly use the database library's execute method.
@@ -56,7 +56,7 @@ export class MySQLExecutableDriver {
     if (isResultSetHeader(result)) {
       return {
         insertId: result.insertId.toString(),
-        affectedRows: result.affectedRows
+        rowsAffected: result.affectedRows
       }
     } else {
       throw new Error("Execution did not return a ResultSetHeader.")
@@ -66,7 +66,7 @@ export class MySQLExecutableDriver {
   /**
    * Runs the given SQL query and returns a success result containing the insertId of the query.
    */
-  executeResult (query: string, args: object | null = null) {
+  executeResult (query: string, args: object | (number | string)[] | null = null) {
     return promiseResult(
       this.execute(query, args).then((executeResult) =>
         success(executeResult)
@@ -77,7 +77,7 @@ export class MySQLExecutableDriver {
   /**
    * Runs the given SQL query and returns a success result containing the result of the query.
    */
-  queryResult<Value> (query: string, args: object | null = null) {
+  queryResult<Value> (query: string, args: object | (number | string)[] | null = null) {
     return promiseResult(
       this.query<Value>(query, args).then((result) => success(result))
     )
@@ -119,13 +119,14 @@ export class MySQLExecutableDriver {
 
   async query<Value> (
     query: string,
-    args: object | null
+    args: object | (number | string)[] | null
   ): Promise<Value[]> {
     // Use this.conn to execute the query and return the result rows
     // This will be the only function to directly use the database library's execute method.
     const conn = await this.conn
     const [rows] = await conn.query(query, args)
     if (Array.isArray(rows)) {
+      // When converting the mySQL values to say a boolean or number we use the castTypes function
       return castTypes(rows as RowDataPacket[]) as Value[]
     } else {
       throw new Error("Query did not return an array of rows.")
@@ -147,9 +148,9 @@ export class MySQLExecutableDriver {
    * console.log(result?.id) // ✅ Typesafe
    * ```
    */
-  queryFirstResult (query: string, args: object | null = null) {
+  queryFirstResult<Value> (query: string, args: object | (number | string)[] | null = null) {
     return promiseResult(
-      this.query(query, args).then((results) =>
+      this.query<Value>(query, args).then((results) =>
         results[0] ? success(results[0]) : failure("no-results" as const)
       )
     )
@@ -161,7 +162,7 @@ export class MySQLExecutableDriver {
    * You should not query specific data with this method, instead use a `"SELECT TRUE"`
    * if you need to perform a select.
    */
-  queryHasResults (query: string, args: object | null = null) {
+  queryHasResults (query: string, args: object | (number | string)[] | null = null) {
     return promiseResult(
       this.query(query, args).then((results) => {
         const hasResults = results.length > 0

@@ -1,7 +1,7 @@
 import {
-    SQLExecutable,
-    conn,
-    success
+  MySQLExecutableDriver,
+  conn,
+  success
 } from "TiFBackendUtils"
 import { z } from "zod"
 import { ServerEnvironment } from "../env.js"
@@ -40,7 +40,7 @@ const CreateEventSchema = z
 export type CreateEventInput = z.infer<typeof CreateEventSchema>
 
 export const createEvent = (
-  conn: SQLExecutable,
+  conn: MySQLExecutableDriver,
   input: CreateEventInput,
   hostId: string
 ) => {

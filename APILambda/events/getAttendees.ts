@@ -1,4 +1,4 @@
-import { DBeventAttendance, DBuser, DBuserArrivals, ExtractSuccess, SQLExecutable, UserRelationship, conn, promiseResult, success } from "TiFBackendUtils"
+import { DBeventAttendance, DBuser, DBuserArrivals, ExtractSuccess, MySQLExecutableDriver, UserRelationship, conn, promiseResult, success } from "TiFBackendUtils"
 import { z } from "zod"
 import { ServerEnvironment } from "../env.js"
 import {
@@ -27,7 +27,7 @@ const CursorRequestSchema = z.object({
 
 // TODO: use index as cursor instead of userid+joindate
 const getTiFAttendees = (
-  conn: SQLExecutable,
+  conn: MySQLExecutableDriver,
   eventId: number,
   userId: string,
   nextPageUserIdCursor: string,
@@ -136,7 +136,7 @@ const paginatedAttendeesResponse = (
 }
 
 const getAttendeesCount = (
-  conn: SQLExecutable,
+  conn: MySQLExecutableDriver,
   eventId: number,
   userId: string
 ) =>
@@ -159,7 +159,7 @@ const getAttendeesCount = (
   )
 
 const getAttendeesByEventId = (
-  conn: SQLExecutable,
+  conn: MySQLExecutableDriver,
   eventId: number,
   userId: string,
   nextPageUserIdCursor: string,

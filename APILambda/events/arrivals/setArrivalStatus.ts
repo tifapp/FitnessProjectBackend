@@ -1,4 +1,4 @@
-import { LocationCoordinate2D, LocationCoordinates2DSchema, SQLExecutable, conn, failure, success } from "TiFBackendUtils"
+import { LocationCoordinate2D, LocationCoordinates2DSchema, MySQLExecutableDriver, conn, failure, success } from "TiFBackendUtils"
 import { z } from "zod"
 import { ServerEnvironment, SetArrivalStatusEnvironment } from "../../env.js"
 import { ValidatedRouter } from "../../validation.js"
@@ -15,7 +15,7 @@ const SetArrivalStatusSchema = z
 export type SetArrivalStatusInput = z.infer<typeof SetArrivalStatusSchema>
 
 export const deleteOldArrivals = (
-  conn: SQLExecutable,
+  conn: MySQLExecutableDriver,
   userId: string,
   coordinate: LocationCoordinate2D
 ) =>
@@ -35,7 +35,7 @@ export const deleteOldArrivals = (
     )
 
 export const deleteMaxArrivals = (
-  conn: SQLExecutable,
+  conn: MySQLExecutableDriver,
   userId: string,
   arrivalsLimit: number
 ) =>
@@ -69,7 +69,7 @@ export const deleteMaxArrivals = (
     .flatMapFailure(() => success())
 
 export const insertArrival = (
-  conn: SQLExecutable,
+  conn: MySQLExecutableDriver,
   userId: string,
   coordinate: LocationCoordinate2D
 ) =>

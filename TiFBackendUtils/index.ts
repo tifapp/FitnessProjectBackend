@@ -1,4 +1,5 @@
 export * from "./AWS/index.js"
+export * from "./LocalSQL/MySQLDriver.js"
 export * from "./LocalSQL/dbConnection.js"
 export * from "./Retryable/utils.js"
 export * from "./TiFUserUtils/index.js"

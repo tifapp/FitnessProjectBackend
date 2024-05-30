@@ -1,4 +1,4 @@
-import { DBuser, SQLExecutable, UserHandle, conn } from "TiFBackendUtils"
+import { DBuser, MySQLExecutableDriver, UserHandle, conn } from "TiFBackendUtils"
 import { z } from "zod"
 import { ServerEnvironment } from "../env.js"
 import { ValidatedRouter, withValidatedRequest } from "../validation.js"
@@ -33,7 +33,7 @@ export const autocompleteUsersRouter = (
 }
 
 const autocompleteUsers = (
-  conn: SQLExecutable,
+  conn: MySQLExecutableDriver,
   baseHandle: UserHandle,
   limit: number
 ) => conn.queryResult<Pick<DBuser, "id" | "name" | "handle">>(
