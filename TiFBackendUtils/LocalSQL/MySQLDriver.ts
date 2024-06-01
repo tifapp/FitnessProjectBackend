@@ -1,5 +1,5 @@
 import { ResultSetHeader, RowDataPacket } from "mysql2"
-import mysql from "mysql2/promise.js"
+import mysql, { FieldPacket } from "mysql2/promise.js"
 import { AwaitableResult, failure, promiseResult, success } from "../result.js"
 
 type ExecuteResult = {
@@ -11,20 +11,25 @@ const isResultSetHeader = (result: ResultSetHeader): result is ResultSetHeader =
   return "insertId" in result && "affectedRows" in result
 }
 
-const typecasts: Record<string, (value: string | null) => unknown> = {
-  INT64: (value) => parseInt(value ?? "0"),
-  INT8: (value) => parseInt(value ?? "0") > 0,
-  DATETIME: (value) => { return value ? new Date(value) : value },
-  DECIMAL: (value) => { return value ? parseFloat(value) : value }
+const typecasts: Record<number, (value: string | null) => unknown> = {
+  3: (value) => parseInt(value ?? "0") > 0, // INT or LONG as BOOLEAN
+  1: (value) => parseInt(value ?? "0") > 0, // TINYINT as BOOLEAN
+  7: (value) => value ? new Date(value) : value, // TIMESTAMP
+  12: (value) => value ? new Date(value) : value, // DATETIME
+  246: (value) => value ? parseFloat(value) : value // NEWDECIMAL (DECIMAL/NUMERIC)
 }
 
-const castTypes = (rows: RowDataPacket[]): RowDataPacket[] => {
+const castTypes = (rows: RowDataPacket[], fields: FieldPacket[]): RowDataPacket[] => {
   return rows.map(row => {
-    for (const key in row) {
-      if (typecasts[key]) {
-        row[key] = typecasts[key](row[key])
+    console.log("row ", row)
+    fields.forEach(field => {
+      console.log("field ", field)
+      const type = field.type
+      const key = field.name
+      if (type !== undefined && typecasts[type]) {
+        row[key] = typecasts[type](row[key])
       }
-    }
+    })
     return row
   })
 }
@@ -117,19 +122,16 @@ export class MySQLExecutableDriver {
    * ```
    */
 
-  async query<Value> (
+  private async query<Value> (
     query: string,
-    args: object | (number | string)[] | null
+    args: object | (number | string)[] | null = null
   ): Promise<Value[]> {
-    // Use this.conn to execute the query and return the result rows
-    // This will be the only function to directly use the database library's execute method.
     const conn = await this.conn
-    const [rows] = await conn.query(query, args)
-    if (Array.isArray(rows)) {
-      // When converting the mySQL values to say a boolean or number we use the castTypes function
-      return castTypes(rows as RowDataPacket[]) as Value[]
+    const [rows, fields] = await conn.query(query, args)
+    if (Array.isArray(rows) && Array.isArray(fields)) {
+      return castTypes(rows as RowDataPacket[], fields) as Value[]
     } else {
-      throw new Error("Query did not return an array of rows.")
+      throw new Error("Query did not return an array of rows and fields.")
     }
   }
 

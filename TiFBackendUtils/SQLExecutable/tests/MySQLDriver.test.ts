@@ -10,6 +10,7 @@ describe("MySQLExecutableDriver", () => {
   let mySQLDriverTest: MySQLExecutableDriver
 
   beforeAll(async () => {
+    mySQLDriverTest = new MySQLExecutableDriver(createDatabaseConnection())
     const createMySQLDriverTableSQL = `
     CREATE TABLE IF NOT EXISTS mySQLDriver (
     id bigint NOT NULL,
@@ -28,14 +29,6 @@ describe("MySQLExecutableDriver", () => {
     await conn.transaction(
       async (tx) => await tx.executeResult(deleteMySQLDriverTableSQL)
     )
-  })
-
-  beforeEach(async () => {
-    mySQLDriverTest = new MySQLExecutableDriver(createDatabaseConnection())
-  })
-
-  afterEach(async () => {
-    await mySQLDriverTest.closeConnection()
   })
 
   describe("execute", () => {
