@@ -122,7 +122,7 @@ export class MySQLExecutableDriver {
    * ```
    */
 
-  private async query<Value> (
+  async query<Value> (
     query: string,
     args: object | (number | string)[] | null = null
   ): Promise<Value[]> {
