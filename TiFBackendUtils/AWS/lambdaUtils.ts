@@ -55,3 +55,10 @@ export const invokeAWSLambda = async (
   InvocationType: InvocationType.RequestResponse,
   Payload: JSON.stringify(targetLambdaParams)
 })
+
+export const getAWSLambdaAlias = (arn: string) => {
+  console.log('Invoked Function ARN:', arn);
+
+  const arnParts = arn.split(':');
+  return arnParts[arnParts.length - 1];
+}

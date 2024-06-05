@@ -61,6 +61,15 @@ jobs:
         run: |
           cd GeocodingLambda
           npm run test:ci
-
+  
   build:
+    needs: test
     uses: ./.github/workflows/build_geocoder.yml
+    secrets: inherit
+  
+  deploy:
+    needs: build
+    uses: ./.github/workflows/deploy_geocoder.yml
+    secrets: inherit
+    with:
+      stage: "stagingTest"

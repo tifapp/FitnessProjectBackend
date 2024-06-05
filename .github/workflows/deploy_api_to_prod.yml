@@ -9,8 +9,6 @@ jobs:
   build:
     uses: ./.github/workflows/build_api.yml    
     secrets: inherit
-    with:
-      stage: "prod"
   
   deploy:
     needs: build

@@ -9,6 +9,12 @@ dotenv.config()
 
 const EnvSchema = z
   .object({
+    ENVIRONMENT: z.union([
+      z.literal('devTest'),
+      z.literal('stagingTest'),
+      z.literal('staging'),
+      z.literal('prod')
+    ]).optional().default('devTest'),
     // TODO: Reduce redundant env vars between projects
     DATABASE_HOST: z.string(),
     DATABASE_PORT: z.string().optional(),
@@ -48,7 +54,7 @@ export type SetArrivalStatusEnvironment = {
  * Examples of this include AWS S3 buckets, or SNS/Push notification clients.
  */
 export type ServerEnvironment = CreateUserProfileEnvironment & SetArrivalStatusEnvironment & {
-  environment: "dev" | "staging" | "prod"
+  environment: EnvSchema["ENVIRONMENT"]
   eventStartWindowInHours: number
   callGeocodingLambda: (location: LocationCoordinate2D) => Promise<unknown>
   routeCollector?: (pathPrefix: string) => (params: ValidatedRouteParams) => void

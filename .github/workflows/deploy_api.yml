@@ -49,6 +49,7 @@ jobs:
           aws lambda update-function-configuration \
             --function-name lambdaSQLRoute \
             --environment "Variables={\
+              ENVIRONMENT=${{ inputs.stage }},\
               DATABASE_HOST=${{ secrets.DATABASE_HOST }},\
               DATABASE_NAME=${{ secrets.DATABASE_NAME }},\
               DATABASE_PORT=${{ secrets.DATABASE_PORT }},\
@@ -78,16 +79,10 @@ jobs:
                   sleep 10
               fi
           done
-          if [[ "${{ inputs.stage }}" == "prod" ]]; then
+          if [[ "${{ inputs.stage }}" == "prod" ]] || [[ "${{ inputs.stage }}" == "staging" ]]; then
             VERSION_NUMBER=$(aws lambda publish-version --function-name lambdaSQLRoute --description '${{ inputs.stage }} commit: ${{ github.sha }}' | jq -r '.Version')
-            sed -i 's/:dev/:prod/g' APILambda/specs.json
-            sed -i 's/\"dev\"/\"prod\"/g' APILambda/specs.json
-            aws lambda update-alias --function-name lambdaSQLRoute --name ${{ inputs.stage }} --function-version $VERSION_NUMBER
-            echo "Updated lambda alias successfully"
-          elif [[ "${{ inputs.stage }}" == "staging" ]]; then
-            VERSION_NUMBER=$(aws lambda publish-version --function-name lambdaSQLRoute --description '${{ inputs.stage }} commit: ${{ github.sha }}' | jq -r '.Version')
-            sed -i 's/:dev/:staging/g' APILambda/specs.json
-            sed -i 's/\"dev\"/\"staging\"/g' APILambda/specs.json
+            sed -i 's/:stagingTest/:${{ inputs.stage }}/g' APILambda/specs.json
+            sed -i 's/\"stagingTest\"/\"${{ inputs.stage }}\"/g' APILambda/specs.json
             aws lambda update-alias --function-name lambdaSQLRoute --name ${{ inputs.stage }} --function-version $VERSION_NUMBER
             echo "Updated lambda alias successfully"
           fi
