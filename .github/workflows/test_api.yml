@@ -76,7 +76,7 @@ jobs:
         run: |
           cd APILambda
           export NODE_OPTIONS="--max_old_space_size=4096"
-          npm run test:ci createEvent
+          npm run test:ci
 
   build:
     needs: test
@@ -137,7 +137,7 @@ jobs:
     - name: Authenticate with AWS Cognito and run staging tests
       # TODO: Reduce memory required
       # TODO: Allow "createUser" tests after we get company email so we can have unlimited test users
-      run: | # -- --testPathIgnorePatterns=createUserProfile\\.test\\.ts
+      run: |
         cd APILambda
         export NODE_OPTIONS="--max_old_space_size=4096"
-        API_ENDPOINT=https://623qsegfb9.execute-api.us-west-2.amazonaws.com/stagingTest ENVIRONMENT=stagingTest npm run test:ci createEvent
+        API_ENDPOINT=https://623qsegfb9.execute-api.us-west-2.amazonaws.com/stagingTest ENVIRONMENT=stagingTest npm run test:ci -- --testPathIgnorePatterns=createUserProfile\\.test\\.ts
