@@ -87,12 +87,17 @@ export class SQLExecutable {
     query: string,
     args: object | any[] | null = null
   ): Promise<Value[]> {
-    const conn = await this.useConnection()
-    const [rows, fields] = await conn.query(query, args)
-    if (Array.isArray(rows) && Array.isArray(fields)) {
-      return castTypes(rows as RowDataPacket[], fields) as Value[]
-    } else {
-      throw new Error("Query did not return an array of rows and fields.")
+    try {
+      const conn = await this.useConnection()
+      const [rows, fields] = await conn.query(query, args)
+      if (Array.isArray(rows) && Array.isArray(fields)) {
+        return castTypes(rows as RowDataPacket[], fields) as Value[]
+      } else {
+        throw new Error("Query did not return an array of rows and fields.")
+      }
+    } catch (e) {
+      console.error(e)
+      throw e
     }
   }
 
@@ -100,15 +105,20 @@ export class SQLExecutable {
     query: string,
     args: object | any[] | null = null
   ): Promise<ExecuteResult> {
-    const conn = await this.useConnection()
-    const [result] = await conn.execute<ResultSetHeader>(query, args)
-    if (isResultSetHeader(result)) {
-      return {
-        insertId: result.insertId.toString(),
-        rowsAffected: result.affectedRows
+    try {
+      const conn = await this.useConnection()
+      const [result] = await conn.execute<ResultSetHeader>(query, args)
+      if (isResultSetHeader(result)) {
+        return {
+          insertId: result.insertId.toString(),
+          rowsAffected: result.affectedRows
+        }
+      } else {
+        throw new Error("Execution did not return a ResultSetHeader.")
       }
-    } else {
-      throw new Error("Execution did not return a ResultSetHeader.")
+    } catch (e) {
+      console.error(e)
+      throw e
     }
   }
 

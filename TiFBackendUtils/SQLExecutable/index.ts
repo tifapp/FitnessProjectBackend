@@ -22,6 +22,9 @@ const EnvVarsSchema = z.object({
 const envVars = EnvVarsSchema.parse(process.env);
 
 export const createConnection = async (connectionConfig: Partial<mysql.ConnectionOptions> = {}) => {
+  console.log("env vars are ")
+  console.log(envVars)
+
   return mysql.createConnection({
     host: envVars.DATABASE_HOST,
     user: envVars.DATABASE_USERNAME,
