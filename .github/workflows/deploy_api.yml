@@ -49,6 +49,7 @@ jobs:
           aws lambda update-function-configuration \
             --function-name lambdaSQLRoute \
             --environment "Variables={\
+              GITHUB_SHA=${{ github.sha }},\
               ENVIRONMENT=${{ inputs.stage }},\
               DATABASE_HOST=${{ secrets.DATABASE_HOST }},\
               DATABASE_NAME=${{ secrets.DATABASE_NAME }},\
