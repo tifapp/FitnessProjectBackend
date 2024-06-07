@@ -15,12 +15,12 @@ jobs:
       mysql:
         image: mysql:8.0
         env:
-          MYSQL_ROOT_PASSWORD: yourpassword
+          MYSQL_ROOT_PASSWORD: password
           MYSQL_DATABASE: tif
         ports:
           - 3306:3306
         options: >-
-          --health-cmd="mysqladmin ping -u root --password=yourpassword"
+          --health-cmd="mysqladmin ping -u root --password=password"
           --health-interval=10s
           --health-timeout=5s
           --health-retries=3

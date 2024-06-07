@@ -95,11 +95,11 @@ describe("MySQLExecutableDriver", () => {
         ]
       )
     })
-    it("should throw an error if query does not return an array of rows", async () => {
+    it("should throw an error if query does not return an array of rows and fields", async () => {
       await mySQLDriverTest.execute("DELETE FROM mySQLDriver")
       const query = "INSERT INTO MySQLDriver (name, id) VALUES ('Bob', 0)"
       const args = null
-      await expect(mySQLDriverTest.query(query, args)).rejects.toThrowError("Query did not return an array of rows.")
+      await expect(mySQLDriverTest.query(query, args)).rejects.toThrowError("Query did not return an array of rows and fields.")
     })
   })
 

@@ -16,12 +16,12 @@ jobs:
       mysql:
         image: mysql:8.0
         env:
-          MYSQL_ROOT_PASSWORD: yourpassword
+          MYSQL_ROOT_PASSWORD: password
           MYSQL_DATABASE: tif
         ports:
           - 3306:3306
         options: >-
-          --health-cmd="mysqladmin ping -u root --password=yourpassword"
+          --health-cmd="mysqladmin ping -u root --password=password"
           --health-interval=10s
           --health-timeout=5s
           --health-retries=3
@@ -30,7 +30,7 @@ jobs:
       DATABASE_HOST: 127.0.0.1
       DATABASE_PORT: 3306
       DATABASE_USERNAME: root
-      DATABASE_PASSWORD: yourpassword
+      DATABASE_PASSWORD: password
       DATABASE_NAME: tif
       AWS_REGION: ${{ secrets.AWS_REGION }}
       AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
