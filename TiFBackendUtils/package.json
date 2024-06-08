@@ -21,7 +21,7 @@
     "dbtots": "node --loader ts-node/esm dbToTs.ts",
     "build": "npx tsc",
     "test": "jest",
-    "test:ci": "jest --ci --detectOpenHandles",
+    "test:ci": "jest --ci --detectOpenHandles --forceExit --runInBand",
     "postinstall": "patch-package"
   },
   "devDependencies": {

@@ -44,7 +44,7 @@ jobs:
 
       - name: Verify MySQL connection
         run: |
-          mysql --host=127.0.0.1 --user=root --password=yourpassword -e "SHOW DATABASES;" 
+          mysql --host=127.0.0.1 --user=root --password=password -e "SHOW DATABASES;" 
 
       - name: Setup Node.js environment
         uses: actions/setup-node@v2
