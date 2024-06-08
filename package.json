@@ -5,8 +5,8 @@
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,md}\"",
     "prepare": "husky",
     "postinstall": "node postinstall.mjs",
-    "dbtots": "node --loader ts-node/esm scripts/dbToTs.ts",
-    "resetDB": "node --loader ts-node/esm resetDB.ts"
+    "dbtots": "node --loader ts-node/esm scripts/dbToTs.ts --run",
+    "resetDB": "node --loader ts-node/esm scripts/resetDB.ts --run"
   },
   "devDependencies": {
     "@rmp135/sql-ts": "^1.18.1",

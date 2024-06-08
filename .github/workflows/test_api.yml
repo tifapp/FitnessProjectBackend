@@ -67,6 +67,7 @@ jobs:
 
       - name: Update entities
         run: |
+          npm run resetDB
           npm run dbtots
       
       - name: Validate openapi specs
