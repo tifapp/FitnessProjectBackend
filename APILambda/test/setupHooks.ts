@@ -1,5 +1,5 @@
 /* eslint-disable import/extensions */
-import { resetDB } from "./database"
+import { resetDB } from "../../scripts/resetDB"
 import { testUserCounter } from "./userFlows/users"
 
 /*

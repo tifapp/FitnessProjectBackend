@@ -1,8 +1,5 @@
-import { conn } from "TiFBackendUtils"
+import { conn, expectFailsCheckConstraint } from "TiFBackendUtils"
 import { randomUUID } from "crypto"
-import {
-  expectFailsCheckConstraint
-} from "../test/database.js"
 import { testEventInput } from "../test/testEvents.js"
 import { createEvent } from "./createEvent.js"
 

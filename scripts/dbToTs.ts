@@ -1,11 +1,11 @@
+// dev use only
+// eslint-disable-next-line import/extensions
 import sqlts from "@rmp135/sql-ts"
 import dotenv from "dotenv"
 import fs from "fs"
 import path from "path"
 import { fileURLToPath } from "url"
-// dev use only
-// eslint-disable-next-line import/extensions
-import { conn } from "./SQLExecutable/index.js"
+import { conn } from "../TiFBackendUtils/SQLExecutable/index.js"
 
 dotenv.config()
 

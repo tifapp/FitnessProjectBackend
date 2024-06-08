@@ -43,19 +43,5 @@ export const createConnection = async (connectionConfig: Partial<mysql.Connectio
   });
 };
 
+export const DATABASE_NAME = envVars.DATABASE_NAME
 export const conn = new SQLExecutable();
-
-export const recreateDatabase = async () => {
-  const connection = await createConnection({database: undefined});
-
-  try {
-    await connection.query(`DROP DATABASE IF EXISTS \`${envVars.DATABASE_NAME}\``);
-    await connection.query(`CREATE DATABASE \`${envVars.DATABASE_NAME}\``);
-
-    console.log(`Reset the database ${envVars.DATABASE_NAME} successfully`);
-  } catch (error) {
-    console.error('An error occurred:', error);
-  } finally {
-    await connection.end();
-  }
-};
