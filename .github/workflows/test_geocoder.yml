@@ -28,7 +28,7 @@ jobs:
     env:
       DATABASE_HOST: 127.0.0.1
       DATABASE_USERNAME: root
-      DATABASE_PASSWORD: yourpassword
+      DATABASE_PASSWORD: password
       DATABASE_NAME: tif
       AWS_REGION: ${{ secrets.AWS_REGION }}
       AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
