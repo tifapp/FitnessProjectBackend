@@ -34,7 +34,7 @@ describe("MySQLExecutableDriver", () => {
   describe("execute", () => {
     it("should execute a query and return the result", async () => {
       await mySQLDriverTest.execute("DELETE FROM mySQLDriver")
-      const query = "INSERT INTO MySQLDriver (name, id) VALUES ('Surya',0)"
+      const query = "INSERT INTO mySQLDriver (name, id) VALUES ('Surya',0)"
       const result = await mySQLDriverTest.execute(query)
       expect(result).toEqual({
         rowsAffected: 1,
@@ -44,7 +44,7 @@ describe("MySQLExecutableDriver", () => {
 
     it("should throw an error if execution does not return a ResultSetHeader", async () => {
       await mySQLDriverTest.execute("DELETE FROM mySQLDriver")
-      const query = "SELECT * FROM MySQLDriver"
+      const query = "SELECT * FROM mySQLDriver"
       const args = null
       await expect(mySQLDriverTest.execute(query, args)).rejects.toThrow(
         "Execution did not return a ResultSetHeader."
@@ -55,7 +55,7 @@ describe("MySQLExecutableDriver", () => {
   describe("transaction", () => {
     it("should perform a transaction and return the result", async () => {
       await mySQLDriverTest.execute("DELETE FROM mySQLDriver")
-      const query = "INSERT INTO MySQLDriver (name, id) VALUES ('Bob',0)"
+      const query = "INSERT INTO mySQLDriver (name, id) VALUES ('Bob',0)"
       const args = null
       const result = await mySQLDriverTest.transaction((tx) =>
         tx.executeResult(query, args)
@@ -70,7 +70,7 @@ describe("MySQLExecutableDriver", () => {
     })
     it("should rollback if an error occurs", async () => {
       await mySQLDriverTest.execute("DELETE FROM mySQLDriver")
-      const query = "INSERT INTO MySQLDriver"
+      const query = "INSERT INTO mySQLDriver"
       const args = null
       expect(
         mySQLDriverTest.transaction((tx) => tx.executeResult(query, args))
@@ -81,10 +81,10 @@ describe("MySQLExecutableDriver", () => {
   describe("query", () => {
     it("should execute a query and return the result rows", async () => {
       await mySQLDriverTest.execute("DELETE FROM mySQLDriver")
-      let query = "INSERT INTO MySQLDriver (name, id) VALUES ('Bob', 0)"
+      let query = "INSERT INTO mySQLDriver (name, id) VALUES ('Bob', 0)"
       const args = null
       await mySQLDriverTest.transaction((tx) => tx.executeResult(query, args))
-      query = "SELECT * FROM MySQLDriver"
+      query = "SELECT * FROM mySQLDriver"
       const result = await mySQLDriverTest.query(query, args)
       expect(result).toEqual(
         [
@@ -97,7 +97,7 @@ describe("MySQLExecutableDriver", () => {
     })
     it("should throw an error if query does not return an array of rows and fields", async () => {
       await mySQLDriverTest.execute("DELETE FROM mySQLDriver")
-      const query = "INSERT INTO MySQLDriver (name, id) VALUES ('Bob', 0)"
+      const query = "INSERT INTO mySQLDriver (name, id) VALUES ('Bob', 0)"
       const args = null
       await expect(mySQLDriverTest.query(query, args)).rejects.toThrowError("Query did not return an array of rows and fields.")
     })
