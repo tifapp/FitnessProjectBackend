@@ -1,4 +1,4 @@
-import { SQLExecutable, conn, failure, success } from "TiFBackendUtils"
+import { MySQLExecutableDriver, conn, failure, success } from "TiFBackendUtils"
 import { z } from "zod"
 import { ValidatedRouter } from "../validation.js"
 
@@ -33,7 +33,7 @@ export const createRegisterPushTokenRouter = (router: ValidatedRouter) => {
 }
 
 const tryInsertPushToken = (
-  conn: SQLExecutable,
+  conn: MySQLExecutableDriver,
   insertRequest: {
     userId: string
     pushToken: string

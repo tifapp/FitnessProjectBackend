@@ -1,4 +1,4 @@
-import { SQLExecutable, UpcomingEvent, conn } from "TiFBackendUtils"
+import { MySQLExecutableDriver, UpcomingEvent, conn } from "TiFBackendUtils"
 import { ServerEnvironment } from "../../env.js"
 import { ValidatedRouter } from "../../validation.js"
 
@@ -39,7 +39,7 @@ const mapEventsToRegions = (events: UpcomingEvent[]): EventRegion[] => {
 }
 
 // TODO: 24 hour window should be parameterized based on env variable
-export const getUpcomingEventsByRegion = (conn: SQLExecutable, userId: string) => conn.queryResult<UpcomingEvent>(
+export const getUpcomingEventsByRegion = (conn: MySQLExecutableDriver, userId: string) => conn.queryResult<UpcomingEvent>(
   `
   SELECT 
     e.*, 

@@ -3,9 +3,9 @@ import dotenv from "dotenv"
 import fs from "fs"
 import path from "path"
 import { fileURLToPath } from "url"
+import { conn } from "./MySQLDriver/dbConnection.js"
 // dev use only
 // eslint-disable-next-line import/extensions
-import { conn } from "./SQLExecutable/index.js"
 
 dotenv.config()
 

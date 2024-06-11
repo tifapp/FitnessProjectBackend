@@ -1,6 +1,6 @@
 import dayjs from "dayjs"
 import duration from "dayjs/plugin/duration.js"
-import { SQLExecutable } from "./SQLExecutable/utils.js"
+import { MySQLExecutableDriver } from "./MySQLDriver/MySQLDriver.js"
 import { UserRelationship } from "./TiFUserUtils/UserRelationships.js"
 import { DBEventAttendeeCountView, DBEventAttendeesView, DBTifEventView, DBevent, DBeventAttendance, DBuserRelations } from "./entities.js"
 import { Placemark } from "./location.js"
@@ -159,7 +159,7 @@ export const tifEventResponseFromDatabaseEvent = (event: DBTifEvent) : TiFEvent 
   }
 }
 
-export const getAttendeeCount = (conn: SQLExecutable, eventIds: string[]) => {
+export const getAttendeeCount = (conn: MySQLExecutableDriver, eventIds: string[]) => {
   return conn.queryResult<DBEventAttendeeCountView>(
     ` SELECT
         attendeeCount
@@ -172,7 +172,7 @@ export const getAttendeeCount = (conn: SQLExecutable, eventIds: string[]) => {
   )
 }
 
-export const getEventAttendanceFields = (conn: SQLExecutable, userId: string, eventIds: string[]) => {
+export const getEventAttendanceFields = (conn: MySQLExecutableDriver, userId: string, eventIds: string[]) => {
   return conn.queryResult<DBeventAttendance>(
     ` SELECT
         ea.joinedDateTime AS joinedDateTime,
@@ -216,7 +216,7 @@ const setAttendeesPreviewForEvent = (
   return events
 }
 
-export const getAttendees = (conn: SQLExecutable, eventIds: string[]) => {
+export const getAttendees = (conn: MySQLExecutableDriver, eventIds: string[]) => {
   return conn.queryResult<DBEventAttendeesView>(
     `
     SELECT 
@@ -235,7 +235,7 @@ HAVING
 }
 
 export const setEventAttendeesFields = (
-  conn: SQLExecutable,
+  conn: MySQLExecutableDriver,
   events: DBTifEvent[],
   userId: string
 ) => {

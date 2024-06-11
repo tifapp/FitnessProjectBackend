@@ -1,10 +1,10 @@
-import { SQLExecutable } from "../SQLExecutable/utils.js"
+import { MySQLExecutableDriver } from "../MySQLDriver/MySQLDriver.js"
 import { DBuser } from "../entities.js"
 import { ExtractSuccess } from "../result.js"
 import { UserRelationship } from "./UserRelationships.js"
 
 export const findTiFUser = (
-  conn: SQLExecutable,
+  conn: MySQLExecutableDriver,
   yourId: string,
   theirId: string
 ) =>

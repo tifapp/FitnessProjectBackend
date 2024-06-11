@@ -1,4 +1,4 @@
-import { LocationCoordinate2D, LocationCoordinates2DSchema, SQLExecutable, conn } from "TiFBackendUtils"
+import { LocationCoordinate2D, LocationCoordinates2DSchema, MySQLExecutableDriver, conn } from "TiFBackendUtils"
 import { z } from "zod"
 import { ServerEnvironment } from "../../env.js"
 import { ValidatedRouter } from "../../validation.js"
@@ -28,7 +28,7 @@ const setDepartureTransaction = (
     .mapSuccess((eventRegions) => ({ status: 200, upcomingRegions: eventRegions }))
 
 export const deleteArrival = (
-  conn: SQLExecutable,
+  conn: MySQLExecutableDriver,
   userId: string,
   coordinate: LocationCoordinate2D
 ) =>

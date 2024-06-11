@@ -1,4 +1,4 @@
-import { DBevent, SQLExecutable, conn, failure } from "TiFBackendUtils"
+import { DBevent, MySQLExecutableDriver, conn, failure } from "TiFBackendUtils"
 import { z } from "zod"
 import { ServerEnvironment } from "../env.js"
 import { ValidatedRouter } from "../validation.js"
@@ -8,7 +8,7 @@ const leaveEventSchema = z.object({
 })
 
 // TODO: Handle adding co-host to event if main host decides to leave
-const leaveEvent = (conn: SQLExecutable, userId: string, eventId: number) => {
+const leaveEvent = (conn: MySQLExecutableDriver, userId: string, eventId: number) => {
   return conn.transaction((tx) =>
     getEvent(tx, eventId)
       .flatMapFailure(() => {
@@ -35,7 +35,7 @@ const leaveEvent = (conn: SQLExecutable, userId: string, eventId: number) => {
   )
 }
 
-const getEvent = (conn: SQLExecutable, eventId: number) =>
+const getEvent = (conn: MySQLExecutableDriver, eventId: number) =>
   conn.queryFirstResult<DBevent>(
     "SELECT * FROM event WHERE id = :eventId;",
     {
@@ -44,7 +44,7 @@ const getEvent = (conn: SQLExecutable, eventId: number) =>
   )
 
 const isHostUserNotFromOwnEvent = (
-  conn: SQLExecutable,
+  conn: MySQLExecutableDriver,
   userId: string,
   eventId: number
 ) =>
@@ -60,7 +60,7 @@ const isHostUserNotFromOwnEvent = (
     .withFailure("co-host-not-found" as const)
 
 const removeUserFromAttendeeList = (
-  conn: SQLExecutable,
+  conn: MySQLExecutableDriver,
   userId: string,
   eventId: number
 ) =>

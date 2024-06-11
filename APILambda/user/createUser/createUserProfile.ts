@@ -1,4 +1,4 @@
-import { DBuser, SQLExecutable, conn, failure, promiseResult, success } from "TiFBackendUtils"
+import { DBuser, MySQLExecutableDriver, conn, failure, promiseResult, success } from "TiFBackendUtils"
 import { CreateUserProfileEnvironment } from "../../env.js"
 import { ValidatedRouter } from "../../validation.js"
 import { generateUniqueUsername } from "../generateUserHandle.js"
@@ -17,7 +17,7 @@ const checkValidName = (name: string) => {
   return success()
 }
 
-const userWithHandleOrIdExists = (conn: SQLExecutable, { id, handle }: NewUserDetails) => {
+const userWithHandleOrIdExists = (conn: MySQLExecutableDriver, { id, handle }: NewUserDetails) => {
   return promiseResult(handle ? success() : failure("missing-handle" as const))
     .flatMapSuccess(() => conn
       .queryFirstResult<DBuser>("SELECT TRUE FROM user WHERE handle = :handle OR id = :id", {
@@ -32,11 +32,11 @@ const userWithHandleOrIdExists = (conn: SQLExecutable, { id, handle }: NewUserDe
 /**
  * Creates a new user in the database.
  *
- * @param conn see {@link SQLExecutable}
+ * @param conn see {@link MySQLExecutableDriver}
  * @param userDetails see {@link NewUserDetails}
  */
 export const insertUser = (
-  conn: SQLExecutable,
+  conn: MySQLExecutableDriver,
   userDetails: NewUserDetails
 ) => conn.executeResult(
   "INSERT INTO user (id, name, handle) VALUES (:id, :name, :handle)",

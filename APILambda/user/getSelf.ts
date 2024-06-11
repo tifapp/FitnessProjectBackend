@@ -1,11 +1,11 @@
-import { DBuser, SQLExecutable, conn } from "TiFBackendUtils"
+import { DBuser, MySQLExecutableDriver, conn } from "TiFBackendUtils"
 import { ServerEnvironment } from "../env.js"
 import { ValidatedRouter } from "../validation.js"
 
 /**
  * Queries the user with the given id.
  */
-const getSelf = (conn: SQLExecutable, userId: string) =>
+const getSelf = (conn: MySQLExecutableDriver, userId: string) =>
   conn
     .queryFirstResult<DBuser>("SELECT * FROM user WHERE id = :userId", {
       userId

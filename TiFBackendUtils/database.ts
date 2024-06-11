@@ -1,5 +1,5 @@
-import { conn, recreateDatabase } from "TiFBackendUtils"
 import { fail } from "assert"
+import { conn, recreateDatabase } from "./MySQLDriver/dbConnection.js"
 
 const createUserTableSQL = `
 CREATE TABLE IF NOT EXISTS user (

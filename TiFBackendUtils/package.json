@@ -5,9 +5,9 @@
   "description": "",
   "main": "index.js",
   "dependencies": {
-    "mysql2": "^3.9.7",
     "@planetscale/database": "^1.7.0",
     "dayjs": "^1.11.10",
+    "mysql2": "^3.9.7",
     "node-fetch": "^3.3.2"
   },
   "peerDependencies": {
@@ -21,7 +21,7 @@
     "dbtots": "node --loader ts-node/esm dbToTs.ts",
     "build": "npx tsc",
     "test": "jest",
-    "test:ci": "jest --ci --detectOpenHandles",
+    "test:ci": "jest --ci --detectOpenHandles --forceExit --runInBand",
     "postinstall": "patch-package"
   },
   "devDependencies": {
