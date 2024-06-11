@@ -26,8 +26,8 @@ PRIMARY KEY (latitude, longitude)
 
 describe("Geocoding lambda tests", () => {
   it("Should insert a placemark with the proper address with the given lat/lon", async () => {
+    await conn.executeResult(locationTableSQL)
     await resetDB()
-    conn.executeResult(locationTableSQL)
 
     const result = await handler(testLocation)
 
