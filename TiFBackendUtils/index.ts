@@ -1,6 +1,6 @@
 export * from "./AWS/index.js"
-export * from "./LocalSQL/MySQLDriver.js"
-export * from "./LocalSQL/dbConnection.js"
+export * from "./MySQLDriver/MySQLDriver.js"
+export * from "./MySQLDriver/dbConnection.js"
 export * from "./Retryable/utils.js"
 export * from "./TiFUserUtils/index.js"
 export * from "./TifEventUtils.js"
@@ -9,3 +9,4 @@ export * from "./entities.js"
 export * from "./location.js"
 export * from "./result.js"
 export * from "./types/index.js"
+

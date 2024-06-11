@@ -3,7 +3,7 @@ import dotenv from "dotenv"
 import fs from "fs"
 import path from "path"
 import { fileURLToPath } from "url"
-import { conn } from "./LocalSQL/dbConnection.js"
+import { conn } from "./MySQLDriver/dbConnection.js"
 // dev use only
 // eslint-disable-next-line import/extensions
 

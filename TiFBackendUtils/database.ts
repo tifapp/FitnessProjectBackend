@@ -1,5 +1,5 @@
 import { fail } from "assert"
-import { conn, recreateDatabase } from "./LocalSQL/dbConnection.js"
+import { conn, recreateDatabase } from "./MySQLDriver/dbConnection.js"
 
 const createUserTableSQL = `
 CREATE TABLE IF NOT EXISTS user (

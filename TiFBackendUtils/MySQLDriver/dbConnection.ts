@@ -1,7 +1,7 @@
 import dotenv from "dotenv"
 import mysql from "mysql2/promise.js"
 import { z } from "zod"
-import { MySQLExecutableDriver } from "../LocalSQL/MySQLDriver.js"
+import { MySQLExecutableDriver } from "./MySQLDriver.js"
 export { MySQLExecutableDriver }
 
 dotenv.config()

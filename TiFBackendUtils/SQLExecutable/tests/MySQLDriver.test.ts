@@ -1,5 +1,5 @@
-import { MySQLExecutableDriver } from "../../LocalSQL/MySQLDriver.js"
-import { conn, createDatabaseConnection } from "../../LocalSQL/dbConnection.js"
+import { MySQLExecutableDriver } from "../../MySQLDriver/MySQLDriver.js"
+import { conn, createDatabaseConnection } from "../../MySQLDriver/dbConnection.js"
 
 export type ExecuteResult = {
   id: string
