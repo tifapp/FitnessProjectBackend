@@ -1,8 +1,8 @@
-import { DATABASE_NAME, conn, createConnection, promiseResult, success, tableDefintionsByFamily } from "TiFBackendUtils";
+import { DATABASE_NAME, conn, createDatabaseConnection, promiseResult, success, tableDefintionsByFamily } from "TiFBackendUtils";
 import { fail } from "assert";
 
 const recreateDatabase = async () => {
-  const connection = await createConnection({database: undefined});
+  const connection = await createDatabaseConnection({database: undefined});
 
   try {
     await connection.query(`DROP DATABASE IF EXISTS \`${DATABASE_NAME}\``);

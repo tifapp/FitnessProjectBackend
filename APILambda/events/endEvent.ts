@@ -1,4 +1,4 @@
-import { SQLExecutable, conn, failure, success } from "TiFBackendUtils"
+import { MySQLExecutableDriver, conn, failure, success } from "TiFBackendUtils"
 import { z } from "zod"
 import { ServerEnvironment } from "../env.js"
 import { ValidatedRouter } from "../validation.js"
@@ -7,7 +7,7 @@ const endEventParamsSchema = z.object({
   eventId: z.string()
 })
 
-const endEventByHost = (conn: SQLExecutable, hostId: string, eventId: number) =>
+const endEventByHost = (conn: MySQLExecutableDriver, hostId: string, eventId: number) =>
   conn
     .executeResult(
       `UPDATE event 

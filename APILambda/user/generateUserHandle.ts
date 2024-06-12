@@ -1,4 +1,4 @@
-import { PromiseResult, SQLExecutable, failure, promiseResult, userWithHandleDoesNotExist } from "TiFBackendUtils"
+import { PromiseResult, MySQLExecutableDriver, failure, promiseResult, userWithHandleDoesNotExist } from "TiFBackendUtils"
 import crypto from "crypto"
 
 const generateNumericHash = (input: string) => {
@@ -9,7 +9,7 @@ const generateNumericHash = (input: string) => {
 }
 
 // make retry function util?
-const generateUniqueUsernameAttempt = (conn: SQLExecutable, name: string, retries: number): PromiseResult<string, "could-not-generate-username"> => {
+const generateUniqueUsernameAttempt = (conn: MySQLExecutableDriver, name: string, retries: number): PromiseResult<string, "could-not-generate-username"> => {
   const potentialUsername = `${name}${generateNumericHash(
     `${name}${Date.now()}`
   )}`
@@ -21,7 +21,7 @@ const generateUniqueUsernameAttempt = (conn: SQLExecutable, name: string, retrie
 }
 
 export const generateUniqueUsername = (
-  conn: SQLExecutable,
+  conn: MySQLExecutableDriver,
   name: string,
   retries = 3
 ) => {

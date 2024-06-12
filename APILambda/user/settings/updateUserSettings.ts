@@ -1,4 +1,4 @@
-import { NullablePartial, SQLExecutable, conn } from "TiFBackendUtils"
+import { NullablePartial, MySQLExecutableDriver, conn } from "TiFBackendUtils"
 import { ServerEnvironment } from "../../env.js"
 import { ValidatedRouter } from "../../validation.js"
 import { UserSettings, UserSettingsSchema } from "./models.js"
@@ -13,7 +13,7 @@ import { UserSettings, UserSettingsSchema } from "./models.js"
  * @param settings the settings fields to update
  */
 const insertUserSettings = (
-  conn: SQLExecutable,
+  conn: MySQLExecutableDriver,
   userId: string,
   {
     isAnalyticsEnabled = null,

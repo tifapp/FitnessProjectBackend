@@ -2,7 +2,7 @@
 // TODO: Replace with backend utils
 import mysql, { FieldPacket, ResultSetHeader, RowDataPacket } from "mysql2/promise.js"
 import { AwaitableResult, failure, promiseResult, success } from "../result.js"
-import { createConnection } from "./index.js"
+import { createDatabaseConnection } from "./dbConnection.js"
 
 /**
  * An interface for performing commonly used operations on a SQL database
@@ -40,7 +40,7 @@ const isResultSetHeader = (result: any): result is ResultSetHeader => {
   return "insertId" in result && "affectedRows" in result
 }
 
-export class SQLExecutable {
+export class MySQLExecutableDriver {
   private connection?: mysql.Connection
 
   private async isOpenConnection () {  
@@ -55,7 +55,7 @@ export class SQLExecutable {
     try {
       await this.isOpenConnection();
     } catch (error) {
-      this.connection = await createConnection();
+      this.connection = await createDatabaseConnection();
     }
 
     // undefined connection paths are caught
@@ -83,7 +83,7 @@ export class SQLExecutable {
    * ```
    */
 
-  private async query<Value> (
+  async query<Value> (
     query: string,
     args: object | any[] | null = null
   ): Promise<Value[]> {
@@ -101,7 +101,7 @@ export class SQLExecutable {
     }
   }
 
-  private async execute (
+  async execute (
     query: string,
     args: object | any[] | null = null
   ): Promise<ExecuteResult> {
@@ -146,7 +146,7 @@ export class SQLExecutable {
    * Performs an idempotent transaction and returns the result of the transaction wrapped in a {@link PromiseResult}.
    */
   transaction<SuccessValue, ErrorValue> (
-    query: (tx: SQLExecutable) => AwaitableResult<SuccessValue, ErrorValue>
+    query: (tx: MySQLExecutableDriver) => AwaitableResult<SuccessValue, ErrorValue>
   ) {
     return promiseResult((async () => {
       const conn = await this.useConnection()
