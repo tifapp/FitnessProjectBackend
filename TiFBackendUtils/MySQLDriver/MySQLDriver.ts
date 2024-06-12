@@ -2,14 +2,7 @@
 // TODO: Replace with backend utils
 import mysql, { FieldPacket, ResultSetHeader, RowDataPacket } from "mysql2/promise.js"
 import { AwaitableResult, failure, promiseResult, success } from "../result.js"
-import { createDatabaseConnection } from "./dbConnection.js"
-
-/**
- * An interface for performing commonly used operations on a SQL database
- *
- * This interface allows for isolated query functions to be made and used in different contexts,
- * transaction or not.
- */
+import { createDatabaseConnection, envVars } from "./dbConnection.js"
 
 type ExecuteResult = {
   insertId: string
@@ -39,8 +32,8 @@ const castTypes = (rows: RowDataPacket[], fields: FieldPacket[]): RowDataPacket[
 const isResultSetHeader = (result: any): result is ResultSetHeader => {
   return "insertId" in result && "affectedRows" in result
 }
-
 export class MySQLExecutableDriver {
+  private closedConnection: boolean = false
   private connection?: mysql.Connection
 
   private async isOpenConnection () {  
@@ -52,6 +45,10 @@ export class MySQLExecutableDriver {
   }
   
   private async useConnection () {
+    if (this.closedConnection) {
+      throw new Error("Current connection instance was ended.")
+    }
+
     try {
       await this.isOpenConnection();
     } catch (error) {
@@ -63,8 +60,11 @@ export class MySQLExecutableDriver {
   }
 
   async closeConnection () {
-    const conn = await this.useConnection()
-    conn.end()
+    if (!this.closedConnection) {
+      const conn = await this.useConnection()
+      conn.end()
+      this.closedConnection = true;
+    }
   }
 
   // ==================
@@ -205,3 +205,6 @@ export class MySQLExecutableDriver {
 // const dbConnection = ...;  // Initialize or import your database connection
 // const sqlExec = new SQLExecutable(dbConnection);
 // sqlExec.queryHasResults("SELECT * FROM users");
+
+export const DATABASE_NAME = envVars.DATABASE_NAME
+export const conn = new MySQLExecutableDriver();

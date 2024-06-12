@@ -1,5 +1,11 @@
-import { DATABASE_NAME, conn, createDatabaseConnection, promiseResult, success, tableDefintionsByFamily } from "TiFBackendUtils";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+// TODO: Replace with backend utils
+
 import { fail } from "assert";
+import { promiseResult, success } from "../../result.js";
+import { DATABASE_NAME, conn } from "../MySQLDriver.js";
+import { createDatabaseConnection } from "../dbConnection.js";
+import { tableDefintionsByFamily } from "./tableDefinitions.js";
 
 const recreateDatabase = async () => {
   const connection = await createDatabaseConnection({database: undefined});
@@ -16,21 +22,21 @@ const recreateDatabase = async () => {
   }
 };
 
-export const resetDB = async () => {
-  await recreateDatabase()
-  await recreateTables()
-}
-
-export const recreateTables = async () => {
+const recreateTables = async () => {
   await conn.transaction(async (tx) => {
     for (const family of tableDefintionsByFamily) {
       await Promise.allSettled(
-        family.map(tableDefinition => tx.executeResult(tableDefinition))
+        family.map(tableDefinition => tx.execute(tableDefinition))
       )
     }
 
     return promiseResult(success())
   })
+}
+
+export const resetDB = async () => {
+  await recreateDatabase()
+  await recreateTables()
 }
 
 /**

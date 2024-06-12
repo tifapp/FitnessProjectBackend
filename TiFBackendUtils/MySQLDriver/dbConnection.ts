@@ -1,9 +1,6 @@
 import dotenv from 'dotenv';
-import mysql from 'mysql2/promise.js';
+import mysql from "mysql2/promise.js";
 import { z } from 'zod';
-import { MySQLExecutableDriver } from './MySQLDriver.js';
-
-export { MySQLExecutableDriver };
 
 dotenv.config();
 
@@ -19,12 +16,9 @@ const EnvVarsSchema = z.object({
   CA_PEM: z.string().optional(),
 }).passthrough();
 
-const envVars = EnvVarsSchema.parse(process.env);
+export const envVars = EnvVarsSchema.parse(process.env);
 
 export const createDatabaseConnection = async (connectionConfig: Partial<mysql.ConnectionOptions> = {}) => {
-  console.log("env vars are ")
-  console.log(envVars)
-
   return mysql.createConnection({
     host: envVars.DATABASE_HOST,
     user: envVars.DATABASE_USERNAME,
@@ -42,6 +36,3 @@ export const createDatabaseConnection = async (connectionConfig: Partial<mysql.C
     ...connectionConfig
   });
 };
-
-export const DATABASE_NAME = envVars.DATABASE_NAME
-export const conn: Exclude<MySQLExecutableDriver, "query" | "execute" | "transaction"> = new MySQLExecutableDriver();

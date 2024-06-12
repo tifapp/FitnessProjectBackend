@@ -1,27 +1,7 @@
 import { Placemark, conn, failure, success } from "TiFBackendUtils"
+import { resetDB } from "../TiFBackendUtils/MySQLDriver/test/utils.js"
 import { handler } from "./index.js"
 
-// annotate the stagingTest with the commit hash somehow
-
-const resetDB = async () => {
-  await conn.executeResult(`
-  CREATE TABLE IF NOT EXISTS location (
-  name varchar(255),
-  city varchar(255),
-  country varchar(255),
-  street varchar(255),
-  streetNumber varchar(255),
-  latitude decimal(10,7) NOT NULL,
-  longitude decimal(10,7) NOT NULL,
-  timezoneIdentifier varchar(255) NOT NULL,
-  postalCode varchar(255),
-  region varchar(255),
-  isoCountryCode varchar(255),
-  createdDateTime datetime NOT NULL DEFAULT current_timestamp(),
-  PRIMARY KEY (latitude, longitude)
-  )
-  `)
-}
 const testLocation = { latitude: 36.99813840222285, longitude: -122.05564377465653 }
 const storedLocation = { latitude: 36.9981384, longitude: -122.0556438 } // SQL has limited precision
 

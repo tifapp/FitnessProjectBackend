@@ -64,10 +64,13 @@ jobs:
           npm ci
         env:
           CI: true
+          
+      - name: Initialize DB
+        run: |
+          npm run resetDB
 
       - name: Update entities
         run: |
-          npm run resetDB
           npm run dbtots
       
       - name: Validate openapi specs
@@ -136,6 +139,10 @@ jobs:
         npm ci
       env:
         CI: true
+
+    - name: Wait for AWS Deployment
+      run: |
+        sleep 30
 
     - name: Authenticate with AWS Cognito and run staging tests
       # TODO: Reduce memory required

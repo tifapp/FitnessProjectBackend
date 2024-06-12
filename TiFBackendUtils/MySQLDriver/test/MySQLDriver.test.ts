@@ -1,5 +1,4 @@
-import { MySQLExecutableDriver } from "../MySQLDriver.js"
-import { conn } from "../dbConnection.js"
+import { MySQLExecutableDriver, conn } from "../MySQLDriver.js"
 
 export type ExecuteResult = {
   id: string
@@ -17,14 +16,15 @@ describe("MySQLExecutableDriver", () => {
     name varchar(50) NOT NULL,
     PRIMARY KEY (id)
     )`
-    await conn.executeResult(createMySQLDriverTableSQL)
+    await conn.execute(createMySQLDriverTableSQL)
   })
 
   afterAll(async () => {
+    await mySQLDriverTest.closeConnection()
     const deleteMySQLDriverTableSQL = `
     DROP TABLE IF EXISTS mySQLDriver
     `
-    await conn.executeResult(deleteMySQLDriverTableSQL)
+    await conn.execute(deleteMySQLDriverTableSQL)
   })
 
   describe("execute", () => {
@@ -104,7 +104,7 @@ describe("MySQLExecutableDriver", () => {
       await mySQLDriverTest.execute("DELETE FROM mySQLDriver")
       await mySQLDriverTest.closeConnection()
       const query = "INSERT INTO mySQLDriver (name, id) VALUES ('Chungus',1)"
-      await expect(mySQLDriverTest.execute(query)).rejects.toThrow("Can't add new command when connection is in closed state")
+      await expect(mySQLDriverTest.execute(query)).rejects.toThrow("Current connection instance was ended.")
     })
   })
 })

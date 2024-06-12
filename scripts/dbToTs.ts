@@ -3,7 +3,7 @@ import dotenv from "dotenv"
 import fs from "fs"
 import path from "path"
 import { fileURLToPath } from "url"
-import { conn } from "../TiFBackendUtils/SQLExecutable/index.js"
+import { conn } from "../TiFBackendUtils/index.js"
 
 if (process.argv.includes('--run')) {
   dotenv.config()
