@@ -1,6 +1,5 @@
 export * from "./AWS/index.js"
 export * from "./MySQLDriver/MySQLDriver.js"
-export * from "./MySQLDriver/dbConnection.js"
 export * from "./Retryable/utils.js"
 export * from "./TiFUserUtils/index.js"
 export * from "./TifEventUtils.js"

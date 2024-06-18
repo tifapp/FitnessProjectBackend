@@ -1,29 +1,24 @@
-import { ResultSetHeader, RowDataPacket } from "mysql2"
-import mysql, { FieldPacket } from "mysql2/promise.js"
+/* eslint-disable @typescript-eslint/no-explicit-any */
+// TODO: Replace with backend utils
+import mysql, { FieldPacket, ResultSetHeader, RowDataPacket } from "mysql2/promise.js"
 import { AwaitableResult, failure, promiseResult, success } from "../result.js"
+import { createDatabaseConnection } from "./dbConnection.js"
 
 type ExecuteResult = {
   insertId: string
   rowsAffected: number
 }
 
-const isResultSetHeader = (result: ResultSetHeader): result is ResultSetHeader => {
-  return "insertId" in result && "affectedRows" in result
-}
-
 const typecasts: Record<number, (value: string | null) => unknown> = {
   3: (value) => parseInt(value ?? "0") > 0, // INT or LONG as BOOLEAN
   1: (value) => parseInt(value ?? "0") > 0, // TINYINT as BOOLEAN
-  7: (value) => value ? new Date(value) : value, // TIMESTAMP
   12: (value) => value ? new Date(value) : value, // DATETIME
   246: (value) => value ? parseFloat(value) : value // NEWDECIMAL (DECIMAL/NUMERIC)
 }
 
 const castTypes = (rows: RowDataPacket[], fields: FieldPacket[]): RowDataPacket[] => {
   return rows.map(row => {
-    console.log("row ", row)
     fields.forEach(field => {
-      console.log("field ", field)
       const type = field.type
       const key = field.name
       if (type !== undefined && typecasts[type]) {
@@ -34,81 +29,47 @@ const castTypes = (rows: RowDataPacket[], fields: FieldPacket[]): RowDataPacket[
   })
 }
 
+const isResultSetHeader = (result: any): result is ResultSetHeader => {
+  return "insertId" in result && "affectedRows" in result
+}
 export class MySQLExecutableDriver {
-  private conn: Promise<mysql.Connection>
+  private closedConnection: boolean = false
+  private connection?: mysql.Connection
 
-  constructor (connection: Promise<mysql.Connection>) {
-    this.conn = connection
+  private async isOpenConnection () {  
+    if (!this.connection) {
+      throw new Error("connection closed")
+    }
+      
+    await this.connection?.ping();
+  }
+  
+  private async useConnection () {
+    if (this.closedConnection) {
+      throw new Error("Current connection instance was ended.")
+    }
+
+    try {
+      await this.isOpenConnection();
+    } catch (error) {
+      this.connection = await createDatabaseConnection();
+    }
+
+    // undefined connection paths are caught
+    return this.connection!;
   }
 
   async closeConnection () {
-    const conn = await this.conn
-    conn.end()
+    if (!this.closedConnection) {
+      const conn = await this.useConnection()
+      conn.end()
+      this.closedConnection = true;
+    }
   }
 
   // ==================
   // Implementation-Dependent Methods
   // ==================
-
-  async execute (
-    query: string,
-    args: object | (number | string)[] | null = null
-  ): Promise<ExecuteResult> {
-    // Use this.conn to execute the query and return the result rows
-    // This will be the only function to directly use the database library's execute method.
-    const conn = await this.conn
-    const [result] = await conn.execute<ResultSetHeader>(query, args)
-    if (isResultSetHeader(result)) {
-      return {
-        insertId: result.insertId.toString(),
-        rowsAffected: result.affectedRows
-      }
-    } else {
-      throw new Error("Execution did not return a ResultSetHeader.")
-    }
-  }
-
-  /**
-   * Runs the given SQL query and returns a success result containing the insertId of the query.
-   */
-  executeResult (query: string, args: object | (number | string)[] | null = null) {
-    return promiseResult(
-      this.execute(query, args).then((executeResult) =>
-        success(executeResult)
-      )
-    )
-  }
-
-  /**
-   * Runs the given SQL query and returns a success result containing the result of the query.
-   */
-  queryResult<Value> (query: string, args: object | (number | string)[] | null = null) {
-    return promiseResult(
-      this.query<Value>(query, args).then((result) => success(result))
-    )
-  }
-
-  /**
-   * Performs an idempotent transaction and returns the result of the transaction wrapped in a {@link PromiseResult}.
-   */
-  transaction<SuccessValue, ErrorValue> (
-    querySQLTransaction: (tx: MySQLExecutableDriver) => AwaitableResult<SuccessValue, ErrorValue>
-  ) {
-    console.log("trying transaction")
-    return promiseResult((async () => {
-      const conn = await this.conn
-      try {
-        await conn.beginTransaction()
-        const result = await querySQLTransaction(this)
-        await conn.commit()
-        return result
-      } catch (error) {
-        console.log("Rollback called")
-        await conn.rollback()
-        throw error
-      }
-    })())
-  }
 
   /**
    * Loads a list of results from the database given a sql query and casts the result to `Value`
@@ -124,20 +85,101 @@ export class MySQLExecutableDriver {
 
   async query<Value> (
     query: string,
-    args: object | (number | string)[] | null = null
+    args: object | any[] | null = null
   ): Promise<Value[]> {
-    const conn = await this.conn
-    const [rows, fields] = await conn.query(query, args)
-    if (Array.isArray(rows) && Array.isArray(fields)) {
-      return castTypes(rows as RowDataPacket[], fields) as Value[]
-    } else {
-      throw new Error("Query did not return an array of rows and fields.")
+    try {
+      const conn = await this.useConnection()
+      const [rows, fields] = await conn.query(query, args)
+      if (Array.isArray(rows) && Array.isArray(fields)) {
+        return castTypes(rows as RowDataPacket[], fields) as Value[]
+      } else {
+        throw new Error("Query did not return an array of rows and fields.")
+      }
+    } catch (e) {
+      console.error(e)
+      throw e
     }
+  }
+
+  async execute (
+    query: string,
+    args: object | any[] | null = null
+  ): Promise<ExecuteResult> {
+    try {
+      const conn = await this.useConnection()
+      const [result] = await conn.execute<ResultSetHeader>(query, args)
+      if (isResultSetHeader(result)) {
+        return {
+          insertId: result.insertId.toString(),
+          rowsAffected: result.affectedRows
+        }
+      } else {
+        throw new Error("Execution did not return a ResultSetHeader.")
+      }
+    } catch (e) {
+      console.error(e)
+      throw e
+    }
+  }
+
+  /**
+   * Runs the given SQL query and returns a success result containing the insertId of the query.
+   */
+  executeResult (query: string, args: object | any[] | null = null) {
+    return promiseResult(
+      this.execute(query, args).then((executeResult) =>
+        success(executeResult)
+      )
+    )
+  }
+
+  /**
+   * Runs the given SQL query and returns a success result containing the result of the query.
+   */
+  queryResult<Value> (query: string, args: object | any[] | null = null) {
+    return promiseResult(
+      this.query<Value>(query, args).then((result) => success(result))
+    )
+  }
+
+  /**
+   * Performs an idempotent transaction and returns the result of the transaction wrapped in a {@link PromiseResult}.
+   */
+  transaction<SuccessValue, ErrorValue> (
+    query: (tx: MySQLExecutableDriver) => AwaitableResult<SuccessValue, ErrorValue>
+  ) {
+    return promiseResult((async () => {
+      const conn = await this.useConnection()
+      try {
+        await conn.beginTransaction()
+        const result = await query(this)
+        await conn.commit()
+        return result
+      } catch (error) {
+        await conn.rollback()
+        throw error
+      }
+    })())
   }
 
   // ==================
   // Generic Methods
   // ==================
+
+  /**
+   * Runs a query an returns a success result if the query returns 1 or more rows.
+   *
+   * You should not query specific data with this method, instead use a `"SELECT TRUE"`
+   * if you need to perform a select.
+   */
+  queryHasResults (query: string, args: object | any[] | null = null) {
+    return promiseResult(
+      this.query(query, args).then((results) => {
+        const hasResults = results.length > 0
+        return hasResults ? success(hasResults) : failure(hasResults)
+      })
+    )
+  }
 
   /**
    * Returns the first result of a query in a typesafe manner.
@@ -150,26 +192,18 @@ export class MySQLExecutableDriver {
    * console.log(result?.id) // ✅ Typesafe
    * ```
    */
-  queryFirstResult<Value> (query: string, args: object | (number | string)[] | null = null) {
+  queryFirstResult<Value> (query: string, args: object | any[] | null = null) {
     return promiseResult(
       this.query<Value>(query, args).then((results) =>
         results[0] ? success(results[0]) : failure("no-results" as const)
       )
     )
   }
-
-  /**
-   * Runs a query an returns a success result if the query returns 1 or more rows.
-   *
-   * You should not query specific data with this method, instead use a `"SELECT TRUE"`
-   * if you need to perform a select.
-   */
-  queryHasResults (query: string, args: object | (number | string)[] | null = null) {
-    return promiseResult(
-      this.query(query, args).then((results) => {
-        const hasResults = results.length > 0
-        return hasResults ? success(hasResults) : failure(hasResults)
-      })
-    )
-  }
 }
+
+// Usage
+// const dbConnection = ...;  // Initialize or import your database connection
+// const sqlExec = new SQLExecutable(dbConnection);
+// sqlExec.queryHasResults("SELECT * FROM users");
+
+export const conn = new MySQLExecutableDriver();

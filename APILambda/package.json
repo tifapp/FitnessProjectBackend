@@ -10,7 +10,6 @@
   "main": "index.js",
   "scripts": {
     "pr": "cd .. && npm run pr",
-    "dbtots": "node --loader ts-node/esm ../TiFBackendUtils/dbToTs.ts",
     "genapispecs": "ts-node --esm ./genapispecs.mjs && npx lint-openapi specs.json",
     "build": "npx tsc",
     "start": "node dist/index.js",

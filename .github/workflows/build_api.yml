@@ -2,10 +2,6 @@ name: Build API Lambda
 
 on:
   workflow_call:
-    inputs:
-      stage:
-        required: true
-        type: string
     outputs:
       zip-path:
         description: "API Lambda zip"
@@ -57,13 +53,6 @@ jobs:
           cd APILambda
           npm ci
           npm install ../TiFBackendUtils/dist/TiFBackendUtils-1.0.0.tgz
-      
-      - name: Use staging index
-        if: inputs.stage == 'test'
-        run: |
-          cd APILambda
-          rm -f index.ts
-          mv ./stagingIndex.ts ./index.ts
 
       - name: Build the project
         run: |

@@ -61,7 +61,7 @@ addRoutes(app, {
       },
       "x-amazon-apigateway-integration": {
         httpMethod: "POST", // "For Lambda integrations, you must use the HTTP method of POST for the integration request" https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html
-        uri: `${testEnvVars.API_SPECS_LAMBDA_ID}:dev/invocations`,
+        uri: `${testEnvVars.API_SPECS_LAMBDA_ID}:stagingTest/invocations`,
         responses: {
           default: {
             // TODO: Generate responses
