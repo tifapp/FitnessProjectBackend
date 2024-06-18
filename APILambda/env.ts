@@ -10,8 +10,11 @@ dotenv.config()
 const EnvSchema = z
   .object({
     DATABASE_HOST: z.string(),
+    DATABASE_PORT: z.string().optional(),
     DATABASE_PASSWORD: z.string(),
     DATABASE_USERNAME: z.string(),
+    DATABASE_NAME: z.string(),
+    CA_PEM: z.string().optional(),
     ABLY_KEY: z.string(),
     AWS_REGION: z.string(),
     AWS_ACCESS_KEY_ID: z.string(),
