@@ -1,6 +1,8 @@
-import { ResultSetHeader, RowDataPacket } from "mysql2"
-import mysql, { FieldPacket } from "mysql2/promise.js"
+/* eslint-disable @typescript-eslint/no-explicit-any */
+// TODO: Replace with backend utils
+import mysql, { FieldPacket, ResultSetHeader, RowDataPacket } from "mysql2/promise.js"
 import { AwaitableResult, failure, promiseResult, success } from "../result.js"
+import { createDatabaseConnection } from "./dbConnection.js"
 
 type ExecuteResult = {
   insertId: string
@@ -21,9 +23,7 @@ const typecasts: Record<number, (value: string | null) => unknown> = {
 
 const castTypes = (rows: RowDataPacket[], fields: FieldPacket[]): RowDataPacket[] => {
   return rows.map(row => {
-    console.log("row ", row)
     fields.forEach(field => {
-      console.log("field ", field)
       const type = field.type
       const key = field.name
       if (type !== undefined && typecasts[type]) {
@@ -34,16 +34,39 @@ const castTypes = (rows: RowDataPacket[], fields: FieldPacket[]): RowDataPacket[
   })
 }
 
-export class MySQLExecutableDriver {
-  private conn: Promise<mysql.Connection>
+export class MySQLDriver {
+  private useConnection: () => Promise<mysql.Connection>
+  private isConnectionClosed: boolean = false
+  
+  constructor () {
+    let connection: mysql.Connection
 
-  constructor (connection: Promise<mysql.Connection>) {
-    this.conn = connection
+    this.useConnection = async () => {
+      if (this.isConnectionClosed) {
+        throw new Error("Current connection instance was ended.")
+      }
+  
+      try {
+        if (!connection) {
+          throw new Error("Connection is closed")
+        }
+          
+        await connection?.ping();
+      } catch (error) {
+        console.error(error)
+        connection = await createDatabaseConnection();
+      }
+  
+      return connection!;
+    }
   }
 
   async closeConnection () {
-    const conn = await this.conn
-    conn.end()
+    if (!this.isConnectionClosed) {
+      const conn = await this.useConnection()
+      conn.end()
+      this.isConnectionClosed = true;
+    }
   }
 
   // ==================
@@ -56,7 +79,7 @@ export class MySQLExecutableDriver {
   ): Promise<ExecuteResult> {
     // Use this.conn to execute the query and return the result rows
     // This will be the only function to directly use the database library's execute method.
-    const conn = await this.conn
+    const conn = await this.useConnection()
     const [result] = await conn.execute<ResultSetHeader>(query, args)
     if (isResultSetHeader(result)) {
       return {
@@ -92,18 +115,16 @@ export class MySQLExecutableDriver {
    * Performs an idempotent transaction and returns the result of the transaction wrapped in a {@link PromiseResult}.
    */
   transaction<SuccessValue, ErrorValue> (
-    querySQLTransaction: (tx: MySQLExecutableDriver) => AwaitableResult<SuccessValue, ErrorValue>
+    query: (tx: MySQLDriver) => AwaitableResult<SuccessValue, ErrorValue>
   ) {
-    console.log("trying transaction")
     return promiseResult((async () => {
-      const conn = await this.conn
+      const conn = await this.useConnection()
       try {
         await conn.beginTransaction()
-        const result = await querySQLTransaction(this)
+        const result = await query(this)
         await conn.commit()
         return result
       } catch (error) {
-        console.log("Rollback called")
         await conn.rollback()
         throw error
       }
@@ -126,7 +147,7 @@ export class MySQLExecutableDriver {
     query: string,
     args: object | (number | string)[] | null = null
   ): Promise<Value[]> {
-    const conn = await this.conn
+    const conn = await this.useConnection()
     const [rows, fields] = await conn.query(query, args)
     if (Array.isArray(rows) && Array.isArray(fields)) {
       return castTypes(rows as RowDataPacket[], fields) as Value[]
@@ -173,3 +194,8 @@ export class MySQLExecutableDriver {
     )
   }
 }
+
+// Usage
+// const dbConnection = ...;  // Initialize or import your database connection
+// const sqlExec = new SQLExecutable(dbConnection);
+// sqlExec.queryHasResults("SELECT * FROM users");
