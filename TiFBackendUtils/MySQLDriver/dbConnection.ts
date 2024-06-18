@@ -22,19 +22,17 @@ const EnvVarsSchema = z
 
 const envVars = EnvVarsSchema.parse(process.env)
 
-const dbName = "tif"
-
 export const recreateDatabase = async () => {
   const connection = await sqlConn
 
   try {
     await connection.changeUser({ database: undefined })
 
-    await connection.query(`DROP DATABASE ${dbName}`)
+    await connection.query(`DROP DATABASE ${envVars.DATABASE_NAME}`)
 
-    await connection.query(`CREATE DATABASE ${dbName}`)
+    await connection.query(`CREATE DATABASE ${envVars.DATABASE_NAME}`)
 
-    await connection.changeUser({ database: dbName })
+    await connection.changeUser({ database: envVars.DATABASE_NAME })
 
     console.log("Reset the database successfully")
   } catch (error) {
@@ -47,9 +45,18 @@ export async function createDatabaseConnection () {
     const connection = await mysql.createConnection({
       host: envVars.DATABASE_HOST,
       user: envVars.DATABASE_USERNAME,
+      port: Number(envVars.DATABASE_PORT),
       password: envVars.DATABASE_PASSWORD,
       database: envVars.DATABASE_NAME,
-      namedPlaceholders: true
+      timezone: 'Z',
+      namedPlaceholders: true,
+      decimalNumbers: true,
+      //if envVars.CA_PEM does not exist, then we're in a local testing env and don't need to pass that to the connection
+      ...(envVars.CA_PEM && {
+        ssl: {
+          ca: envVars.CA_PEM
+        }
+      }),
     })
     console.log("Successfully connected to the database.")
     return connection
