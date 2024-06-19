@@ -1,4 +1,5 @@
-import { scheduleAWSLambda } from "../AWS/lambdaUtils.js"
+import { deleteEventBridgeRule, scheduleAWSLambda } from "../AWS/lambdaUtils.js"
+import { envVars } from "../env.js"
 
 export interface Retryable {
   retries?: number
@@ -14,16 +15,18 @@ export interface Retryable {
 export const exponentialFunctionBackoff = <T extends Retryable, U>(
   asyncFunc: (event: T) => Promise<U>,
   maxRetries: number = 3,
-  retryAsyncFunc = scheduleAWSLambda // parameterized for testing
+  retryAsyncFunc = envVars.ENVIRONMENT === "devTest" ? () => {} : scheduleAWSLambda,
+  cleanup = envVars.ENVIRONMENT === "devTest" ? () => {} : deleteEventBridgeRule
 ) => {
   // retryAsync: (date, T) => U
   return async (event: T) => {
     const parsedEvent = typeof event === "string" ? JSON.parse(event) : event // event may be received as a string when triggered with lambda.invoke()?
     try {
-      return await asyncFunc(parsedEvent)
+      await cleanup(parsedEvent)
+      return await asyncFunc(parsedEvent.detail)
     } catch (e) {
       console.error(e)
-      const retries = parsedEvent.retries ?? 0
+      const retries = parsedEvent.detail.retries ?? 0
       if (retries < maxRetries) {
         const retryDelay = Math.pow(2, retries)
         const retryDate = new Date()

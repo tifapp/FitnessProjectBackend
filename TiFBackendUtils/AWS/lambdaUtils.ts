@@ -27,11 +27,11 @@ export const scheduleAWSLambda = async (
 ) => {
   const cronExpression = createCronExpressions(dateString)
   const ruleName = `${functionName}_${dateString}`.replace(/[: ]/g, "_")
-  const ruleParams = {
+  await eventbridge.putRule({
     Name: ruleName,
-    ScheduleExpression: cronExpression
-  }
-  await eventbridge.putRule(ruleParams)
+    ScheduleExpression: cronExpression,
+    EventBusName: functionName
+  })
   const targetParams = {
     Rule: ruleName,
     Targets: [
@@ -53,3 +53,10 @@ export const invokeAWSLambda = async (
   InvocationType: InvocationType.RequestResponse,
   Payload: JSON.stringify(targetLambdaParams)
 })
+
+export const deleteEventBridgeRule = async (event: {id: string}) => {
+  await eventbridge.deleteRule({
+    Name: event.id,
+    EventBusName: functionName
+  });
+};
