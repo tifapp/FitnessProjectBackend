@@ -1,4 +1,4 @@
-import { MySQLExecutableDriver } from "../MySQLDriver/MySQLDriver.js"
+import { MySQLExecutableDriver } from "../MySQLDriver/index.js"
 import { DBuser } from "../entities.js"
 import { ExtractSuccess } from "../result.js"
 import { UserRelationship } from "./UserRelationships.js"

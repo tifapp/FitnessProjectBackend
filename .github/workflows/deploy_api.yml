@@ -50,6 +50,7 @@ jobs:
             --function-name lambdaSQLRoute \
             --environment "Variables={\
               GITHUB_SHA=${{ github.sha }},\
+              ENVIRONMENT=${{ inputs.stage }},\
               DATABASE_HOST=${{ secrets.DATABASE_HOST }},\
               DATABASE_NAME=${{ inputs.stage }},\
               DATABASE_PORT=${{ secrets.DATABASE_PORT }},\

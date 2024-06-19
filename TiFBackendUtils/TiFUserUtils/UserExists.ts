@@ -1,4 +1,4 @@
-import { MySQLExecutableDriver } from "../MySQLDriver/MySQLDriver.js"
+import { MySQLExecutableDriver } from "../MySQLDriver/index.js"
 
 export const userWithHandleDoesNotExist = (
   conn: MySQLExecutableDriver,
