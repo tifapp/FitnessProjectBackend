@@ -1,6 +1,4 @@
-/* eslint-disable import/extensions */
-
-import { resetDB } from "./database"
+import { resetDB } from "../TiFBackendUtils/MySQLDriver/test/utils.js";
 
 /*
 * Resets database before each test
