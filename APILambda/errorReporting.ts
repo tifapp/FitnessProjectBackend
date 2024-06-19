@@ -1,10 +1,7 @@
 /* eslint-disable @typescript-eslint/naming-convention */
-import dotenv from "dotenv"
+import { envVars } from "TiFBackendUtils"
 import { Application } from "express"
 import https from "https"
-import { envVars } from "./env.js"
-
-dotenv.config()
 
 const outputChannel = "C01B7FFKDCP"
 

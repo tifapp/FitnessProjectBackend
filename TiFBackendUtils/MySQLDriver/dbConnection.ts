@@ -1,26 +1,5 @@
-import dotenv from 'dotenv';
 import mysql from "mysql2/promise.js";
-import { z } from 'zod';
-
-dotenv.config()
-
-const EnvVarsSchema = z
-  .object({
-    DATABASE_HOST: z.string(),
-    DATABASE_NAME: z.string()
-      .min(1, { message: "Database name must be at least 1 character long." })
-      .max(16, { message: "Database name must be no more than 16 characters long." })
-      .regex(/^[a-zA-Z0-9_]+$/, { message: "Database name must only contain alphanumeric characters and underscores." }),
-    DATABASE_PORT: z.string().optional(),
-    DATABASE_PASSWORD: z.string(),
-    DATABASE_USERNAME: z.string(),
-    CA_PEM: z.string().optional(),
-  })
-  .passthrough()
-
-const envVars = EnvVarsSchema.parse(process.env)
-
-export const DATABASE_NAME = envVars.DATABASE_NAME
+import { envVars } from "../env.js";
 
 export const createDatabaseConnection = async (connectionConfig: Partial<mysql.ConnectionOptions> = {}) => {
   return mysql.createConnection({

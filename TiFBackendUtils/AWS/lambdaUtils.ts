@@ -1,8 +1,6 @@
 import { EventBridge } from "@aws-sdk/client-eventbridge"
 import { InvocationType, Lambda } from "@aws-sdk/client-lambda"
-import dotenv from "dotenv"
-
-dotenv.config()
+import { AWSEnvVars } from "./env.js"
 
 const eventbridge = new EventBridge({ apiVersion: "2023-04-20" })
 const lambda = new Lambda()
@@ -18,9 +16,9 @@ const createCronExpressions = (dateString: string) => {
   return `cron(${minute} ${hour} ${dayOfMonth} ${month} ? ${year})`
 }
 
-const functionName = process.env.AWS_LAMBDA_FUNCTION_NAME
-const region = process.env.AWS_REGION
-const accountId = process.env.AWS_ACCOUNT_ID
+const functionName = AWSEnvVars.AWS_LAMBDA_FUNCTION_NAME
+const region = AWSEnvVars.AWS_REGION
+const accountId = AWSEnvVars.AWS_ACCOUNT_ID
 const lambdaArn = `arn:aws:lambda:${region}:${accountId}:function:${functionName}`
 
 export const scheduleAWSLambda = async (

@@ -1,11 +1,12 @@
 import awsServerlessExpress from "@vendia/serverless-express"
 import {
   LocationCoordinate2D,
+  envVars,
   invokeAWSLambda
 } from "TiFBackendUtils"
 import { addBenchmarking, addRoutes, createApp } from "./app.js"
 import { addCognitoTokenVerification } from "./auth.js"
-import { ServerEnvironment, envVars } from "./env.js"
+import { ServerEnvironment } from "./env.js"
 import { addErrorReporting } from "./errorReporting.js"
 import { addEventToRequest } from "./serverlessMiddleware.js"
 import { setProfileCreatedAttribute } from "./user/createUser/setCognitoAttribute.js"

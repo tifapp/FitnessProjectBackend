@@ -53,4 +53,6 @@ describe("Geocoding lambda tests", () => {
 
     expect(result).toMatchObject(failure("placemark-already-exists"))
   })
+
+  afterAll(() => conn.closeConnection())
 })
