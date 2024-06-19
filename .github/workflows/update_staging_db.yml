@@ -1,0 +1,45 @@
+name: Build and Deploy API to AWS Lambda
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  # need a script to create new DB for staging, and revoke drop permissions from user "backend"  
+  make_staging_db:
+    runs-on: ubuntu-latest
+    
+    env:
+      DATABASE_HOST: ${{ secrets.DATABASE_HOST }}
+      DATABASE_PORT: ${{ secrets.DATABASE_PORT }}
+      DATABASE_USERNAME: root
+      DATABASE_PASSWORD: yourpassword
+      DATABASE_NAME: devTest
+      AWS_REGION: ${{ secrets.AWS_REGION }}
+      AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      ABLY_KEY: ${{ secrets.ABLY_KEY }}
+      COGNITO_USER_POOL_ID: ${{ secrets.COGNITO_USER_POOL_ID }}
+      AWS_LAMBDA_FUNCTION_NAME: lambdaSQLRoute
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v2
+        with:
+          node-version: '18'
+          
+      - name: Install dependencies
+        run: |
+          npm ci
+          cd TiFBackendUtils
+        env:
+          CI: true
+
+      - name: Create staging db
+        run: |
+          npm run resetDB
