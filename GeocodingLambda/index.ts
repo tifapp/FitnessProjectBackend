@@ -6,7 +6,6 @@ import {
   LocationCoordinate2D,
   Placemark,
   Result,
-  Retryable,
   conn,
   exponentialFunctionBackoff,
   promiseResult,
@@ -14,7 +13,7 @@ import {
 } from "TiFBackendUtils"
 import { SearchClosestAddressToCoordinates, addPlacemarkToDB, checkExistingPlacemarkInDB, getTimeZone } from "./utils.js"
 
-interface LocationSearchRequest extends Retryable, LocationCoordinate2D {}
+interface LocationSearchRequest extends LocationCoordinate2D {}
 
 // TODO: Fix handler type, fix util dependencies
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
