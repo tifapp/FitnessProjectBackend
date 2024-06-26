@@ -6,17 +6,10 @@ on:
     branches:
       - development
 
-concurrency: 
-  group: ${{ github.workflow }}
-  cancel-in-progress: false
-
 jobs:
   test:
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}-${{ github.run_attempt }}
-      cancel-in-progress: false
 
     services:
       mysql:
@@ -90,6 +83,9 @@ jobs:
     secrets: inherit
   
   deploy_for_staging_tests:
+    concurrency: 
+      group: stagingTest
+      cancel-in-progress: false
     needs: build
     uses: ./.github/workflows/deploy_api.yml
     secrets: inherit
@@ -97,6 +93,9 @@ jobs:
       stage: "stagingTest"
   
   test_on_staging:
+    concurrency: 
+      group: stagingTest
+      cancel-in-progress: false
     runs-on: ubuntu-latest
     timeout-minutes: 15
     needs: deploy_for_staging_tests
@@ -142,7 +141,7 @@ jobs:
 
     - name: Wait for AWS Deployment
       run: |
-        sleep 15
+        sleep 20
 
     - name: Run staging tests with authenticated Cognito users
       # TODO: Reduce memory required

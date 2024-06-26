@@ -1,20 +1,17 @@
 import sqlts from "@rmp135/sql-ts"
-import dotenv from "dotenv"
 import fs from "fs"
 import path from "path"
 import { fileURLToPath } from "url"
-import { conn } from "../TiFBackendUtils/index.js"
+import { conn, envVars } from "../TiFBackendUtils/index.js"
 
 if (process.argv.includes('--run')) {
-  dotenv.config()
-
   const config = {
     client: "mysql2",
     connection: {
-      host: process.env.DATABASE_HOST,
-      user: process.env.DATABASE_USERNAME,
-      password: process.env.DATABASE_PASSWORD,
-      database: process.env.ENVIRONMENT,
+      host: envVars.DATABASE_HOST,
+      user: envVars.DATABASE_USERNAME,
+      password: envVars.DATABASE_PASSWORD,
+      database: envVars.ENVIRONMENT,
       ssl: {
         rejectUnauthorized: false
       }
@@ -24,17 +21,17 @@ if (process.argv.includes('--run')) {
       number: ["bigint"]
     },
     typeOverrides: {
-      [`${process.env.ENVIRONMENT}.TifEventView.hasArrived`]: "boolean" as const
+      [`${envVars.ENVIRONMENT}.TifEventView.hasArrived`]: "boolean" as const
     },
     columnOptionality: {
-      [`${process.env.ENVIRONMENT}.TifEventView.hasArrived`]: "required" as const
+      [`${envVars.ENVIRONMENT}.TifEventView.hasArrived`]: "required" as const
     },
     globalOptionality: "required" as const,
     // eslint-disable-next-line no-template-curly-in-string
     interfaceNameFormat: "DB${table}"
   }
   
-  const tablesColumn = `Tables_in_${process.env.ENVIRONMENT}`
+  const tablesColumn = `Tables_in_${envVars.ENVIRONMENT}`
   
   const tableNames = (await conn.queryResult<{
     tablesColumn: string

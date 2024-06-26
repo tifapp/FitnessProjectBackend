@@ -57,6 +57,7 @@ jobs:
               CA_PEM=${{ secrets.CA_PEM }},\
               DATABASE_USERNAME=$DB_USERNAME,\
               DATABASE_PASSWORD=$DB_PASSWORD,\
+              AWS_ACCOUNT_ID=${{ secrets.AWS_ACCOUNT_ID }},\
               ABLY_KEY=${{ secrets.ABLY_KEY }},\
               SLACK_APP_ID=${{ secrets.SLACK_APP_ID }},\
               COGNITO_USER_POOL_ID=${{ secrets.COGNITO_USER_POOL_ID }}\

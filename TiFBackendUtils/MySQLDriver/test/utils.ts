@@ -1,8 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // TODO: Replace with backend utils
 import { fail } from "assert";
+import { envVars } from "../../env.js";
 import { promiseResult, success } from "../../result.js";
-import { DATABASE_NAME, createDatabaseConnection } from "../dbConnection.js";
+import { createDatabaseConnection } from "../dbConnection.js";
 import { conn } from "../index.js";
 import { tableDefintionsByFamily } from "./tableDefinitions.js";
 
@@ -11,10 +12,10 @@ const recreateDatabase = async () => {
 
   try {
     //Need to interpolate the database name when using DDL statements like DROP DATABASE or CREATE DATABASE.
-    await connection.query(`DROP DATABASE IF EXISTS \`${DATABASE_NAME}\``);
-    await connection.query(`CREATE DATABASE \`${DATABASE_NAME}\``);
+    await connection.query(`DROP DATABASE IF EXISTS \`${envVars.DATABASE_NAME}\``);
+    await connection.query(`CREATE DATABASE \`${envVars.DATABASE_NAME}\``);
 
-    console.log(`Reset the database ${DATABASE_NAME} successfully`);
+    console.log(`Reset the database ${envVars.DATABASE_NAME} successfully`);
   } catch (error) {
     console.error('An error occurred:', error);
   } finally {

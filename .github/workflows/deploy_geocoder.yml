@@ -50,6 +50,7 @@ jobs:
               DATABASE_NAME=${{ inputs.stage }},\
               DATABASE_PORT=${{ secrets.DATABASE_PORT }},\
               CA_PEM=${{ secrets.CA_PEM }},\
+              AWS_ACCOUNT_ID=${{ secrets.AWS_ACCOUNT_ID }},\
               DATABASE_USERNAME=$DB_USERNAME,\
               DATABASE_PASSWORD=$DB_PASSWORD\
             }"

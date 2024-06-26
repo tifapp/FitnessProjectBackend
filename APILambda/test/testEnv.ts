@@ -1,9 +1,6 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 // Env variables
-import dotenv from "dotenv"
 import { z } from "zod"
-
-dotenv.config()
 
 const TestEnvSchema = z
   .object({

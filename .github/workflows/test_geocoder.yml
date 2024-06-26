@@ -5,10 +5,6 @@ on:
     types: [opened, synchronize]
     branches:
       - development
-
-concurrency: 
-  group: ${{ github.workflow }}
-  cancel-in-progress: false
   
 jobs:
   test:
@@ -72,6 +68,9 @@ jobs:
     secrets: inherit
   
   deploy:
+    concurrency: 
+      group: stagingTest
+      cancel-in-progress: false
     needs: build
     uses: ./.github/workflows/deploy_geocoder.yml
     secrets: inherit
