@@ -27,6 +27,7 @@ jobs:
     
     env:
       DATABASE_HOST: 127.0.0.1
+      DATABASE_PORT: 3306
       DATABASE_USERNAME: root
       DATABASE_PASSWORD: password
       DATABASE_NAME: tif
@@ -90,7 +91,10 @@ jobs:
     needs: deploy_for_tests
     
     env:
+      CA_PEM: ${{ secrets.CA_PEM }}
       DATABASE_HOST: ${{ secrets.DATABASE_HOST }}
+      DATABASE_PORT: ${{ secrets.DATABASE_PORT }}
+      DATABASE_NAME: stagingTest
       DATABASE_USERNAME: ${{ secrets.DEV_DATABASE_USERNAME }}
       DATABASE_PASSWORD: ${{ secrets.DEV_DATABASE_PASSWORD }}
       AWS_REGION: ${{ secrets.AWS_REGION }}
@@ -98,7 +102,7 @@ jobs:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       ABLY_KEY: ${{ secrets.ABLY_KEY }}
-      AWS_LAMBDA_FUNCTION_NAME: 'lambdaSQLRoute'
+      AWS_LAMBDA_FUNCTION_NAME: lambdaSQLRoute
       COGNITO_CLIENT_APP_ID: ${{ secrets.COGNITO_CLIENT_APP_ID }}
       COGNITO_USER_POOL_ID: ${{ secrets.COGNITO_USER_POOL_ID }}
       SLACK_APP_ID: ${{ secrets.SLACK_APP_ID }}
