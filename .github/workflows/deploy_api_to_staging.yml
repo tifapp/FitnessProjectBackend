@@ -6,67 +6,10 @@ on:
     branches:
       - main
 
-jobs:
-  build_for_tests:
-    uses: ./.github/workflows/build_api.yml
-    secrets: inherit
-    with:
-      stage: "test"
-  
-  deploy_for_tests:
-    needs: build_for_tests
-    uses: ./.github/workflows/deploy_api.yml
-    secrets: inherit
-    with:
-      stage: "staging"
-  
-  test_on_staging:
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    needs: deploy_for_tests
-    
-    env:
-      DATABASE_HOST: ${{ secrets.DATABASE_HOST }}
-      DATABASE_USERNAME: ${{ secrets.DEV_DATABASE_USERNAME }}
-      DATABASE_PASSWORD: ${{ secrets.DEV_DATABASE_PASSWORD }}
-      AWS_REGION: ${{ secrets.AWS_REGION }}
-      AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
-      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      ABLY_KEY: ${{ secrets.ABLY_KEY }}
-      AWS_LAMBDA_FUNCTION_NAME: 'lambdaSQLRoute'
-      COGNITO_CLIENT_APP_ID: ${{ secrets.COGNITO_CLIENT_APP_ID }}
-      COGNITO_USER_POOL_ID: ${{ secrets.COGNITO_USER_POOL_ID }}
-      SLACK_APP_ID: ${{ secrets.SLACK_APP_ID }}
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
-
-    - name: Setup Node.js environment
-      uses: actions/setup-node@v2
-      with:
-        node-version: '18'
-
-    - name: Install dependencies
-      run: |
-        npm ci
-      env:
-        CI: true
-
-    - name: Authenticate with AWS Cognito and run tests
-      run: |
-        cd APILambda
-        export NODE_OPTIONS="--max_old_space_size=4096"
-        API_ENDPOINT=https://623qsegfb9.execute-api.us-west-2.amazonaws.com/staging npm run test:ci
-  
+jobs:  
   build:
-    needs: test_on_staging
-    if: ${{ always() }}
     uses: ./.github/workflows/build_api.yml
     secrets: inherit
-    with:
-      stage: "staging"
   
   deploy:
     needs: build

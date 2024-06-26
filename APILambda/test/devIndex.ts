@@ -4,8 +4,8 @@ import { addRoutes, createApp } from "../app.js"
 import { addCognitoTokenVerification } from "../auth.js"
 import { ServerEnvironment } from "../env.js"
 
-export const testEnv: ServerEnvironment = {
-  environment: "dev",
+export const devTestEnv: ServerEnvironment = {
+  environment: "devTest",
   maxArrivals: 4,
   eventStartWindowInHours: 1,
   setProfileCreatedAttribute: () => promiseResult(success()),
@@ -15,4 +15,4 @@ export const testEnv: ServerEnvironment = {
 
 export const app = createApp()
 addCognitoTokenVerification(app)
-addRoutes(app, testEnv)
+addRoutes(app, devTestEnv)
