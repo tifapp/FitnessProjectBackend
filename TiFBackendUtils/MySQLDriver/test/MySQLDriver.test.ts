@@ -1,4 +1,8 @@
+<<<<<<< HEAD:TiFBackendUtils/SQLExecutable/tests/MySQLDriver.test.ts
 import { MySQLDriver } from "../../MySQLDriver/MySQLDriver.js"
+=======
+import { MySQLExecutableDriver, conn } from "../MySQLDriver.js"
+>>>>>>> 05202d1 (no message):TiFBackendUtils/MySQLDriver/test/MySQLDriver.test.ts
 
 export type ExecuteResult = {
   id: string
@@ -9,14 +13,22 @@ describe("MySQLDriver", () => {
   let mySQLDriverTest: MySQLDriver
 
   beforeAll(async () => {
+<<<<<<< HEAD:TiFBackendUtils/SQLExecutable/tests/MySQLDriver.test.ts
     mySQLDriverTest = new MySQLDriver()
+=======
+    mySQLDriverTest = new MySQLExecutableDriver()
+>>>>>>> 05202d1 (no message):TiFBackendUtils/MySQLDriver/test/MySQLDriver.test.ts
     const createMySQLDriverTableSQL = `
     CREATE TABLE IF NOT EXISTS mySQLDriver (
     id bigint NOT NULL,
     name varchar(50) NOT NULL,
     PRIMARY KEY (id)
     )`
+<<<<<<< HEAD:TiFBackendUtils/SQLExecutable/tests/MySQLDriver.test.ts
     await mySQLDriverTest.execute(createMySQLDriverTableSQL)
+=======
+    await conn.execute(createMySQLDriverTableSQL)
+>>>>>>> 05202d1 (no message):TiFBackendUtils/MySQLDriver/test/MySQLDriver.test.ts
   })
 
   afterAll(async () => {
@@ -24,9 +36,13 @@ describe("MySQLDriver", () => {
     const deleteMySQLDriverTableSQL = `
     DROP TABLE IF EXISTS mySQLDriver
     `
+<<<<<<< HEAD:TiFBackendUtils/SQLExecutable/tests/MySQLDriver.test.ts
     mySQLDriverTest = new MySQLDriver()
     await mySQLDriverTest.execute(deleteMySQLDriverTableSQL)
     await mySQLDriverTest.closeConnection()
+=======
+    await conn.execute(deleteMySQLDriverTableSQL)
+>>>>>>> 05202d1 (no message):TiFBackendUtils/MySQLDriver/test/MySQLDriver.test.ts
   })
 
   describe("execute", () => {

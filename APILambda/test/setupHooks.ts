@@ -1,5 +1,5 @@
 /* eslint-disable import/extensions */
-import { resetDB } from "./database"
+import { resetDB } from "TiFBackendUtils/MySQLDriver/test/utils"
 import { testUserCounter } from "./userFlows/users"
 
 /*

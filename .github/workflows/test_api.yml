@@ -62,9 +62,16 @@ jobs:
       - name: Install dependencies
         run: |
           npm ci
-          cd TiFBackendUtils
         env:
           CI: true
+          
+      - name: Initialize DB
+        run: |
+          npm run resetDB
+
+      - name: Update entities
+        run: |
+          npm run dbtots
       
       - name: Validate openapi specs
         run: |
