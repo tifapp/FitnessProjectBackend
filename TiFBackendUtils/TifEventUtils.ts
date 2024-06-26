@@ -1,6 +1,6 @@
 import dayjs from "dayjs"
 import duration from "dayjs/plugin/duration.js"
-import { MySQLExecutableDriver } from "./MySQLDriver/MySQLDriver.js"
+import { MySQLExecutableDriver } from "./MySQLDriver/index.js"
 import { UserRelationship } from "./TiFUserUtils/UserRelationships.js"
 import { DBEventAttendeeCountView, DBEventAttendeesView, DBTifEventView, DBevent, DBeventAttendance, DBuserRelations } from "./entities.js"
 import { Placemark } from "./location.js"

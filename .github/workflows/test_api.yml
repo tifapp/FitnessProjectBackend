@@ -144,7 +144,9 @@ jobs:
       run: |
         sleep 15
 
-    - name: Authenticate with AWS Cognito and run tests
+    - name: Run staging tests with authenticated Cognito users
+      # TODO: Reduce memory required
+      # TODO: Allow "createUser" tests after we get company email so we can have unlimited test users
       run: |
         cd APILambda
         export NODE_OPTIONS="--max_old_space_size=4096"

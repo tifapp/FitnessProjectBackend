@@ -1,0 +1,19 @@
+name: Build and Deploy Geocoding Pipeline to AWS Lambda
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+    branches:
+      - main
+
+jobs:
+  build:
+    uses: ./.github/workflows/build_geocoder.yml
+    secrets: inherit
+
+  deploy:
+    needs: build
+    uses: ./.github/workflows/deploy_geocoder.yml
+    secrets: inherit
+    with:
+      stage: "staging"

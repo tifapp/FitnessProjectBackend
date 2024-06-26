@@ -5,18 +5,18 @@ import {
 } from "TiFBackendUtils"
 import { addBenchmarking, addRoutes, createApp } from "./app.js"
 import { addCognitoTokenVerification } from "./auth.js"
-import { ServerEnvironment } from "./env.js"
+import { ServerEnvironment, envVars } from "./env.js"
 import { addErrorReporting } from "./errorReporting.js"
 import { addEventToRequest } from "./serverlessMiddleware.js"
 import { setProfileCreatedAttribute } from "./user/createUser/setCognitoAttribute.js"
 
 const env: ServerEnvironment = {
-  environment: "prod",
+  environment: envVars.ENVIRONMENT,
   eventStartWindowInHours: 1,
   maxArrivals: 100,
   setProfileCreatedAttribute,
   callGeocodingLambda: (location: LocationCoordinate2D) =>
-    invokeAWSLambda("geocodingPipeline", location)
+    invokeAWSLambda(`geocodingPipeline:${envVars.ENVIRONMENT}`, location)
 }
 
 const app = createApp()

@@ -34,33 +34,29 @@ const castTypes = (rows: RowDataPacket[], fields: FieldPacket[]): RowDataPacket[
   })
 }
 
-export class MySQLDriver {
-  private useConnection: () => Promise<mysql.Connection>
+class MySQLConnectionHandler {
+  private connection?: mysql.Connection
   private isConnectionClosed: boolean = false
   
-  constructor () {
-    let connection: mysql.Connection
-
-    this.useConnection = async () => {
-      if (this.isConnectionClosed) {
-        throw new Error("Current connection instance was ended.")
-      }
-  
-      try {
-        if (!connection) {
-          throw new Error("Connection is closed")
-        }
-          
-        await connection?.ping();
-      } catch (error) {
-        console.error(error)
-        connection = await createDatabaseConnection();
-      }
-  
-      return connection!;
+  async useConnection () {
+    if (this.isConnectionClosed) {
+      throw new Error("Current connection instance was ended.")
     }
-  }
 
+    try {
+      if (!this.connection) {
+        throw new Error("Connection is closed")
+      }
+        
+      await this.connection?.ping();
+    } catch (error) {
+      console.error(`${error}, making new connection`)
+      this.connection = await createDatabaseConnection();
+    }
+
+    return this.connection!;
+  }
+  
   async closeConnection () {
     if (!this.isConnectionClosed) {
       const conn = await this.useConnection()
@@ -68,18 +64,37 @@ export class MySQLDriver {
       this.isConnectionClosed = true;
     }
   }
+}
+
+export class MySQLDriver {
+  private connectionHandler = new MySQLConnectionHandler()
+
+  async closeConnection () {
+    await this.connectionHandler.closeConnection()
+  }
 
   // ==================
   // Implementation-Dependent Methods
   // ==================
-
-  async execute (
+  
+  /**
+   * Executes a write statement and returns the insert id and # rows affected
+   *
+   * @example
+   * ```ts
+   * type User = { id: string, ... }
+   *
+   * const results = await execute<User>(conn, "INSERT user");
+   * console.log(results[0].id) // ✅ Typesafe
+   * ```
+   */
+  private async execute (
     query: string,
     args: object | (number | string)[] | null = null
   ): Promise<ExecuteResult> {
     // Use this.conn to execute the query and return the result rows
     // This will be the only function to directly use the database library's execute method.
-    const conn = await this.useConnection()
+    const conn = await this.connectionHandler.useConnection()
     const [result] = await conn.execute<ResultSetHeader>(query, args)
     if (isResultSetHeader(result)) {
       return {
@@ -88,6 +103,31 @@ export class MySQLDriver {
       }
     } else {
       throw new Error("Execution did not return a ResultSetHeader.")
+    }
+  }
+  
+  /**
+   * Loads a list of results from the database given a sql query and casts the result to `Value`
+   *
+   * @example
+   * ```ts
+   * type User = { id: string, ... }
+   *
+   * const results = await query<User>(conn, "SELECT * FROM user");
+   * console.log(results[0].id) // ✅ Typesafe
+   * ```
+   */
+
+  private async query<Value> (
+    query: string,
+    args: object | (number | string)[] | null = null
+  ): Promise<Value[]> {
+    const conn = await this.connectionHandler.useConnection()
+    const [rows, fields] = await conn.query(query, args)
+    if (Array.isArray(rows) && Array.isArray(fields)) {
+      return castTypes(rows as RowDataPacket[], fields) as Value[]
+    } else {
+      throw new Error("Query did not return an array of rows and fields.")
     }
   }
 
@@ -115,10 +155,10 @@ export class MySQLDriver {
    * Performs an idempotent transaction and returns the result of the transaction wrapped in a {@link PromiseResult}.
    */
   transaction<SuccessValue, ErrorValue> (
-    query: (tx: MySQLDriver) => AwaitableResult<SuccessValue, ErrorValue>
+    query: (tx: Omit<MySQLDriver, "query" | "execute">) => AwaitableResult<SuccessValue, ErrorValue>
   ) {
     return promiseResult((async () => {
-      const conn = await this.useConnection()
+      const conn = await this.connectionHandler.useConnection()
       try {
         await conn.beginTransaction()
         const result = await query(this)
@@ -131,30 +171,6 @@ export class MySQLDriver {
     })())
   }
 
-  /**
-   * Loads a list of results from the database given a sql query and casts the result to `Value`
-   *
-   * @example
-   * ```ts
-   * type User = { id: string, ... }
-   *
-   * const results = await execute<User>(conn, "SELECT * FROM user");
-   * console.log(results[0].id) // ✅ Typesafe
-   * ```
-   */
-
-  async query<Value> (
-    query: string,
-    args: object | (number | string)[] | null = null
-  ): Promise<Value[]> {
-    const conn = await this.useConnection()
-    const [rows, fields] = await conn.query(query, args)
-    if (Array.isArray(rows) && Array.isArray(fields)) {
-      return castTypes(rows as RowDataPacket[], fields) as Value[]
-    } else {
-      throw new Error("Query did not return an array of rows and fields.")
-    }
-  }
 
   // ==================
   // Generic Methods

@@ -1,4 +1,3 @@
-
 import { resetDB } from "../TiFBackendUtils/MySQLDriver/test/utils.ts";
 import { conn } from "../TiFBackendUtils/index.ts";
 
