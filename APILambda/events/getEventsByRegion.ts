@@ -1,4 +1,4 @@
-import { DBTifEvent, SQLExecutable, conn, setEventAttendeesFields, tifEventResponseFromDatabaseEvent } from "TiFBackendUtils"
+import { DBTifEvent, MySQLExecutableDriver, conn, setEventAttendeesFields, tifEventResponseFromDatabaseEvent } from "TiFBackendUtils"
 import { z } from "zod"
 import { ServerEnvironment } from "../env.js"
 import { ValidatedRouter } from "../validation.js"
@@ -17,10 +17,10 @@ type EventsRequestByRegion = {
 }
 
 export const getEventsByRegion = (
-  conn: SQLExecutable,
+  conn: MySQLExecutableDriver,
   eventsRequest: EventsRequestByRegion
 ) =>
-  conn.queryResults<DBTifEvent>(
+  conn.queryResult<DBTifEvent>(
     `
     SELECT TifEventView.*,
     CASE

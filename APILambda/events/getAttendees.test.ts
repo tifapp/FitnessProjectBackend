@@ -1,6 +1,5 @@
 import { conn } from "TiFBackendUtils"
 import dayjs from "dayjs"
-import { AttendeesCursorResponse } from "../shared/Attendee.js"
 import { decodeAttendeesListCursor } from "../shared/Cursor.js"
 import { callGetAttendees, callSetArrival } from "../test/apiCallers/events.js"
 import { callBlockUser } from "../test/apiCallers/users.js"
@@ -55,7 +54,7 @@ const createTestAttendeesList = async ({
 const getNextPageCursorResp = (
   testAttendees: Array<TestUser>,
   index: number
-): Omit<AttendeesCursorResponse, "arrivedDateTime"> => {
+): Omit<unknown, "arrivedDateTime"> => {
   return {
     userId: testAttendees[index].userId,
     joinedDateTime: index >= testAttendees.length ? null : expect.any(Date)
@@ -96,8 +95,8 @@ describe("getAttendeesList endpoint", () => {
   it("should return 404 if attendee list is empty", async () => {
     const currentUser = await createUserFlow()
 
-    // We want to use createEvent, since if we use the create event flow it will automatically add the host to the attendees list
-    // In this test, we want to have the list be empty so that we can check it returns 404
+    // In this test, we want to create an event with an empty attendees list, so we must use createEvent directly.
+    // if we use the create event flow the host will be added to the attendees list.
     const {
       value: { insertId }
     } = await createEvent(

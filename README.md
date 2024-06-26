@@ -1,3 +1,5 @@
+## [View Database Schema](schema.md) ##
+
 Todo: Add aws section
 Todo: Add section for testing locally
 Todo: Add table of contents
@@ -40,12 +42,12 @@ For example, if you're adding a new "products" route, you might add a SQL statem
 
 ```typescript
 // getNewProduct.ts or SQL.ts in 'products' folder
-import { SQLExecutable, conn, failure, success } from "TiFBackendUtils"
+import { MySQLExecutableDriver, conn, failure, success } from "TiFBackendUtils"
 import { ServerEnvironment } from "../env.js"
 import { ValidatedRouter } from "../validation.js"
 
 const getNewProduct = (
-  conn: SQLExecutable,
+  conn: MySQLExecutableDriver,
   productId: string,
 ) => {
   return conn.queryResults(
@@ -73,11 +75,11 @@ For example, if you're working on the "products" route, and you have a SQL state
 
 ```typescript
 // getNewProduct.ts in 'products' folder
-import { SQLExecutable, conn, failure, success } from "TiFBackendUtils"
+import { MySQLExecutableDriver, conn, failure, success } from "TiFBackendUtils"
 import { ServerEnvironment } from "../env.js"
 import { ValidatedRouter } from "../validation.js"
 
-const getNewProductTransaction = (conn: SQLExecutable, id: string) =>
+const getNewProductTransaction = (conn: MySQLExecutableDriver, id: string) =>
   conn.transaction((tx) =>
     getNewProduct(tx, id)
       .flatMapSuccess((result) => {
@@ -122,7 +124,7 @@ For example, if you're adding a "products" route to get a product by its ID, you
 
 ```typescript
 // getNewProduct.ts in 'products' folder
-import { SQLExecutable, conn, failure, success } from "TiFBackendUtils"
+import { MySQLExecutableDriver, conn, failure, success } from "TiFBackendUtils"
 import { ServerEnvironment } from "../env.js"
 import { ValidatedRouter } from "../validation.js"
 

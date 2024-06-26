@@ -3,7 +3,7 @@ import {
   Place,
   SearchPlaceIndexForPositionCommand
 } from "@aws-sdk/client-location"
-import { SQLExecutable } from "TiFBackendUtils/SQLExecutable/index.js"
+import { MySQLExecutableDriver } from "TiFBackendUtils"
 import { LocationCoordinate2D, Placemark } from "TiFBackendUtils/location.js"
 // https://github.com/evansiroky/node-geo-tz/commit/1b11eda7824a1e6dbc0b0ff65bfea1f50c20d3fa
 // eslint-disable-next-line import/extensions
@@ -60,7 +60,7 @@ export const SearchClosestAddressToCoordinates = async (
 }
 
 export const checkExistingPlacemarkInDB = (
-  conn: SQLExecutable,
+  conn: MySQLExecutableDriver,
   location: LocationCoordinate2D
 ) =>
   conn
@@ -73,7 +73,7 @@ export const checkExistingPlacemarkInDB = (
     .inverted()
     .withFailure("placemark-already-exists" as const)
 
-export const addPlacemarkToDB = (conn: SQLExecutable, {
+export const addPlacemarkToDB = (conn: MySQLExecutableDriver, {
   latitude,
   longitude,
   name = null,
@@ -85,7 +85,7 @@ export const addPlacemarkToDB = (conn: SQLExecutable, {
   region = null,
   isoCountryCode = null
 }: Placemark, timezoneIdentifier: string) =>
-  conn.queryResults(
+  conn.executeResult(
     `
         INSERT INTO location (name, city, country, street, streetNumber, postalCode, latitude, longitude, timezoneIdentifier, isoCountryCode)
         VALUES (:name, :city, :country, :street, :streetNumber, :postalCode, :latitude, :longitude, :timezoneIdentifier, :isoCountryCode)

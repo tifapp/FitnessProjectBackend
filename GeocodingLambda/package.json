@@ -11,10 +11,10 @@
     "TiFBackendUtils": "file:../TiFBackendUtils"
   },
   "scripts": {
-    "dbtots": "node ../TiFBackendUtils/Planetscale/dbToTs.mjs",
+    "pr": "cd .. && npm run pr",
     "build": "npx tsc",
     "test": "jest",
-    "test:ci": "jest --ci --detectOpenHandles",
+    "test:ci": "jest --ci --detectOpenHandles --forceExit --runInBand",
     "postinstall": "node removeUnusedTimezones.cjs"
   },
   "devDependencies": {

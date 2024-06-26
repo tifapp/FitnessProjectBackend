@@ -1,4 +1,4 @@
-import { DBuser, NullablePartial, SQLExecutable, UserHandle, conn, success, userWithHandleDoesNotExist } from "TiFBackendUtils"
+import { DBuser, NullablePartial, MySQLExecutableDriver, UserHandle, conn, success, userWithHandleDoesNotExist } from "TiFBackendUtils"
 import { z } from "zod"
 import { ServerEnvironment } from "../env.js"
 import { ValidatedRouter } from "../validation.js"
@@ -40,7 +40,7 @@ export const updateUserProfileRouter = (
 }
 
 const updateProfileTransaction = (
-  conn: SQLExecutable,
+  conn: MySQLExecutableDriver,
   userId: string,
   updatedProfile: UpdateUserRequest
 ) =>
@@ -48,12 +48,12 @@ const updateProfileTransaction = (
     .flatMapSuccess(() => updateProfile(conn, userId, updatedProfile))
 
 const updateProfile = (
-  conn: SQLExecutable,
+  conn: MySQLExecutableDriver,
   userId: string,
   { handle = null, name = null, bio = null }: NullablePartial<EditableProfileFields>
 ) =>
   conn
-    .queryResults(
+    .executeResult(
       `UPDATE user 
       SET 
       name = COALESCE(:name, name),

@@ -1,4 +1,4 @@
-import { SQLExecutable, conn, userWithIdExists } from "TiFBackendUtils"
+import { MySQLExecutableDriver, conn, userWithIdExists } from "TiFBackendUtils"
 import { z } from "zod"
 import { userNotFoundResponse } from "../shared/Responses.js"
 import { ValidatedRouter } from "../validation.js"
@@ -23,14 +23,14 @@ export const createBlockUserRouter = (router: ValidatedRouter) => {
 }
 
 const blockUser = (
-  conn: SQLExecutable,
+  conn: MySQLExecutableDriver,
   fromUserId: string,
   toUserId: string
 ) => {
   return userWithIdExists(conn, toUserId)
     .withFailure("user-not-found" as const)
     .flatMapSuccess(() => {
-      return conn.queryResults(
+      return conn.executeResult(
         `
       INSERT INTO userRelations (fromUserId, toUserId, status)
       VALUES (:fromUserId, :toUserId, 'blocked')
@@ -41,7 +41,7 @@ const blockUser = (
       )
     })
     .flatMapSuccess(() => {
-      return conn.queryResults(
+      return conn.executeResult(
         `
       DELETE FROM userRelations
       WHERE fromUserId = :toUserId AND toUserId = :fromUserId AND status != 'blocked';

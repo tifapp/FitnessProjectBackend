@@ -1,7 +1,7 @@
-import { SQLExecutable, conn } from "TiFBackendUtils"
+import { MySQLExecutableDriver, conn } from "TiFBackendUtils"
 
 export const isUserInEvent = (
-  conn: SQLExecutable,
+  conn: MySQLExecutableDriver,
   userId: string,
   eventId: number
 ) =>
@@ -13,7 +13,7 @@ export const isUserInEvent = (
     .withFailure("user-not-attendee" as const)
 
 export const isUserNotBlocked = (
-  conn: SQLExecutable,
+  conn: MySQLExecutableDriver,
   fromUserId: string,
   toUserId: string
 ) =>
@@ -26,7 +26,7 @@ export const isUserNotBlocked = (
     .withFailure("user-is-blocked" as const)
 
 export const addUserToEventAttendance = (userId: string, eventId: number) =>
-  conn.queryResults(
+  conn.queryResult(
     `
     INSERT INTO eventAttendance (userId, eventId)
     VALUES (:userId, :eventId)

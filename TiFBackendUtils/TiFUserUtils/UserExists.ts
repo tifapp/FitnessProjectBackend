@@ -1,7 +1,7 @@
-import { SQLExecutable } from "../SQLExecutable/utils.js"
+import { MySQLExecutableDriver } from "../MySQLDriver/index.js"
 
 export const userWithHandleDoesNotExist = (
-  conn: SQLExecutable,
+  conn: MySQLExecutableDriver,
   handle: string
 ) =>
   conn
@@ -11,5 +11,5 @@ export const userWithHandleDoesNotExist = (
     .inverted()
     .withFailure("duplicate-handle" as const)
 
-export const userWithIdExists = (conn: SQLExecutable, id: string) =>
+export const userWithIdExists = (conn: MySQLExecutableDriver, id: string) =>
   conn.queryHasResults("SELECT TRUE FROM user WHERE id = :id", { id })

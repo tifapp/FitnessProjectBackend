@@ -1,5 +1,5 @@
 import {
-  SQLExecutable,
+  MySQLExecutableDriver,
   conn,
   success
 } from "TiFBackendUtils"
@@ -40,43 +40,42 @@ const CreateEventSchema = z
 export type CreateEventInput = z.infer<typeof CreateEventSchema>
 
 export const createEvent = (
-  conn: SQLExecutable,
+  conn: MySQLExecutableDriver,
   input: CreateEventInput,
   hostId: string
-) =>
-  conn.queryResult(
+) => {
+  return conn.executeResult(
     `
-INSERT INTO event (
-  hostId,
-  title, 
-  description, 
-  startDateTime, 
-  endDateTime, 
-  color, 
-  shouldHideAfterStartDate, 
-  isChatEnabled, 
-  latitude, 
-  longitude
-) VALUES (
-  :hostId,
-  :title, 
-  :description, 
-  FROM_UNIXTIME(:startDateTime), 
-  FROM_UNIXTIME(:endDateTime), 
-  :color, 
-  :shouldHideAfterStartDate, 
-  :isChatEnabled, 
-  :latitude, 
-  :longitude
-)
-`,
+  INSERT INTO event (
+    hostId,
+    title, 
+    description, 
+    startDateTime, 
+    endDateTime, 
+    color, 
+    shouldHideAfterStartDate, 
+    isChatEnabled, 
+    latitude, 
+    longitude
+  ) VALUES (
+    :hostId,
+    :title, 
+    :description, 
+    :startDateTime, 
+    :endDateTime, 
+    :color, 
+    :shouldHideAfterStartDate, 
+    :isChatEnabled, 
+    :latitude, 
+    :longitude
+  )
+  `,
     {
       ...input,
-      startDateTime: input.startDateTime.getTime() / 1000,
-      endDateTime: input.endDateTime.getTime() / 1000,
       hostId
     }
   )
+}
 
 /**
  * Creates routes related to event operations.

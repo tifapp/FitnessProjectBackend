@@ -1,4 +1,4 @@
-import { LocationCoordinate2D, LocationCoordinates2DSchema, SQLExecutable, conn, failure, success } from "TiFBackendUtils"
+import { LocationCoordinate2D, LocationCoordinates2DSchema, MySQLExecutableDriver, conn, failure, success } from "TiFBackendUtils"
 import { z } from "zod"
 import { ServerEnvironment } from "../env.js"
 import { ValidatedRouter } from "../validation.js"
@@ -22,7 +22,7 @@ const joinEventBodySchema = z
 
 export type JoinEventInput = z.infer<typeof joinEventBodySchema>
 
-const joinEvent = (conn: SQLExecutable, userId: string, eventId: number, coordinate?: LocationCoordinate2D) => {
+const joinEvent = (conn: MySQLExecutableDriver, userId: string, eventId: number, coordinate?: LocationCoordinate2D) => {
   return conn.transaction((tx) =>
     getEventById(tx, eventId, userId)
       .flatMapSuccess((event) =>
@@ -61,12 +61,12 @@ const joinEvent = (conn: SQLExecutable, userId: string, eventId: number, coordin
 // ADD CHECK IF HOST TRIES JOINING THEIR OWN EVENT
 // AUTO MAKE HOST AN ATTENDEE
 export const addUserToAttendeeList = (
-  conn: SQLExecutable,
+  conn: MySQLExecutableDriver,
   userId: string,
   eventId: number,
   role: string
 ) =>
-  conn.queryResult(
+  conn.executeResult(
     "INSERT IGNORE INTO eventAttendance (userId, eventId, role) VALUES (:userId, :eventId, :role)",
     { userId, eventId, role }
   )

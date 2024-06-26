@@ -1,4 +1,4 @@
-import { SQLExecutable, conn, failure, success, userWithIdExists } from "TiFBackendUtils"
+import { MySQLExecutableDriver, conn, failure, success, userWithIdExists } from "TiFBackendUtils"
 import { z } from "zod"
 import { ValidatedRouter } from "../validation.js"
 
@@ -24,12 +24,12 @@ export const createUnblockUserRouter = (router: ValidatedRouter) => {
 }
 
 const unblockUser = (
-  conn: SQLExecutable,
+  conn: MySQLExecutableDriver,
   fromUserId: string,
   toUserId: string
 ) => {
   return conn
-    .queryResult(
+    .executeResult(
       `
         DELETE FROM userRelations
         WHERE fromUserId = :fromUserId AND toUserId = :toUserId 

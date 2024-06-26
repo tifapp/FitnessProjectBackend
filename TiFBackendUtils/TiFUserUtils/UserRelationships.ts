@@ -1,4 +1,4 @@
-import { DBuserRelations } from "../Planetscale/entities.js"
+import { DBuserRelations } from "../entities.js"
 
 /**
  * A type representing the relationship status between 2 users.

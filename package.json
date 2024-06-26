@@ -1,12 +1,19 @@
 {
+  "type": "module",
   "scripts": {
+    "pr": "node --loader ts-node/esm ./TiFBackendUtils/node_modules/TiFShared/npm-scripts/auto-pr.ts",
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,md}\"",
-    "prepare": "husky"
+    "prepare": "husky",
+    "postinstall": "node postinstall.mjs",
+    "dbtots": "node --trace-warnings --loader ts-node/esm --unhandled-rejections=strict scripts/dbToTs.ts --run",
+    "resetDB": "node --trace-warnings --loader ts-node/esm --unhandled-rejections=strict scripts/resetDB.ts --run"
   },
   "devDependencies": {
+    "@rmp135/sql-ts": "^1.18.1",
     "@types/jest": "^29.5.5",
     "@typescript-eslint/eslint-plugin": "^6.4.1",
     "@typescript-eslint/parser": "^6.4.1",
+    "dotenv": "^16.3.1",
     "eslint": "^8.47.0",
     "eslint-config-prettier": "^8.8.0",
     "eslint-config-standard": "^17.1.0",
@@ -20,6 +27,8 @@
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-native": "^4.0.0",
     "husky": "^9.0.11",
-    "prettier": "^2.8.8"
+    "mysql2": "^3.9.7",
+    "prettier": "^2.8.8",
+    "ts-node": "^10.9.2"
   }
 }

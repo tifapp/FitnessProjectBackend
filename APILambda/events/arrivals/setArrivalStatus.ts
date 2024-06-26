@@ -1,4 +1,4 @@
-import { LocationCoordinate2D, LocationCoordinates2DSchema, SQLExecutable, conn, failure, success } from "TiFBackendUtils"
+import { LocationCoordinate2D, LocationCoordinates2DSchema, MySQLExecutableDriver, conn, failure, success } from "TiFBackendUtils"
 import { z } from "zod"
 import { ServerEnvironment, SetArrivalStatusEnvironment } from "../../env.js"
 import { ValidatedRouter } from "../../validation.js"
@@ -15,12 +15,12 @@ const SetArrivalStatusSchema = z
 export type SetArrivalStatusInput = z.infer<typeof SetArrivalStatusSchema>
 
 export const deleteOldArrivals = (
-  conn: SQLExecutable,
+  conn: MySQLExecutableDriver,
   userId: string,
   coordinate: LocationCoordinate2D
 ) =>
   conn
-    .queryResults( // TO DECIDE: if event length limit or limit in how far in advance event can be scheduled, then we can also delete outdated arrivals
+    .executeResult( // TO DECIDE: if event length limit or limit in how far in advance event can be scheduled, then we can also delete outdated arrivals
       `
         DELETE FROM userArrivals
         WHERE userId = :userId
@@ -35,7 +35,7 @@ export const deleteOldArrivals = (
     )
 
 export const deleteMaxArrivals = (
-  conn: SQLExecutable,
+  conn: MySQLExecutableDriver,
   userId: string,
   arrivalsLimit: number
 ) =>
@@ -58,7 +58,7 @@ export const deleteMaxArrivals = (
       )
       : failure())
     .flatMapSuccess((arrival) =>
-      conn.queryResults(`
+      conn.executeResult(`
         DELETE FROM userArrivals 
         WHERE userId = :userId 
         AND latitude = :latitude 
@@ -69,12 +69,12 @@ export const deleteMaxArrivals = (
     .flatMapFailure(() => success())
 
 export const insertArrival = (
-  conn: SQLExecutable,
+  conn: MySQLExecutableDriver,
   userId: string,
   coordinate: LocationCoordinate2D
 ) =>
   conn
-    .queryResult(
+    .executeResult(
       `
         INSERT INTO userArrivals (userId, latitude, longitude)
         VALUES (:userId, :latitude, :longitude)

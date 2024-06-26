@@ -1,4 +1,4 @@
-import { SQLExecutable, conn, failure, findTiFUser, success } from "TiFBackendUtils"
+import { MySQLExecutableDriver, conn, failure, findTiFUser, success } from "TiFBackendUtils"
 import { z } from "zod"
 import { ValidatedRouter } from "../validation.js"
 
@@ -44,7 +44,7 @@ export const sendFriendRequestsRouter = (router: ValidatedRouter) => {
  * @param receiverId the id of the user who is receiving the friend request
  */
 const sendFriendRequest = (
-  conn: SQLExecutable,
+  conn: MySQLExecutableDriver,
   senderId: string,
   receiverId: string
 ) =>
@@ -76,11 +76,11 @@ const sendFriendRequest = (
   )
 
 const makeFriends = (
-  conn: SQLExecutable,
+  conn: MySQLExecutableDriver,
   fromUserId: string,
   toUserId: string
 ) =>
-  conn.queryResults(
+  conn.executeResult(
     `
     UPDATE userRelations 
     SET status = 'friends' 
@@ -90,11 +90,11 @@ const makeFriends = (
   )
 
 const addPendingFriendRequest = (
-  conn: SQLExecutable,
+  conn: MySQLExecutableDriver,
   senderId: string,
   receiverId: string
 ) =>
-  conn.queryResults(
+  conn.executeResult(
     `
     INSERT INTO userRelations (fromUserId, toUserId, status) 
     VALUES (:senderId, :receiverId, 'friend-request-pending')

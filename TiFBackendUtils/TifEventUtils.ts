@@ -1,8 +1,8 @@
 import dayjs from "dayjs"
 import duration from "dayjs/plugin/duration.js"
-import { DBEventAttendeeCountView, DBEventAttendeesView, DBTifEventView, DBevent, DBeventAttendance, DBuserRelations } from "./Planetscale/entities.js"
-import { SQLExecutable } from "./SQLExecutable/utils.js"
+import { MySQLExecutableDriver } from "./MySQLDriver/index.js"
 import { UserRelationship } from "./TiFUserUtils/UserRelationships.js"
+import { DBEventAttendeeCountView, DBEventAttendeesView, DBTifEventView, DBevent, DBeventAttendance, DBuserRelations } from "./entities.js"
 import { Placemark } from "./location.js"
 import { success } from "./result.js"
 dayjs.extend(duration)
@@ -159,8 +159,8 @@ export const tifEventResponseFromDatabaseEvent = (event: DBTifEvent) : TiFEvent 
   }
 }
 
-export const getAttendeeCount = (conn: SQLExecutable, eventIds: string[]) => {
-  return conn.queryResults<DBEventAttendeeCountView>(
+export const getAttendeeCount = (conn: MySQLExecutableDriver, eventIds: string[]) => {
+  return conn.queryResult<DBEventAttendeeCountView>(
     ` SELECT
         attendeeCount
       FROM
@@ -172,8 +172,8 @@ export const getAttendeeCount = (conn: SQLExecutable, eventIds: string[]) => {
   )
 }
 
-export const getEventAttendanceFields = (conn: SQLExecutable, userId: string, eventIds: string[]) => {
-  return conn.queryResults<DBeventAttendance>(
+export const getEventAttendanceFields = (conn: MySQLExecutableDriver, userId: string, eventIds: string[]) => {
+  return conn.queryResult<DBeventAttendance>(
     ` SELECT
         ea.joinedDateTime AS joinedDateTime,
         ea.role AS role
@@ -216,8 +216,8 @@ const setAttendeesPreviewForEvent = (
   return events
 }
 
-export const getAttendees = (conn: SQLExecutable, eventIds: string[]) => {
-  return conn.queryResults<DBEventAttendeesView>(
+export const getAttendees = (conn: MySQLExecutableDriver, eventIds: string[]) => {
+  return conn.queryResult<DBEventAttendeesView>(
     `
     SELECT 
       EventAttendeesView.userIds
@@ -235,7 +235,7 @@ HAVING
 }
 
 export const setEventAttendeesFields = (
-  conn: SQLExecutable,
+  conn: MySQLExecutableDriver,
   events: DBTifEvent[],
   userId: string
 ) => {
