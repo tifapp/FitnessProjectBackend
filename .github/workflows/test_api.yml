@@ -139,10 +139,6 @@ jobs:
       env:
         CI: true
 
-    - name: Wait for AWS Deployment
-      run: |
-        sleep 20
-
     - name: Run staging tests with authenticated Cognito users
       # TODO: Reduce memory required
       # TODO: Allow "createUser" tests after we get company email so we can have unlimited test users
