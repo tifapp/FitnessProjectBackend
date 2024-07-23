@@ -4,7 +4,7 @@ import {
   OpenApiGeneratorV3,
   extendZodWithOpenApi
 } from "@asteasolutions/zod-to-openapi"
-import dotenv from "dotenv"
+import { envVars } from "TiFBackendUtils"
 import fs from "fs"
 import path from "path"
 import { fileURLToPath } from "url"
@@ -12,15 +12,13 @@ import { z } from "zod"
 import { addRoutes, createApp } from "./app.js"
 import { addCognitoTokenVerification } from "./auth.js"
 
-dotenv.config()
-
-const lambdaEnvVarsSchema = z
+const APIEnvVarsSchema = z
   .object({
-    API_SPECS_ENDPOINT: z.string().url().optional(),
-    API_SPECS_LAMBDA_ID: z.string().optional()
+    API_SPECS_ENDPOINT: z.string().url(),
+    API_SPECS_LAMBDA_ID: z.string()
   }).passthrough()
 
-export const testEnvVars = lambdaEnvVarsSchema.parse(process.env)
+const APIEnvVars = APIEnvVarsSchema.parse(envVars)
 
 extendZodWithOpenApi(z)
 
@@ -61,7 +59,7 @@ addRoutes(app, {
       },
       "x-amazon-apigateway-integration": {
         httpMethod: "POST", // "For Lambda integrations, you must use the HTTP method of POST for the integration request" https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html
-        uri: `${testEnvVars.API_SPECS_LAMBDA_ID}:stagingTest/invocations`,
+        uri: `${APIEnvVars.API_SPECS_LAMBDA_ID}:stagingTest/invocations`,
         responses: {
           default: {
             // TODO: Generate responses
@@ -86,7 +84,7 @@ const specs = generator.generateDocument({
     version: new Date()
   },
   servers: [{
-    url: `${testEnvVars.API_SPECS_ENDPOINT}/{basePath}`,
+    url: `${APIEnvVars.API_SPECS_ENDPOINT}/{basePath}`,
     variables: {
       basePath: {
         default: "staging"
