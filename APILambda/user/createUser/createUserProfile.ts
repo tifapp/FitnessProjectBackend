@@ -1,5 +1,6 @@
+import { conn } from "TiFBackendUtils"
 import { DBuser } from "TiFBackendUtils/DBTypes"
-import { MySQLExecutableDriver, conn } from "TiFBackendUtils/MySQLDriver"
+import { MySQLExecutableDriver } from "TiFBackendUtils/MySQLDriver"
 import { failure, promiseResult, success } from "TiFShared/lib/Result"
 import { CreateUserProfileEnvironment } from "../../env"
 import { ValidatedRouter } from "../../validation"
@@ -27,7 +28,7 @@ const userWithHandleOrIdExists = (conn: MySQLExecutableDriver, { id, handle }: N
         id
       })
       .inverted()
-      .mapFailure(user => user.handle === handle ? "duplicate-handle" as const : "user-exists")
+      .mapFailure(user => `${user.handle}` === handle ? "duplicate-handle" as const : "user-exists")
     )
 }
 

@@ -37,7 +37,7 @@ jobs:
         run: |
           cd TiFBackendUtils
           jq 'del(.scripts.postinstall)' package.json > temp.json && mv temp.json package.json
-          npm prune --production
+          npm prune --omit=dev --omit=peer
       
       - name: Package backend utils
         run: |

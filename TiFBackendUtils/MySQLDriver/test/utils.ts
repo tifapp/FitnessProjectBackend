@@ -22,9 +22,19 @@ const recreateTables = async () => {
   const connection = await createDatabaseConnection({ database: envVars.DATABASE_NAME })
 
   for (const family of tableDefintionsByFamily) {
-    await Promise.allSettled(
-      family.map(tableDefinition => connection.execute(tableDefinition))
-    )
+    try {
+      const results = await Promise.allSettled(
+        family.map(tableDefinition => connection.execute(tableDefinition))
+      )
+
+      results.forEach((result, index) => {
+        if (result.status === "rejected") {
+          console.error(`Error creating table: ${family[index]}`, result.reason);
+        }
+      })
+    } catch (error) {
+      console.error("Unexpected error:", error)
+    }
   }
 
   await connection.end()

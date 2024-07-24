@@ -1,6 +1,9 @@
-import "TiFShared/lib/Zod" // needed to compile.
+import "TiFShared/lib/Zod"
+// needed to compile.
 
+import { ColorString } from "TiFShared/domain-models/ColorString"
 import { Placemark } from "TiFShared/domain-models/Placemark"
+import { UserHandle } from "TiFShared/domain-models/User"
 import { success } from "TiFShared/lib/Result"
 import dayjs from "dayjs"
 import duration from "dayjs/plugin/duration"
@@ -26,14 +29,14 @@ export type TiFEvent = {
     title: string
     description: string
     attendeeCount: number
-    color: string
+    color: ColorString
     time: {
       secondsToStart: number
       dateRange: {
         startDateTime: Date
         endDateTime: Date
       }
-      todayOrTomorrow: TodayOrTomorrow | null
+      todayOrTomorrow?: TodayOrTomorrow
     }
     previewAttendees: Attendee[]
     location: {
@@ -41,8 +44,8 @@ export type TiFEvent = {
         latitude: number,
         longitude: number
       },
-      timezoneIdentifier: string | null,
-      placemark: Omit<Placemark, "latitude" | "longitude"> | null,
+      timezoneIdentifier?: string,
+      placemark?: Omit<Placemark, "latitude" | "longitude">,
       arrivalRadiusMeters: number
       isInArrivalTrackingPeriod: boolean
     }
@@ -52,9 +55,9 @@ export type TiFEvent = {
         fromYouToThem: UserHostRelations
       }
       id: string
-      username: string | null
-      handle: string | null
-      profileImageURL: string | null
+      username?: string
+      handle?: UserHandle
+      profileImageURL?: string
     }
     settings: {
       shouldHideAfterStartDate: boolean
@@ -62,11 +65,11 @@ export type TiFEvent = {
     }
     isChatExpired: boolean
     userAttendeeStatus: UserAttendeeStatus
-    joinedDateTime: Date | null
+    joinedDateTime?: Date
     hasArrived: boolean
     updatedDateTime: Date
     createdDateTime: Date
-    endedDateTime: Date | null
+    endedDateTime?: Date
   }
 
 export const calcSecondsToStart = (startDateTime: Date) => {
@@ -74,8 +77,8 @@ export const calcSecondsToStart = (startDateTime: Date) => {
   return millisecondsToStart / 1000
 }
 
-const isChatExpired = (endedDateTime: Date | null) => {
-  if (endedDateTime === null) {
+const isChatExpired = (endedDateTime?: Date) => {
+  if (endedDateTime == null) {
     return false
   }
 
@@ -96,7 +99,7 @@ export const calcTodayOrTomorrow = (startDateTime: Date) => {
   } else if (eventDate.isSame(currentDate.add(1, "day"), "day")) {
     return "tomorrow"
   } else {
-    return null
+    return undefined
   }
 }
 
@@ -143,7 +146,7 @@ export const tifEventResponseFromDatabaseEvent = (event: DBTifEvent) : TiFEvent 
       id: event.hostId,
       username: event.hostUsername,
       handle: event.hostHandle,
-      profileImageURL: null
+      profileImageURL: undefined
     },
     settings: {
       shouldHideAfterStartDate: event.shouldHideAfterStartDate,
@@ -157,7 +160,7 @@ export const tifEventResponseFromDatabaseEvent = (event: DBTifEvent) : TiFEvent 
     hasArrived: event.hasArrived === 1,
     updatedDateTime: new Date(event.updatedDateTime),
     createdDateTime: new Date(event.createdDateTime),
-    endedDateTime: event.endedDateTime !== null ? event.endedDateTime : null
+    endedDateTime: event.endedDateTime !== undefined ? event.endedDateTime : undefined
   }
 }
 

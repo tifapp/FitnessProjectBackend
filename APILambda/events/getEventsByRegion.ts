@@ -1,4 +1,5 @@
-import { conn, MySQLExecutableDriver } from "TiFBackendUtils/MySQLDriver"
+import { conn } from "TiFBackendUtils"
+import { MySQLExecutableDriver } from "TiFBackendUtils/MySQLDriver"
 import { DBTifEvent, setEventAttendeesFields, tifEventResponseFromDatabaseEvent } from "TiFBackendUtils/TifEventUtils"
 import { z } from "zod"
 import { ServerEnvironment } from "../env"

@@ -10,7 +10,7 @@
       "url": "https://623qsegfb9.execute-api.us-west-2.amazonaws.com/{basePath}",
       "variables": {
         "basePath": {
-          "default": "stagingTest"
+          "default": "staging"
         }
       }
     }
@@ -626,9 +626,7 @@
                     "type": "string",
                     "maxLength": 250
                   },
-                  "handle": {
-                    "nullable": true
-                  }
+                  "handle": {}
                 }
               }
             }
@@ -686,18 +684,6 @@
                     "type": "boolean"
                   },
                   "isCrashReportingEnabled": {
-                    "type": "boolean"
-                  },
-                  "isEventNotificationsEnabled": {
-                    "type": "boolean"
-                  },
-                  "isMentionsNotificationsEnabled": {
-                    "type": "boolean"
-                  },
-                  "isChatNotificationsEnabled": {
-                    "type": "boolean"
-                  },
-                  "isFriendRequestNotificationsEnabled": {
                     "type": "boolean"
                   }
                 }

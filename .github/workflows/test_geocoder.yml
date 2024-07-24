@@ -9,7 +9,10 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 5
+    concurrency:
+      group: testGeocoder-${{ github.head_ref }}
+      cancel-in-progress: true
     
     services:
       mysql:

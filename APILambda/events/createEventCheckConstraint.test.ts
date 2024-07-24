@@ -1,4 +1,4 @@
-import { conn } from "TiFBackendUtils/MySQLDriver"
+import { conn } from "TiFBackendUtils"
 import { randomUUID } from "crypto"
 import { expectFailsCheckConstraint } from "../../TiFBackendUtils/MySQLDriver/test/utils"
 import { testEventInput } from "../test/testEvents"

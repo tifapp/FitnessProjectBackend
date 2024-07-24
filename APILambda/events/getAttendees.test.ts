@@ -1,4 +1,4 @@
-import { conn } from "TiFBackendUtils/MySQLDriver"
+import { conn } from "TiFBackendUtils"
 import dayjs from "dayjs"
 import { decodeAttendeesListCursor } from "../shared/Cursor"
 import { callGetAttendees, callSetArrival } from "../test/apiCallers/eventEndpoints"
@@ -11,9 +11,7 @@ import { createEvent } from "./createEvent"
 const eventLocation = { latitude: 50, longitude: 50 }
 // TODO: should have a universal "lastpagecursor" value
 const lastPageCursorResponse = {
-  userId: "lastPage",
-  joinedDateTime: null,
-  arrivedDateTime: null
+  userId: "lastPage"
 }
 const paginationLimit = 2
 
@@ -57,7 +55,7 @@ const getNextPageCursorResp = (
 ): Omit<unknown, "arrivedDateTime"> => {
   return {
     userId: testAttendees[index].userId,
-    joinedDateTime: index >= testAttendees.length ? null : expect.any(Date)
+    joinedDateTime: index >= testAttendees.length ? undefined : expect.any(Date)
   }
 }
 
@@ -369,7 +367,6 @@ describe("getAttendeesList endpoint", () => {
             name: attendeesList[0].name,
             joinedDateTime: expect.any(Date),
             hasArrived: false,
-            arrivedDateTime: null,
             role: "hosting"
           },
           {
@@ -414,16 +411,14 @@ describe("getAttendeesList endpoint", () => {
             joinedDateTime: expect.any(Date),
             name: attendeesList[2].name,
             role: "attending",
-            hasArrived: false,
-            arrivedDateTime: null
+            hasArrived: false
           },
           {
             id: attendeesList[3].userId,
             joinedDateTime: expect.any(Date),
             name: attendeesList[3].name,
             hasArrived: false,
-            role: "attending",
-            arrivedDateTime: null
+            role: "attending"
           }
         ],
         nextPageCursor: lastPageCursorResponse,

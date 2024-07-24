@@ -1,5 +1,6 @@
+import { conn } from "TiFBackendUtils"
 import { DBeventAttendance, DBuser, DBuserArrivals } from "TiFBackendUtils/DBTypes"
-import { MySQLExecutableDriver, conn } from "TiFBackendUtils/MySQLDriver"
+import { MySQLExecutableDriver } from "TiFBackendUtils/MySQLDriver"
 import { UserRelationship } from "TiFBackendUtils/TiFUserUtils"
 import { ExtractSuccess, promiseResult, success } from "TiFShared/lib/Result"
 import { z } from "zod"
@@ -16,8 +17,8 @@ const AttendeesRequestSchema = z.object({
 
 const DecodedCursorValidationSchema = z.object({
   userId: z.string(),
-  joinedDateTime: z.date().nullable(),
-  arrivedDateTime: z.date().nullable()
+  joinedDateTime: z.date().optional(),
+  arrivedDateTime: z.date().optional()
 })
 
 const CursorRequestSchema = z.object({
@@ -30,13 +31,13 @@ const CursorRequestSchema = z.object({
 
 // TODO: use index as cursor instead of userid+joindate
 const getTiFAttendees = (
+  limit: number,
   conn: MySQLExecutableDriver,
   eventId: number,
   userId: string,
   nextPageUserIdCursor: string,
-  nextPageJoinDateCursor: Date | null,
-  nextPageArrivedDateTimeCursor: Date | null,
-  limit: number
+  nextPageJoinDateCursor?: Date,
+  nextPageArrivedDateTimeCursor?: Date
 ) =>
   conn.queryResult<DBeventAttendance & DBuserArrivals & UserRelationship & Pick<DBuser, "id" | "name" | "profileImageURL" | "handle"> & {hasArrived: boolean}>(
     `SELECT 
@@ -117,10 +118,10 @@ const paginatedAttendeesResponse = (
     : "lastPage"
   const nextPageJoinDateCursor = hasMoreAttendees
     ? attendees[limit - 1].joinedDateTime
-    : null
+    : undefined
   const nextPageArrivedDateTimeCursor = hasMoreAttendees
     ? attendees[limit - 1].arrivedDateTime
-    : null
+    : undefined
 
   let paginatedAttendees = []
   paginatedAttendees = attendees.slice(0, limit)
@@ -162,24 +163,24 @@ const getAttendeesCount = (
   )
 
 const getAttendeesByEventId = (
+  limit: number,
   conn: MySQLExecutableDriver,
   eventId: number,
   userId: string,
   nextPageUserIdCursor: string,
-  nextPageJoinDateCursor: Date | null,
-  nextPageArrivedDateTimeCursor: Date | null,
-  limit: number
+  nextPageJoinDateCursor?: Date,
+  nextPageArrivedDateTimeCursor?: Date
 ) => {
   return promiseResult(
     Promise.all([
       getTiFAttendees(
+        limit,
         conn,
         eventId,
         userId,
         nextPageUserIdCursor,
         nextPageJoinDateCursor,
-        nextPageArrivedDateTimeCursor,
-        limit
+        nextPageArrivedDateTimeCursor
       ),
       getAttendeesCount(conn, eventId, userId)
     ]).then((results) => {
@@ -218,13 +219,13 @@ export const getAttendeesByEventIdRouter = (
 
       return conn.transaction((tx) =>
         getAttendeesByEventId(
+          req.query.limit + 1, // Add 1 to handle checking last page
           tx,
           Number(req.params.eventId),
           res.locals.selfId,
           decodedValues.userId,
           decodedValues.joinedDateTime,
-          decodedValues.arrivedDateTime,
-          req.query.limit + 1 // Add 1 to handle checking last page
+          decodedValues.arrivedDateTime
         ).mapSuccess((results) => {
           const attendees = results.attendees
           const totalAttendeeCount =

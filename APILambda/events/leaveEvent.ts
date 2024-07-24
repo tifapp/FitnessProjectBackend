@@ -1,5 +1,6 @@
+import { conn } from "TiFBackendUtils"
 import { DBevent } from "TiFBackendUtils/DBTypes"
-import { MySQLExecutableDriver, conn } from "TiFBackendUtils/MySQLDriver"
+import { MySQLExecutableDriver } from "TiFBackendUtils/MySQLDriver"
 import { failure } from "TiFShared/lib/Result"
 import { z } from "zod"
 import { ServerEnvironment } from "../env"

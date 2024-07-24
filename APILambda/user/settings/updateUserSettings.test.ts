@@ -17,7 +17,7 @@ describe("Update Settings tests", () => {
   it("should update the user's settings", async () => {
     const { token } = await createUserFlow()
     const updateResp = await callPatchSettings(token, {
-      isChatNotificationsEnabled: false
+      isAnalyticsEnabled: false
     })
     expect(withEmptyResponseBody(updateResp)).toMatchObject({
       status: 204,
@@ -40,12 +40,9 @@ describe("Update Settings tests", () => {
     expect(settings2Resp).toMatchObject({
       status: 200,
       body: expect.objectContaining({
-        isAnalyticsEnabled: true,
+        isAnalyticsEnabled: false,
         isCrashReportingEnabled: false,
-        isEventNotificationsEnabled: true,
-        isMentionsNotificationsEnabled: true,
-        isChatNotificationsEnabled: false,
-        isFriendRequestNotificationsEnabled: true,
+        // TODO: Update with models from tifshared api
         updatedDateTime: expect.anything()
       })
     })
@@ -66,12 +63,9 @@ describe("Update Settings tests", () => {
     expect(settings3Resp).toMatchObject({
       status: 200,
       body: expect.objectContaining({
-        isAnalyticsEnabled: true,
+        isAnalyticsEnabled: false,
         isCrashReportingEnabled: true,
-        isEventNotificationsEnabled: true,
-        isMentionsNotificationsEnabled: true,
-        isChatNotificationsEnabled: false,
-        isFriendRequestNotificationsEnabled: true,
+        // TODO: Update with models from tifshared api
         updatedDateTime: expect.anything()
       })
     })

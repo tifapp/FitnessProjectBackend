@@ -5,7 +5,6 @@
   "main": "index.js",
   "scripts": {
     "pr": "cd .. && npm run pr",
-    "genapispecs": "ts-node --esm ./genapispecs.mjs && npx lint-openapi specs.json",
     "build": "npx tsc --traceResolution --strict false",
     "test": "npx ts-node node_modules/jest/bin/jest --detectOpenHandles --runInBand",
     "test:ci": "npx ts-node node_modules/.bin/jest --ci --detectOpenHandles --forceExit --runInBand"
@@ -25,11 +24,9 @@
     "zod": "^3.22.4"
   },
   "devDependencies": {
-    "@asteasolutions/zod-to-openapi": "^6.4.0",
     "@aws-sdk/client-cloudwatch-logs": "^3.637.0",
     "@aws-sdk/credential-providers": "^3.515.0",
     "@faker-js/faker": "^7.6.0",
-    "@ibm-cloud/openapi-ruleset": "^1.15.3",
     "@swc/core": "^1.4.2",
     "@swc/jest": "^0.2.36",
     "@types/aws-lambda": "^8.10.115",
@@ -42,7 +39,6 @@
     "concurrently": "^8.0.1",
     "dayjs": "^1.11.10",
     "expect-type": "^0.18.0",
-    "ibm-openapi-validator": "^1.16.3",
     "jest": "^29.7.0",
     "jest-watch-suspend": "^1.1.2",
     "jest-watch-typeahead": "^2.2.2",

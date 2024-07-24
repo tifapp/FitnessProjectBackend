@@ -1,4 +1,5 @@
-import { MySQLExecutableDriver, conn } from "TiFBackendUtils/MySQLDriver"
+import { conn } from "TiFBackendUtils"
+import { MySQLExecutableDriver } from "TiFBackendUtils/MySQLDriver"
 import { userWithIdExists } from "TiFBackendUtils/TiFUserUtils"
 import { z } from "zod"
 import { userNotFoundResponse } from "../shared/Responses"

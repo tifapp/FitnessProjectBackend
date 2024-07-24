@@ -6,18 +6,11 @@ const defaultJoinDate = "1970-01-01T00:00:00Z"
  * @param cursorObject - An object with properties 'userId' (string) and 'joinedDateTime' (Date).
  * @returns The encoded cursor combining userId and joinedDateTime.
  */
-export const encodeAttendeesListCursor = (cursorObject?: {
+export const encodeAttendeesListCursor = ({ userId = "firstPage", joinedDateTime, arrivedDateTime }: {
   userId: string
-  joinedDateTime: Date | null
-  arrivedDateTime: Date | null
+  joinedDateTime?: Date
+  arrivedDateTime?: Date
 }): string => {
-  const { userId, joinedDateTime, arrivedDateTime } = cursorObject ??
-    {
-      userId: "firstPage",
-      joinedDateTime: null,
-      arrivedDateTime: null
-    }
-
   const joinDateToEncode = joinedDateTime ?? defaultJoinDate
   const encodedCursor = Buffer.from(
     `${userId}|${joinDateToEncode}|${arrivedDateTime}`
@@ -33,12 +26,11 @@ export const encodeAttendeesListCursor = (cursorObject?: {
  */
 export const decodeAttendeesListCursor = (
   cursor: string | undefined
-): { userId: string; joinedDateTime: Date | null; arrivedDateTime: Date | null } => {
+): { userId: string; joinedDateTime?: Date; arrivedDateTime?: Date } => {
   let joinedDateTime = new Date(defaultJoinDate)
-  let arrivedDateTime = null
 
   if (cursor === undefined) {
-    return { userId: "firstPage", joinedDateTime, arrivedDateTime: null }
+    return { userId: "firstPage", joinedDateTime }
   }
 
   const decodedString = Buffer.from(cursor, "base64").toString("utf-8")
@@ -46,11 +38,11 @@ export const decodeAttendeesListCursor = (
     decodedString.split("|")
 
   if (decodedUserId === "lastPage") {
-    return { userId: "lastPage", joinedDateTime: null, arrivedDateTime: null }
+    return { userId: "lastPage" }
   }
   joinedDateTime =
     decodedJoinDate !== defaultJoinDate ? new Date(decodedJoinDate) : joinedDateTime
-  arrivedDateTime = decodedArrivedDateTime !== "null" ? new Date(decodedArrivedDateTime) : null
+  const arrivedDateTime = decodedArrivedDateTime !== "undefined" ? new Date(decodedArrivedDateTime) : undefined
 
   return { userId: decodedUserId, joinedDateTime, arrivedDateTime }
 }

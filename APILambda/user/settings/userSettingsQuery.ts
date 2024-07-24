@@ -8,11 +8,8 @@ import { success } from "TiFShared/lib/Result"
  */
 const DEFAULT_USER_SETTINGS = {
   isAnalyticsEnabled: true,
-  isCrashReportingEnabled: true,
-  isEventNotificationsEnabled: true,
-  isMentionsNotificationsEnabled: true,
-  isChatNotificationsEnabled: true,
-  isFriendRequestNotificationsEnabled: true
+  isCrashReportingEnabled: true
+  // TODO: Update with models from tifshared api
 } as const
 
 /**

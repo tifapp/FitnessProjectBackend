@@ -1,4 +1,4 @@
-import { conn } from "TiFBackendUtils/MySQLDriver"
+import { conn } from "TiFBackendUtils"
 import { userWithIdExists } from "TiFBackendUtils/TiFUserUtils"
 import { ServerEnvironment } from "../env"
 import { ValidatedRouter } from "../validation"

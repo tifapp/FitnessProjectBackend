@@ -24,10 +24,7 @@ const EnvSchema = z
       .max(16, { message: "Database name must be no more than 16 characters long." })
       .regex(/^[a-zA-Z0-9_]+$/, { message: "Database name must only contain alphanumeric characters and underscores." }),
     CA_PEM: z.string().optional(),
-    ABLY_KEY: z.string().optional(),
-    COGNITO_USER_POOL_ID: z.string().optional(),
-    API_SPECS_ENDPOINT: z.string().url().optional(),
-    API_SPECS_LAMBDA_ID: z.string().optional()
+    ABLY_KEY: z.string().optional()
   })
   .passthrough()
 

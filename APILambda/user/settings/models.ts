@@ -5,11 +5,8 @@ import { z } from "zod"
  */
 export const UserSettingsSchema = z.object({
   isAnalyticsEnabled: z.boolean(),
-  isCrashReportingEnabled: z.boolean(),
-  isEventNotificationsEnabled: z.boolean(),
-  isMentionsNotificationsEnabled: z.boolean(),
-  isChatNotificationsEnabled: z.boolean(),
-  isFriendRequestNotificationsEnabled: z.boolean()
+  isCrashReportingEnabled: z.boolean()
+  // TODO: Update with models from tifshared api
 })
 
 /**
