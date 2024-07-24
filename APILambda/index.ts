@@ -1,3 +1,5 @@
+import "TiFShared"
+
 import awsServerlessExpress from "@vendia/serverless-express"
 import {
   envVars,

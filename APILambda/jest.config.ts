@@ -7,7 +7,7 @@ export default {
     "^.+\\.(t|j)s?$": "@swc/jest"
   },
   transformIgnorePatterns: [
-    "/node_modules/(?!(node-fetch|data-uri-to-buffer|fetch-blob|formdata-polyfill))"
+    "/node_modules/(?!(TiFShared|node-fetch|data-uri-to-buffer|fetch-blob|formdata-polyfill))"
   ],
   testPathIgnorePatterns: ["/dist/"],
   moduleNameMapper: {

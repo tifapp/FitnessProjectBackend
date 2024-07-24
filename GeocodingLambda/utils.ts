@@ -6,10 +6,11 @@ import {
 import { AWSEnvVars, MySQLExecutableDriver } from "TiFBackendUtils"
 // https://github.com/evansiroky/node-geo-tz/commit/1b11eda7824a1e6dbc0b0ff65bfea1f50c20d3fa
 // eslint-disable-next-line import/extensions
-import { NullablePartial } from "TiFShared/lib/Types/HelperTypes"
+import { LocationCoordinate2D } from "TiFShared/domain-models/LocationCoordinate2D.js"
+import { Placemark } from "TiFShared/domain-models/Placemark.js"
+import { NullablePartial } from "TiFShared/lib/Types/HelperTypes.js"
+// eslint-disable-next-line import/extensions
 import { find } from "geo-tz/dist/find-now"
-import { LocationCoordinate2D } from "../../TiFShared/domain-models/LocationCoordinate2D"
-import { Placemark } from "../../TiFShared/domain-models/Placemark"
 
 const locationClient = new LocationClient({ region: AWSEnvVars.AWS_REGION })
 

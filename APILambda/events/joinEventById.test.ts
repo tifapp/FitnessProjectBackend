@@ -1,7 +1,6 @@
 import { conn } from "TiFBackendUtils"
 import { randomInt } from "crypto"
 import dayjs from "dayjs"
-import { describe } from "node:test"
 import { callCreateEvent, callEndEvent, callGetAttendees, callJoinEvent } from "../test/apiCallers/eventEndpoints.js"
 import { callBlockUser } from "../test/apiCallers/userEndpoints.js"
 import { testEventInput } from "../test/testEvents.js"

@@ -1,10 +1,11 @@
 /**
  * @type {import('@types/aws-lambda').APIGatewayProxyHandler}
  */
+import "TiFShared"
 
 import {
   conn,
-  exponentialFunctionBackoff,
+  exponentialFunctionBackoff
 } from "TiFBackendUtils"
 import { LocationCoordinate2D } from "../../TiFShared/domain-models/LocationCoordinate2D.js"
 import { Result, promiseResult, success } from "../../TiFShared/lib/Result.js"

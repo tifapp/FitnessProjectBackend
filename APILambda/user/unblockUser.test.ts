@@ -1,12 +1,12 @@
 import { randomUUID } from "crypto"
 import {
-  callBlockUser,
-  callGetUser,
-  callPostFriendRequest,
-  callUnblockUser
-} from "../test/apiCallers/users.js"
+    callBlockUser,
+    callGetUser,
+    callPostFriendRequest,
+    callUnblockUser
+} from "../test/apiCallers/userEndpoints.js"
 import { withEmptyResponseBody } from "../test/assertions.js"
-import { createUserFlow } from "../test/userFlows/users.js"
+import { createUserFlow } from "../test/userFlows/createUserFlow.js"
 
 describe("UnblockUser tests", () => {
   it("should 403 when the unblocked user exists, but has no prior relation to user", async () => {
