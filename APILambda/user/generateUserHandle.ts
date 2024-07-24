@@ -1,4 +1,5 @@
-import { PromiseResult, MySQLExecutableDriver, failure, promiseResult, userWithHandleDoesNotExist } from "TiFBackendUtils"
+import { MySQLExecutableDriver, userWithHandleDoesNotExist } from "TiFBackendUtils"
+import { PromiseResult, failure, promiseResult } from "TiFShared/lib/Result"
 import crypto from "crypto"
 
 const generateNumericHash = (input: string) => {

@@ -1,4 +1,5 @@
-import { DBTifEvent, MySQLExecutableDriver, TiFEvent, conn, setEventAttendeesFields, success, tifEventResponseFromDatabaseEvent } from "TiFBackendUtils"
+import { DBTifEvent, MySQLExecutableDriver, TiFEvent, conn, setEventAttendeesFields, tifEventResponseFromDatabaseEvent } from "TiFBackendUtils"
+import { success } from "TiFShared/lib/Result.js"
 import { z } from "zod"
 import { ServerEnvironment } from "../env.js"
 import { ValidatedRouter } from "../validation.js"

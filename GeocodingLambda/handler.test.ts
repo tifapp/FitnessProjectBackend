@@ -1,4 +1,6 @@
-import { Placemark, conn, failure, success } from "TiFBackendUtils"
+import { conn } from "TiFBackendUtils"
+import { Placemark } from "TiFShared/domain-models/Placemark.js"
+import { failure, success } from "TiFShared/lib/Result.js"
 import { resetDB } from "../TiFBackendUtils/MySQLDriver/test/utils.js"
 import { handler } from "./index.js"
 

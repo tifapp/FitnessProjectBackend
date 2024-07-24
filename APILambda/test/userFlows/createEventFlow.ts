@@ -1,9 +1,9 @@
+import { sleep } from "TiFShared/test-helpers/DelayData.js"
 import { CreateEventInput } from "../../events/createEvent.js"
-import { callCreateEvent, callJoinEvent } from "../apiCallers/events.js"
-import { delay } from "../helpers/delay.js"
+import { callCreateEvent, callJoinEvent } from "../apiCallers/eventEndpoints.js"
 import { testEnvVars } from "../testEnv.js"
 import { testEventInput } from "../testEvents.js"
-import { TestUser, createUserFlow } from "./users.js"
+import { TestUser, createUserFlow } from "./createUserFlow.js"
 
 export const createEventFlow = async (
   eventInputs: Partial<CreateEventInput>[] = [{}],
@@ -40,7 +40,7 @@ export const createEventFlow = async (
 
     for (const eventId of eventIds) {
       // delay needed for test attendees to be properly sorted by join time
-      if (!testEnvVars.API_ENDPOINT) { await delay(1000) }
+      if (!testEnvVars.API_ENDPOINT) { await sleep(1000) }
       await callJoinEvent(attendee.token, eventId)
     }
   }

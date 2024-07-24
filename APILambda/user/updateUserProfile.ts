@@ -1,4 +1,7 @@
-import { DBuser, NullablePartial, MySQLExecutableDriver, UserHandle, conn, success, userWithHandleDoesNotExist } from "TiFBackendUtils"
+import { DBuser, MySQLExecutableDriver, conn, userWithHandleDoesNotExist } from "TiFBackendUtils"
+import { UserHandleSchema } from "TiFShared/domain-models/User.js"
+import { success } from "TiFShared/lib/Result.js"
+import { NullablePartial } from "TiFShared/lib/Types/HelperTypes.js"
 import { z } from "zod"
 import { ServerEnvironment } from "../env.js"
 import { ValidatedRouter } from "../validation.js"
@@ -6,7 +9,7 @@ import { ValidatedRouter } from "../validation.js"
 const UpdateUserRequestSchema = z.object({
   name: z.string().optional(),
   bio: z.string().max(250).optional(),
-  handle: UserHandle.schema.optional().transform(handle => handle?.rawValue)
+  handle: UserHandleSchema.optional().transform(handle => handle?.rawValue)
 })
 
 type UpdateUserRequest = z.infer<typeof UpdateUserRequestSchema>

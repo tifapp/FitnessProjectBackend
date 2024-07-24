@@ -1,6 +1,8 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 // Env variables
-import { EnvSchema, LocationCoordinate2D, PromiseResult } from "TiFBackendUtils"
+import { EnvSchema } from "TiFBackendUtils"
+import { LocationCoordinate2D } from "TiFShared/domain-models/LocationCoordinate2D.js"
+import { PromiseResult } from "TiFShared/lib/Result.js"
 import { ValidatedRouteParams } from "./validation.js"
 
 export type CreateUserProfileEnvironment = {

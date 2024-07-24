@@ -8,7 +8,8 @@
     "@aws-sdk/client-location": "^3.515.0",
     "dotenv": "^16.3.1",
     "geo-tz": "^8.0.1",
-    "TiFBackendUtils": "file:../TiFBackendUtils"
+    "TiFBackendUtils": "file:../TiFBackendUtils",
+    "TiFShared": "git+https://github.com/tifapp/TiFShared#main"
   },
   "scripts": {
     "pr": "cd .. && npm run pr",

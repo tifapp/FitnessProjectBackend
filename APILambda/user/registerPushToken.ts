@@ -1,4 +1,5 @@
-import { MySQLExecutableDriver, conn, failure, success } from "TiFBackendUtils"
+import { MySQLExecutableDriver, conn } from "TiFBackendUtils"
+import { failure, success } from "TiFShared/lib/Result.js"
 import { z } from "zod"
 import { ValidatedRouter } from "../validation.js"
 

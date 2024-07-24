@@ -1,8 +1,8 @@
 import {
   MySQLExecutableDriver,
-  conn,
-  success
+  conn
 } from "TiFBackendUtils"
+import { success } from "TiFShared/lib/Result.js"
 import { z } from "zod"
 import { ServerEnvironment } from "../env.js"
 import { ValidatedRouter } from "../validation.js"

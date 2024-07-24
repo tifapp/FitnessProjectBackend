@@ -8,10 +8,13 @@
     "removeComments": true,
     "allowJs": true,
     "moduleResolution": "node",
-    "paths": {},
+    "paths": {
+      "TiFShared/*": ["./node_modules/TiFShared/*"]
+    },
     "esModuleInterop": true,
     "resolveJsonModule": true
   },
+  "preserveSymlinks": true,
   "exclude": [
     "**/*.test.ts",
     "**/*.spec.ts",

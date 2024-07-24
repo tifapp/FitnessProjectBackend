@@ -3,15 +3,12 @@
  */
 
 import {
-  LocationCoordinate2D,
-  Placemark,
-  Result,
   conn,
   exponentialFunctionBackoff,
-  promiseResult,
-  success
 } from "TiFBackendUtils"
-import { SearchClosestAddressToCoordinates, addPlacemarkToDB, checkExistingPlacemarkInDB, getTimeZone } from "./utils.js"
+import { LocationCoordinate2D } from "../../TiFShared/domain-models/LocationCoordinate2D.js"
+import { Result, promiseResult, success } from "../../TiFShared/lib/Result.js"
+import { SearchClosestAddressToCoordinates, addLocationToDB, checkExistingPlacemarkInDB, getTimeZone } from "./utils.js"
 
 interface LocationSearchRequest extends LocationCoordinate2D {}
 
@@ -34,20 +31,20 @@ export const handler: any = exponentialFunctionBackoff<
         SearchClosestAddressToCoordinates({
           latitude,
           longitude
-        }).then(placemark => success(placemark))
+        }).then(locationInfo => success(locationInfo))
       )
     }
     )
-    .flatMapSuccess((placemark: Placemark) => {
-      console.log("aws placemark is ", JSON.stringify(placemark, null, 2))
+    .flatMapSuccess((locationInfo) => {
+      console.log("aws placemark is ", JSON.stringify(locationInfo, null, 2))
       console.log("checking timezone")
       // rely on geo-tz timezone instead of AWS timezone to align with front-end data
       const timezoneIdentifier = getTimeZone({ latitude, longitude })[0]
       console.log("timezone is ", timezoneIdentifier)
       if (!timezoneIdentifier) { // should we throw if no address exists? ex. pacific ocean
-        throw new Error(`Could not find timezone for ${JSON.stringify(location)}.`)
+        throw new Error(`Could not find timezone for ${JSON.stringify(locationInfo)}.`)
       }
-      return addPlacemarkToDB(conn, placemark, timezoneIdentifier)
+      return addLocationToDB(conn, locationInfo, timezoneIdentifier)
     })
     .mapSuccess(() => "placemark-successfully-inserted" as const)
 }

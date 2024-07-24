@@ -14,7 +14,8 @@
     "@aws-sdk/client-eventbridge": "^3.515.0",
     "@aws-sdk/client-lambda": "^3.518.0",
     "dotenv": "^16.3.1",
-    "zod": "^3.22.4"
+    "zod": "^3.22.4",
+    "TiFShared": "git+https://github.com/tifapp/TiFShared#main"
   },
   "scripts": {
     "pr": "cd .. && npm run pr",
