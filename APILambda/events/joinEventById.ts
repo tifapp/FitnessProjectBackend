@@ -1,4 +1,6 @@
-import { LocationCoordinate2D, LocationCoordinates2DSchema, MySQLExecutableDriver, conn, failure, success } from "TiFBackendUtils"
+import { MySQLExecutableDriver, conn } from "TiFBackendUtils"
+import { LocationCoordinate2D, LocationCoordinate2DSchema } from "TiFShared/domain-models/LocationCoordinate2D.js"
+import { failure, success } from "TiFShared/lib/Result.js"
 import { z } from "zod"
 import { ServerEnvironment } from "../env.js"
 import { ValidatedRouter } from "../validation.js"
@@ -15,7 +17,7 @@ const joinEventParamsSchema = z.object({
 const joinEventBodySchema = z
   .object({
     region: z.object({
-      coordinate: LocationCoordinates2DSchema,
+      coordinate: LocationCoordinate2DSchema,
       arrivalRadiusMeters: z.number()
     })
   }).optional()

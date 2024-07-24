@@ -1,11 +1,11 @@
 import { conn } from "TiFBackendUtils"
 import dayjs from "dayjs"
 import { decodeAttendeesListCursor } from "../shared/Cursor.js"
-import { callGetAttendees, callSetArrival } from "../test/apiCallers/events.js"
-import { callBlockUser } from "../test/apiCallers/users.js"
+import { callGetAttendees, callSetArrival } from "../test/apiCallers/eventEndpoints.js"
+import { callBlockUser } from "../test/apiCallers/userEndpoints.js"
 import { testEventInput } from "../test/testEvents.js"
-import { createEventFlow } from "../test/userFlows/events.js"
-import { TestUser, createUserFlow } from "../test/userFlows/users.js"
+import { createEventFlow } from "../test/userFlows/createEventFlow.js"
+import { TestUser, createUserFlow } from "../test/userFlows/createUserFlow.js"
 import { createEvent } from "./createEvent.js"
 
 const eventLocation = { latitude: 50, longitude: 50 }

@@ -7,11 +7,12 @@ export default {
     "^.+\\.(t|j)s?$": "@swc/jest"
   },
   transformIgnorePatterns: [
-    "/node_modules/(?!(@planetscale|node-fetch|data-uri-to-buffer|fetch-blob|formdata-polyfill))"
+    "/node_modules/(?!(node-fetch|data-uri-to-buffer|fetch-blob|formdata-polyfill))"
   ],
   testPathIgnorePatterns: ["/dist/"],
   moduleNameMapper: {
-    "^(\\.{1,2}/.*)\\.js$": "$1"
+    "^(\\.{1,2}/.*)\\.js$": "$1",
+    "^TiFShared/(.*)\\.js$": "<rootDir>/node_modules/TiFShared/$1"
   },
   globalSetup: "./test/jestSetup.ts",
   // globalTeardown: "./test/jestTeardown.ts",

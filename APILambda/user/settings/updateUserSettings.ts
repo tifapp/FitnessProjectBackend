@@ -1,4 +1,5 @@
-import { NullablePartial, MySQLExecutableDriver, conn } from "TiFBackendUtils"
+import { MySQLExecutableDriver, conn } from "TiFBackendUtils"
+import { NullablePartial } from "TiFShared/lib/Types/HelperTypes.js"
 import { ServerEnvironment } from "../../env.js"
 import { ValidatedRouter } from "../../validation.js"
 import { UserSettings, UserSettingsSchema } from "./models.js"

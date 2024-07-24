@@ -11,6 +11,7 @@
     "esModuleInterop": true,
     "resolveJsonModule": true
   },
+  "preserveSymlinks": true,
   "exclude": [
     "**/*.test.ts",
     "**/*.spec.ts",

@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // TODO: Replace with backend utils
+import { promiseResult, success } from "TiFShared/lib/Result.js";
 import { fail } from "assert";
 import { envVars } from "../../env.js";
-import { promiseResult, success } from "../../result.js";
 import { createDatabaseConnection } from "../dbConnection.js";
 import { conn } from "../index.js";
 import { tableDefintionsByFamily } from "./tableDefinitions.js";

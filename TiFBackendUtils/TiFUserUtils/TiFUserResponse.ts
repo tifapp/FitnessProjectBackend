@@ -1,7 +1,7 @@
-import { MySQLExecutableDriver } from "../MySQLDriver/index.js"
-import { DBuser } from "../entities.js"
-import { ExtractSuccess } from "../result.js"
-import { UserRelationship } from "./UserRelationships.js"
+import { ExtractSuccess } from "TiFShared/lib/Result.js";
+import { MySQLExecutableDriver } from "../MySQLDriver/index.js";
+import { DBuser } from "../entities.js";
+import { UserRelationship } from "./UserRelationships.js";
 
 export const findTiFUser = (
   conn: MySQLExecutableDriver,
@@ -24,5 +24,5 @@ export const findTiFUser = (
       { yourId, theirId }
     )
     .mapSuccess(({ fromThemToYou, fromYouToThem, ...user }) => ({ ...user, relations: { fromThemToYou, fromYouToThem } }))
-
-export type TiFUser = ExtractSuccess<ReturnType<typeof findTiFUser>> // TODO: Get type from shared package schema
+    
+export type TiFUser = ExtractSuccess<ReturnType<typeof findTiFUser>>;

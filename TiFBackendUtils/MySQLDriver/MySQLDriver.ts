@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // TODO: Replace with backend utils
+import { PromiseResult, failure, promiseResult, success } from "TiFShared/lib/Result.js"
 import mysql, { FieldPacket, ResultSetHeader, RowDataPacket } from "mysql2/promise.js"
-import { AwaitableResult, failure, promiseResult, success } from "../result.js"
 import { createDatabaseConnection } from "./dbConnection.js"
 
-type ExecuteResult = {
+export type DBExecution = {
   insertId: string
   rowsAffected: number
 }
@@ -91,7 +91,7 @@ export class MySQLDriver {
   private async execute (
     query: string,
     args: object | (number | string)[] | null = null
-  ): Promise<ExecuteResult> {
+  ): Promise<DBExecution> {
     // Use this.conn to execute the query and return the result rows
     // This will be the only function to directly use the database library's execute method.
     const conn = await this.connectionHandler.useConnection()
@@ -155,7 +155,7 @@ export class MySQLDriver {
    * Performs an idempotent transaction and returns the result of the transaction wrapped in a {@link PromiseResult}.
    */
   transaction<SuccessValue, ErrorValue> (
-    query: (tx: Omit<MySQLDriver, "query" | "execute">) => AwaitableResult<SuccessValue, ErrorValue>
+    query: (tx: Omit<MySQLDriver, "query" | "execute">) => PromiseResult<SuccessValue, ErrorValue>
   ) {
     return promiseResult((async () => {
       const conn = await this.connectionHandler.useConnection()

@@ -1,16 +1,12 @@
 import { conn } from "TiFBackendUtils"
 import { randomInt } from "crypto"
 import dayjs from "dayjs"
-import {
-  callCreateEvent,
-  callEndEvent,
-  callGetAttendees,
-  callJoinEvent
-} from "../test/apiCallers/events.js"
-import { callBlockUser } from "../test/apiCallers/users.js"
+import { describe } from "node:test"
+import { callCreateEvent, callEndEvent, callGetAttendees, callJoinEvent } from "../test/apiCallers/eventEndpoints.js"
+import { callBlockUser } from "../test/apiCallers/userEndpoints.js"
 import { testEventInput } from "../test/testEvents.js"
-import { createEventFlow } from "../test/userFlows/events.js"
-import { createUserFlow } from "../test/userFlows/users.js"
+import { createEventFlow } from "../test/userFlows/createEventFlow.js"
+import { createUserFlow } from "../test/userFlows/createUserFlow.js"
 import { createEvent } from "./createEvent.js"
 
 const eventLocation = { latitude: 50, longitude: 50 }

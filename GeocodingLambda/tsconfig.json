@@ -7,10 +7,14 @@
     "outDir": "dist",
     "removeComments": true,
     "allowJs": true,
+    "paths": {
+      "TiFShared/*": ["./node_modules/TiFShared/*"]
+    },
     "moduleResolution": "node",
     "esModuleInterop": true,
     "resolveJsonModule": true
   },
+  "preserveSymlinks": true,
   "exclude": [
     "**/*.test.ts",
     "**/*.spec.ts",
