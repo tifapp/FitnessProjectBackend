@@ -8,7 +8,7 @@
 ### Event
 | Property | Type | Optional | DefaultValue |
 | ---------- | ---------- | ---------- | ---------- |
-| color | import("./node_modules/TiFShared/domain-models/ColorString.js").ColorString | false | None |
+| color | import("./node_modules/TiFShared/domain-models/ColorString").ColorString | false | None |
 | createdDateTime | Date | false | CURRENT_TIMESTAMP |
 | description | string | false | None |
 | endDateTime | Date | false | None |
@@ -80,14 +80,14 @@
 | Property | Type | Optional | DefaultValue |
 | ---------- | ---------- | ---------- | ---------- |
 | city | string | true | None |
-| color | import("./node_modules/TiFShared/domain-models/ColorString.js").ColorString | false | None |
+| color | import("./node_modules/TiFShared/domain-models/ColorString").ColorString | false | None |
 | country | string | true | None |
 | createdDateTime | Date | false | CURRENT_TIMESTAMP |
 | description | string | false | None |
 | endDateTime | Date | false | None |
 | endedDateTime | Date | true | None |
 | hasArrived | boolean | false | 0 |
-| hostHandle | import("./node_modules/TiFShared/domain-models/User.js").UserHandle | false | None |
+| hostHandle | import("./node_modules/TiFShared/domain-models/User").UserHandle | false | None |
 | hostId | string | false | None |
 | hostUsername | string | false | None |
 | id | number | false | 0 |
@@ -111,7 +111,7 @@
 | ---------- | ---------- | ---------- | ---------- |
 | bio | string | true | None |
 | createdDateTime | Date | false | CURRENT_TIMESTAMP |
-| handle | import("./node_modules/TiFShared/domain-models/User.js").UserHandle | false | None |
+| handle | import("./node_modules/TiFShared/domain-models/User").UserHandle | false | None |
 | id | string | false | None |
 | name | string | false | None |
 | profileImageURL | string | true | None |
@@ -152,7 +152,7 @@
 | eventPresetShouldHideAfterStartDate | boolean | false | 1 |
 | isAnalyticsEnabled | boolean | false | 1 |
 | isCrashReportingEnabled | boolean | false | 1 |
-| pushNotificationTriggerIds | import("./node_modules/TiFShared/domain-models/Settings.js").UserSettings["pushNotificationTriggerIds"] | true | None |
+| pushNotificationTriggerIds | import("./node_modules/TiFShared/domain-models/Settings").UserSettings["pushNotificationTriggerIds"] | true | None |
 | updatedDateTime | Date | true | CURRENT_TIMESTAMP |
 | userId | string | false | None |
 | version | number | false | 0 |

@@ -1,8 +1,9 @@
 import { Application } from "express"
+import { UserID } from "TiFShared/domain-models/User"
 import { z } from "zod"
 
 export type ResponseContext = {
-  selfId: string,
+  selfId: UserID,
   name: string,
   isContactInfoVerified: boolean,
   doesProfileExist: boolean
@@ -51,10 +52,9 @@ export const addCognitoTokenVerification = (
 ) => {
   // TODO: - Verify JWT properly
   app.use(async (req, res, next) => {
-    const auth = req.headers?.Authorization ?? req.headers?.authorization
-
-    console.debug("authorization is ")
-    console.debug(req.headers?.Authorization ?? req.headers?.authorization)
+    console.log("headers are lkj;egr")
+    console.log(req.headers)
+    const auth = req.headers?.authorization
 
     if (!auth || Array.isArray(auth)) {
       // TODO: Change error message to generic message for prod api
@@ -65,6 +65,7 @@ export const addCognitoTokenVerification = (
     const token = auth.split(" ")[1] // TODO: ensure correct format of auth header ("Bearer {token}")
 
     try {
+      console.log("headers are passing through schema")
       // eslint-disable-next-line camelcase
       const { selfId, name, isContactInfoVerified, doesProfileExist } =
         TransformedAuthClaimsSchema.parse(
@@ -79,6 +80,7 @@ export const addCognitoTokenVerification = (
         // TODO: Change error message to generic message for prod api
         return res.status(401).json({ error: "unverified-user" })
       }
+      console.log("headers are passed")
 
       // separate attribute checker to a middleware, apply to other endpints
       // const isCreatingProfile = req.url === "/user" && req.method === "POST"

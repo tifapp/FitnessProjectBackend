@@ -1,25 +1,10 @@
 import { conn } from "TiFBackendUtils"
 import { userWithIdExists } from "TiFBackendUtils/TiFUserUtils"
-import { ServerEnvironment } from "../env"
-import { ValidatedRouter } from "../validation"
+import { resp } from "TiFShared/api/Transport"
+import { TiFAPIRouter } from "../router"
 
-/**
- * Creates routes related to user operations.
- *
- * @param environment see {@link ServerEnvironment}.
- */
-export const deleteUserAccountRouter = (
-  environment: ServerEnvironment,
-  router: ValidatedRouter
-) => {
-  /**
-   * deletes the current user's account
-   */
-  router.deleteWithValidation("/self", {}, (_, res) =>
-    userWithIdExists(conn, res.locals.selfId)
-      .mapSuccess(() => res.status(204).send())
-      .mapFailure(() => res.status(400).send({ error: "user-does-not-exist" }))
-  )
-
-  return router
-}
+export const removeAccount: TiFAPIRouter["removeAccount"] = ({ context: { selfId } }) =>
+  userWithIdExists(conn, selfId)
+    .mapSuccess(() => resp(204))
+    .mapFailure(() => resp(500, { userId: selfId, error: "self-does-not-exist" }) as never)
+    .unwrap()

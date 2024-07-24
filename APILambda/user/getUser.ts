@@ -1,42 +1,14 @@
-import { conn } from "TiFBackendUtils"
-import { TiFUser, findTiFUser } from "TiFBackendUtils/TiFUserUtils"
-import { z } from "zod"
-import { ServerEnvironment } from "../env"
-import { ValidatedRouter } from "../validation"
+import { conn, findTiFUser } from "TiFBackendUtils"
+import { resp } from "TiFShared/api/Transport"
+import { TiFAPIRouter } from "../router"
+import { userNotFoundBody } from "../utils/Responses"
 
-const userIdSchema = z.object({
-  userId: z.string()
-})
-
-/**
- * Creates routes related to user operations.
- *
- * @param environment see {@link ServerEnvironment}.
- */
-export const getUserRouter = (
-  environment: ServerEnvironment,
-  router: ValidatedRouter
-) => {
-  /**
-   * gets the user with the specified userId
-   */
-  router.getWithValidation(
-    "/:userId",
-    { pathParamsSchema: userIdSchema },
-    (req, res) =>
-      findTiFUser(conn, res.locals.selfId, req.params.userId)
-        .mapSuccess((user) =>
-          user.relations.fromThemToYou === "blocked"
-            ? res.status(403).json(blockedUserProfileResponse(user))
-            : res.status(200).json(user)
-        )
-        .mapFailure((error) => res.status(404).json({ error }))
-  )
-}
-
-const blockedUserProfileResponse = ({ name, profileImageURL, handle, relations }: TiFUser) => ({
-  name,
-  profileImageURL,
-  handle,
-  relations
-})
+export const getUser: TiFAPIRouter["getUser"] = ({ context: { selfId: fromUserId }, params: { userId: toUserId } }) =>
+  findTiFUser(conn, { fromUserId, toUserId })
+    .mapSuccess((user) =>
+      user.relations.fromThemToYou === "blocked"
+        ? resp(403, { error: "blocked", userId: toUserId })
+        : resp(200, user)
+    )
+    .mapFailure(() => resp(404, userNotFoundBody(toUserId)))
+    .unwrap()

@@ -4,7 +4,7 @@ import "TiFShared/lib/Zod"
 import { LocationCoordinate2D } from "TiFShared/domain-models/LocationCoordinate2D"
 import { promiseResult, success } from "TiFShared/lib/Result"
 import { handler } from "../../GeocodingLambda/index"
-import { addRoutes, createApp } from "../app"
+import { addTiFRouter, createApp } from "../app"
 import { addCognitoTokenVerification } from "../auth"
 import { ServerEnvironment } from "../env"
 
@@ -17,6 +17,6 @@ export const devTestEnv: ServerEnvironment = {
     handler(location)
 }
 
-export const app = createApp()
-addCognitoTokenVerification(app)
-addRoutes(app, devTestEnv)
+export const devApp = createApp()
+addCognitoTokenVerification(devApp)
+addTiFRouter(devApp, devTestEnv)

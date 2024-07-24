@@ -1,25 +1,25 @@
 import { ColorString } from "TiFShared/domain-models/ColorString"
+import { dateRange, FixedDateRange } from "TiFShared/domain-models/FixedDateRange"
 import { Placemark } from "TiFShared/domain-models/Placemark"
-import { UserHandle } from "TiFShared/domain-models/User"
+import { UnblockedBidirectionalUserRelations, UserHandle, UserID } from "TiFShared/domain-models/User"
 import { success } from "TiFShared/lib/Result"
 import dayjs from "dayjs"
 import duration from "dayjs/plugin/duration"
-import { DBEventAttendeeCountView, DBEventAttendeesView, DBTifEventView, DBevent, DBeventAttendance, DBuserRelations } from "./DBTypes"
+import { DBevent, DBeventAttendance, DBEventAttendeeCountView, DBEventAttendeesView, DBTifEventView, DBuserRelations } from "./DBTypes"
 import { MySQLExecutableDriver } from "./MySQLDriver/index"
-import { UserRelationship } from "./TiFUserUtils/UserRelationships"
 dayjs.extend(duration)
 
 // Get the total seconds in the duration
 export const SECONDS_IN_DAY = dayjs.duration(1, "day").asSeconds()
 export const ARRIVAL_RADIUS_IN_METERS = 120
 
-export type UpcomingEvent = DBevent & {hasArrived: boolean}
+export type DBupcomingEvent = DBevent & {hasArrived: boolean}
 export type UserHostRelations = "not-friends" | "friend-request-pending" | "friends" | "blocked" | "current-user"
 export type TodayOrTomorrow = "today" | "tomorrow"
 export type UserAttendeeStatus = DBeventAttendance["role"] | "not-participating"
-export type Attendee = { id: string, profileImageURL: string | null}
+export type Attendee = { id: string, profileImageURL?: string}
 export type DBTifEvent = DBTifEventView & Omit<DBuserRelations, "status" | "updatedDateTime"> &
-{ attendeeCount: number, previewAttendees: Attendee[], userAttendeeStatus: UserAttendeeStatus, joinedDateTime: Date } & UserRelationship
+{ attendeeCount: number, previewAttendees: Attendee[], userAttendeeStatus: UserAttendeeStatus, joinedDateTime: Date } & UnblockedBidirectionalUserRelations
 
 export type TiFEvent = {
     id: number
@@ -29,10 +29,7 @@ export type TiFEvent = {
     color: ColorString
     time: {
       secondsToStart: number
-      dateRange: {
-        startDateTime: Date
-        endDateTime: Date
-      }
+      dateRange: FixedDateRange
       todayOrTomorrow?: TodayOrTomorrow
     }
     previewAttendees: Attendee[]
@@ -41,20 +38,20 @@ export type TiFEvent = {
         latitude: number,
         longitude: number
       },
-      timezoneIdentifier?: string,
+      timezoneIdentifier: string,
       placemark?: Omit<Placemark, "latitude" | "longitude">,
       arrivalRadiusMeters: number
       isInArrivalTrackingPeriod: boolean
     }
     host: {
-      relations: {
-        fromThemToYou: UserHostRelations
-        fromYouToThem: UserHostRelations
-      }
-      id: string
-      username?: string
-      handle?: UserHandle
+      relations: UnblockedBidirectionalUserRelations
+      id: UserID
+      username: string
+      handle: UserHandle
       profileImageURL?: string
+      name: string
+      joinedDateTime: Date
+      arrivedDateTime: Date
     }
     settings: {
       shouldHideAfterStartDate: boolean
@@ -109,10 +106,7 @@ export const tifEventResponseFromDatabaseEvent = (event: DBTifEvent) : TiFEvent 
     color: event.color,
     time: {
       secondsToStart: calcSecondsToStart(event.startDateTime),
-      dateRange: {
-        startDateTime: event.startDateTime,
-        endDateTime: event.endDateTime
-      },
+      dateRange: dateRange(event.startDateTime, event.endDateTime)!,
       todayOrTomorrow: calcTodayOrTomorrow(event.startDateTime)
     },
     previewAttendees: event.previewAttendees,
@@ -131,7 +125,7 @@ export const tifEventResponseFromDatabaseEvent = (event: DBTifEvent) : TiFEvent 
         isoCountryCode: event.isoCountryCode ?? undefined,
         city: event.city ?? undefined
       },
-      timezoneIdentifier: event.timezoneIdentifier,
+      timezoneIdentifier: event.timezoneIdentifier ?? "",
       arrivalRadiusMeters: ARRIVAL_RADIUS_IN_METERS,
       isInArrivalTrackingPeriod: calcSecondsToStart(event.startDateTime) < SECONDS_IN_DAY
     },
@@ -139,11 +133,14 @@ export const tifEventResponseFromDatabaseEvent = (event: DBTifEvent) : TiFEvent 
       relations: {
         fromThemToYou: event.fromThemToYou,
         fromYouToThem: event.fromYouToThem
-      },
+      } as UnblockedBidirectionalUserRelations,
       id: event.hostId,
       username: event.hostUsername,
       handle: event.hostHandle,
-      profileImageURL: undefined
+      profileImageURL: undefined,
+      name: "TODO: FIX",
+      joinedDateTime: new Date(10000), // TODO: FIX
+      arrivedDateTime: new Date(10000) // TODO: FIX
     },
     settings: {
       shouldHideAfterStartDate: event.shouldHideAfterStartDate,
@@ -157,7 +154,7 @@ export const tifEventResponseFromDatabaseEvent = (event: DBTifEvent) : TiFEvent 
     hasArrived: event.hasArrived === 1,
     updatedDateTime: new Date(event.updatedDateTime),
     createdDateTime: new Date(event.createdDateTime),
-    endedDateTime: event.endedDateTime !== undefined ? event.endedDateTime : undefined
+    endedDateTime: event.endedDateTime
   }
 }
 
@@ -205,7 +202,7 @@ const setAttendeesPreviewForEvent = (
       .map(id => (
         {
           id,
-          profileImageURL: null
+          profileImageURL: undefined
         }
       )) ??
     []

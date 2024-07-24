@@ -3,11 +3,10 @@ import { Result } from "TiFShared/lib/Result"
 import express, {
   NextFunction,
   Request,
-  RequestHandler,
   Response,
   Router
 } from "express"
-import { AnyZodObject, ZodSchema, z } from "zod"
+import { ZodSchema, z } from "zod"
 import { ResponseContext } from "./auth"
 
 interface ValidationSchemas {
@@ -181,18 +180,4 @@ export const createValidatedRouter = (routeCollector?: (params: ValidatedRoutePa
   router.putWithValidation = (path, inputSchema, ...handlers) => addRoute("put", path, inputSchema, ...handlers)
 
   return router
-}
-
-export const withValidatedRequest = <Schema extends AnyZodObject>(
-  schema: Schema,
-  fn: (data: z.infer<Schema>, res: Response) => Promise<Result<Response, Response>>
-): RequestHandler => {
-  return async (req: Request, res: Response) => {
-    try {
-      const data = await schema.passthrough().parseAsync(req)
-      return await fn(data, res)
-    } catch (err) {
-      return res.status(400).json(err)
-    }
-  }
 }

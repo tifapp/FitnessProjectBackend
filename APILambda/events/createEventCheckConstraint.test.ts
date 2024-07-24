@@ -7,7 +7,7 @@ import { createEvent } from "./createEvent"
 describe("Insert event CheckConstraint test", () => {
   it("does not allow the end date to be before the start date", async () => {
     await expectFailsCheckConstraint(async () => {
-      await createEvent(
+      await createEventSQL(
         conn,
         {
           ...testEventInput,

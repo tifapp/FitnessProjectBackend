@@ -1,36 +1,20 @@
-import { conn } from "TiFBackendUtils"
-import { MySQLExecutableDriver } from "TiFBackendUtils/MySQLDriver"
-import { userWithIdExists } from "TiFBackendUtils/TiFUserUtils"
-import { z } from "zod"
-import { userNotFoundResponse } from "../shared/Responses"
-import { ValidatedRouter } from "../validation"
+import { MySQLExecutableDriver, UserRelationsInput, conn, userWithIdExists } from "TiFBackendUtils"
+import { resp } from "TiFShared/api/Transport"
+import { TiFAPIRouter } from "../router"
+import { userNotFoundBody } from "../utils/Responses"
 
-const BlockUserRequestSchema = z.object({
-  userId: z.string().uuid()
-})
+export const blockUser: TiFAPIRouter["blockUser"] = ({ context: { selfId: fromUserId }, params: { userId: toUserId } }) =>
+  conn
+    .transaction((tx) => blockUserSQL(tx, { fromUserId, toUserId }))
+    .mapSuccess(() => resp(204))
+    .mapFailure(() => resp(404, userNotFoundBody(toUserId)))
+    .unwrap()
 
-export const createBlockUserRouter = (router: ValidatedRouter) => {
-  router.patchWithValidation(
-    "/block/:userId",
-    { pathParamsSchema: BlockUserRequestSchema },
-    async (req, res) => {
-      return conn
-        .transaction((tx) => {
-          return blockUser(tx, res.locals.selfId, req.params.userId)
-        })
-        .mapSuccess(() => res.status(204).send())
-        .mapFailure(() => userNotFoundResponse(res, req.params.userId))
-    }
-  )
-}
-
-const blockUser = (
+const blockUserSQL = (
   conn: MySQLExecutableDriver,
-  fromUserId: string,
-  toUserId: string
+  { fromUserId, toUserId }: UserRelationsInput
 ) => {
   return userWithIdExists(conn, toUserId)
-    .withFailure("user-not-found" as const)
     .flatMapSuccess(() => {
       return conn.executeResult(
         `

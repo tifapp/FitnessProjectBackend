@@ -1,11 +1,14 @@
 import { conn } from "TiFBackendUtils"
+import { DBTifEvent } from "TiFBackendUtils/TifEventUtils"
+import { EventID } from "TiFShared/domain-models/Event"
+import { UserID } from "TiFShared/domain-models/User"
 import { success } from "TiFShared/lib/Result"
 import { z } from "zod"
 import { ChatPermissions, createTokenRequest } from "../ably"
 import { ServerEnvironment } from "../env"
+import { isUserBlocked, isUserInEvent } from "../utils/sharedSQL"
 import { ValidatedRouter } from "../validation"
-import { getEventById } from "./getEventById"
-import { isUserInEvent, isUserNotBlocked } from "./sharedSQL"
+import { eventDetailsSQL } from "./getEventById"
 
 type Role = "admin" | "attendee" | "viewer"
 
@@ -55,26 +58,30 @@ export const determineChatPermissions = (
   }
 }
 
+export const getTokenRequest = async (event: DBTifEvent, userId: UserID) => {
+  const permissions = determineChatPermissions(
+    event.hostId,
+    event.endDateTime,
+    userId,
+    event.id
+  )
+
+  const chatToken = await createTokenRequest(permissions, userId)
+
+  return { id: event.id, chatToken }
+}
+
 export const checkChatPermissionsTransaction = (
-  eventId: number,
-  userId: string
+  eventId: EventID,
+  userId: UserID
 ) =>
   conn.transaction((tx) =>
-    getEventById(tx, eventId, userId)
-      .flatMapSuccess(event => isUserInEvent(tx, userId, eventId).mapSuccess(() => event))
-      .flatMapSuccess(event => isUserNotBlocked(tx, event.hostId, userId).mapSuccess(() => event))
+    eventDetailsSQL(tx, eventId, userId)
+      .passthroughSuccess(() => isUserInEvent(tx, userId, eventId))
+      .passthroughSuccess(event => isUserBlocked(tx, event.hostId, userId).inverted().withFailure("user-is-blocked"))
   )
     .flatMapSuccess(async (event) => {
-      const permissions = determineChatPermissions(
-        event.hostId,
-        event.endDateTime,
-        userId,
-        eventId
-      )
-
-      const tokenRequest = await createTokenRequest(permissions, userId)
-
-      return success({ id: eventId, tokenRequest })
+      return success(await getTokenRequest(event, userId))
     })
 
 const eventRequestSchema = z.object({

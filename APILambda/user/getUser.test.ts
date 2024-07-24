@@ -15,6 +15,21 @@ describe("GetUser tests", () => {
   //   })
   // })
 
+  it("should retrieve self", async () => {
+    const { token: searchingUserToken, userId: searchedUserId, name: searchedUserName, handle: searchedUserHandle } = await createUserFlow()
+    const resp = await callGetUser(searchingUserToken, searchedUserId)
+
+    expect(resp).toMatchObject({
+      status: 200,
+      body: expect.objectContaining({
+        id: searchedUserId,
+        name: searchedUserName,
+        handle: searchedUserHandle,
+        relations: { fromThemToYou: "current-user", fromYouToThem: "current-user" }
+      })
+    })
+  })
+
   it("should retrieve a user that exists", async () => {
     const { token: searchingUserToken } = await createUserFlow()
 
@@ -26,13 +41,12 @@ describe("GetUser tests", () => {
       body: expect.objectContaining({
         id: searchedUserId,
         name: searchedUserName,
-        handle: searchedUserHandle
+        handle: searchedUserHandle,
+        relations: { fromThemToYou: "not-friends", fromYouToThem: "not-friends" }
       })
     })
   })
-})
 
-describe("Get blocked user's profile name only", () => {
   it("should return blocked user's profile name and fromThemToYou status of blocked", async () => {
     const { token, userId, name, handle } = await createUserFlow()
     const { token: blockedToken, userId: blockedUserId } = await createUserFlow()

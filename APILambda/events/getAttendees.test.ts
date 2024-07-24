@@ -93,11 +93,10 @@ describe("getAttendeesList endpoint", () => {
   it("should return 404 if attendee list is empty", async () => {
     const currentUser = await createUserFlow()
 
-    // In this test, we want to create an event with an empty attendees list, so we must use createEvent directly.
-    // if we use the create event flow the host will be added to the attendees list.
+    // We must use createEventSQL directly because createEventFlow() makes an event with the host in the attendees list.
     const {
       value: { insertId }
-    } = await createEvent(
+    } = await createEventSQL(
       conn,
       {
         ...testEventInput,

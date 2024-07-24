@@ -5,6 +5,7 @@ import { faker } from "@faker-js/faker"
 import jwt from "jsonwebtoken"
 import { TestUser, TestUserInput } from "../global"
 import { testEnvVars } from "./testEnv"
+import { envVars } from "TiFBackendUtils/env"
 
 const cognito = new CognitoIdentityProvider({
   credentials: fromEnv()
@@ -33,7 +34,7 @@ export const createCognitoAuthToken = async (
 
   const adminConfirmSignUpParams: AdminConfirmSignUpRequest =
     {
-      UserPoolId: testEnvVars.COGNITO_USER_POOL_ID ?? "",
+      UserPoolId: envVars.COGNITO_USER_POOL_ID ?? "",
       Username: email
     }
 
@@ -41,7 +42,7 @@ export const createCognitoAuthToken = async (
 
   const verifyEmailParams: AdminUpdateUserAttributesRequest =
     {
-      UserPoolId: testEnvVars.COGNITO_USER_POOL_ID ?? "",
+      UserPoolId: envVars.COGNITO_USER_POOL_ID ?? "",
       Username: email,
       UserAttributes: [
         {

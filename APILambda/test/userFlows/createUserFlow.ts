@@ -1,4 +1,4 @@
-import { callPostUser } from "../apiCallers/userEndpoints";
+import { testApi } from "../testApp";
 
 export type TestUser = {handle: string, userId: string, token: string, name: string};
 
@@ -11,7 +11,7 @@ export const createUserFlow = async (): Promise<TestUser> => {
   }
 
   const testUser = global.users[testUserCounter.currentUserIndex]
-  const { body: { id: userId, handle } } = await callPostUser(testUser.auth)
+  const { data: { id: userId, handle } } = await testApi.createCurrentUserProfile({ headers: { authorization: testUser.auth } })
   const token = await testUser.refreshAuth()
 
   testUserCounter.currentUserIndex = (testUserCounter.currentUserIndex + 1)

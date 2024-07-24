@@ -1,36 +1,11 @@
 import { conn } from "TiFBackendUtils"
 import { MySQLExecutableDriver } from "TiFBackendUtils/MySQLDriver"
-import { DBTifEvent, TiFEvent, setEventAttendeesFields, tifEventResponseFromDatabaseEvent } from "TiFBackendUtils/TifEventUtils"
-import { success } from "TiFShared/lib/Result"
-import { z } from "zod"
-import { ServerEnvironment } from "../env"
-import { ValidatedRouter } from "../validation"
+import { DBTifEvent, setEventAttendeesFields, tifEventResponseFromDatabaseEvent } from "TiFBackendUtils/TifEventUtils"
+import { resp } from "TiFShared/api/Transport"
+import { failure, success } from "TiFShared/lib/Result"
+import { TiFAPIRouter } from "../router"
 
-const eventRequestSchema = z.object({
-  eventId: z.string()
-})
-
-export type BlockedTiFEventResponse = Pick<TiFEvent, "title" | "id" | "host" | "createdDateTime" | "updatedDateTime">
-
-const getEventWhenBlockedResponse = (
-  event: DBTifEvent
-): BlockedTiFEventResponse => ({
-  title: event.title,
-  id: event.id,
-  host: {
-    username: event.hostUsername,
-    id: event.hostId,
-    handle: event.hostHandle,
-    relations: {
-      fromThemToYou: event.fromThemToYou,
-      fromYouToThem: event.fromYouToThem
-    }
-  },
-  createdDateTime: event.createdDateTime,
-  updatedDateTime: event.updatedDateTime
-})
-
-export const getEventById = (
+export const eventDetailsSQL = (
   conn: MySQLExecutableDriver,
   eventId: number,
   userId: string
@@ -66,31 +41,18 @@ export const getEventById = (
     )
     .withFailure("event-not-found" as const)
 
-/**
- * Creates routes related to event operations.
- *
- * @param environment see {@link ServerEnvironment}.
- */
-export const getEventByIdRouter = (
-  environment: ServerEnvironment,
-  router: ValidatedRouter
-) => {
-  router.getWithValidation(
-    "/details/:eventId",
-    { pathParamsSchema: eventRequestSchema },
-    (req, res) =>
-      conn.transaction((tx) =>
-        getEventById(conn, Number(req.params.eventId), res.locals.selfId)
-          .flatMapSuccess((event) =>
-            event.fromThemToYou === "blocked" ||
+export const eventDetails: TiFAPIRouter["eventDetails"] = ({ context: { selfId }, params: { eventId } }) =>
+  conn.transaction((tx) =>
+    eventDetailsSQL(conn, Number(eventId), selfId)
+      .mapFailure((error) => resp(404, { error }))
+      .passthroughSuccess((event) =>
+        event.fromThemToYou === "blocked" ||
             event.fromYouToThem === "blocked"
-              ? success(res
-                .status(403)
-                .json(getEventWhenBlockedResponse(event)))
-              : setEventAttendeesFields(tx, [event], res.locals.selfId).mapSuccess(([event]) => tifEventResponseFromDatabaseEvent(event)) // TODO: if no timezone, return error
-                .mapSuccess((event) => res.status(200).json(event))
-          )
-          .mapFailure((error) => res.status(404).json({ error }))
+          ? failure(resp(403, { error: "user-is-blocked" }))
+          : success()
       )
+      .flatMapSuccess((event) => setEventAttendeesFields(tx, [event], selfId)
+        .mapSuccess(([event]) => tifEventResponseFromDatabaseEvent(event))
+        .mapSuccess((event) => resp(200, event)))
   )
-}
+    .unwrap()

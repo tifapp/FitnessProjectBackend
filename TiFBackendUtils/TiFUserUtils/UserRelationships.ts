@@ -12,3 +12,5 @@ export type UserRelationship =
     fromThemToYou: UserRelationshipStatus
     fromYouToThem: UserRelationshipStatus
   }
+
+export type UserRelationsInput = Pick<DBuserRelations, "fromUserId" | "toUserId">
