@@ -1,11 +1,11 @@
 import { randomUUID } from "crypto"
 import {
-  callBlockUser,
-  callGetUser,
-  callPostFriendRequest
-} from "../test/apiCallers/users.js"
+    callBlockUser,
+    callGetUser,
+    callPostFriendRequest
+} from "../test/apiCallers/userEndpoints.js"
 import { withEmptyResponseBody } from "../test/assertions.js"
-import { createUserFlow } from "../test/userFlows/users.js"
+import { createUserFlow } from "../test/userFlows/createUserFlow.js"
 
 describe("Block User tests", () => {
   // TEST THAT USER IS KICKED OUT OF EVENT AFTER BEING BLOCKED

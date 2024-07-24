@@ -1,9 +1,9 @@
 {
   "compilerOptions": {
     "module": "esnext",
-    "target": "es2020",
+    "target": "esnext",
+    "lib": ["esnext"],
     "strict": true,
-    "declaration": false,
     "outDir": "dist",
     "removeComments": true,
     "allowJs": true,

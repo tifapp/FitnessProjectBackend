@@ -91,7 +91,7 @@ export const callGetAttendees = async (
 
 export const callGetEvent = async (bearerToken: string, eventId: number) => {
   return await request(testApp)
-    .get(`/event/${eventId}`)
+    .get(`/event/details/${eventId}`)
     .set("Authorization", bearerToken)
     .send()
 }

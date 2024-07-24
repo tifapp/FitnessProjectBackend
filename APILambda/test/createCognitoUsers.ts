@@ -2,7 +2,6 @@
 import { AdminConfirmSignUpRequest, AdminUpdateUserAttributesRequest, CognitoIdentityProvider, InitiateAuthRequest, SignUpRequest } from "@aws-sdk/client-cognito-identity-provider"
 import { fromEnv } from "@aws-sdk/credential-providers"
 import { faker } from "@faker-js/faker"
-import { envVars } from "TiFBackendUtils"
 import jwt from "jsonwebtoken"
 import { TestUser, TestUserInput } from "../global"
 import { testEnvVars } from "./testEnv"

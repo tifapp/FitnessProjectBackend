@@ -1,4 +1,4 @@
-import { sleep } from "TiFShared/test-helpers/DelayData.js"
+import { sleep } from "TiFShared/lib/DelayData.js"
 import { CreateEventInput } from "../../events/createEvent.js"
 import { callCreateEvent, callJoinEvent } from "../apiCallers/eventEndpoints.js"
 import { testEnvVars } from "../testEnv.js"

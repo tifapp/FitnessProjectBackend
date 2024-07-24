@@ -1,3 +1,4 @@
+import "TiFShared"
 
 import { LocationCoordinate2D } from "TiFShared/domain-models/LocationCoordinate2D.js"
 import { promiseResult, success } from "TiFShared/lib/Result.js"

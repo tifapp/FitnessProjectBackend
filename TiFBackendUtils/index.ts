@@ -1,4 +1,3 @@
-import "TiFShared"
 export * from "./AWS/index.js"
 export * from "./MySQLDriver/index.js"
 export * from "./Retryable/utils.js"

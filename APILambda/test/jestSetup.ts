@@ -1,3 +1,5 @@
+// THIS IS TOO FRAGILE
+
 /* eslint-disable import/extensions */ // todo: allow ts imports here
 import { TestUser, TestUserInput } from "../global"
 import { createCognitoTestAuthToken } from "./createCognitoUsers"
