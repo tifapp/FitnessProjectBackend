@@ -3,7 +3,6 @@ import { AdminConfirmSignUpRequest, AdminUpdateUserAttributesRequest, CognitoIde
 import { fromEnv } from "@aws-sdk/credential-providers"
 import { faker } from "@faker-js/faker"
 import jwt from "jsonwebtoken"
-import { envVars } from "../env"
 import { TestUser, TestUserInput } from "../global"
 import { testEnvVars } from "./testEnv"
 
@@ -34,7 +33,7 @@ export const createCognitoAuthToken = async (
 
   const adminConfirmSignUpParams: AdminConfirmSignUpRequest =
     {
-      UserPoolId: envVars.COGNITO_USER_POOL_ID ?? "",
+      UserPoolId: testEnvVars.COGNITO_USER_POOL_ID ?? "",
       Username: email
     }
 
@@ -42,7 +41,7 @@ export const createCognitoAuthToken = async (
 
   const verifyEmailParams: AdminUpdateUserAttributesRequest =
     {
-      UserPoolId: envVars.COGNITO_USER_POOL_ID ?? "",
+      UserPoolId: testEnvVars.COGNITO_USER_POOL_ID ?? "",
       Username: email,
       UserAttributes: [
         {
