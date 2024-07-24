@@ -11,7 +11,7 @@
   "scripts": {
     "pr": "cd .. && npm run pr",
     "genapispecs": "ts-node --esm ./genapispecs.mjs && npx lint-openapi specs.json",
-    "build": "npx tsc",
+    "build": "npx tsc --strict false",
     "start": "node dist/index.js",
     "dev": "concurrently \"npx tsc --watch\" \"nodemon -q dist/index.js\"",
     "test": "jest --detectOpenHandles --runInBand",

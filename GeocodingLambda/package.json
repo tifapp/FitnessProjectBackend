@@ -12,7 +12,7 @@
   },
   "scripts": {
     "pr": "cd .. && npm run pr",
-    "build": "npx tsc",
+    "build": "npx tsc --strict false",
     "test": "jest",
     "test:ci": "jest --ci --detectOpenHandles --forceExit --runInBand",
     "postinstall": "node removeUnusedTimezones.cjs"

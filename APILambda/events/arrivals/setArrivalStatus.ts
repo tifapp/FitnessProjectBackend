@@ -1,4 +1,4 @@
-import { LocationCoordinate2D, LocationCoordinates2DSchema, MySQLExecutableDriver, conn, failure, success } from "TiFBackendUtils"
+import { LocationCoordinate2D, LocationCoordinate2DSchema, MySQLExecutableDriver, conn, failure, success } from "TiFBackendUtils"
 import { z } from "zod"
 import { ServerEnvironment, SetArrivalStatusEnvironment } from "../../env.js"
 import { ValidatedRouter } from "../../validation.js"
@@ -8,7 +8,7 @@ import { getUpcomingEventsByRegion } from "./getUpcomingEvents.js"
 
 const SetArrivalStatusSchema = z
   .object({
-    coordinate: LocationCoordinates2DSchema,
+    coordinate: LocationCoordinate2DSchema,
     arrivalRadiusMeters: z.number().optional() // may use in the future
   })
 

@@ -16,5 +16,5 @@ const commands = isCI
 
 commands.forEach(command => {
   console.log(command)
-  execSync(command, { stdio: "inherit" })
+  execSync(command, { stdio: "inherit", env: process.env })
 })

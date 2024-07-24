@@ -37,7 +37,7 @@ jobs:
         run: |
           cd TiFBackendUtils
           jq 'del(.scripts.postinstall)' package.json > temp.json && mv temp.json package.json
-          npm ci --omit=dev
+          npm prune --production
       
       - name: Package backend utils
         run: |
@@ -62,7 +62,7 @@ jobs:
       - name: Remove dev dependencies
         run: |
           cd APILambda
-          npm ci --omit=dev
+          npm prune --production
 
       - name: Zip the project
         run: |

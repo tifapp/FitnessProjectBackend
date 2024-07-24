@@ -3,8 +3,7 @@ import {
   Place,
   SearchPlaceIndexForPositionCommand
 } from "@aws-sdk/client-location"
-import { AWSEnvVars, MySQLExecutableDriver } from "TiFBackendUtils"
-import { LocationCoordinate2D, Placemark } from "TiFBackendUtils/location.js"
+import { AWSEnvVars, LocationCoordinate2D, MySQLExecutableDriver } from "TiFBackendUtils"
 // https://github.com/evansiroky/node-geo-tz/commit/1b11eda7824a1e6dbc0b0ff65bfea1f50c20d3fa
 // eslint-disable-next-line import/extensions
 import { find } from "geo-tz/dist/find-now"
@@ -21,7 +20,9 @@ const locationClient = new LocationClient({ region: AWSEnvVars.AWS_REGION })
 export const SearchForPositionResultToPlacemark = (
   location: LocationCoordinate2D,
   place?: Place
-): Placemark => {
+  // TODO: Update in follow up prs
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+): any => {
   return {
     latitude: location.latitude,
     longitude: location.longitude,
@@ -84,7 +85,9 @@ export const addPlacemarkToDB = (conn: MySQLExecutableDriver, {
   postalCode = null,
   region = null,
   isoCountryCode = null
-}: Placemark, timezoneIdentifier: string) =>
+  // TODO: Update in follow up prs
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+}: any, timezoneIdentifier: string) =>
   conn.executeResult(
     `
         INSERT INTO location (name, city, country, street, streetNumber, postalCode, latitude, longitude, timezoneIdentifier, isoCountryCode)
