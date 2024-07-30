@@ -1,4 +1,5 @@
 {
+  "extends": "./node_modules/TiFShared/tsconfig.json",
   "compilerOptions": {
     "module": "esnext",
     "target": "esnext",
@@ -6,8 +7,6 @@
     "strict": true,
     "outDir": "dist",
     "removeComments": true,
-    "allowJs": true,
-    "moduleResolution": "node",
     "paths": {
       "TiFShared/*": ["./node_modules/TiFShared/*"]
     },
@@ -15,6 +14,9 @@
     "resolveJsonModule": true
   },
   "preserveSymlinks": true,
+  "include": [
+    "**/*.ts",
+  ],
   "exclude": [
     "**/*.test.ts",
     "**/*.spec.ts",

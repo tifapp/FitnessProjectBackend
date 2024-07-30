@@ -9,6 +9,9 @@
     "allowJs": true,
     "moduleResolution": "node",
     "esModuleInterop": true,
+    "paths": {
+      "TiFShared/*": ["./node_modules/TiFShared/*"]
+    },
     "resolveJsonModule": true
   },
   "preserveSymlinks": true,
