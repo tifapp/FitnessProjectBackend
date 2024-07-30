@@ -115,3 +115,28 @@ type ValidatedRequestHandler<S extends any> = ( //wait
 // }
 
 export type TiFAPIRouter = TiFAPIClient<{context: ResponseContext}>
+
+const TiFAPIMiddleware = {}
+
+const TiFRouter = implementTiFAPI()
+
+export const TiFRouterMiddleware = (
+  req: Request,
+  res: Response
+) => {
+  // router.patchWithValidation(
+  //   "/self",
+  //   { bodySchema: UpdateUserRequestSchema },
+  //   (req, res) =>
+  //     conn
+  //       .transaction((tx) => updateProfileTransaction(tx, res.locals.selfId, req.body))
+  //       .mapFailure((error) => res.status(400).json({ error }))
+  //       .mapSuccess(() => res.status(204).send())
+  // )
+
+  // return router
+}
+
+//EITHER abstract away the express router, or turn tifrouter into a middleware for express router. I like the middleware idea better, still not sure if we want to completely abstract the express router away and it might be confusing for new members.
+//the middleware contains the routing logic
+//then we dont even need the "implementationCollector". hmmmm

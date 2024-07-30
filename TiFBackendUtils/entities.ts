@@ -6,16 +6,16 @@
 * Rerun sql-ts to regenerate this file.
 */
 export interface DBbanned {
-  'banEnd': Date | null;
-  'banStart': Date | null;
+  'banEnd': Date | undefined;
+  'banStart': Date | undefined;
   'userId': string;
 }
 export interface DBevent {
-  'color': string;
+  'color': import("../../TiFShared/domain-models/ColorString.js").ColorString;
   'createdDateTime': Date;
   'description': string;
   'endDateTime': Date;
-  'endedDateTime': Date | null;
+  'endedDateTime': Date | undefined;
   'hostId': string;
   'id': number;
   'isChatEnabled': boolean;
@@ -38,7 +38,7 @@ export interface DBEventAttendeeCountView {
 }
 export interface DBEventAttendeesView {
   'eventId': number;
-  'userIds': string | null;
+  'userIds': string | undefined;
 }
 export interface DBeventReports {
   'eventOwnerId': string;
@@ -48,60 +48,60 @@ export interface DBeventReports {
   'userReporting': string;
 }
 export interface DBlocation {
-  'city': string | null;
-  'country': string | null;
+  'city': string | undefined;
+  'country': string | undefined;
   'createdDateTime': Date;
-  'isoCountryCode': string | null;
+  'isoCountryCode': string | undefined;
   'latitude': number;
   'longitude': number;
-  'name': string | null;
-  'postalCode': string | null;
-  'region': string | null;
-  'street': string | null;
-  'streetNumber': string | null;
+  'name': string | undefined;
+  'postalCode': string | undefined;
+  'region': string | undefined;
+  'street': string | undefined;
+  'streetNumber': string | undefined;
   'timezoneIdentifier': string;
 }
 export interface DBpushTokens {
   'id': number;
   'platformName': 'apple'|'android';
-  'pushToken': any | null;
+  'pushToken': any | undefined;
   'userId': string;
 }
 export interface DBTifEventView {
-  'city': string | null;
-  'color': string;
-  'country': string | null;
+  'city': string | undefined;
+  'color': import("../../TiFShared/domain-models/ColorString.js").ColorString;
+  'country': string | undefined;
   'createdDateTime': Date;
   'description': string;
   'endDateTime': Date;
-  'endedDateTime': Date | null;
+  'endedDateTime': Date | undefined;
   'hasArrived': boolean;
   'hostHandle': string;
   'hostId': string;
   'hostUsername': string;
   'id': number;
   'isChatEnabled': boolean;
-  'isoCountryCode': string | null;
+  'isoCountryCode': string | undefined;
   'latitude': number;
   'longitude': number;
-  'placemarkName': string | null;
-  'postalCode': string | null;
-  'region': string | null;
+  'placemarkName': string | undefined;
+  'postalCode': string | undefined;
+  'region': string | undefined;
   'shouldHideAfterStartDate': boolean;
   'startDateTime': Date;
-  'street': string | null;
-  'streetNumber': string | null;
-  'timezoneIdentifier': string | null;
+  'street': string | undefined;
+  'streetNumber': string | undefined;
+  'timezoneIdentifier': string | undefined;
   'title': string;
   'updatedDateTime': Date;
 }
 export interface DBuser {
-  'bio': string | null;
+  'bio': string | undefined;
   'createdDateTime': Date;
-  'handle': string;
+  'handle': import("../../TiFShared/domain-models/User.js").UserHandle;
   'id': string;
   'name': string;
-  'profileImageURL': string | null;
+  'profileImageURL': string | undefined;
   'updatedDateTime': Date;
 }
 export interface DBuserArrivals {
@@ -123,12 +123,14 @@ export interface DBuserReports {
   'userReporting': number;
 }
 export interface DBuserSettings {
+  'canShareArrivalStatus': boolean;
+  'eventCalendarDefaultLayout': 'single-day-layout'|'week-layout'|'month-layout';
+  'eventCalendarStartOfWeekDay': 'sunday'|'monday'|'tuesday'|'wednesday'|'thursday'|'friday'|'saturday';
+  'eventPresetShouldHideAfterStartDate': boolean;
   'isAnalyticsEnabled': boolean;
-  'isChatNotificationsEnabled': boolean;
   'isCrashReportingEnabled': boolean;
-  'isEventNotificationsEnabled': boolean;
-  'isFriendRequestNotificationsEnabled': boolean;
-  'isMentionsNotificationsEnabled': boolean;
-  'updatedDateTime': Date | null;
+  'pushNotificationTriggerIds': import("../../TiFShared/domain-models/Settings.js").UserSettings["pushNotificationTriggerIds"] | undefined;
+  'updatedDateTime': Date | undefined;
   'userId': string;
+  'version': number;
 }

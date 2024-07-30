@@ -121,7 +121,7 @@
 |----------|-----------|----------|---------------|
 | bio | string | Yes | None |
 | createdDateTime | Date | No | CURRENT_TIMESTAMP |
-| handle | string | No | None |
+| handle | import("../../TiFShared/domain-models/User.js").UserHandle | No | None |
 | id | string | No | None |
 | name | string | No | None |
 | profileImageURL | string | Yes | None |
