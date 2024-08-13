@@ -10,7 +10,8 @@ describe("CheckConstraint tests", () => {
         {
           id: randomUUID(),
           name: "test",
-          handle: "(*(*&(SJK"
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          handle: "(*(*&(SJK" as any
         }
       )
     })
@@ -21,7 +22,8 @@ describe("CheckConstraint tests", () => {
       await insertUser(conn, {
         id: randomUUID(),
         name: "test",
-        handle: ""
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        handle: "" as any
       })
     })
   })

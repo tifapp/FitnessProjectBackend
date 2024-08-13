@@ -1,45 +1,35 @@
-import { MySQLExecutableDriver, UpcomingEvent, conn } from "TiFBackendUtils"
-import { ServerEnvironment } from "../../env.js"
-import { ValidatedRouter } from "../../validation.js"
+import { DBupcomingEvent, MySQLExecutableDriver, conn } from "TiFBackendUtils"
+import { resp } from "TiFShared/api/Transport.js"
+import { EventArrivalRegion, EventID } from "TiFShared/domain-models/Event.js"
+import { UserID } from "TiFShared/domain-models/User.js"
+import { TiFAPIRouter } from "../../router.js"
 
-type EventRegion = {
-  eventIds: number[]
-  coordinate: {
-    latitude: number
-    longitude: number
-  }
-  arrivalRadiusMeters: number
-  hasArrived: boolean
-}
+const mapEventsToRegions = (events: DBupcomingEvent[]): EventArrivalRegion[] =>
+  Array.from(
+    events.reduce((acc, { id, hasArrived, latitude, longitude }) => {
+      const key = `${hasArrived}-${latitude}-${longitude}`
 
-const mapEventsToRegions = (events: UpcomingEvent[]): EventRegion[] => {
-  const eventRegions = new Map<string, EventRegion>();
+      if (!acc.has(key)) {
+        acc.set(key, {
+          eventIds: [],
+          coordinate: { latitude, longitude },
+          hasArrived,
+          arrivalRadiusMeters: 500 // TODO: Parameterize
+        })
+      }
 
-  events.forEach(({ id, hasArrived, latitude, longitude }) => {
-    const key = `${hasArrived}-${latitude}-${longitude}`;
+      const existingRegion = acc.get(key)
+      if (existingRegion) {
+        existingRegion.eventIds.push(id as EventID)
+      }
 
-    if (!eventRegions.has(key)) {
-      eventRegions.set(key, {
-        eventIds: [],
-        coordinate: { latitude, longitude },
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        hasArrived: hasArrived === 1 || hasArrived === true, // hasArrived should be treated as int, but is treated as bigint if it occurs in a transaction after TiFEventView
-        arrivalRadiusMeters: 500 // TODO: Parameterize
-      });
-    }
-
-    const existingRegion = eventRegions.get(key);
-    if (existingRegion) {
-      existingRegion.eventIds.push(id);
-    }
-  });
-
-  return Array.from(eventRegions.values());
-}
+      return acc
+    }, new Map<string, EventArrivalRegion>())
+      .values()
+  )
 
 // TODO: 24 hour window should be parameterized based on env variable
-export const getUpcomingEventsByRegion = (conn: MySQLExecutableDriver, userId: string) => conn.queryResult<UpcomingEvent>(
+export const upcomingEventArrivalRegionsSQL = (conn: MySQLExecutableDriver, userId: string) => conn.queryResult<DBupcomingEvent>(
   `
   SELECT 
     e.*, 
@@ -67,24 +57,16 @@ export const getUpcomingEventsByRegion = (conn: MySQLExecutableDriver, userId: s
   LIMIT 100;
   `,
   { userId }
-).mapSuccess(mapEventsToRegions)
+)
 
-/**
- * Creates routes related to event operations.
- *
- * @param environment see {@link ServerEnvironment}.
- */
-export const getUpcomingEventsByRegionRouter = (
-  environment: ServerEnvironment,
-  router: ValidatedRouter
-) => {
-  router.getWithValidation(
-    "/upcoming",
-    {},
-    (req, res) => getUpcomingEventsByRegion(
-      conn,
-      res.locals.selfId
-    )
-      .mapSuccess((events) => res.status(200).send({ upcomingRegions: events }))
+export const upcomingEventArrivalRegionsResult = (conn: MySQLExecutableDriver, selfId: UserID) =>
+  upcomingEventArrivalRegionsSQL(
+    conn,
+    selfId
   )
-}
+    .mapSuccess(mapEventsToRegions)
+
+export const upcomingEventArrivalRegions: TiFAPIRouter["upcomingEventArrivalRegions"] = ({ context: { selfId } }) =>
+  upcomingEventArrivalRegionsResult(conn, selfId)
+    .mapSuccess((trackableRegions) => resp(200, { trackableRegions }))
+    .unwrap()

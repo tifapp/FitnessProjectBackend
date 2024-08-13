@@ -1,14 +1,12 @@
 import { DBuser, MySQLExecutableDriver, conn } from "TiFBackendUtils"
+import { resp } from "TiFShared/api/Transport.js"
+import { UserHandle } from "TiFShared/domain-models/User.js"
 import { failure, promiseResult, success } from "TiFShared/lib/Result.js"
-import { CreateUserProfileEnvironment } from "../../env.js"
-import { ValidatedRouter } from "../../validation.js"
+import { TiFAPIRouter } from "../../router.js"
 import { generateUniqueUsername } from "../generateUserHandle.js"
+import { setProfileCreatedAttribute } from "./setCognitoAttribute.js"
 
-type NewUserDetails = {
-  id: string
-  name: string
-  handle: string
-}
+type CreateUserInput = Pick<DBuser, "id" | "handle" | "name">
 
 const checkValidName = (name: string) => {
   if (name === "") {
@@ -18,7 +16,7 @@ const checkValidName = (name: string) => {
   return success()
 }
 
-const userWithHandleOrIdExists = (conn: MySQLExecutableDriver, { id, handle }: NewUserDetails) => {
+const userWithHandleOrIdExists = (conn: MySQLExecutableDriver, { id, handle }: CreateUserInput) => {
   return promiseResult(handle ? success() : failure("missing-handle" as const))
     .flatMapSuccess(() => conn
       .queryFirstResult<DBuser>("SELECT TRUE FROM user WHERE handle = :handle OR id = :id", {
@@ -34,11 +32,11 @@ const userWithHandleOrIdExists = (conn: MySQLExecutableDriver, { id, handle }: N
  * Creates a new user in the database.
  *
  * @param conn see {@link MySQLExecutableDriver}
- * @param userDetails see {@link NewUserDetails}
+ * @param userDetails see {@link CreateUserInput}
  */
 export const insertUser = (
   conn: MySQLExecutableDriver,
-  userDetails: NewUserDetails
+  userDetails: CreateUserInput
 ) => conn.executeResult(
   "INSERT INTO user (id, name, handle) VALUES (:id, :name, :handle)",
   userDetails
@@ -52,7 +50,7 @@ export const insertUser = (
  * @returns an object containing the id of the newly registered user
  */
 const createUserProfileTransaction = (
-  userDetails: NewUserDetails
+  userDetails: CreateUserInput
 ) =>
   conn.transaction((tx) =>
     userWithHandleOrIdExists(tx, userDetails)
@@ -60,20 +58,16 @@ const createUserProfileTransaction = (
       .withSuccess(userDetails)
   )
 
-export const createUserProfileRouter = (
-  { setProfileCreatedAttribute }: CreateUserProfileEnvironment,
-  router: ValidatedRouter
-) =>
-  router.postWithValidation("/", {}, (_, res) =>
-    promiseResult(checkValidName(res.locals.name))
-      .flatMapSuccess(() =>
-        generateUniqueUsername(
-          conn,
-          res.locals.name
-        )
+export const createCurrentUserProfile: TiFAPIRouter["createCurrentUserProfile"] = ({ context: { selfId, name } }) =>
+  promiseResult(checkValidName(name))
+    .flatMapSuccess(() =>
+      generateUniqueUsername(
+        conn,
+        name
       )
-      .flatMapSuccess(handle => createUserProfileTransaction({ id: res.locals.selfId, name: res.locals.name, handle }))
-      .flatMapSuccess(profile => setProfileCreatedAttribute(res.locals.selfId).withSuccess(profile))
-      .mapFailure(error => res.status(error === "user-exists" ? 400 : 401).json({ error }))
-      .mapSuccess(profile => res.status(201).json(profile))
-  )
+    )
+    .flatMapSuccess(handle => createUserProfileTransaction({ id: selfId, name, handle: UserHandle.parse(handle).handle! }))
+    .flatMapSuccess(profile => setProfileCreatedAttribute(selfId).withSuccess(profile))
+    .mapFailure(error => error === "user-exists" ? resp(400, { error }) as never : resp(401, { error }) as never)
+    .mapSuccess(profile => resp(201, profile))
+    .unwrap()

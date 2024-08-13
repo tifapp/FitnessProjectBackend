@@ -1,17 +1,11 @@
 import { conn } from "TiFBackendUtils"
-import { ServerEnvironment } from "../../env.js"
-import { ValidatedRouter } from "../../validation.js"
+import { resp } from "TiFShared/api/Transport.js"
+import { TiFAPIRouter } from "../../router.js"
 import { queryUserSettings } from "./userSettingsQuery.js"
 
-export const getUserSettingsRouter = (
-  environment: ServerEnvironment,
-  router: ValidatedRouter
-) => {
-  /**
-   * gets the current user's settings info
-   */
-  router.getWithValidation("/self/settings", {}, (_, res) =>
-    queryUserSettings(conn, res.locals.selfId)
-      .mapSuccess(settings => res.status(200).json(settings).send())
-  )
-}
+export const userSettings: TiFAPIRouter["userSettings"] = ({ context: { selfId } }) =>
+  queryUserSettings(conn, selfId)
+    .mapSuccess(settings => resp(200, settings))
+    // TODO: Add eventpresetduration and eventpresetplacemark
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    .unwrap() as any

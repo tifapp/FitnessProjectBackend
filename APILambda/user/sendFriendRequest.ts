@@ -1,85 +1,57 @@
-import { MySQLExecutableDriver, conn, findTiFUser } from "TiFBackendUtils"
-import { failure, success } from "TiFShared/lib/Result.js"
-import { z } from "zod"
-import { ValidatedRouter } from "../validation.js"
+import { MySQLExecutableDriver, UserRelationsInput, conn, findTiFUser } from "TiFBackendUtils"
+import { resp } from "TiFShared/api/Transport.js"
+import { TiFAPIRouter } from "../router.js"
 
-const friendRequestSchema = z.object({
-  userId: z.string().uuid()
-})
+export const sendFriendRequest: TiFAPIRouter["sendFriendRequest"] = async ({ context: { selfId: fromUserId }, params: { userId: toUserId } }) => {
+  const result = await findTiFUser(conn, { fromUserId, toUserId })
+    .withFailure(resp(404, {
+      userId: toUserId,
+      error: "user-not-found"
+    }))
+    .mapSuccess(
+      ({ relations: { fromYouToThem, fromThemToYou } }) => {
+        if (fromThemToYou === "blocked") {
+          return resp(403, { error: "blocked", userId: toUserId })
+        }
 
-/**
- * Creates routes related to user operations.
- *
- * @param environment see {@link ServerEnvironment}.
- */
-export const sendFriendRequestsRouter = (router: ValidatedRouter) => {
-  /**
-   * sends a friend request to the specified userId
-   */
-  router.postWithValidation(
-    "/friend/:userId",
-    { pathParamsSchema: friendRequestSchema },
-    (req, res) =>
-      conn
-        .transaction((tx) =>
-          sendFriendRequest(tx, res.locals.selfId, req.params.userId)
-        )
-        .mapFailure((error) => res.status(403).json({ status: error }))
-        .mapSuccess(({ status, statusChanged }) =>
-          res
-            .status(statusChanged ? 201 : 200)
-            .json({ status })
-            .send()
-        )
-  )
-  return router
+        if (
+          fromYouToThem === "friends" ||
+          fromYouToThem === "friend-request-pending"
+        ) {
+          return resp(200, { status: fromYouToThem })
+        }
+
+        if (fromThemToYou === "friend-request-pending") {
+          return "friends" as const
+        }
+
+        return "friend-request-pending" as const
+      }
+    )
+    .unwrap()
+
+  if (result === "friend-request-pending") {
+    return addPendingFriendRequestSQL(conn, { fromUserId, toUserId })
+      .withSuccess(resp(201,
+        { status: "friend-request-pending" }
+      ))
+      .unwrap()
+  }
+
+  if (result === "friends") {
+    return makeFriendsSQL(conn, { fromUserId, toUserId })
+      .withSuccess(resp(201,
+        { status: "friends" }
+      ))
+      .unwrap()
+  }
+
+  return result
 }
 
-/**
- * Sends a friend request to the user represented by `receiverId`. If the 2 users have no
- * prior relationship, then a `friend-request-pending` status will be returned, otherwise
- * a `friends` status will be returned if the receiver has sent a friend request to the sender.
- *
- * @param conn the query executor to use
- * @param senderId the id of the user who is sending the friend request
- * @param receiverId the id of the user who is receiving the friend request
- */
-const sendFriendRequest = (
+const makeFriendsSQL = (
   conn: MySQLExecutableDriver,
-  senderId: string,
-  receiverId: string
-) =>
-  findTiFUser(conn, senderId, receiverId).flatMapSuccess(
-    ({ relations: { fromYouToThem, fromThemToYou } }) => {
-      if (
-        fromYouToThem === "friends" ||
-        fromYouToThem === "friend-request-pending"
-      ) {
-        return success({ statusChanged: false, status: fromYouToThem })
-      }
-
-      if (fromThemToYou === "blocked") {
-        return failure("blocked" as const)
-      }
-
-      if (fromThemToYou === "friend-request-pending") {
-        return makeFriends(conn, senderId, receiverId).withSuccess({ // could be combined all into one, something like "upsert where fromUser=xxx, toUser=yyy and relation is friend-request pending"
-          statusChanged: true,
-          status: "friends" as const
-        })
-      }
-
-      return addPendingFriendRequest(conn, senderId, receiverId).withSuccess({
-        statusChanged: true,
-        status: "friend-request-pending" as const
-      })
-    }
-  )
-
-const makeFriends = (
-  conn: MySQLExecutableDriver,
-  fromUserId: string,
-  toUserId: string
+  { fromUserId, toUserId }: UserRelationsInput
 ) =>
   conn.executeResult(
     `
@@ -90,17 +62,16 @@ const makeFriends = (
     { fromUserId, toUserId }
   )
 
-const addPendingFriendRequest = (
+const addPendingFriendRequestSQL = (
   conn: MySQLExecutableDriver,
-  senderId: string,
-  receiverId: string
+  { fromUserId, toUserId }: UserRelationsInput
 ) =>
   conn.executeResult(
     `
     INSERT INTO userRelations (fromUserId, toUserId, status) 
-    VALUES (:senderId, :receiverId, 'friend-request-pending')
+    VALUES (:fromUserId, :toUserId, 'friend-request-pending')
     ON DUPLICATE KEY UPDATE
       status = 'friend-request-pending'
     `,
-    { senderId, receiverId }
+    { fromUserId, toUserId }
   )

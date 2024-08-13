@@ -1,4 +1,6 @@
-import { conn } from "TiFBackendUtils"
+import { conn, DBTifEvent } from "TiFBackendUtils"
+import { EventID } from "TiFShared/domain-models/Event.js"
+import { UserID } from "TiFShared/domain-models/User.js"
 import { success } from "TiFShared/lib/Result.js"
 import { z } from "zod"
 import {
@@ -6,9 +8,9 @@ import {
   createTokenRequest
 } from "../ably.js"
 import { ServerEnvironment } from "../env.js"
+import { isUserBlocked, isUserInEvent } from "../utils/sharedSQL.js"
 import { ValidatedRouter } from "../validation.js"
 import { getEventById } from "./getEventById.js"
-import { isUserInEvent, isUserNotBlocked } from "./sharedSQL.js"
 
 type Role = "admin" | "attendee" | "viewer"
 
@@ -58,26 +60,30 @@ export const determineChatPermissions = (
   }
 }
 
+export const getTokenRequest = async (event: DBTifEvent, userId: UserID) => {
+  const permissions = determineChatPermissions(
+    event.hostId,
+    event.endDateTime,
+    userId,
+    event.id
+  )
+
+  const chatToken = await createTokenRequest(permissions, userId)
+
+  return { id: event.id, chatToken }
+}
+
 export const checkChatPermissionsTransaction = (
-  eventId: number,
-  userId: string
+  eventId: EventID,
+  userId: UserID
 ) =>
   conn.transaction((tx) =>
     getEventById(tx, eventId, userId)
-      .flatMapSuccess(event => isUserInEvent(tx, userId, eventId).mapSuccess(() => event))
-      .flatMapSuccess(event => isUserNotBlocked(tx, event.hostId, userId).mapSuccess(() => event))
+      .passthroughSuccess(() => isUserInEvent(tx, userId, eventId))
+      .passthroughSuccess(event => isUserBlocked(tx, event.hostId, userId).inverted().withFailure("user-is-blocked"))
   )
     .flatMapSuccess(async (event) => {
-      const permissions = determineChatPermissions(
-        event.hostId,
-        event.endDateTime,
-        userId,
-        eventId
-      )
-
-      const tokenRequest = await createTokenRequest(permissions, userId)
-
-      return success({ id: eventId, tokenRequest })
+      return success(await getTokenRequest(event, userId))
     })
 
 const eventRequestSchema = z.object({

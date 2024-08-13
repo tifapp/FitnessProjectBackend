@@ -1,40 +1,7 @@
 import { DBevent, MySQLExecutableDriver, conn } from "TiFBackendUtils"
-import { failure } from "TiFShared/lib/Result.js"
-import { z } from "zod"
-import { ServerEnvironment } from "../env.js"
-import { ValidatedRouter } from "../validation.js"
-
-const leaveEventSchema = z.object({
-  eventId: z.string()
-})
-
-// TODO: Handle adding co-host to event if main host decides to leave
-const leaveEvent = (conn: MySQLExecutableDriver, userId: string, eventId: number) => {
-  return conn.transaction((tx) =>
-    getEvent(tx, eventId)
-      .flatMapFailure(() => {
-        return failure("event-not-found")
-      })
-      .flatMapSuccess((event) => {
-        if (!event.endedDateTime) {
-          return isHostUserNotFromOwnEvent(tx, userId, eventId)
-            .flatMapSuccess(() =>
-              removeUserFromAttendeeList(tx, userId, eventId)
-            )
-            .mapSuccess(({ rowsAffected }) =>
-              rowsAffected > 0 ? "" : "already-left-event"
-            )
-            .mapFailure((error) => {
-              return error
-            })
-        } else if (event.endedDateTime <= event.startDateTime) {
-          return failure("event-has-been-cancelled" as const)
-        } else {
-          return failure("event-has-ended" as const)
-        }
-      })
-  )
-}
+import { resp } from "TiFShared/api/Transport.js"
+import { failure, success } from "TiFShared/lib/Result.js"
+import { TiFAPIRouter } from "../router.js"
 
 const getEvent = (conn: MySQLExecutableDriver, eventId: number) =>
   conn.queryFirstResult<DBevent>(
@@ -77,31 +44,31 @@ const removeUserFromAttendeeList = (
  *
  * @param environment see {@link ServerEnvironment}.
  */
-export const leaveEventRouter = (
-  environment: ServerEnvironment,
-  router: ValidatedRouter
-) => {
-  /**
-   * Leave an event
-   */
-  router.deleteWithValidation(
-    "/leave/:eventId",
-    { pathParamsSchema: leaveEventSchema },
-    (req, res) =>
-      leaveEvent(conn, res.locals.selfId, Number(req.params.eventId))
-        .mapSuccess((result) =>
-          res.status(!result ? 204 : 400).json({ error: result })
-        )
-        .mapFailure((error) =>
-          res
-            .status(
-              error === "co-host-not-found"
-                ? 400
-                : error === "event-not-found"
-                  ? 404
-                  : 403
-            )
-            .json({ error })
-        )
+export const leaveEvent: TiFAPIRouter["leaveEvent"] = ({ context: { selfId }, params: { eventId } }) =>
+  conn.transaction((tx) =>
+    getEvent(tx, eventId)
+      .mapFailure(() => resp(404, { error: "event-not-found" }))
+      .passthroughSuccess((event) =>
+        (event.endedDateTime && event.endedDateTime <= event.startDateTime)
+          ? failure(resp(403, { error: "event-has-been-cancelled" }))
+          : success()
+      )
+      .passthroughSuccess((event) =>
+        (event.endedDateTime)
+          ? failure(resp(403, { error: "event-has-ended" }))
+          : success()
+      )
+      .flatMapSuccess(() =>
+        isHostUserNotFromOwnEvent(tx, selfId, eventId)
+          .flatMapSuccess(() =>
+            removeUserFromAttendeeList(tx, selfId, eventId)
+          )
+          .mapSuccess(({ rowsAffected }) =>
+            rowsAffected > 0 ? resp(204) : resp(400, { error: "already-left-event" })
+          )
+          .mapFailure((error) =>
+            resp(400, { error })
+          )
+      )
   )
-}
+    .unwrap()

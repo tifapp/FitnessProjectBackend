@@ -1,64 +1,49 @@
-import { MySQLExecutableDriver, conn } from "TiFBackendUtils"
-import { LocationCoordinate2D, LocationCoordinate2DSchema } from "TiFShared/domain-models/LocationCoordinate2D.js"
+import { conn, MySQLExecutableDriver } from "TiFBackendUtils"
+import { resp } from "TiFShared/api/Transport.js"
+import { areCoordinatesEqual } from "TiFShared/domain-models/LocationCoordinate2D.js"
 import { failure, success } from "TiFShared/lib/Result.js"
-import { z } from "zod"
-import { ServerEnvironment } from "../env.js"
-import { ValidatedRouter } from "../validation.js"
+import { TiFAPIRouter } from "../router.js"
+import { isUserBlocked } from "../utils/sharedSQL.js"
 import { getUpcomingEventsByRegion } from "./arrivals/getUpcomingEvents.js"
 import { insertArrival } from "./arrivals/setArrivalStatus.js"
-import { checkChatPermissionsTransaction } from "./getChatToken.js"
+import { getTokenRequest } from "./getChatToken.js"
 import { getEventById } from "./getEventById.js"
-import { isUserNotBlocked } from "./sharedSQL.js"
 
-const joinEventParamsSchema = z.object({
-  eventId: z.string()
-})
-
-const joinEventBodySchema = z
-  .object({
-    region: z.object({
-      coordinate: LocationCoordinate2DSchema,
-      arrivalRadiusMeters: z.number()
-    })
-  }).optional()
-
-export type JoinEventInput = z.infer<typeof joinEventBodySchema>
-
-const joinEvent = (conn: MySQLExecutableDriver, userId: string, eventId: number, coordinate?: LocationCoordinate2D) => {
-  return conn.transaction((tx) =>
-    getEventById(tx, eventId, userId)
-      .flatMapSuccess((event) =>
-        (new Date() < event.endDateTime && !event.endedDateTime // perform in sql?
-          ? isUserNotBlocked(tx, event.hostId, userId)
-          : failure("event-has-ended" as const))
-          .flatMapSuccess(() =>
-            (coordinate && event.longitude === coordinate.longitude && event.latitude === coordinate.latitude
-              ? insertArrival(
-                tx,
-                userId,
-                coordinate
-              ).mapSuccess(() => ({ hasArrived: true }))
-              : success(({ hasArrived: false })))
-              .flatMapSuccess(({ hasArrived }) =>
-                addUserToAttendeeList(tx, userId, eventId, "attending")
-                  .flatMapSuccess(
-                    ({ rowsAffected }) =>
-                      rowsAffected > 0 ? success({ status: 201 }) : success({ status: 200 })
-                  )
-                  .flatMapSuccess(({ status }) =>
-                    checkChatPermissionsTransaction(eventId, userId)
-                      .flatMapSuccess((chatPermissions) => getUpcomingEventsByRegion(tx, userId)
-                        .mapSuccess(upcomingRegions => (
-                          { ...chatPermissions, status, hasArrived, upcomingRegions }
-                        ))
-                      )
-                  )
-              )
-          )
-
+export const joinEvent: TiFAPIRouter["joinEvent"] = async ({ context: { selfId }, params: { eventId }, body: { region: { coordinate } = { coordinate: undefined } } = {} }) =>
+  conn.transaction(async (tx) =>
+    getEventById(tx, eventId, selfId)
+      .withFailure(resp(404, { error: "event-not-found" }))
+      .passthroughSuccess(event =>
+        event.endedDateTime
+          ? failure(resp(403, { error: "event-has-ended" }))
+          : success()
       )
+      .passthroughSuccess(event =>
+        isUserBlocked(tx, event.hostId, selfId)
+          .withFailure(resp(403, { error: "user-is-blocked" }))
+      )
+      .mapSuccess(async (event) => {
+        const [status, hasArrived, chatPermissions, trackableRegions] = await Promise.all([
+          addUserToAttendeeList(tx, selfId, eventId, "attending")
+            .mapSuccess(
+              ({ rowsAffected }) =>
+                rowsAffected > 0 ? (201) : (200)
+            ).unwrap(),
+          coordinate && areCoordinatesEqual(coordinate, event)
+            ? insertArrival(tx, selfId, coordinate).withSuccess(true).unwrap()
+            : success(true).unwrap(),
+          getTokenRequest(event, selfId),
+          getUpcomingEventsByRegion(tx, selfId).unwrap()
+        ])
+
+        if (status === 201) {
+          return resp(201, { ...chatPermissions, hasArrived, trackableRegions })
+        } else {
+          return resp(200, { ...chatPermissions, hasArrived, trackableRegions })
+        }
+      })
   )
-}
+    .unwrap()
 
 // ADD CHECK IF HOST TRIES JOINING THEIR OWN EVENT
 // AUTO MAKE HOST AN ATTENDEE
@@ -72,35 +57,3 @@ export const addUserToAttendeeList = (
     "INSERT IGNORE INTO eventAttendance (userId, eventId, role) VALUES (:userId, :eventId, :role)",
     { userId, eventId, role }
   )
-
-/**
- * Join an event given an event id.
- *
- * @param environment see {@link ServerEnvironment}.
- */
-export const joinEventRouter = (
-  environment: ServerEnvironment,
-  router: ValidatedRouter
-) => {
-  /**
-   * Join an event
-   */
-  router.postWithValidation(
-    "/join/:eventId",
-    { pathParamsSchema: joinEventParamsSchema, bodySchema: joinEventBodySchema },
-    (req, res) =>
-      joinEvent(conn, res.locals.selfId, Number(req.params.eventId), req.body?.region?.coordinate)
-        .mapFailure((error) =>
-          res
-            .status(
-              error === "event-not-found"
-                ? 404
-                : error === "user-is-blocked" || error === "event-has-ended"
-                  ? 403
-                  : 500
-            )
-            .json({ error })
-        )
-        .mapSuccess(({ status, id, tokenRequest, hasArrived, upcomingRegions }) => res.status(status).json({ id, token: tokenRequest, hasArrived, upcomingRegions }))
-  )
-}

@@ -65,7 +65,13 @@ if (process.argv.includes("--run")) {
       const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
       await Promise.all([
-        fs.writeFile(path.join(__dirname, options.schemaOutput), generateMarkdownTable(TiFDBTables)),
+        fs.writeFile(path.join(__dirname, options.schemaOutput),
+          TiFDBTables.map(table =>
+            `### ${table.name}\n${generateMarkdownTable(table.columns.map(
+              ({ propertyName: Property, propertyType: Type, nullable: Optional, defaultValue: DefaultValue }) =>
+                ({ Property, Type, Optional, DefaultValue })
+            ))}`
+          ).join("\n")),
         fs.writeFile(path.join(__dirname, options.typesOutput), tsString)
       ])
 

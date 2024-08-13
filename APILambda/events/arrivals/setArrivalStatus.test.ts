@@ -1,6 +1,6 @@
 import dayjs from "dayjs"
-import { callGetEvent, callSetArrival, callSetDeparture } from "../../test/apiCallers/eventEndpoints"
-import { createEventFlow } from "../../test/userFlows/createEventFlow"
+import { callGetEvent, callSetArrival, callSetDeparture } from "../../test/apiCallers/eventEndpoints.js"
+import { createEventFlow } from "../../test/userFlows/createEventFlow.js"
 
 const eventLocation = { latitude: 50, longitude: 50 }
 

@@ -1,7 +1,7 @@
 import { DBuser, MySQLExecutableDriver, conn, userWithHandleDoesNotExist } from "TiFBackendUtils"
 import { UpdateCurrentUserProfileRequest } from "TiFShared/api/models/User.js"
+import { resp } from "TiFShared/api/Transport.js"
 import { success } from "TiFShared/lib/Result.js"
-import { NullablePartial } from "TiFShared/lib/Types/HelperTypes.js"
 import { TiFAPIRouter } from "../router.js"
 
 export const updateCurrentUserProfile: TiFAPIRouter["updateCurrentUserProfile"] = async ({
@@ -10,8 +10,8 @@ export const updateCurrentUserProfile: TiFAPIRouter["updateCurrentUserProfile"] 
 }) =>
   conn
     .transaction((tx) => updateProfileTransaction(tx, selfId, body))
-    .mapFailure((error) => ({ status: 400, data: error }) as any)
-    .mapSuccess(() => ({ status: 204 }))
+    .mapFailure((error) => resp(400, { error }) as never)
+    .mapSuccess(() => resp(204))
     .unwrap()
 
 const updateProfileTransaction = (
@@ -19,15 +19,13 @@ const updateProfileTransaction = (
   userId: string,
   updatedProfile: UpdateCurrentUserProfileRequest
 ) =>
-  (updatedProfile.handle ? userWithHandleDoesNotExist(conn, updatedProfile.handle) : success())
+  (updatedProfile ? userWithHandleDoesNotExist(conn, updatedProfile) : success())
     .flatMapSuccess(() => updateProfileSQL(conn, userId, updatedProfile))
-
-type EditableProfileFields = Pick<DBuser, "bio" | "handle" | "name">
 
 const updateProfileSQL = (
   conn: MySQLExecutableDriver,
   userId: string,
-  { handle = null, name = null, bio = null }: NullablePartial<EditableProfileFields>
+  { handle, name, bio }: Partial<Pick<DBuser, "bio" | "handle" | "name">>
 ) =>
   conn
     .executeResult(

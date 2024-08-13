@@ -1,8 +1,7 @@
 import { MySQLExecutableDriver, conn } from "TiFBackendUtils"
-import { NullablePartial } from "TiFShared/lib/Types/HelperTypes.js"
-import { ServerEnvironment } from "../../env.js"
-import { ValidatedRouter } from "../../validation.js"
-import { UserSettings, UserSettingsSchema } from "./models.js"
+import { resp } from "TiFShared/api/Transport.js"
+import { UserSettings } from "TiFShared/domain-models/Settings.js"
+import { TiFAPIRouter } from "../../router.js"
 
 /**
  * Updates the user's settings with the specified fields in the settings object.
@@ -13,28 +12,36 @@ import { UserSettings, UserSettingsSchema } from "./models.js"
  * @param userId the id of the user to update settings for
  * @param settings the settings fields to update
  */
-const insertUserSettings = (
+const updateUserSettingsSQL = (
   conn: MySQLExecutableDriver,
   userId: string,
   {
-    isAnalyticsEnabled = null,
-    isCrashReportingEnabled = null,
-    isEventNotificationsEnabled = null,
-    isMentionsNotificationsEnabled = null,
-    isChatNotificationsEnabled = null,
-    isFriendRequestNotificationsEnabled = null
-  }: NullablePartial<UserSettings>
+    isAnalyticsEnabled,
+    isCrashReportingEnabled,
+    pushNotificationTriggerIds,
+    canShareArrivalStatus,
+    eventCalendarStartOfWeekDay,
+    eventCalendarDefaultLayout,
+    eventPresetShouldHideAfterStartDate,
+    eventPresetPlacemark,
+    eventPresetDurations,
+    version
+  }: Partial<UserSettings>
 ) =>
   conn.executeResult(
     `
     INSERT INTO userSettings (
-      userId, 
-      isAnalyticsEnabled, 
+      userId,
+      isAnalyticsEnabled,
       isCrashReportingEnabled,
-      isEventNotificationsEnabled, 
-      isMentionsNotificationsEnabled, 
-      isChatNotificationsEnabled, 
-      isFriendRequestNotificationsEnabled
+      pushNotificationTriggerIds,
+      canShareArrivalStatus,
+      eventCalendarStartOfWeekDay,
+      eventCalendarDefaultLayout,
+      eventPresetShouldHideAfterStartDate,
+      eventPresetPlacemark,
+      eventPresetDurations,
+      version
     ) VALUES (
       :userId, 
       COALESCE(:isAnalyticsEnabled, 1), 
@@ -56,30 +63,18 @@ const insertUserSettings = (
       userId,
       isAnalyticsEnabled,
       isCrashReportingEnabled,
-      isEventNotificationsEnabled,
-      isMentionsNotificationsEnabled,
-      isChatNotificationsEnabled,
-      isFriendRequestNotificationsEnabled
+      pushNotificationTriggerIds,
+      canShareArrivalStatus,
+      eventCalendarStartOfWeekDay,
+      eventCalendarDefaultLayout,
+      eventPresetShouldHideAfterStartDate,
+      eventPresetPlacemark,
+      eventPresetDurations,
+      version
     }
   )
 
-/**
- * Creates routes related to user operations.
- *
- * @param environment see {@link ServerEnvironment}.
- */
-export const updateUserSettingsRouter = (
-  environment: ServerEnvironment,
-  router: ValidatedRouter
-) => {
-  /**
-   * updates the current user's settings
-   */
-  router.patchWithValidation(
-    "/self/settings",
-    { bodySchema: UserSettingsSchema.partial() },
-    (req, res) =>
-      insertUserSettings(conn, res.locals.selfId, req.body)
-        .mapSuccess(() => res.status(204).send())
-  )
-}
+export const saveUserSettings: TiFAPIRouter["saveUserSettings"] = ({ context: { selfId }, body: newSettings }) =>
+  updateUserSettingsSQL(conn, selfId, newSettings)
+    .mapSuccess(() => resp(204))
+    .unwrap()

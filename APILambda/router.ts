@@ -1,12 +1,7 @@
 /* eslint-disable no-restricted-imports */
 import { TiFAPIClient } from "TiFShared/api/TiFAPISchema.js"
-import { Result } from "TiFShared/lib/Result.js"
-import {
-  NextFunction,
-  Request,
-  Response
-} from "express"
 import { ResponseContext } from "./auth.js"
+import { ServerEnvironment } from "./env.js"
 
 // if (error instanceof z.ZodError) {
 //   // console.log("failed to validate request ", error)
@@ -16,11 +11,11 @@ import { ResponseContext } from "./auth.js"
 //   return res.status(500).json({ error: "internal-server-error" })
 // }
 
-type ValidatedRequestHandler<S extends any> = ( //wait
-  req: Omit<Request, "body" | "query" | "params"> & any, /// wait until we integrate with router
-  res: Omit<Response, "locals"> & {locals: ResponseContext},
-  next: NextFunction
-) => Promise<Result<Response, Response>>
+// type ValidatedRequestHandler<S extends any> = ( // wait
+//   req: Omit<Request, "body" | "query" | "params"> & any, /// wait until we integrate with router
+//   res: Omit<Response, "locals"> & {locals: ResponseContext},
+//   next: NextFunction
+// ) => Promise<Result<Response, Response>>
 
 /**
  * Wrapper around the Express Router which facilitates runtime validation and
@@ -114,29 +109,29 @@ type ValidatedRequestHandler<S extends any> = ( //wait
 //   }
 // }
 
-export type TiFAPIRouter = TiFAPIClient<{context: ResponseContext}>
+export type TiFAPIRouter = TiFAPIClient<{context: ResponseContext, environment: ServerEnvironment}>
 
-const TiFAPIMiddleware = {}
+// const TiFAPIMiddleware = {}
 
-const TiFRouter = implementTiFAPI()
+// const TiFRouter = implementTiFAPI()
 
-export const TiFRouterMiddleware = (
-  req: Request,
-  res: Response
-) => {
-  // router.patchWithValidation(
-  //   "/self",
-  //   { bodySchema: UpdateUserRequestSchema },
-  //   (req, res) =>
-  //     conn
-  //       .transaction((tx) => updateProfileTransaction(tx, res.locals.selfId, req.body))
-  //       .mapFailure((error) => res.status(400).json({ error }))
-  //       .mapSuccess(() => res.status(204).send())
-  // )
+// export const TiFRouterMiddleware = (
+//   req: Request,
+//   res: Response
+// ) => {
+// router.patchWithValidation(
+//   "/self",
+//   { bodySchema: UpdateUserRequestSchema },
+//   (req, res) =>
+//     conn
+//       .transaction((tx) => updateProfileTransaction(tx, res.locals.selfId, req.body))
+//       .mapFailure((error) => res.status(400).json({ error }))
+//       .mapSuccess(() => res.status(204).send())
+// )
 
-  // return router
-}
+// return router
+// }
 
-//EITHER abstract away the express router, or turn tifrouter into a middleware for express router. I like the middleware idea better, still not sure if we want to completely abstract the express router away and it might be confusing for new members.
-//the middleware contains the routing logic
-//then we dont even need the "implementationCollector". hmmmm
+// EITHER abstract away the express router, or turn tifrouter into a middleware for express router. I like the middleware idea better, still not sure if we want to completely abstract the express router away and it might be confusing for new members.
+// the middleware contains the routing logic
+// then we dont even need the "implementationCollector". hmmmm

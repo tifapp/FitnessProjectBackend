@@ -1,24 +1,15 @@
 import { DBTifEvent, MySQLExecutableDriver, conn, setEventAttendeesFields, tifEventResponseFromDatabaseEvent } from "TiFBackendUtils"
-import { z } from "zod"
-import { ServerEnvironment } from "../env.js"
-import { ValidatedRouter } from "../validation.js"
-
-const EventsRequestSchema = z.object({
-  userLatitude: z.number(),
-  userLongitude: z.number(),
-  radius: z.number()
-})
-
-type EventsRequestByRegion = {
-  userId: string
-  userLatitude: number
-  userLongitude: number
-  radius: number
-}
+import { resp } from "TiFShared/api/Transport.js"
+import { LocationCoordinate2D } from "TiFShared/domain-models/LocationCoordinate2D.js"
+import { TiFAPIRouter } from "../router.js"
 
 export const getEventsByRegion = (
   conn: MySQLExecutableDriver,
-  eventsRequest: EventsRequestByRegion
+  eventsRequest: {
+    userId: string
+    userLocation: LocationCoordinate2D,
+    radius: number
+  }
 ) =>
   conn.queryResult<DBTifEvent>(
     `
@@ -50,34 +41,17 @@ LEFT JOIN userRelations UserRelationOfUserToHost ON UserRelationOfUserToHost.fro
     { ...eventsRequest }
   )
 
-/**
- * Creates routes related to event operations.
- *
- * @param environment see {@link ServerEnvironment}.
- */
-export const getEventsByRegionRouter = (
-  environment: ServerEnvironment,
-  router: ValidatedRouter
-) => {
-  /**
-   * Get events by region
-   */
-  router.postWithValidation(
-    "/region",
-    { bodySchema: EventsRequestSchema },
-    (req, res) =>
-      conn
-        .transaction((tx) =>
-          getEventsByRegion(tx, {
-            userId: res.locals.selfId,
-            userLatitude: req.body.userLatitude,
-            userLongitude: req.body.userLongitude,
-            radius: req.body.radius
-          }).flatMapSuccess((result) => setEventAttendeesFields(tx, result, res.locals.selfId).mapSuccess((events) => events.map((event) => tifEventResponseFromDatabaseEvent(event)))
-            .mapSuccess((result) => {
-              return res.status(200).json({ events: result })
-            })
-          )
-        )
-  )
-}
+export const exploreEvents: TiFAPIRouter["exploreEvents"] = ({ context: { selfId: userId }, body: { userLocation, radius } }) =>
+  conn
+    .transaction((tx) =>
+      getEventsByRegion(tx, {
+        userId,
+        userLocation,
+        radius
+      }).flatMapSuccess((result) =>
+        setEventAttendeesFields(tx, result, userId)
+          .mapSuccess((events) => events.map((event) => tifEventResponseFromDatabaseEvent(event)))
+          .mapSuccess((events) => resp(200, { events }))
+      )
+    )
+    .unwrap()

@@ -1,44 +1,24 @@
 import { MySQLExecutableDriver, conn } from "TiFBackendUtils"
+import { DevicePlatform } from "TiFShared/api/models/User.js"
+import { resp } from "TiFShared/api/Transport.js"
 import { failure, success } from "TiFShared/lib/Result.js"
-import { z } from "zod"
-import { ValidatedRouter } from "../validation.js"
+import { TiFAPIRouter } from "../router.js"
 
-const PushTokenPlatformNameSchema = z.union([
-  z.literal("apple"),
-  z.literal("android")
-])
-
-export type PushTokenPlatformName = z.infer<typeof PushTokenPlatformNameSchema>
-
-const RegisterPushTokenRequestSchema = z.object({
-  pushToken: z.string().nonempty(),
-  platformName: PushTokenPlatformNameSchema
-})
-
-/**
- * Adds the push notification registration endpoint.
- */
-export const createRegisterPushTokenRouter = (router: ValidatedRouter) => {
-  router.postWithValidation(
-    "/notifications/push/register",
-    { bodySchema: RegisterPushTokenRequestSchema },
-    async (req, res) => {
-      return tryInsertPushToken(conn, {
-        ...req.body,
-        userId: res.locals.selfId
-      })
-        .mapSuccess((status) => res.status(201).send({ status }))
-        .mapFailure((error) => res.status(400).send({ error }))
-    }
-  )
-}
+export const registerForPushNotifications: TiFAPIRouter["registerForPushNotifications"] = ({ body, context: { selfId: userId } }) =>
+  tryInsertPushToken(conn, {
+    ...body,
+    userId
+  })
+    .mapSuccess((status) => resp(201, { status }))
+    .mapFailure((error) => resp(400, { error }))
+    .unwrap()
 
 const tryInsertPushToken = (
   conn: MySQLExecutableDriver,
   insertRequest: {
     userId: string
     pushToken: string
-    platformName: PushTokenPlatformName
+    platformName: DevicePlatform
   }
 ) => {
   return conn

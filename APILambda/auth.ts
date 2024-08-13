@@ -1,8 +1,9 @@
 import { Application } from "express"
+import { UserID } from "TiFShared/domain-models/User.js"
 import { z } from "zod"
 
 export type ResponseContext = {
-  selfId: string,
+  selfId: UserID,
   name: string,
   isContactInfoVerified: boolean,
   doesProfileExist: boolean

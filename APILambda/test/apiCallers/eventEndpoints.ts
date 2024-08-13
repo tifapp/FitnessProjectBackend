@@ -1,13 +1,13 @@
 import request from "supertest"
+import { CreateEvent } from "TiFShared/api/models/Event.js"
+import { EventRegion } from "TiFShared/domain-models/Event.js"
 import { SetArrivalStatusInput } from "../../events/arrivals/setArrivalStatus.js"
 import { SetDepartureInput } from "../../events/arrivals/setDeparture.js"
-import { CreateEventInput } from "../../events/createEvent.js"
-import { JoinEventInput } from "../../events/joinEventById.js"
 import { testApp } from "../testApp.js"
 
 export const callCreateEvent = async (
   bearerToken: string,
-  req: CreateEventInput
+  req: CreateEvent
 ) => {
   return await request(testApp)
     .post("/event")
@@ -18,7 +18,7 @@ export const callCreateEvent = async (
 export const callJoinEvent = async (
   bearerToken: string,
   eventId: number,
-  req?: JoinEventInput
+  req?: {body: EventRegion}
 ) => {
   return await request(testApp)
     .post(`/event/join/${eventId}`)
@@ -74,7 +74,6 @@ export const callGetUpcomingEvents = async (
     .set("Authorization", bearerToken)
     .send()
 }
-
 
 export const callGetAttendees = async (
   bearerToken: string,

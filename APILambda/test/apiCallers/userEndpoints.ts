@@ -1,6 +1,6 @@
 import request from "supertest"
-import { PushTokenPlatformName } from "../../user/registerPushToken.js"
-import { UserSettings } from "../../user/settings/models.js"
+import { DevicePlatform } from "TiFShared/api/models/User.js"
+import { UserSettings } from "TiFShared/domain-models/Settings.js"
 import { testApp } from "../testApp.js"
 
 export const callPatchSettings = async (
@@ -116,7 +116,7 @@ export const callUnblockUser = async (
 
 export const callRegisterPushToken = async (
   userToken: string,
-  body: { pushToken: string; platformName: PushTokenPlatformName }
+  body: { pushToken: string; platformName: DevicePlatform }
 ) => {
   return await request(testApp)
     .post("/user/notifications/push/register")

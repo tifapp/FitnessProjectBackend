@@ -1,6 +1,6 @@
 import { AdminUpdateUserAttributesRequest, CognitoIdentityProvider } from "@aws-sdk/client-cognito-identity-provider"
 import { envVars } from "TiFBackendUtils"
-import { failure, promiseResult, success } from "TiFShared/lib/Result"
+import { failure, promiseResult, success } from "TiFShared/lib/Result.js"
 
 const cognito = new CognitoIdentityProvider()
 

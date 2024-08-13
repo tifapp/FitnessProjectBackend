@@ -1,47 +1,41 @@
-import { MySQLExecutableDriver, conn, userWithIdExists } from "TiFBackendUtils"
+import { MySQLExecutableDriver, UserRelationsInput, conn, userWithIdExists } from "TiFBackendUtils"
+import { resp } from "TiFShared/api/Transport.js"
 import { failure, success } from "TiFShared/lib/Result.js"
-import { z } from "zod"
-import { ValidatedRouter } from "../validation.js"
+import { TiFAPIRouter } from "../router.js"
 
-const UnblockUserRequestSchema = z.object({
-  userId: z.string().uuid()
-})
+export const unblockUser: TiFAPIRouter["unblockUser"] =
+  ({ context: { selfId: fromUserId }, params: { userId: toUserId } }) =>
+    unblockUserSQL(conn, { fromUserId, toUserId })
+      .flatMapSuccess((result) => {
+        if (result.rowsAffected === 1) return success(resp(204))
 
-/**
- * Creates an endpoint to unblock the user.
- */
-export const createUnblockUserRouter = (router: ValidatedRouter) => {
-  router.deleteWithValidation("/block/:userId",
-    { pathParamsSchema: UnblockUserRequestSchema },
-    async (req, res) => {
-      return unblockUser(conn, res.locals.selfId, req.params.userId)
-        .mapFailure((error) => {
-          return res
-            .status(error === "user-not-found" ? 404 : 403)
-            .json({ error, userId: req.params.userId })
-        })
-        .mapSuccess(() => res.status(204).send())
-    })
-}
+        return userWithIdExists(conn, toUserId)
+          .withFailure(resp(404,
+            {
+              error: "user-not-found",
+              userId: toUserId
+            }
+          ))
+          .flatMapSuccess(() =>
+            failure(resp(403,
+              {
+                error: "user-not-blocked",
+                userId: toUserId
+              }
+            ))
+          )
+      })
+      .unwrap()
 
-const unblockUser = (
+const unblockUserSQL = (
   conn: MySQLExecutableDriver,
-  fromUserId: string,
-  toUserId: string
-) => {
-  return conn
-    .executeResult(
-      `
-        DELETE FROM userRelations
-        WHERE fromUserId = :fromUserId AND toUserId = :toUserId 
-          AND status = 'blocked'
-      `,
-      { fromUserId, toUserId }
-    )
-    .flatMapSuccess((result) => {
-      if (result.rowsAffected === 1) return success()
-      return userWithIdExists(conn, toUserId)
-        .withFailure("user-not-found" as const)
-        .flatMapSuccess(() => failure("user-not-blocked" as const))
-    })
-}
+  { fromUserId, toUserId }: UserRelationsInput
+) => conn
+  .executeResult(
+    `
+      DELETE FROM userRelations
+      WHERE fromUserId = :fromUserId AND toUserId = :toUserId 
+        AND status = 'blocked'
+    `,
+    { fromUserId, toUserId }
+  )

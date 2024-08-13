@@ -1,12 +1,12 @@
 import { conn } from "TiFBackendUtils"
 import dayjs from "dayjs"
-import { decodeAttendeesListCursor } from "../shared/Cursor.js"
 import { callGetAttendees, callSetArrival } from "../test/apiCallers/eventEndpoints.js"
 import { callBlockUser } from "../test/apiCallers/userEndpoints.js"
 import { testEventInput } from "../test/testEvents.js"
 import { createEventFlow } from "../test/userFlows/createEventFlow.js"
 import { TestUser, createUserFlow } from "../test/userFlows/createUserFlow.js"
-import { createEvent } from "./createEvent.js"
+import { decodeAttendeesListCursor } from "../utils/Cursor.js"
+import { createEventSQL } from "./createEvent.js"
 
 const eventLocation = { latitude: 50, longitude: 50 }
 // TODO: should have a universal "lastpagecursor" value
@@ -95,11 +95,10 @@ describe("getAttendeesList endpoint", () => {
   it("should return 404 if attendee list is empty", async () => {
     const currentUser = await createUserFlow()
 
-    // In this test, we want to create an event with an empty attendees list, so we must use createEvent directly.
-    // if we use the create event flow the host will be added to the attendees list.
+    // We must use createEventSQL directly because createEventFlow() makes an event with the host in the attendees list.
     const {
       value: { insertId }
-    } = await createEvent(
+    } = await createEventSQL(
       conn,
       {
         ...testEventInput,

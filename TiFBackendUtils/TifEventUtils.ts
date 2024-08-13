@@ -1,37 +1,36 @@
+import { ColorString } from "TiFShared/domain-models/ColorString.js"
+import { dateRange, FixedDateRange } from "TiFShared/domain-models/FixedDateRange.js"
+import { Placemark } from "TiFShared/domain-models/Placemark.js"
+import { BidirectionalUserRelations, UnblockedBidirectionalUserRelations, UserHandle, UserID } from "TiFShared/domain-models/User.js"
 import { success } from "TiFShared/lib/Result.js"
 import dayjs from "dayjs"
 import duration from "dayjs/plugin/duration.js"
 import { MySQLExecutableDriver } from "./MySQLDriver/index.js"
-import { UserRelationship } from "./TiFUserUtils/UserRelationships.js"
-import { DBEventAttendeeCountView, DBEventAttendeesView, DBTifEventView, DBevent, DBeventAttendance, DBuserRelations } from "./entities.js"
-import { Placemark } from "TiFShared/domain-models/Placemark.js"
+import { DBevent, DBeventAttendance, DBEventAttendeeCountView, DBEventAttendeesView, DBTifEventView, DBuserRelations } from "./Types/index.js"
 dayjs.extend(duration)
 
 // Get the total seconds in the duration
 export const SECONDS_IN_DAY = dayjs.duration(1, "day").asSeconds()
 export const ARRIVAL_RADIUS_IN_METERS = 120
 
-export type UpcomingEvent = DBevent & {hasArrived: boolean}
+export type DBupcomingEvent = DBevent & {hasArrived: boolean}
 export type UserHostRelations = "not-friends" | "friend-request-pending" | "friends" | "blocked" | "current-user"
 export type TodayOrTomorrow = "today" | "tomorrow"
 export type UserAttendeeStatus = DBeventAttendance["role"] | "not-participating"
-export type Attendee = { id: string, profileImageURL: string | null}
+export type Attendee = { id: string, profileImageURL?: string}
 export type DBTifEvent = DBTifEventView & Omit<DBuserRelations, "status" | "updatedDateTime"> &
-{ attendeeCount: number, previewAttendees: Attendee[], userAttendeeStatus: UserAttendeeStatus, joinedDateTime: Date } & UserRelationship
+{ attendeeCount: number, previewAttendees: Attendee[], userAttendeeStatus: UserAttendeeStatus, joinedDateTime: Date } & BidirectionalUserRelations
 
 export type TiFEvent = {
     id: number
     title: string
     description: string
     attendeeCount: number
-    color: string
+    color: ColorString
     time: {
       secondsToStart: number
-      dateRange: {
-        startDateTime: Date
-        endDateTime: Date
-      }
-      todayOrTomorrow: TodayOrTomorrow | null
+      dateRange: FixedDateRange
+      todayOrTomorrow?: TodayOrTomorrow
     }
     previewAttendees: Attendee[]
     location: {
@@ -39,20 +38,20 @@ export type TiFEvent = {
         latitude: number,
         longitude: number
       },
-      timezoneIdentifier: string | null,
-      placemark: Omit<Placemark, "latitude" | "longitude"> | null,
+      timezoneIdentifier: string,
+      placemark?: Omit<Placemark, "latitude" | "longitude">,
       arrivalRadiusMeters: number
       isInArrivalTrackingPeriod: boolean
     }
     host: {
-      relations: {
-        fromThemToYou: UserHostRelations
-        fromYouToThem: UserHostRelations
-      }
-      id: string
-      username: string | null
-      handle: string | null
-      profileImageURL: string | null
+      relations: UnblockedBidirectionalUserRelations
+      id: UserID
+      username: string
+      handle: UserHandle
+      profileImageURL?: string
+      name: string
+      joinedDateTime: Date
+      arrivedDateTime: Date
     }
     settings: {
       shouldHideAfterStartDate: boolean
@@ -60,11 +59,11 @@ export type TiFEvent = {
     }
     isChatExpired: boolean
     userAttendeeStatus: UserAttendeeStatus
-    joinedDateTime: Date | null
+    joinedDateTime?: Date
     hasArrived: boolean
     updatedDateTime: Date
     createdDateTime: Date
-    endedDateTime: Date | null
+    endedDateTime?: Date
   }
 
 export const calcSecondsToStart = (startDateTime: Date) => {
@@ -72,8 +71,8 @@ export const calcSecondsToStart = (startDateTime: Date) => {
   return millisecondsToStart / 1000
 }
 
-const isChatExpired = (endedDateTime: Date | null) => {
-  if (endedDateTime === null) {
+const isChatExpired = (endedDateTime?: Date) => {
+  if (!endedDateTime) {
     return false
   }
 
@@ -94,7 +93,7 @@ export const calcTodayOrTomorrow = (startDateTime: Date) => {
   } else if (eventDate.isSame(currentDate.add(1, "day"), "day")) {
     return "tomorrow"
   } else {
-    return null
+    return undefined
   }
 }
 
@@ -107,10 +106,7 @@ export const tifEventResponseFromDatabaseEvent = (event: DBTifEvent) : TiFEvent 
     color: event.color,
     time: {
       secondsToStart: calcSecondsToStart(event.startDateTime),
-      dateRange: {
-        startDateTime: event.startDateTime,
-        endDateTime: event.endDateTime
-      },
+      dateRange: dateRange(event.startDateTime, event.endDateTime)!,
       todayOrTomorrow: calcTodayOrTomorrow(event.startDateTime)
     },
     previewAttendees: event.previewAttendees,
@@ -129,7 +125,7 @@ export const tifEventResponseFromDatabaseEvent = (event: DBTifEvent) : TiFEvent 
         isoCountryCode: event.isoCountryCode ?? undefined,
         city: event.city ?? undefined
       },
-      timezoneIdentifier: event.timezoneIdentifier,
+      timezoneIdentifier: event.timezoneIdentifier ?? "",
       arrivalRadiusMeters: ARRIVAL_RADIUS_IN_METERS,
       isInArrivalTrackingPeriod: calcSecondsToStart(event.startDateTime) < SECONDS_IN_DAY
     },
@@ -141,7 +137,8 @@ export const tifEventResponseFromDatabaseEvent = (event: DBTifEvent) : TiFEvent 
       id: event.hostId,
       username: event.hostUsername,
       handle: event.hostHandle,
-      profileImageURL: null
+      profileImageURL: undefined,
+      ...event.previewAttendees[0]
     },
     settings: {
       shouldHideAfterStartDate: event.shouldHideAfterStartDate,
@@ -155,7 +152,7 @@ export const tifEventResponseFromDatabaseEvent = (event: DBTifEvent) : TiFEvent 
     hasArrived: event.hasArrived === 1,
     updatedDateTime: new Date(event.updatedDateTime),
     createdDateTime: new Date(event.createdDateTime),
-    endedDateTime: event.endedDateTime !== null ? event.endedDateTime : null
+    endedDateTime: event.endedDateTime
   }
 }
 
@@ -203,7 +200,7 @@ const setAttendeesPreviewForEvent = (
       .map(id => (
         {
           id,
-          profileImageURL: null
+          profileImageURL: undefined
         }
       )) ??
     []

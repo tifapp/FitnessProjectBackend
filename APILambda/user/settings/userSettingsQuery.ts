@@ -1,17 +1,6 @@
 import { DBuserSettings, MySQLExecutableDriver, userWithIdExists } from "TiFBackendUtils"
-import { success } from "TiFShared/lib/Result"
-
-/**
- * The default user settings, which enables all fields.
- */
-const DEFAULT_USER_SETTINGS = {
-  isAnalyticsEnabled: true,
-  isCrashReportingEnabled: true,
-  isEventNotificationsEnabled: true,
-  isMentionsNotificationsEnabled: true,
-  isChatNotificationsEnabled: true,
-  isFriendRequestNotificationsEnabled: true
-} as const
+import { DEFAULT_USER_SETTINGS } from "TiFShared/domain-models/Settings.js"
+import { success } from "TiFShared/lib/Result.js"
 
 /**
  * Queries a given user's settings. If the user has never edited their settings,
