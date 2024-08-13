@@ -51,6 +51,7 @@
         ]
       }
     ],
+    "no-console": ["warn"],
     "semi": ["error", "never"],
     "quotes": ["error", "double"],
     "no-unused-vars": "warn",
