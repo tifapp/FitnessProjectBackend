@@ -1,169 +1,158 @@
-### banned
+### Banned
+| Property | Type | Optional | DefaultValue |
+| ---------- | ---------- | ---------- | ---------- |
+| banEnd | Date | true | None |
+| banStart | Date | true | None |
+| userId | string | false | None |
 
-| Property | Data Type | Nullable | Default Value |
-|----------|-----------|----------|---------------|
-| banEnd | Date | Yes | None |
-| banStart | Date | Yes | None |
-| userId | string | No | None |
+### Event
+| Property | Type | Optional | DefaultValue |
+| ---------- | ---------- | ---------- | ---------- |
+| color | import("../../node_modules/TiFShared/domain-models/ColorString.js").ColorString | false | None |
+| createdDateTime | Date | false | CURRENT_TIMESTAMP |
+| description | string | false | None |
+| endDateTime | Date | false | None |
+| endedDateTime | Date | true | None |
+| hostId | string | false | None |
+| id | number | false | None |
+| isChatEnabled | boolean | false | None |
+| latitude | number | false | None |
+| longitude | number | false | None |
+| shouldHideAfterStartDate | boolean | false | None |
+| startDateTime | Date | false | None |
+| title | string | false | None |
+| updatedDateTime | Date | false | CURRENT_TIMESTAMP |
 
-### event
+### Event Attendance
+| Property | Type | Optional | DefaultValue |
+| ---------- | ---------- | ---------- | ---------- |
+| eventId | number | false | None |
+| joinedDateTime | Date | false | CURRENT_TIMESTAMP |
+| role | 'hosting'|'attending' | false | None |
+| userId | string | false | None |
 
-| Property | Data Type | Nullable | Default Value |
-|----------|-----------|----------|---------------|
-| color | string | No | None |
-| createdDateTime | Date | No | CURRENT_TIMESTAMP |
-| description | string | No | None |
-| endDateTime | Date | No | None |
-| endedDateTime | Date | Yes | None |
-| hostId | string | No | None |
-| id | number | No | None |
-| isChatEnabled | boolean | No | None |
-| latitude | number | No | None |
-| longitude | number | No | None |
-| shouldHideAfterStartDate | boolean | No | None |
-| startDateTime | Date | No | None |
-| title | string | No | None |
-| updatedDateTime | Date | No | CURRENT_TIMESTAMP |
+### Event Attendee Count
+| Property | Type | Optional | DefaultValue |
+| ---------- | ---------- | ---------- | ---------- |
+| attendeeCount | number | false | 0 |
+| id | number | false | 0 |
 
-### eventAttendance
+### Event Attendees View
+| Property | Type | Optional | DefaultValue |
+| ---------- | ---------- | ---------- | ---------- |
+| eventId | number | false | None |
+| userIds | string | true | None |
 
-| Property | Data Type | Nullable | Default Value |
-|----------|-----------|----------|---------------|
-| eventId | number | No | None |
-| joinedDateTime | Date | No | CURRENT_TIMESTAMP |
-| role | 'hosting'|'attending' | No | None |
-| userId | string | No | None |
+### Event Reports
+| Property | Type | Optional | DefaultValue |
+| ---------- | ---------- | ---------- | ---------- |
+| eventOwnerId | string | false | None |
+| eventReported | number | false | None |
+| reportDate | Date | false | CURRENT_TIMESTAMP |
+| reportingReason | 'Spam'|'Harassment'|'Hate Speech'|'Violence'|'Scam or fraud'|'Suicide or self-harm'|'False information'|'Sale of illegal or regulated goods'|'Other' | false | None |
+| userReporting | string | false | None |
 
-### EventAttendeeCountView
+### Location
+| Property | Type | Optional | DefaultValue |
+| ---------- | ---------- | ---------- | ---------- |
+| city | string | true | None |
+| country | string | true | None |
+| createdDateTime | Date | false | CURRENT_TIMESTAMP |
+| isoCountryCode | string | true | None |
+| latitude | number | false | None |
+| longitude | number | false | None |
+| name | string | true | None |
+| postalCode | string | true | None |
+| region | string | true | None |
+| street | string | true | None |
+| streetNumber | string | true | None |
+| timezoneIdentifier | string | false | None |
 
-| Property | Data Type | Nullable | Default Value |
-|----------|-----------|----------|---------------|
-| attendeeCount | number | No | 0 |
-| id | number | No | 0 |
+### Push Tokens
+| Property | Type | Optional | DefaultValue |
+| ---------- | ---------- | ---------- | ---------- |
+| id | number | false | None |
+| platformName | 'apple'|'android' | false | None |
+| pushToken | any | true | None |
+| userId | string | false | None |
 
-### EventAttendeesView
+### TiF Event View
+| Property | Type | Optional | DefaultValue |
+| ---------- | ---------- | ---------- | ---------- |
+| city | string | true | None |
+| color | import("../../node_modules/TiFShared/domain-models/ColorString.js").ColorString | false | None |
+| country | string | true | None |
+| createdDateTime | Date | false | CURRENT_TIMESTAMP |
+| description | string | false | None |
+| endDateTime | Date | false | None |
+| endedDateTime | Date | true | None |
+| hasArrived | boolean | false | 0 |
+| hostHandle | import("../../node_modules/TiFShared/domain-models/User.js").UserHandle | false | None |
+| hostId | string | false | None |
+| hostUsername | string | false | None |
+| id | number | false | 0 |
+| isChatEnabled | boolean | false | None |
+| isoCountryCode | string | true | None |
+| latitude | number | false | None |
+| longitude | number | false | None |
+| placemarkName | string | true | None |
+| postalCode | string | true | None |
+| region | string | true | None |
+| shouldHideAfterStartDate | boolean | false | None |
+| startDateTime | Date | false | None |
+| street | string | true | None |
+| streetNumber | string | true | None |
+| timezoneIdentifier | string | true | None |
+| title | string | false | None |
+| updatedDateTime | Date | false | CURRENT_TIMESTAMP |
 
-| Property | Data Type | Nullable | Default Value |
-|----------|-----------|----------|---------------|
-| eventId | number | No | None |
-| userIds | string | Yes | None |
+### User
+| Property | Type | Optional | DefaultValue |
+| ---------- | ---------- | ---------- | ---------- |
+| bio | string | true | None |
+| createdDateTime | Date | false | CURRENT_TIMESTAMP |
+| handle | import("../../node_modules/TiFShared/domain-models/User.js").UserHandle | false | None |
+| id | string | false | None |
+| name | string | false | None |
+| profileImageURL | string | true | None |
+| updatedDateTime | Date | false | CURRENT_TIMESTAMP |
 
-### eventReports
+### User Arrivals
+| Property | Type | Optional | DefaultValue |
+| ---------- | ---------- | ---------- | ---------- |
+| arrivedDateTime | Date | false | CURRENT_TIMESTAMP |
+| latitude | number | false | None |
+| longitude | number | false | None |
+| userId | string | false | None |
 
-| Property | Data Type | Nullable | Default Value |
-|----------|-----------|----------|---------------|
-| eventOwnerId | string | No | None |
-| eventReported | number | No | None |
-| reportDate | Date | No | CURRENT_TIMESTAMP |
-| reportingReason | 'Spam'|'Harassment'|'Hate Speech'|'Violence'|'Scam or fraud'|'Suicide or self-harm'|'False information'|'Sale of illegal or regulated goods'|'Other' | No | None |
-| userReporting | string | No | None |
+### User Relations
+| Property | Type | Optional | DefaultValue |
+| ---------- | ---------- | ---------- | ---------- |
+| fromUserId | string | false | None |
+| status | 'friends'|'friend-request-pending'|'blocked' | false | None |
+| toUserId | string | false | None |
+| updatedDateTime | Date | false | CURRENT_TIMESTAMP |
 
-### location
+### User Reports
+| Property | Type | Optional | DefaultValue |
+| ---------- | ---------- | ---------- | ---------- |
+| reportDate | Date | false | CURRENT_TIMESTAMP |
+| reportingReason | 'Spam'|'Harassment'|'Hate Speech'|'Violence'|'Scam or fraud'|'Suicide or self-harm'|'False information'|'Sale of illegal or regulated goods'|'Other' | false | None |
+| userReported | number | false | None |
+| userReporting | number | false | None |
 
-| Property | Data Type | Nullable | Default Value |
-|----------|-----------|----------|---------------|
-| city | string | Yes | None |
-| country | string | Yes | None |
-| createdDateTime | Date | No | CURRENT_TIMESTAMP |
-| isoCountryCode | string | Yes | None |
-| latitude | number | No | None |
-| longitude | number | No | None |
-| name | string | Yes | None |
-| postalCode | string | Yes | None |
-| region | string | Yes | None |
-| street | string | Yes | None |
-| streetNumber | string | Yes | None |
-| timezoneIdentifier | string | No | None |
-
-### pushTokens
-
-| Property | Data Type | Nullable | Default Value |
-|----------|-----------|----------|---------------|
-| id | number | No | None |
-| platformName | 'apple'|'android' | No | None |
-| pushToken | any | Yes | None |
-| userId | string | No | None |
-
-### TifEventView
-
-| Property | Data Type | Nullable | Default Value |
-|----------|-----------|----------|---------------|
-| city | string | Yes | None |
-| color | string | No | None |
-| country | string | Yes | None |
-| createdDateTime | Date | No | CURRENT_TIMESTAMP |
-| description | string | No | None |
-| endDateTime | Date | No | None |
-| endedDateTime | Date | Yes | None |
-| hasArrived | boolean | No | 0 |
-| hostHandle | string | No | None |
-| hostId | string | No | None |
-| hostUsername | string | No | None |
-| id | number | No | 0 |
-| isChatEnabled | boolean | No | None |
-| isoCountryCode | string | Yes | None |
-| latitude | number | No | None |
-| longitude | number | No | None |
-| placemarkName | string | Yes | None |
-| postalCode | string | Yes | None |
-| region | string | Yes | None |
-| shouldHideAfterStartDate | boolean | No | None |
-| startDateTime | Date | No | None |
-| street | string | Yes | None |
-| streetNumber | string | Yes | None |
-| timezoneIdentifier | string | Yes | None |
-| title | string | No | None |
-| updatedDateTime | Date | No | CURRENT_TIMESTAMP |
-
-### user
-
-| Property | Data Type | Nullable | Default Value |
-|----------|-----------|----------|---------------|
-| bio | string | Yes | None |
-| createdDateTime | Date | No | CURRENT_TIMESTAMP |
-| handle | import("../../TiFShared/domain-models/User.js").UserHandle | No | None |
-| id | string | No | None |
-| name | string | No | None |
-| profileImageURL | string | Yes | None |
-| updatedDateTime | Date | No | CURRENT_TIMESTAMP |
-
-### userArrivals
-
-| Property | Data Type | Nullable | Default Value |
-|----------|-----------|----------|---------------|
-| arrivedDateTime | Date | No | CURRENT_TIMESTAMP |
-| latitude | number | No | None |
-| longitude | number | No | None |
-| userId | string | No | None |
-
-### userRelations
-
-| Property | Data Type | Nullable | Default Value |
-|----------|-----------|----------|---------------|
-| fromUserId | string | No | None |
-| status | 'friends'|'friend-request-pending'|'blocked' | No | None |
-| toUserId | string | No | None |
-| updatedDateTime | Date | No | CURRENT_TIMESTAMP |
-
-### userReports
-
-| Property | Data Type | Nullable | Default Value |
-|----------|-----------|----------|---------------|
-| reportDate | Date | No | CURRENT_TIMESTAMP |
-| reportingReason | 'Spam'|'Harassment'|'Hate Speech'|'Violence'|'Scam or fraud'|'Suicide or self-harm'|'False information'|'Sale of illegal or regulated goods'|'Other' | No | None |
-| userReported | number | No | None |
-| userReporting | number | No | None |
-
-### userSettings
-
-| Property | Data Type | Nullable | Default Value |
-|----------|-----------|----------|---------------|
-| isAnalyticsEnabled | boolean | No | 1 |
-| isChatNotificationsEnabled | boolean | No | 1 |
-| isCrashReportingEnabled | boolean | No | 1 |
-| isEventNotificationsEnabled | boolean | No | 1 |
-| isFriendRequestNotificationsEnabled | boolean | No | 1 |
-| isMentionsNotificationsEnabled | boolean | No | 1 |
-| updatedDateTime | Date | Yes | CURRENT_TIMESTAMP |
-| userId | string | No | None |
-
+### User Settings
+| Property | Type | Optional | DefaultValue |
+| ---------- | ---------- | ---------- | ---------- |
+| canShareArrivalStatus | boolean | false | 1 |
+| eventCalendarDefaultLayout | 'single-day-layout'|'week-layout'|'month-layout' | false | month-layout |
+| eventCalendarStartOfWeekDay | 'sunday'|'monday'|'tuesday'|'wednesday'|'thursday'|'friday'|'saturday' | false | monday |
+| eventPresetDurations | Object | true | None |
+| eventPresetPlacemark | Object | true | None |
+| eventPresetShouldHideAfterStartDate | boolean | false | 1 |
+| isAnalyticsEnabled | boolean | false | 1 |
+| isCrashReportingEnabled | boolean | false | 1 |
+| pushNotificationTriggerIds | import("../../node_modules/TiFShared/domain-models/Settings.js").UserSettings["pushNotificationTriggerIds"] | true | None |
+| updatedDateTime | Date | true | CURRENT_TIMESTAMP |
+| userId | string | false | None |
+| version | number | false | 0 |

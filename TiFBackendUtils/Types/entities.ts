@@ -11,7 +11,7 @@ export interface DBbanned {
   'userId': string;
 }
 export interface DBevent {
-  'color': import("../../TiFShared/domain-models/ColorString.js").ColorString;
+  'color': import("../../node_modules/TiFShared/domain-models/ColorString.js").ColorString;
   'createdDateTime': Date;
   'description': string;
   'endDateTime': Date;
@@ -69,14 +69,14 @@ export interface DBpushTokens {
 }
 export interface DBTifEventView {
   'city': string | undefined;
-  'color': import("../../TiFShared/domain-models/ColorString.js").ColorString;
+  'color': import("../../node_modules/TiFShared/domain-models/ColorString.js").ColorString;
   'country': string | undefined;
   'createdDateTime': Date;
   'description': string;
   'endDateTime': Date;
   'endedDateTime': Date | undefined;
   'hasArrived': boolean;
-  'hostHandle': string;
+  'hostHandle': import("../../node_modules/TiFShared/domain-models/User.js").UserHandle;
   'hostId': string;
   'hostUsername': string;
   'id': number;
@@ -98,7 +98,7 @@ export interface DBTifEventView {
 export interface DBuser {
   'bio': string | undefined;
   'createdDateTime': Date;
-  'handle': import("../../TiFShared/domain-models/User.js").UserHandle;
+  'handle': import("../../node_modules/TiFShared/domain-models/User.js").UserHandle;
   'id': string;
   'name': string;
   'profileImageURL': string | undefined;
@@ -126,10 +126,12 @@ export interface DBuserSettings {
   'canShareArrivalStatus': boolean;
   'eventCalendarDefaultLayout': 'single-day-layout'|'week-layout'|'month-layout';
   'eventCalendarStartOfWeekDay': 'sunday'|'monday'|'tuesday'|'wednesday'|'thursday'|'friday'|'saturday';
+  'eventPresetDurations': Object | undefined;
+  'eventPresetPlacemark': Object | undefined;
   'eventPresetShouldHideAfterStartDate': boolean;
   'isAnalyticsEnabled': boolean;
   'isCrashReportingEnabled': boolean;
-  'pushNotificationTriggerIds': import("../../TiFShared/domain-models/Settings.js").UserSettings["pushNotificationTriggerIds"] | undefined;
+  'pushNotificationTriggerIds': import("../../node_modules/TiFShared/domain-models/Settings.js").UserSettings["pushNotificationTriggerIds"] | undefined;
   'updatedDateTime': Date | undefined;
   'userId': string;
   'version': number;

@@ -8,12 +8,11 @@ import { AWSEnvVars, MySQLExecutableDriver } from "TiFBackendUtils"
 // eslint-disable-next-line import/extensions
 import { LocationCoordinate2D } from "TiFShared/domain-models/LocationCoordinate2D.js"
 import { Placemark } from "TiFShared/domain-models/Placemark.js"
-import { NullablePartial } from "TiFShared/lib/Types/HelperTypes"
 import { find } from "geo-tz/dist/find-now"
 
 const locationClient = new LocationClient({ region: AWSEnvVars.AWS_REGION })
 
-export type FlattenedLocation = LocationCoordinate2D & NullablePartial<Placemark>
+export type FlattenedLocation = LocationCoordinate2D & Placemark
 
 /**
  * Converts an AWS location search result into placemark format.

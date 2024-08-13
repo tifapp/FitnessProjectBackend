@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-// TODO: Replace with backend utils
 import { undefinedToNull } from "TiFShared/lib/Object.js"
 import { AwaitableResult, failure, promiseResult, success } from "TiFShared/lib/Result.js"
 import mysql, { FieldPacket, ResultSetHeader, RowDataPacket } from "mysql2/promise.js"
+import { domainModelColumns } from "../Types/domain-models.js"
 import { createDatabaseConnection } from "./dbConnection.js"
 
 export type DBExecution = {
@@ -33,6 +33,9 @@ const castTypes = (rows: RowDataPacket[], fields: FieldPacket[]): RowDataPacket[
       }
       if (row[key] === null) {
         delete row[key]
+      }
+      if (Object.keys(domainModelColumns).includes(key)) {
+        row[key] = domainModelColumns[key as keyof typeof domainModelColumns](row[key])
       }
     })
     return row
