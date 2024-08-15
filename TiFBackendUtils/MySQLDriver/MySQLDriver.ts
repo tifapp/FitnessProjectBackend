@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // TODO: Replace with backend utils
-import { PromiseResult, failure, promiseResult, success } from "TiFShared/lib/Result.js"
+import { Result, failure, promiseResult, success } from "TiFShared/lib/Result.js"
 import mysql, { FieldPacket, ResultSetHeader, RowDataPacket } from "mysql2/promise.js"
 import { createDatabaseConnection } from "./dbConnection.js"
 
@@ -37,7 +37,7 @@ const castTypes = (rows: RowDataPacket[], fields: FieldPacket[]): RowDataPacket[
 class MySQLConnectionHandler {
   private connection?: mysql.Connection
   private isConnectionClosed: boolean = false
-  
+
   async useConnection () {
     if (this.isConnectionClosed) {
       throw new Error("Current connection instance was ended.")
@@ -47,21 +47,21 @@ class MySQLConnectionHandler {
       if (!this.connection) {
         throw new Error("Connection is closed")
       }
-        
-      await this.connection?.ping();
+
+      await this.connection?.ping()
     } catch (error) {
       console.error(`${error}, making new connection`)
-      this.connection = await createDatabaseConnection();
+      this.connection = await createDatabaseConnection()
     }
 
-    return this.connection!;
+    return this.connection!
   }
-  
+
   async closeConnection () {
     if (!this.isConnectionClosed) {
       const conn = await this.useConnection()
       conn.end()
-      this.isConnectionClosed = true;
+      this.isConnectionClosed = true
     }
   }
 }
@@ -76,7 +76,7 @@ export class MySQLDriver {
   // ==================
   // Implementation-Dependent Methods
   // ==================
-  
+
   /**
    * Executes a write statement and returns the insert id and # rows affected
    *
@@ -105,7 +105,7 @@ export class MySQLDriver {
       throw new Error("Execution did not return a ResultSetHeader.")
     }
   }
-  
+
   /**
    * Loads a list of results from the database given a sql query and casts the result to `Value`
    *
@@ -155,7 +155,7 @@ export class MySQLDriver {
    * Performs an idempotent transaction and returns the result of the transaction wrapped in a {@link PromiseResult}.
    */
   transaction<SuccessValue, ErrorValue> (
-    query: (tx: Omit<MySQLDriver, "query" | "execute">) => PromiseResult<SuccessValue, ErrorValue>
+    query: (tx: Omit<MySQLDriver, "query" | "execute">) => Promise<Result<SuccessValue, ErrorValue>>
   ) {
     return promiseResult((async () => {
       const conn = await this.connectionHandler.useConnection()
@@ -170,7 +170,6 @@ export class MySQLDriver {
       }
     })())
   }
-
 
   // ==================
   // Generic Methods

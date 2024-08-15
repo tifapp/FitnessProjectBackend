@@ -5,8 +5,8 @@
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,md}\"",
     "prepare": "husky",
     "postinstall": "node postinstall.mjs",
-    "dbtots": "node --trace-warnings --loader ts-node/esm --unhandled-rejections=strict scripts/dbToTs.ts --run",
-    "resetDB": "node --trace-warnings --loader ts-node/esm --unhandled-rejections=strict scripts/resetDB.ts --run"
+    "dbtots": "node --loader ts-node/esm --unhandled-rejections=strict scripts/dbToTs.ts --run",
+    "resetDB": "node --loader ts-node/esm --unhandled-rejections=strict scripts/resetDB.ts --run"
   },
   "devDependencies": {
     "@rmp135/sql-ts": "^1.18.1",
