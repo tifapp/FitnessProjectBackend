@@ -1,5 +1,4 @@
 {
-  "type": "module",
   "exports": {
     "./user": "./user",
     "./other": "./src/other/index.js"
@@ -14,8 +13,8 @@
     "build": "npx tsc",
     "start": "node dist/index.js",
     "dev": "concurrently \"npx tsc --watch\" \"nodemon -q dist/index.js\"",
-    "test": "jest --detectOpenHandles --runInBand",
-    "test:ci": "jest --ci --detectOpenHandles --forceExit --runInBand"
+    "test": "node --loader ts-node/esm node_modules/jest/bin/jest.js --detectOpenHandles --runInBand",
+    "test:ci": "node -r ts-node/register node_modules/.bin/jest --ci --detectOpenHandles --forceExit --runInBand"
   },
   "files": [
     "dist"

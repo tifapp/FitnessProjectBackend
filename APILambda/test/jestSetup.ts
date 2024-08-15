@@ -1,6 +1,7 @@
 // WARNING: Cannot import modules with extensions here
 
 /* eslint-disable import/extensions */ // todo: allow ts imports here
+import "TiFShared"
 import { TestUser, TestUserInput } from "../global"
 import { createCognitoTestAuthToken } from "./createCognitoUsers"
 import { createMockAuthToken } from "./createMockUsers"
