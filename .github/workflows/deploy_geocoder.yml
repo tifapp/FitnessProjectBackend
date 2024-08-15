@@ -69,7 +69,7 @@ jobs:
                   exit 1
               else
                   echo "Update in progress. Waiting..."
-                  sleep 10
+                  sleep 5
               fi
           done
           if [[ "${{ inputs.stage }}" == "prod" ]] || [[ "${{ inputs.stage }}" == "staging" ]]; then
