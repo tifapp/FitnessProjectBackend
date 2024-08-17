@@ -2,9 +2,7 @@
 import "TiFShared"
 
 import { resetDB } from "TiFBackendUtils/MySQLDriver/test/utils"
-import { testUserCounter } from "./userFlows/createUserFlow"
-
-console.log("LETS GO")
+import { testUserCounter } from "../userFlows/createUserFlow"
 
 /*
 * Resets database before each test

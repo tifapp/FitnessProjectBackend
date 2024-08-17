@@ -1,5 +1,5 @@
 /* eslint-disable import/extensions */ // todo: allow ts imports here
-import { testEnvVars } from "./testEnv"
+import { testEnvVars } from "../testEnv"
 
 export default async (): Promise<void> => {
   console.log(process.memoryUsage())

@@ -14,10 +14,10 @@ export default {
     "^(\\.{1,2}/.*)\\.js$": "$1",
     "^TiFShared/(.*)\\.js$": "<rootDir>/node_modules/TiFShared/$1"
   },
-  globalSetup: "./test/jestSetup.ts",
-  // globalTeardown: "./test/jestTeardown.ts",
+  globalSetup: "./test/jest/globalSetup.ts",
+  // globalTeardown: "./test/jest/jestTeardown.ts",
   testTimeout: 15000,
-  setupFilesAfterEnv: ["./test/setupHooks.ts"],
+  setupFilesAfterEnv: ["./test/jest/setupHooksAfterEnv.ts"],
   watchPlugins: [
     "jest-watch-typeahead/filename",
     "jest-watch-typeahead/testname",

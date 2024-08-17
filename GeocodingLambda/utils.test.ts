@@ -1,7 +1,7 @@
 import { Place } from "@aws-sdk/client-location"
-import { SearchForPositionResultToPlacemark } from "./utils.js"
+import { AddressSearchResultToFlattenedLocation } from "./utils.js"
 
-describe("SearchForPositionResultToPlacemark", () => {
+describe("AddressSearchResultToFlattenedLocation", () => {
   test("Should convert a Place object to a Placemark correctly", () => {
     const coordinate = { latitude: 12.34, longitude: 56.78 }
     const place = {
@@ -16,7 +16,7 @@ describe("SearchForPositionResultToPlacemark", () => {
       UnitNumber: "5678"
     } as Place
 
-    expect(SearchForPositionResultToPlacemark(coordinate, place)).toEqual({
+    expect(AddressSearchResultToFlattenedLocation(coordinate, place)).toEqual({
       latitude: 12.34,
       longitude: 56.78,
       name: "Sample Location",
@@ -34,7 +34,7 @@ describe("SearchForPositionResultToPlacemark", () => {
     const coordinate = { latitude: 12.34, longitude: 56.78 }
     const place = {} as Place
 
-    expect(SearchForPositionResultToPlacemark(coordinate, place)).toEqual({
+    expect(AddressSearchResultToFlattenedLocation(coordinate, place)).toEqual({
       latitude: 12.34,
       longitude: 56.78,
       name: undefined,
@@ -51,7 +51,7 @@ describe("SearchForPositionResultToPlacemark", () => {
       Municipality: "Sample City"
     } as Place
 
-    expect(SearchForPositionResultToPlacemark(coordinate, place).city).toEqual(
+    expect(AddressSearchResultToFlattenedLocation(coordinate, place).city).toEqual(
       "Sample City"
     )
   })
@@ -62,7 +62,7 @@ describe("SearchForPositionResultToPlacemark", () => {
       SubRegion: "Sample SubRegion"
     } as Place
 
-    expect(SearchForPositionResultToPlacemark(coordinate, place).city).toEqual(
+    expect(AddressSearchResultToFlattenedLocation(coordinate, place).city).toEqual(
       "Sample SubRegion"
     )
   })
@@ -73,7 +73,7 @@ describe("SearchForPositionResultToPlacemark", () => {
       Region: "Sample Region"
     } as Place
 
-    expect(SearchForPositionResultToPlacemark(coordinate, place).country).toEqual(
+    expect(AddressSearchResultToFlattenedLocation(coordinate, place).country).toEqual(
       undefined
     )
   })

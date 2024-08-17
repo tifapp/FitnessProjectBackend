@@ -1,11 +1,10 @@
 // WARNING: Cannot import modules with extensions here
 
 /* eslint-disable import/extensions */ // todo: allow ts imports here
-import "TiFShared"
-import { TestUser, TestUserInput } from "../global"
-import { createCognitoTestAuthToken } from "./createCognitoUsers"
-import { createMockAuthToken } from "./createMockUsers"
-import { testEnvVars } from "./testEnv"
+import { TestUser, TestUserInput } from "../../global"
+import { createCognitoTestAuthToken } from "../createCognitoUsers"
+import { createMockAuthToken } from "../createMockUsers"
+import { testEnvVars } from "../testEnv"
 
 const setGlobalVariables = async ({ createUser, maxUsers }: {createUser: (user?: TestUserInput) => Promise<TestUser>, maxUsers: number}) => {
   global.registerUser = createUser
