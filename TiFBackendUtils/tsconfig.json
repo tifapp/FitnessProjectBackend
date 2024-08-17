@@ -16,6 +16,9 @@
     "resolveJsonModule": true
   },
   "preserveSymlinks": true,
+  "include": [
+    "**/*.ts"
+  ],
   "exclude": [
     "**/*.test.ts",
     "**/*.spec.ts",
