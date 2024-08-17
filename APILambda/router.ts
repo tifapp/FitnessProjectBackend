@@ -111,6 +111,8 @@ import { ServerEnvironment } from "./env.js"
 
 export type TiFAPIRouter = TiFAPIClient<{context: ResponseContext, environment: ServerEnvironment}>
 
+type t = ReturnType<TiFAPIClient["updateCurrentUserProfile"]>
+
 // const TiFAPIMiddleware = {}
 
 // const TiFRouter = implementTiFAPI()

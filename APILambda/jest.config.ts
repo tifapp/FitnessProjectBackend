@@ -1,10 +1,17 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 // keys must be regex
 export default {
+  globals: {
+    "ts-jest": {
+      tsconfig: "tsconfig.json",
+      useESM: true
+    }
+  },
+  extensionsToTreatAsEsm: [".ts", ".tsx"],
   testEnvironment: "node",
   clearMocks: true,
   transform: {
-    "^.+\\.(t|j)s?$": "@swc/jest"
+    "^.+\\.(t|j)s?$": "ts-jest"
   },
   transformIgnorePatterns: [
     "/node_modules/(?!(TiFShared|node-fetch|data-uri-to-buffer|fetch-blob|formdata-polyfill))"
