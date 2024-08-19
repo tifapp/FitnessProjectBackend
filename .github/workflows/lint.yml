@@ -1,4 +1,4 @@
-name: Lint Project
+name: Lint and Typecheck Project
 
 on:
   pull_request:
@@ -8,9 +8,9 @@ on:
       - development
 
 jobs:
-  test:
+  lint:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 5
 
     steps:
       - name: Checkout code
@@ -30,3 +30,7 @@ jobs:
       - name: Check ESLint
         run: |
           npx eslint . --fix
+    
+      - name: Check Typescript
+        run: |
+          npx tsc --noEmit
