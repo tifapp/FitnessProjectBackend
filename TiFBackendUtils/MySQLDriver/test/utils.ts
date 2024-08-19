@@ -1,38 +1,35 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // TODO: Replace with backend utils
-import { promiseResult, success } from "TiFShared/lib/Result.js";
-import { fail } from "assert";
-import { envVars } from "../../env.js";
-import { createDatabaseConnection } from "../dbConnection.js";
-import { conn } from "../index.js";
-import { tableDefintionsByFamily } from "./tableDefinitions.js";
+import { envVars } from "../../env.js"
+import { createDatabaseConnection } from "../dbConnection.js"
+import { tableDefintionsByFamily } from "./tableDefinitions.js"
 
 const recreateDatabase = async () => {
-  const connection = await createDatabaseConnection({database: undefined});
+  const connection = await createDatabaseConnection({ database: undefined })
 
   try {
-    //Need to interpolate the database name when using DDL statements like DROP DATABASE or CREATE DATABASE.
-    await connection.query(`DROP DATABASE IF EXISTS \`${envVars.DATABASE_NAME}\``);
-    await connection.query(`CREATE DATABASE \`${envVars.DATABASE_NAME}\``);
+    // Need to interpolate the database name when using DDL statements like DROP DATABASE or CREATE DATABASE.
+    await connection.query(`DROP DATABASE IF EXISTS \`${envVars.DATABASE_NAME}\``)
+    await connection.query(`CREATE DATABASE \`${envVars.DATABASE_NAME}\``)
 
-    console.log(`Reset the database ${envVars.DATABASE_NAME} successfully`);
+    console.log(`Reset the database ${envVars.DATABASE_NAME} successfully`)
   } catch (error) {
-    console.error('An error occurred:', error);
+    console.error("An error occurred:", error)
   } finally {
-    await connection.end();
+    await connection.end()
   }
-};
+}
 
 const recreateTables = async () => {
-  await conn.transaction(async (tx) => {
-    for (const family of tableDefintionsByFamily) {
-      await Promise.allSettled(
-        family.map(tableDefinition => tx.executeResult(tableDefinition))
-      )
-    }
+  const connection = await createDatabaseConnection({ database: envVars.DATABASE_NAME })
 
-    return promiseResult(success())
-  })
+  for (const family of tableDefintionsByFamily) {
+    await Promise.allSettled(
+      family.map(tableDefinition => connection.execute(tableDefinition))
+    )
+  }
+
+  await connection.end()
 }
 
 export const resetDB = async () => {
