@@ -33,6 +33,9 @@ jobs:
     
       - name: Check Typescript
         run: |
+          cd TiFBackendUtils/node_modules/TiFShared
+          npx tsc
+          cd
           cd TiFBackendUtils
           npx tsc
           cd ../GeocodingLambda
