@@ -30,6 +30,7 @@
     "express": "^4.18.2",
     "linkify-it": "^3.0.2",
     "TiFBackendUtils": "file:../TiFBackendUtils",
+    "TiFShared": "git+https://github.com/tifapp/TiFShared.git#combined2",
     "zod": "^3.22.4"
   },
   "devDependencies": {
