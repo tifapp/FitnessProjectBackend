@@ -7,9 +7,6 @@
     "outDir": "dist",
     "removeComments": true,
     "moduleResolution": "node",
-    "paths": {
-      "TiFShared/*": ["./node_modules/TiFShared/*"]
-    },
     "esModuleInterop": true,
     "resolveJsonModule": true
   },

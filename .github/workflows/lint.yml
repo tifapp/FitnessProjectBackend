@@ -33,4 +33,9 @@ jobs:
     
       - name: Check Typescript
         run: |
+          cd TiFBackendUtils
+          npx tsc --noEmit
+          cd ../GeocodingLambda
+          npx tsc --noEmit
+          cd ../APILambda
           npx tsc --noEmit
