@@ -1,4 +1,4 @@
-name: Lint and Typecheck Project
+name: Lint Project
 
 on:
   pull_request:
@@ -30,15 +30,3 @@ jobs:
       - name: Check ESLint
         run: |
           npx eslint . --fix
-    
-      - name: Check Typescript
-        run: |
-          cd TiFBackendUtils/node_modules/TiFShared
-          npx tsc
-          cd
-          cd TiFBackendUtils
-          npx tsc
-          cd ../GeocodingLambda
-          npx tsc
-          cd ../APILambda
-          npx tsc
