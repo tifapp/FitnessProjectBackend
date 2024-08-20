@@ -1,5 +1,5 @@
 /* eslint-disable no-restricted-imports */
-import { Result } from "TiFBackendUtils"
+import { Result } from "TiFShared/lib/Result.js"
 import express, {
   NextFunction,
   Request,

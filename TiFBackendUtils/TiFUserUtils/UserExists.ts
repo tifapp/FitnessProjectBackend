@@ -1,8 +1,9 @@
+import { UserHandle } from "TiFShared/domain-models/User.js"
 import { MySQLExecutableDriver } from "../MySQLDriver/index.js"
 
 export const userWithHandleDoesNotExist = (
   conn: MySQLExecutableDriver,
-  handle: string
+  handle: UserHandle
 ) =>
   conn
     .queryHasResults("SELECT TRUE FROM user WHERE handle = :handle", {

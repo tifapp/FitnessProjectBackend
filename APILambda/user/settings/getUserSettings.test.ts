@@ -1,7 +1,5 @@
-import {
-  callGetSettings
-} from "../../test/apiCallers/users.js"
-import { createUserFlow } from "../../test/userFlows/users.js"
+import { callGetSettings } from "../../test/apiCallers/userEndpoints"
+import { createUserFlow } from "../../test/userFlows/createUserFlow"
 
 describe("Get Settings tests", () => {
   // it("should return 401 when the user has no profile", async () => {

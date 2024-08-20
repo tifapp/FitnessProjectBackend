@@ -1,4 +1,5 @@
-import { LocationCoordinate2D, LocationCoordinates2DSchema, MySQLExecutableDriver, conn } from "TiFBackendUtils"
+import { MySQLExecutableDriver, conn } from "TiFBackendUtils"
+import { LocationCoordinate2D, LocationCoordinate2DSchema } from "TiFShared/domain-models/LocationCoordinate2D.js"
 import { z } from "zod"
 import { ServerEnvironment } from "../../env.js"
 import { ValidatedRouter } from "../../validation.js"
@@ -6,7 +7,7 @@ import { getUpcomingEventsByRegion } from "./getUpcomingEvents.js"
 
 const SetDepartureSchema = z
   .object({
-    coordinate: LocationCoordinates2DSchema,
+    coordinate: LocationCoordinate2DSchema,
     arrivalRadiusMeters: z.number().optional() // may use in the future
   })
 

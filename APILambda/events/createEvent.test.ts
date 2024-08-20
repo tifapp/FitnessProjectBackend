@@ -2,11 +2,11 @@ import {
   conn
 } from "TiFBackendUtils"
 import dayjs from "dayjs"
-import { addPlacemarkToDB } from "../../GeocodingLambda/utils.js"
-import { callCreateEvent, callGetEvent } from "../test/apiCallers/events.js"
+import { addLocationToDB } from "../../GeocodingLambda/utils.js"
+import { callCreateEvent, callGetEvent } from "../test/apiCallers/eventEndpoints.js"
 import { testEventInput } from "../test/testEvents.js"
-import { createEventFlow } from "../test/userFlows/events.js"
-import { createUserFlow } from "../test/userFlows/users.js"
+import { createEventFlow } from "../test/userFlows/createEventFlow.js"
+import { createUserFlow } from "../test/userFlows/createUserFlow.js"
 
 describe("CreateEvent tests", () => {
   it("should allow a user to create an event and add them to the attendee list", async () => {
@@ -100,7 +100,7 @@ describe("CreateEvent tests", () => {
 
   it("create event still is successful if the placemark already exists", async () => {
     const { token } = await createUserFlow()
-    addPlacemarkToDB(conn, {
+    addLocationToDB(conn, {
       latitude: testEventInput.latitude,
       longitude: testEventInput.longitude,
       name: "Sample Location",
@@ -131,7 +131,7 @@ describe("CreateEvent tests", () => {
 
   it("create event still is successful if the location is on a border of two timezones", async () => {
     const { token } = await createUserFlow()
-    addPlacemarkToDB(conn, {
+    addLocationToDB(conn, {
       latitude: 43.839319,
       longitude: 87.526148,
       name: "Sample Location",

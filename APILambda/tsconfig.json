@@ -1,17 +1,22 @@
 {
+  "extends": "./node_modules/TiFShared/tsconfig.json",
   "compilerOptions": {
     "module": "esnext",
-    "target": "es2020",
+    "target": "esnext",
+    "lib": ["esnext"],
     "strict": true,
-    "declaration": false,
     "outDir": "dist",
     "removeComments": true,
-    "allowJs": true,
-    "moduleResolution": "node",
-    "paths": {},
+    "paths": {
+      "TiFShared/*": ["./node_modules/TiFShared/*"]
+    },
     "esModuleInterop": true,
     "resolveJsonModule": true
   },
+  "preserveSymlinks": true,
+  "include": [
+    "**/*.ts",
+  ],
   "exclude": [
     "**/*.test.ts",
     "**/*.spec.ts",

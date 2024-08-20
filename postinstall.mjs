@@ -9,9 +9,9 @@ const commands = isCI
     "cd GeocodingLambda && npm ci && cd .."
   ]
   : [
-    "cd TiFBackendUtils && npm install && cd ..",
-    "cd APILambda && npm install && cd ..",
-    "cd GeocodingLambda && npm install && cd .."
+    "cd TiFBackendUtils && npm install && npm link TiFShared && cd ..",
+    "cd APILambda && npm install && npm link TiFShared && cd ..",
+    "cd GeocodingLambda && npm install && npm link TiFShared && cd .."
   ]
 
 commands.forEach(command => {

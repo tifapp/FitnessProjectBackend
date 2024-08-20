@@ -1,97 +1,78 @@
-import sqlts from "@rmp135/sql-ts"
-import fs from "fs"
+import sqlts, { Config } from "@rmp135/sql-ts"
+import { promises as fs } from "fs"
 import path from "path"
 import { fileURLToPath } from "url"
-import { conn, envVars } from "../TiFBackendUtils/index.js"
+import { envVars } from "../TiFBackendUtils/env.js"
+import { generateMarkdownTable } from "./utils/generateMarkdownTable.js"
+import { getTableNames } from "./utils/getTableNames.js"
 
-if (process.argv.includes('--run')) {
-  const config = {
+const options = {
+  schemaOutput: "../schema.md",
+  typesOutput: "../TiFBackendUtils/Types/entities.ts",
+  optionalValueUndefined: true,
+  assignColumnType: {
+    hostHandle: "import(\"../../node_modules/TiFShared/domain-models/User.js\").UserHandle",
+    handle: "import(\"../../node_modules/TiFShared/domain-models/User.js\").UserHandle",
+    color: "import(\"../../node_modules/TiFShared/domain-models/ColorString.js\").ColorString",
+    hasArrived: "boolean",
+    pushNotificationTriggerIds: "import(\"../../node_modules/TiFShared/domain-models/Settings.js\").UserSettings[\"pushNotificationTriggerIds\"]"
+  },
+  typeMap: {
+    boolean: ["tinyint"],
+    number: ["bigint"]
+  }
+}
+
+if (process.argv.includes("--run")) {
+  const sqltsConfig: Config = {
     client: "mysql2",
     connection: {
       host: envVars.DATABASE_HOST,
       user: envVars.DATABASE_USERNAME,
       password: envVars.DATABASE_PASSWORD,
-      database: envVars.ENVIRONMENT,
-      ssl: {
-        rejectUnauthorized: false
-      }
+      database: envVars.DATABASE_NAME
     },
-    typeMap: {
-      boolean: ["tinyint"],
-      number: ["bigint"]
-    },
-    typeOverrides: {
-      [`${envVars.ENVIRONMENT}.TifEventView.hasArrived`]: "boolean" as const
-    },
-    columnOptionality: {
-      [`${envVars.ENVIRONMENT}.TifEventView.hasArrived`]: "required" as const
-    },
+    typeMap: options.typeMap,
     globalOptionality: "required" as const,
     // eslint-disable-next-line no-template-curly-in-string
     interfaceNameFormat: "DB${table}"
   }
-  
-  const tablesColumn = `Tables_in_${envVars.ENVIRONMENT}`
-  
-  const tableNames = (await conn.queryResult<{
-    tablesColumn: string
-  }>("SHOW TABLES;")).value.map(name => `DB${name[tablesColumn]}`)
-  
-  const DB = await sqlts.toObject(config)
+
+  const DB = await sqlts.toObject(sqltsConfig)
+
+  const tableNames = await getTableNames()
+
   const TiFDBTables = DB.tables.filter(table => tableNames.includes(`${table.interfaceName}`))
-  
-  const __dirname = path.dirname(fileURLToPath(import.meta.url))
-  
-  const tsString = await sqlts.fromObject({ tables: TiFDBTables, enums: DB.enums }, config)
-  
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const generateMarkdownTable = (data: any[]): string => {
-    let markdownContent = ""
-  
-    data.forEach(table => {
-      markdownContent += `### ${table.name}\n\n`
-      markdownContent += "| Property | Data Type | Nullable | Default Value |\n"
-      markdownContent += "|----------|-----------|----------|---------------|\n"
-  
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      table.columns.forEach((column: any) => {
-        markdownContent += `| ${column.propertyName} | ${column.propertyType} | ${column.nullable ? "Yes" : "No"} | ${column.defaultValue || "None"} |\n`
+
+  if (options.assignColumnType) {
+    TiFDBTables.forEach(table => {
+      table.columns.forEach(column => {
+        if (options.assignColumnType[column.name]) {
+          column.propertyType = options.assignColumnType[column.name]
+        }
       })
-  
-      markdownContent += "\n"
     })
-  
-    return markdownContent
   }
-  
-  const markdownTables = generateMarkdownTable(TiFDBTables)
-  
-  const writeFilePromise = (filePath, content) => new Promise<void>((resolve, reject) => {
-    fs.writeFile(filePath, content, (err) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve();
-      }
-    });
-  });
-  
+
+  let tsString = await sqlts.fromObject({ tables: TiFDBTables, enums: DB.enums }, sqltsConfig)
+
+  if (options.optionalValueUndefined) {
+    tsString = tsString.replace(/ null/g, " undefined")
+  }
+
   (async () => {
     try {
-      const schemaPath = path.join(__dirname, "../schema.md");
-      const entitiesPath = path.join(__dirname, "../entities.ts");
-  
+      const __dirname = path.dirname(fileURLToPath(import.meta.url))
+
       await Promise.all([
-        writeFilePromise(schemaPath, markdownTables),
-        writeFilePromise(entitiesPath, tsString)
-      ]);
-  
-      console.log("Schema generated successfully");
-      console.log("Entities generated successfully");
+        fs.writeFile(path.join(__dirname, options.schemaOutput), generateMarkdownTable(TiFDBTables)),
+        fs.writeFile(path.join(__dirname, options.typesOutput), tsString)
+      ])
+
+      console.log("Schema generated successfully")
+      console.log("Entities generated successfully")
     } catch (err) {
-      console.error("Error saving files:", err);
-    } finally {
-      conn.closeConnection();
+      console.error("Error saving files:", err)
     }
-  })();
+  })()
 }

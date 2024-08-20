@@ -1,4 +1,5 @@
-import { conn, success } from "TiFBackendUtils"
+import { conn } from "TiFBackendUtils"
+import { success } from "TiFShared/lib/Result.js"
 import { z } from "zod"
 import {
   ChatPermissions,

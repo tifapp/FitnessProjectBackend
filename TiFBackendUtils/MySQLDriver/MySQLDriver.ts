@@ -1,10 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-// TODO: Replace with backend utils
+import { undefinedToNull } from "TiFShared/lib/Object.js"
+import { AwaitableResult, failure, promiseResult, success } from "TiFShared/lib/Result.js"
 import mysql, { FieldPacket, ResultSetHeader, RowDataPacket } from "mysql2/promise.js"
-import { AwaitableResult, failure, promiseResult, success } from "../result.js"
+import { domainModelColumns } from "../Types/domain-models.js"
 import { createDatabaseConnection } from "./dbConnection.js"
 
-type ExecuteResult = {
+export type DBExecution = {
   insertId: string
   rowsAffected: number
 }
@@ -18,7 +19,8 @@ const typecasts: Record<number, (value: string | null) => unknown> = {
   1: (value) => parseInt(value ?? "0") > 0, // TINYINT as BOOLEAN
   7: (value) => value ? new Date(value) : value, // TIMESTAMP
   12: (value) => value ? new Date(value) : value, // DATETIME
-  246: (value) => value ? parseFloat(value) : value // NEWDECIMAL (DECIMAL/NUMERIC)
+  246: (value) => value ? parseFloat(value) : value, // NEWDECIMAL (DECIMAL/NUMERIC)
+  245: (value) => value ? JSON.parse(value) : value // JSON
 }
 
 const castTypes = (rows: RowDataPacket[], fields: FieldPacket[]): RowDataPacket[] => {
@@ -29,6 +31,12 @@ const castTypes = (rows: RowDataPacket[], fields: FieldPacket[]): RowDataPacket[
       if (type !== undefined && typecasts[type]) {
         row[key] = typecasts[type](row[key])
       }
+      if (row[key] === null) {
+        delete row[key]
+      }
+      if (Object.keys(domainModelColumns).includes(key)) {
+        row[key] = domainModelColumns[key as keyof typeof domainModelColumns](row[key])
+      }
     })
     return row
   })
@@ -37,7 +45,7 @@ const castTypes = (rows: RowDataPacket[], fields: FieldPacket[]): RowDataPacket[
 class MySQLConnectionHandler {
   private connection?: mysql.Connection
   private isConnectionClosed: boolean = false
-  
+
   async useConnection () {
     if (this.isConnectionClosed) {
       throw new Error("Current connection instance was ended.")
@@ -47,21 +55,21 @@ class MySQLConnectionHandler {
       if (!this.connection) {
         throw new Error("Connection is closed")
       }
-        
-      await this.connection?.ping();
+
+      await this.connection?.ping()
     } catch (error) {
       console.error(`${error}, making new connection`)
-      this.connection = await createDatabaseConnection();
+      this.connection = await createDatabaseConnection()
     }
 
-    return this.connection!;
+    return this.connection!
   }
-  
+
   async closeConnection () {
     if (!this.isConnectionClosed) {
       const conn = await this.useConnection()
       conn.end()
-      this.isConnectionClosed = true;
+      this.isConnectionClosed = true
     }
   }
 }
@@ -76,7 +84,7 @@ export class MySQLDriver {
   // ==================
   // Implementation-Dependent Methods
   // ==================
-  
+
   /**
    * Executes a write statement and returns the insert id and # rows affected
    *
@@ -90,12 +98,12 @@ export class MySQLDriver {
    */
   private async execute (
     query: string,
-    args: object | (number | string)[] | null = null
-  ): Promise<ExecuteResult> {
+    args: object | null = null
+  ): Promise<DBExecution> {
     // Use this.conn to execute the query and return the result rows
     // This will be the only function to directly use the database library's execute method.
     const conn = await this.connectionHandler.useConnection()
-    const [result] = await conn.execute<ResultSetHeader>(query, args)
+    const [result] = await conn.execute<ResultSetHeader>(query, args != null ? undefinedToNull(args) : args)
     if (isResultSetHeader(result)) {
       return {
         insertId: result.insertId.toString(),
@@ -105,7 +113,7 @@ export class MySQLDriver {
       throw new Error("Execution did not return a ResultSetHeader.")
     }
   }
-  
+
   /**
    * Loads a list of results from the database given a sql query and casts the result to `Value`
    *
@@ -170,7 +178,6 @@ export class MySQLDriver {
       }
     })())
   }
-
 
   // ==================
   // Generic Methods
