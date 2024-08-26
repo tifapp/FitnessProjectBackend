@@ -32,13 +32,6 @@
     }
   },
   "rules": {
-    "import/extensions": [
-      "error",
-      "always",
-      {
-        "js": "always"
-      }
-    ],
     "no-restricted-imports": [
       "error",
       {

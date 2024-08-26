@@ -1,10 +1,9 @@
 import sqlts from "@rmp135/sql-ts"
 import fs from "fs"
 import path from "path"
-import { fileURLToPath } from "url"
-import { envVars } from "../TiFBackendUtils/env.js"
-import { createDatabaseConnection } from "../TiFBackendUtils/MySQLDriver/dbConnection.js"
-import { resetDB } from "../TiFBackendUtils/MySQLDriver/test/utils.js"
+import { envVars } from "../TiFBackendUtils/env"
+import { createDatabaseConnection } from "../TiFBackendUtils/MySQLDriver/dbConnection"
+import { resetDB } from "../TiFBackendUtils/MySQLDriver/test/utils"
 
 if (process.argv.includes("--run")) {
   const config = {
@@ -33,20 +32,6 @@ if (process.argv.includes("--run")) {
     interfaceNameFormat: "DB${table}"
   }
 
-  await resetDB()
-  const DBconnection = await createDatabaseConnection()
-  const tables = await DBconnection.query("SHOW TABLES;")
-  // @ts-expect-error Only for development
-  const tableNames = tables[0].map(name => `DB${name[`Tables_in_${envVars.DATABASE_NAME}`]}`)
-  DBconnection.end()
-
-  const DB = await sqlts.toObject(config)
-  const TiFDBTables = DB.tables.filter(table => tableNames.includes(`${table.interfaceName}`))
-
-  const __dirname = path.dirname(fileURLToPath(import.meta.url))
-
-  const tsString = await sqlts.fromObject({ tables: TiFDBTables, enums: DB.enums }, config)
-
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const generateMarkdownTable = (data: any[]): string => {
     let markdownContent = ""
@@ -67,8 +52,6 @@ if (process.argv.includes("--run")) {
     return markdownContent
   }
 
-  const markdownTables = generateMarkdownTable(TiFDBTables)
-
   const writeFilePromise = (filePath, content) => new Promise<void>((resolve, reject) => {
     fs.writeFile(filePath, content, (err) => {
       if (err) {
@@ -81,6 +64,19 @@ if (process.argv.includes("--run")) {
 
   (async () => {
     try {
+      await resetDB()
+      const DBconnection = await createDatabaseConnection()
+      const tables = await DBconnection.query("SHOW TABLES;")
+      // @ts-expect-error Only for development
+      const tableNames = tables[0].map(name => `DB${name[`Tables_in_${envVars.DATABASE_NAME}`]}`)
+      DBconnection.end()
+
+      const DB = await sqlts.toObject(config)
+      const TiFDBTables = DB.tables.filter(table => tableNames.includes(`${table.interfaceName}`))
+
+      const tsString = await sqlts.fromObject({ tables: TiFDBTables, enums: DB.enums }, config)
+      const markdownTables = generateMarkdownTable(TiFDBTables)
+
       const schemaPath = path.join(__dirname, "../schema.md")
       const entitiesPath = path.join(__dirname, "../TiFBackendUtils/entities.ts")
 

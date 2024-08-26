@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // TODO: Replace with backend utils
-import { envVars } from "../../env.js"
-import { createDatabaseConnection } from "../dbConnection.js"
-import { tableDefintionsByFamily } from "./tableDefinitions.js"
+import { envVars } from "../../env"
+import { createDatabaseConnection } from "../dbConnection"
+import { tableDefintionsByFamily } from "./tableDefinitions"
 
 const recreateDatabase = async () => {
   const connection = await createDatabaseConnection({ database: undefined })

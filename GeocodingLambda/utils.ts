@@ -5,7 +5,6 @@ import {
 } from "@aws-sdk/client-location"
 import { AWSEnvVars, LocationCoordinate2D, MySQLExecutableDriver } from "TiFBackendUtils"
 // https://github.com/evansiroky/node-geo-tz/commit/1b11eda7824a1e6dbc0b0ff65bfea1f50c20d3fa
-// eslint-disable-next-line import/extensions
 import { find } from "geo-tz/dist/find-now"
 
 const locationClient = new LocationClient({ region: AWSEnvVars.AWS_REGION })

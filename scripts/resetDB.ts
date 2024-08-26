@@ -1,5 +1,5 @@
-import { resetDB } from "../TiFBackendUtils/MySQLDriver/test/utils.ts"
+import { resetDB } from "../TiFBackendUtils/MySQLDriver/test/utils"
 
 if (process.argv.includes("--run")) {
-  await resetDB()
+  resetDB()
 }

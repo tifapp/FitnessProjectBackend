@@ -1,7 +1,7 @@
 {
   "extends": "./node_modules/TiFShared/tsconfig.json",
   "compilerOptions": {
-    "module": "esnext",
+    "module": "commonjs",
     "target": "esnext",
     "strict": true,
     "outDir": "dist",

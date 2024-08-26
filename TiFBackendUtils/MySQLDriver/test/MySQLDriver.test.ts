@@ -100,7 +100,7 @@ describe("MySQLDriver", () => {
       await expect(mySQLDriverTest.queryResult(query, args)).rejects.toThrowError("Query did not return an array of rows and fields.")
     })
   })
-
+  
   describe("queryFirstResult", () => {
     it("should execute a query and return the result rows", async () => {
       await mySQLDriverTest.executeResult("DELETE FROM mySQLDriver")
@@ -125,7 +125,7 @@ describe("MySQLDriver", () => {
       expect(result.status).toEqual("failure")
     })
   })
-
+  
   describe("queryHasResults", () => {
     it("should execute a query and return the result rows", async () => {
       await mySQLDriverTest.executeResult("DELETE FROM mySQLDriver")
