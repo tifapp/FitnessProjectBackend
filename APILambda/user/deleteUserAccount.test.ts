@@ -1,6 +1,6 @@
-import { callDeleteSelf } from "../test/apiCallers/users.js"
-import { withEmptyResponseBody } from "../test/assertions.js"
-import { createUserFlow } from "../test/userFlows/users.js"
+import { callDeleteSelf } from "../test/apiCallers/users"
+import { withEmptyResponseBody } from "../test/assertions"
+import { createUserFlow } from "../test/userFlows/users"
 
 describe("DeleteSelf tests", () => {
   // it("should 401 on non existing user", async () => {

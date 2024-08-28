@@ -1,8 +1,8 @@
 import { EventBridge, PutTargetsCommandOutput } from "@aws-sdk/client-eventbridge"
 import { InvocationType, Lambda } from "@aws-sdk/client-lambda"
-import { retryFunction } from "../Retryable/utils.js"
-import { mockInDevTest } from "../mock.js"
-import { AWSEnvVars } from "./env.js"
+import { retryFunction } from "../Retryable/utils"
+import { mockInDevTest } from "../mock"
+import { AWSEnvVars } from "./env"
 
 const eventbridge = new EventBridge({ apiVersion: "2023-04-20" })
 const lambda = new Lambda()

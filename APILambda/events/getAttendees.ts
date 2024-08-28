@@ -1,11 +1,11 @@
 import { DBeventAttendance, DBuser, DBuserArrivals, ExtractSuccess, MySQLExecutableDriver, UserRelationship, conn, promiseResult, success } from "TiFBackendUtils"
 import { z } from "zod"
-import { ServerEnvironment } from "../env.js"
+import { ServerEnvironment } from "../env"
 import {
   decodeAttendeesListCursor,
   encodeAttendeesListCursor
-} from "../shared/Cursor.js"
-import { ValidatedRouter } from "../validation.js"
+} from "../shared/Cursor"
+import { ValidatedRouter } from "../validation"
 
 const AttendeesRequestSchema = z.object({
   eventId: z.string()

@@ -1,8 +1,8 @@
 import { LocationCoordinate2D, LocationCoordinate2DSchema, MySQLExecutableDriver, conn } from "TiFBackendUtils"
 import { z } from "zod"
-import { ServerEnvironment } from "../../env.js"
-import { ValidatedRouter } from "../../validation.js"
-import { getUpcomingEventsByRegion } from "./getUpcomingEvents.js"
+import { ServerEnvironment } from "../../env"
+import { ValidatedRouter } from "../../validation"
+import { getUpcomingEventsByRegion } from "./getUpcomingEvents"
 
 const SetDepartureSchema = z
   .object({

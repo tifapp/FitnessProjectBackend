@@ -1,6 +1,6 @@
 import { conn, userWithIdExists } from "TiFBackendUtils"
-import { ServerEnvironment } from "../env.js"
-import { ValidatedRouter } from "../validation.js"
+import { ServerEnvironment } from "../env"
+import { ValidatedRouter } from "../validation"
 
 /**
  * Creates routes related to user operations.

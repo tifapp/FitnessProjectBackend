@@ -1,8 +1,8 @@
 import { LocationCoordinate2D, LocationCoordinate2DSchema, MySQLExecutableDriver, conn, failure, success } from "TiFBackendUtils"
 import { z } from "zod"
-import { ServerEnvironment, SetArrivalStatusEnvironment } from "../../env.js"
-import { ValidatedRouter } from "../../validation.js"
-import { getUpcomingEventsByRegion } from "./getUpcomingEvents.js"
+import { ServerEnvironment, SetArrivalStatusEnvironment } from "../../env"
+import { ValidatedRouter } from "../../validation"
+import { getUpcomingEventsByRegion } from "./getUpcomingEvents"
 
 // type ArrivalStatusEnum = "invalid" | "early" | "on-time" | "late" | "ended" // so far, unused
 

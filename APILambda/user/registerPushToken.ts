@@ -1,6 +1,6 @@
 import { conn, failure, MySQLExecutableDriver, success } from "TiFBackendUtils"
 import { z } from "zod"
-import { ValidatedRouter } from "../validation.js"
+import { ValidatedRouter } from "../validation"
 
 const PushTokenPlatformNameSchema = z.union([
   z.literal("apple"),

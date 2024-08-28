@@ -1,8 +1,8 @@
 import { conn } from "TiFBackendUtils"
 import { randomUUID } from "crypto"
-import { expectFailsCheckConstraint } from "../../TiFBackendUtils/MySQLDriver/test/utils.js"
-import { testEventInput } from "../test/testEvents.js"
-import { createEvent } from "./createEvent.js"
+import { expectFailsCheckConstraint } from "../../TiFBackendUtils/MySQLDriver/test/utils"
+import { testEventInput } from "../test/testEvents"
+import { createEvent } from "./createEvent"
 
 describe("Insert event CheckConstraint test", () => {
   it("does not allow the end date to be before the start date", async () => {

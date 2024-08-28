@@ -1,6 +1,6 @@
 import { DBuser, MySQLExecutableDriver, conn } from "TiFBackendUtils"
-import { ServerEnvironment } from "../env.js"
-import { ValidatedRouter } from "../validation.js"
+import { ServerEnvironment } from "../env"
+import { ValidatedRouter } from "../validation"
 
 /**
  * Queries the user with the given id.

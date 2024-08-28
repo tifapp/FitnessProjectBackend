@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 // Env variables
 import { EnvSchema, LocationCoordinate2D, PromiseResult } from "TiFBackendUtils"
-import { ValidatedRouteParams } from "./validation.js"
+import { ValidatedRouteParams } from "./validation"
 
 export type CreateUserProfileEnvironment = {
   setProfileCreatedAttribute: (userId: string) => PromiseResult<unknown, unknown>

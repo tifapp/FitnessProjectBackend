@@ -1,5 +1,5 @@
 import { Place } from "@aws-sdk/client-location"
-import { SearchForPositionResultToPlacemark } from "./utils.js"
+import { SearchForPositionResultToPlacemark } from "./utils"
 
 describe("SearchForPositionResultToPlacemark", () => {
   test("Should convert a Place object to a Placemark correctly", () => {

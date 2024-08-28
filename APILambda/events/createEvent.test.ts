@@ -2,11 +2,11 @@ import {
   conn
 } from "TiFBackendUtils"
 import dayjs from "dayjs"
-import { addPlacemarkToDB } from "../../GeocodingLambda/utils.js"
-import { callCreateEvent, callGetEvent } from "../test/apiCallers/events.js"
-import { testEventInput } from "../test/testEvents.js"
-import { createEventFlow } from "../test/userFlows/events.js"
-import { createUserFlow } from "../test/userFlows/users.js"
+import { addPlacemarkToDB } from "../../GeocodingLambda/utils"
+import { callCreateEvent, callGetEvent } from "../test/apiCallers/events"
+import { testEventInput } from "../test/testEvents"
+import { createEventFlow } from "../test/userFlows/events"
+import { createUserFlow } from "../test/userFlows/users"
 
 describe("CreateEvent tests", () => {
   it("should allow a user to create an event and add them to the attendee list", async () => {

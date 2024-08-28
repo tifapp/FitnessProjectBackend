@@ -1,6 +1,6 @@
-import { AwaitableResult, failure, promiseResult, success } from "TiFShared/lib/Result.js"
-import mysql, { FieldPacket, ResultSetHeader, RowDataPacket } from "mysql2/promise.js"
-import { createDatabaseConnection } from "./dbConnection.js"
+import { AwaitableResult, failure, promiseResult, success } from "TiFShared/lib/Result"
+import mysql, { FieldPacket, ResultSetHeader, RowDataPacket } from "mysql2/promise"
+import { createDatabaseConnection } from "./dbConnection"
 
 export type DBExecution = {
   insertId: string

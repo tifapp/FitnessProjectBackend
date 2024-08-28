@@ -1,7 +1,7 @@
 import { DBuser, MySQLExecutableDriver, conn, failure, promiseResult, success } from "TiFBackendUtils"
-import { CreateUserProfileEnvironment } from "../../env.js"
-import { ValidatedRouter } from "../../validation.js"
-import { generateUniqueUsername } from "../generateUserHandle.js"
+import { CreateUserProfileEnvironment } from "../../env"
+import { ValidatedRouter } from "../../validation"
+import { generateUniqueUsername } from "../generateUserHandle"
 
 type NewUserDetails = {
   id: string

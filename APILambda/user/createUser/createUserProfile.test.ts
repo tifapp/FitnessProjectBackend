@@ -1,4 +1,4 @@
-import { callPostUser } from "../../test/apiCallers/users.js"
+import { callPostUser } from "../../test/apiCallers/users"
 
 describe("Create User Profile tests", () => {
   // TODO: Move to separate unit test file for auth middleware

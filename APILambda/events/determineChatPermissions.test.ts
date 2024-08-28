@@ -1,4 +1,4 @@
-import { determineChatPermissions } from "./getChatToken.js"
+import { determineChatPermissions } from "./getChatToken"
 
 describe("determineChatPermissions", () => {
   it("should return admin permissions for a host user", () => {

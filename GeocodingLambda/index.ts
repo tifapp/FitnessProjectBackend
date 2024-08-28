@@ -11,7 +11,7 @@ import {
   promiseResult,
   success
 } from "TiFBackendUtils"
-import { SearchClosestAddressToCoordinates, addPlacemarkToDB, checkExistingPlacemarkInDB, getTimeZone } from "./utils.js"
+import { SearchClosestAddressToCoordinates, addPlacemarkToDB, checkExistingPlacemarkInDB, getTimeZone } from "./utils"
 
 interface LocationSearchRequest extends LocationCoordinate2D {}
 

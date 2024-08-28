@@ -1,5 +1,5 @@
-import { app } from "./devIndex.js"
-import { testEnvVars } from "./testEnv.js"
+import { app } from "./devIndex"
+import { testEnvVars } from "./testEnv"
 
 /**
  * Creates a test environment application.

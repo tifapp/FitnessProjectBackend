@@ -1,12 +1,12 @@
 import { LocationCoordinate2D, LocationCoordinate2DSchema, MySQLExecutableDriver, conn, failure, success } from "TiFBackendUtils"
 import { z } from "zod"
-import { ServerEnvironment } from "../env.js"
-import { ValidatedRouter } from "../validation.js"
-import { getUpcomingEventsByRegion } from "./arrivals/getUpcomingEvents.js"
-import { insertArrival } from "./arrivals/setArrivalStatus.js"
-import { checkChatPermissionsTransaction } from "./getChatToken.js"
-import { getEventById } from "./getEventById.js"
-import { isUserNotBlocked } from "./sharedSQL.js"
+import { ServerEnvironment } from "../env"
+import { ValidatedRouter } from "../validation"
+import { getUpcomingEventsByRegion } from "./arrivals/getUpcomingEvents"
+import { insertArrival } from "./arrivals/setArrivalStatus"
+import { checkChatPermissionsTransaction } from "./getChatToken"
+import { getEventById } from "./getEventById"
+import { isUserNotBlocked } from "./sharedSQL"
 
 const joinEventParamsSchema = z.object({
   eventId: z.string()

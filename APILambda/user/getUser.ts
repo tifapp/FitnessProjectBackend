@@ -1,7 +1,7 @@
 import { TiFUser, conn, findTiFUser } from "TiFBackendUtils"
 import { z } from "zod"
-import { ServerEnvironment } from "../env.js"
-import { ValidatedRouter } from "../validation.js"
+import { ServerEnvironment } from "../env"
+import { ValidatedRouter } from "../validation"
 
 const userIdSchema = z.object({
   userId: z.string()

@@ -1,9 +1,9 @@
-import { CreateEventInput } from "../../events/createEvent.js"
-import { callCreateEvent, callJoinEvent } from "../apiCallers/events.js"
-import { delay } from "../helpers/delay.js"
-import { testEnvVars } from "../testEnv.js"
-import { testEventInput } from "../testEvents.js"
-import { TestUser, createUserFlow } from "./users.js"
+import { CreateEventInput } from "../../events/createEvent"
+import { callCreateEvent, callJoinEvent } from "../apiCallers/events"
+import { delay } from "../helpers/delay"
+import { testEnvVars } from "../testEnv"
+import { testEventInput } from "../testEvents"
+import { TestUser, createUserFlow } from "./users"
 
 export const createEventFlow = async (
   eventInputs: Partial<CreateEventInput>[] = [{}],
