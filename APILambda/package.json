@@ -1,26 +1,17 @@
 {
-  "exports": {
-    "./user": "./user",
-    "./other": "./src/other/index.js"
-  },
-  "name": "backend",
+  "name": "apilambda",
   "version": "1.0.0",
-  "description": "",
+  "description": "Serves the endpoints for TiF app",
   "main": "index.js",
   "scripts": {
     "pr": "cd .. && npm run pr",
     "genapispecs": "ts-node --esm ./genapispecs.mjs && npx lint-openapi specs.json",
     "build": "npx tsc --strict false",
-    "start": "node dist/index.js",
-    "dev": "concurrently \"npx tsc --watch\" \"nodemon -q dist/index.js\"",
     "test": "jest --detectOpenHandles --runInBand",
     "test:ci": "jest --ci --detectOpenHandles --forceExit --runInBand"
   },
-  "files": [
-    "dist"
-  ],
   "keywords": [],
-  "author": "",
+  "author": "TiF",
   "license": "ISC",
   "dependencies": {
     "@aws-sdk/client-cognito-identity-provider": "^3.515.0",
