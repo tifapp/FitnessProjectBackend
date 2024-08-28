@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-// TODO: Replace with backend utils
 import { envVars } from "../../env"
 import { createDatabaseConnection } from "../dbConnection"
 import { tableDefintionsByFamily } from "./tableDefinitions"

@@ -1,6 +1,8 @@
 /* eslint-disable import/extensions */
+import "TiFShared"
+
 import { resetDB } from "TiFBackendUtils/MySQLDriver/test/utils"
-import { testUserCounter } from "./userFlows/users"
+import { testUserCounter } from "../userFlows/createUserFlow"
 
 /*
 * Resets database before each test

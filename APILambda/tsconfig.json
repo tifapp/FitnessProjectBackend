@@ -1,17 +1,17 @@
 {
   "compilerOptions": {
     "module": "commonjs",
-    "target": "es2020",
+    "target": "ESNext",
     "strict": true,
     "declaration": false,
     "outDir": "dist",
     "removeComments": true,
     "allowJs": true,
     "moduleResolution": "node",
-    "paths": {},
     "esModuleInterop": true,
     "resolveJsonModule": true
   },
+  "preserveSymlinks": true,
   "include": [
     "**/*.ts"
   ],

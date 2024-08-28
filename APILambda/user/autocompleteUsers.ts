@@ -1,4 +1,5 @@
-import { DBuser, MySQLExecutableDriver, UserHandle, UserHandleSchema, conn } from "TiFBackendUtils"
+import { DBuser, MySQLExecutableDriver, conn } from "TiFBackendUtils"
+import { UserHandle, UserHandleSchema } from "TiFShared/domain-models/User"
 import { z } from "zod"
 import { ServerEnvironment } from "../env"
 import { ValidatedRouter, withValidatedRequest } from "../validation"

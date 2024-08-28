@@ -1,5 +1,5 @@
-import { callGetSelf } from "../test/apiCallers/users"
-import { createUserFlow } from "../test/userFlows/users"
+import { callGetSelf } from "../test/apiCallers/userEndpoints"
+import { createUserFlow } from "../test/userFlows/createUserFlow"
 
 describe("GetSelf tests", () => {
   it("should return 500 when we can't retrieve a user's profile", async () => {

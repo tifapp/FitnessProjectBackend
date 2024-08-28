@@ -1,4 +1,6 @@
-import { Placemark, conn, failure, success } from "TiFBackendUtils"
+import { conn } from "TiFBackendUtils"
+import { Placemark } from "TiFShared/domain-models/Placemark"
+import { failure, success } from "TiFShared/lib/Result"
 import { resetDB } from "../TiFBackendUtils/MySQLDriver/test/utils"
 import { handler } from "./index"
 

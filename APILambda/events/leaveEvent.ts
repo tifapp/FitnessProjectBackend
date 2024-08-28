@@ -1,4 +1,5 @@
-import { DBevent, MySQLExecutableDriver, conn, failure } from "TiFBackendUtils"
+import { DBevent, MySQLExecutableDriver, conn } from "TiFBackendUtils"
+import { failure } from "TiFShared/lib/Result"
 import { z } from "zod"
 import { ServerEnvironment } from "../env"
 import { ValidatedRouter } from "../validation"

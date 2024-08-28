@@ -1,6 +1,6 @@
 import dayjs from "dayjs"
-import { callEndEvent } from "../test/apiCallers/events"
-import { createEventFlow } from "../test/userFlows/events"
+import { callEndEvent } from "../test/apiCallers/eventEndpoints"
+import { createEventFlow } from "../test/userFlows/createEventFlow"
 
 describe("End/cancel event tests", () => {
   const eventLocation = { latitude: 50, longitude: 50 }

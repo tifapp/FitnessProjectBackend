@@ -9,10 +9,3 @@ export * from "./Retryable/utils"
 export * from "./TifEventUtils"
 export * from "./TiFUserUtils/index"
 
-export * from "TiFShared/domain-models/LocationCoordinate2D"
-export * from "TiFShared/domain-models/Placemark"
-export * from "TiFShared/domain-models/User"
-export * from "TiFShared/lib/Result"
-// eslint-disable-next-line import/export
-export * from "TiFShared/lib/Types/HelperTypes"
-

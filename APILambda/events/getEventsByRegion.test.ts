@@ -1,12 +1,10 @@
 import { conn, getAttendeeCount, getAttendees } from "TiFBackendUtils"
 import dayjs from "dayjs"
-import { addPlacemarkToDB } from "../../GeocodingLambda/utils"
-import { callGetEventsByRegion } from "../test/helpers/events"
+import { addLocationToDB } from "../../GeocodingLambda/utils"
+import { callEndEvent, callGetEventsByRegion } from "../test/apiCallers/eventEndpoints"
+import { callBlockUser } from "../test/apiCallers/userEndpoints"
 import { testEventInput } from "../test/testEvents"
-import { createEventFlow } from "../test/userFlows/events"
-// import { getAttendeeCount, getAttendees } from "./getEventsByRegion"
-import { callEndEvent } from "../test/apiCallers/events"
-import { callBlockUser } from "../test/apiCallers/users"
+import { createEventFlow } from "../test/userFlows/createEventFlow"
 
 let eventOwnerTestToken: string
 let attendeeTestToken: string
@@ -16,7 +14,7 @@ let futureEventTestId: number
 let ongoingEventTestId: number
 
 export const setupDB = async () => {
-  addPlacemarkToDB(
+  addLocationToDB(
     conn,
     {
       latitude: testEventInput.latitude,

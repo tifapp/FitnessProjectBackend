@@ -1,10 +1,7 @@
 import { randomInt } from "crypto"
-import {
-  callCreateEvent,
-  callGetEventChatToken
-} from "../test/apiCallers/events"
+import { callCreateEvent, callGetEventChatToken } from "../test/apiCallers/eventEndpoints"
 import { testEventInput } from "../test/testEvents"
-import { createUserFlow } from "../test/userFlows/users"
+import { createUserFlow } from "../test/userFlows/createUserFlow"
 
 describe("GetTokenRequest tests", () => {
   // TODO: Make shared util for this

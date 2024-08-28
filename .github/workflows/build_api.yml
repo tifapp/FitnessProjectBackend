@@ -53,6 +53,7 @@ jobs:
           cd APILambda
           npm ci
           npm install ../TiFBackendUtils/dist/TiFBackendUtils-1.0.0.tgz
+          find node_modules/TiFShared -name "*.ts" -type f -delete
 
       - name: Build the project
         run: |

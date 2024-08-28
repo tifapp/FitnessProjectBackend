@@ -1,4 +1,5 @@
-import { DBuser, MySQLExecutableDriver, conn, failure, promiseResult, success } from "TiFBackendUtils"
+import { DBuser, MySQLExecutableDriver, conn } from "TiFBackendUtils"
+import { failure, promiseResult, success } from "TiFShared/lib/Result"
 import { CreateUserProfileEnvironment } from "../../env"
 import { ValidatedRouter } from "../../validation"
 import { generateUniqueUsername } from "../generateUserHandle"
