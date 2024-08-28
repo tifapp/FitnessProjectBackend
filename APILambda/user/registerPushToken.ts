@@ -1,4 +1,4 @@
-import { MySQLExecutableDriver, conn, failure, success } from "TiFBackendUtils"
+import { conn, failure, MySQLExecutableDriver, success } from "TiFBackendUtils"
 import { z } from "zod"
 import { ValidatedRouter } from "../validation.js"
 
@@ -21,9 +21,10 @@ export const createRegisterPushTokenRouter = (router: ValidatedRouter) => {
   router.postWithValidation(
     "/notifications/push/register",
     { bodySchema: RegisterPushTokenRequestSchema },
-    async (req, res) => {
+    async ({ body: { pushToken, platformName } }, res) => {
       return tryInsertPushToken(conn, {
-        ...req.body,
+        pushToken,
+        platformName,
         userId: res.locals.selfId
       })
         .mapSuccess((status) => res.status(201).send({ status }))

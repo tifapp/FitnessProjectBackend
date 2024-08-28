@@ -1,11 +1,11 @@
-import { DBuser, MySQLExecutableDriver, UserHandle, conn } from "TiFBackendUtils"
+import { DBuser, MySQLExecutableDriver, UserHandle, UserHandleSchema, conn } from "TiFBackendUtils"
 import { z } from "zod"
 import { ServerEnvironment } from "../env.js"
 import { ValidatedRouter, withValidatedRequest } from "../validation.js"
 
 const AutocompleteUsersRequestSchema = z.object({
   query: z.object({
-    handle: UserHandle.schema,
+    handle: UserHandleSchema,
     limit: z
       .string()
       .transform((arg) => parseInt(arg))

@@ -1,10 +1,8 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-// TODO: Replace with backend utils
+import { AwaitableResult, failure, promiseResult, success } from "TiFShared/lib/Result.js"
 import mysql, { FieldPacket, ResultSetHeader, RowDataPacket } from "mysql2/promise.js"
-import { AwaitableResult, failure, promiseResult, success } from "../result.js"
 import { createDatabaseConnection } from "./dbConnection.js"
 
-type ExecuteResult = {
+export type DBExecution = {
   insertId: string
   rowsAffected: number
 }
@@ -37,7 +35,7 @@ const castTypes = (rows: RowDataPacket[], fields: FieldPacket[]): RowDataPacket[
 class MySQLConnectionHandler {
   private connection?: mysql.Connection
   private isConnectionClosed: boolean = false
-  
+
   async useConnection () {
     if (this.isConnectionClosed) {
       throw new Error("Current connection instance was ended.")
@@ -47,21 +45,21 @@ class MySQLConnectionHandler {
       if (!this.connection) {
         throw new Error("Connection is closed")
       }
-        
-      await this.connection?.ping();
+
+      await this.connection?.ping()
     } catch (error) {
       console.error(`${error}, making new connection`)
-      this.connection = await createDatabaseConnection();
+      this.connection = await createDatabaseConnection()
     }
 
-    return this.connection!;
+    return this.connection!
   }
-  
+
   async closeConnection () {
     if (!this.isConnectionClosed) {
       const conn = await this.useConnection()
       conn.end()
-      this.isConnectionClosed = true;
+      this.isConnectionClosed = true
     }
   }
 }
@@ -76,7 +74,7 @@ export class MySQLDriver {
   // ==================
   // Implementation-Dependent Methods
   // ==================
-  
+
   /**
    * Executes a write statement and returns the insert id and # rows affected
    *
@@ -91,7 +89,7 @@ export class MySQLDriver {
   private async execute (
     query: string,
     args: object | (number | string)[] | null = null
-  ): Promise<ExecuteResult> {
+  ): Promise<DBExecution> {
     // Use this.conn to execute the query and return the result rows
     // This will be the only function to directly use the database library's execute method.
     const conn = await this.connectionHandler.useConnection()
@@ -105,7 +103,7 @@ export class MySQLDriver {
       throw new Error("Execution did not return a ResultSetHeader.")
     }
   }
-  
+
   /**
    * Loads a list of results from the database given a sql query and casts the result to `Value`
    *
@@ -170,7 +168,6 @@ export class MySQLDriver {
       }
     })())
   }
-
 
   // ==================
   // Generic Methods

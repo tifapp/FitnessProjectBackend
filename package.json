@@ -1,12 +1,11 @@
 {
-  "type": "module",
   "scripts": {
-    "pr": "node --loader ts-node/esm ./TiFBackendUtils/node_modules/TiFShared/npm-scripts/auto-pr.ts",
+    "pr": "ts-node ./TiFBackendUtils/node_modules/TiFShared/npm-scripts/auto-pr",
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,md}\"",
     "prepare": "husky",
     "postinstall": "node postinstall.mjs",
-    "dbtots": "node --trace-warnings --loader ts-node/esm --unhandled-rejections=strict scripts/dbToTs.ts --run",
-    "resetDB": "node --trace-warnings --loader ts-node/esm --unhandled-rejections=strict scripts/resetDB.ts --run"
+    "dbtots": "npx ts-node scripts/dbToTs --run",
+    "resetDB": "npx ts-node scripts/resetDB --run"
   },
   "devDependencies": {
     "@rmp135/sql-ts": "^1.18.1",

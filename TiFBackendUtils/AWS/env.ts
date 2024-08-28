@@ -1,11 +1,8 @@
-import dotenv from "dotenv";
-import { dirname, join } from "path";
-import { fileURLToPath } from "url";
-import { z } from "zod";
+import dotenv from "dotenv"
+import { join } from "path"
+import { z } from "zod"
 
-let _dirname = dirname(fileURLToPath(import.meta.url));
-
-dotenv.config({ path: join(_dirname, '../../.env') });
+dotenv.config({ path: join(__dirname, "../../.env") })
 dotenv.config()
 
 const EnvSchema = z
