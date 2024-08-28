@@ -1,6 +1,6 @@
 import { MySQLExecutableDriver, conn, failure, findTiFUser, success } from "TiFBackendUtils"
 import { z } from "zod"
-import { ValidatedRouter } from "../validation.js"
+import { ValidatedRouter } from "../validation"
 
 const friendRequestSchema = z.object({
   userId: z.string().uuid()

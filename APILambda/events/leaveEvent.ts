@@ -1,7 +1,7 @@
 import { DBevent, MySQLExecutableDriver, conn, failure } from "TiFBackendUtils"
 import { z } from "zod"
-import { ServerEnvironment } from "../env.js"
-import { ValidatedRouter } from "../validation.js"
+import { ServerEnvironment } from "../env"
+import { ValidatedRouter } from "../validation"
 
 const leaveEventSchema = z.object({
   eventId: z.string()

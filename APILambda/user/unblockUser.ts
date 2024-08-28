@@ -1,6 +1,6 @@
 import { MySQLExecutableDriver, conn, failure, success, userWithIdExists } from "TiFBackendUtils"
 import { z } from "zod"
-import { ValidatedRouter } from "../validation.js"
+import { ValidatedRouter } from "../validation"
 
 const UnblockUserRequestSchema = z.object({
   userId: z.string().uuid()

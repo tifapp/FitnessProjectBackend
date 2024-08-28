@@ -1,4 +1,4 @@
-import { callPostUser } from "../apiCallers/users.js";
+import { callPostUser } from "../apiCallers/users";
 
 export type TestUser = {handle: string, userId: string, token: string, name: string};
 

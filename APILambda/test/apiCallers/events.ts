@@ -1,9 +1,9 @@
 import request from "supertest"
-import { SetArrivalStatusInput } from "../../events/arrivals/setArrivalStatus.js"
-import { SetDepartureInput } from "../../events/arrivals/setDeparture.js"
-import { CreateEventInput } from "../../events/createEvent.js"
-import { JoinEventInput } from "../../events/joinEventById.js"
-import { testApp } from "../testApp.js"
+import { SetArrivalStatusInput } from "../../events/arrivals/setArrivalStatus"
+import { SetDepartureInput } from "../../events/arrivals/setDeparture"
+import { CreateEventInput } from "../../events/createEvent"
+import { JoinEventInput } from "../../events/joinEventById"
+import { testApp } from "../testApp"
 
 export const callCreateEvent = async (
   bearerToken: string,

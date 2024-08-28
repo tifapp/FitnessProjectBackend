@@ -1,8 +1,8 @@
 import type { NullablePartial } from "TiFBackendUtils"
 import { DBuser, MySQLExecutableDriver, UserHandleSchema, conn, success, userWithHandleDoesNotExist } from "TiFBackendUtils"
 import { z } from "zod"
-import { ServerEnvironment } from "../env.js"
-import { ValidatedRouter } from "../validation.js"
+import { ServerEnvironment } from "../env"
+import { ValidatedRouter } from "../validation"
 
 const UpdateUserRequestSchema = z.object({
   name: z.string().optional(),

@@ -1,7 +1,7 @@
 import { conn } from "TiFBackendUtils"
 import { randomUUID } from "crypto"
-import { expectFailsCheckConstraint } from "../../../TiFBackendUtils/MySQLDriver/test/utils.js"
-import { insertUser } from "./createUserProfile.js"
+import { expectFailsCheckConstraint } from "../../../TiFBackendUtils/MySQLDriver/test/utils"
+import { insertUser } from "./createUserProfile"
 
 describe("CheckConstraint tests", () => {
   it("should not allow a handle with non-lowercase alpha numeric characters", async () => {

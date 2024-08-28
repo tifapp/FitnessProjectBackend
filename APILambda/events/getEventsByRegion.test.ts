@@ -1,12 +1,12 @@
 import { conn, getAttendeeCount, getAttendees } from "TiFBackendUtils"
 import dayjs from "dayjs"
-import { addPlacemarkToDB } from "../../GeocodingLambda/utils.js"
-import { callGetEventsByRegion } from "../test/helpers/events.js"
-import { testEventInput } from "../test/testEvents.js"
-import { createEventFlow } from "../test/userFlows/events.js"
-// import { getAttendeeCount, getAttendees } from "./getEventsByRegion.js"
-import { callEndEvent } from "../test/apiCallers/events.js"
-import { callBlockUser } from "../test/apiCallers/users.js"
+import { addPlacemarkToDB } from "../../GeocodingLambda/utils"
+import { callGetEventsByRegion } from "../test/helpers/events"
+import { testEventInput } from "../test/testEvents"
+import { createEventFlow } from "../test/userFlows/events"
+// import { getAttendeeCount, getAttendees } from "./getEventsByRegion"
+import { callEndEvent } from "../test/apiCallers/events"
+import { callBlockUser } from "../test/apiCallers/users"
 
 let eventOwnerTestToken: string
 let attendeeTestToken: string

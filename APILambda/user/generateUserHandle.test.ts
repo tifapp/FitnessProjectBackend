@@ -1,5 +1,5 @@
 import { conn } from "TiFBackendUtils"
-import { generateUniqueUsername } from "./generateUserHandle.js"
+import { generateUniqueUsername } from "./generateUserHandle"
 
 describe("generateUniqueUsername", () => {
   it("should generate a unique usernames from the same name", async () => {

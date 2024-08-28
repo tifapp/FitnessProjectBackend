@@ -43,8 +43,8 @@ For example, if you're adding a new "products" route, you might add a SQL statem
 ```typescript
 // getNewProduct.ts or SQL.ts in 'products' folder
 import { MySQLExecutableDriver, conn, failure, success } from "TiFBackendUtils"
-import { ServerEnvironment } from "../env.js"
-import { ValidatedRouter } from "../validation.js"
+import { ServerEnvironment } from "../env"
+import { ValidatedRouter } from "../validation"
 
 const getNewProduct = (
   conn: MySQLExecutableDriver,
@@ -76,8 +76,8 @@ For example, if you're working on the "products" route, and you have a SQL state
 ```typescript
 // getNewProduct.ts in 'products' folder
 import { MySQLExecutableDriver, conn, failure, success } from "TiFBackendUtils"
-import { ServerEnvironment } from "../env.js"
-import { ValidatedRouter } from "../validation.js"
+import { ServerEnvironment } from "../env"
+import { ValidatedRouter } from "../validation"
 
 const getNewProductTransaction = (conn: MySQLExecutableDriver, id: string) =>
   conn.transaction((tx) =>
@@ -125,8 +125,8 @@ For example, if you're adding a "products" route to get a product by its ID, you
 ```typescript
 // getNewProduct.ts in 'products' folder
 import { MySQLExecutableDriver, conn, failure, success } from "TiFBackendUtils"
-import { ServerEnvironment } from "../env.js"
-import { ValidatedRouter } from "../validation.js"
+import { ServerEnvironment } from "../env"
+import { ValidatedRouter } from "../validation"
 
 export const getNewProductRouter = (
   environment: ServerEnvironment,

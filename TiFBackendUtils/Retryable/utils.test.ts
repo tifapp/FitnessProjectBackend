@@ -1,4 +1,4 @@
-import { retryFunction } from "./utils.js";
+import { retryFunction } from "./utils";
 
 describe("retryFunction", () => {
   test("Should not retry if function succeeds", async () => {

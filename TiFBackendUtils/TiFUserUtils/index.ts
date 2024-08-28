@@ -1,3 +1,3 @@
-export * from "./TiFUserResponse.js"
-export * from "./UserExists.js"
-export * from "./UserRelationships.js"
+export * from "./TiFUserResponse"
+export * from "./UserExists"
+export * from "./UserRelationships"

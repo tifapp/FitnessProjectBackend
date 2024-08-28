@@ -1,7 +1,7 @@
 import { DBTifEvent, MySQLExecutableDriver, TiFEvent, conn, setEventAttendeesFields, success, tifEventResponseFromDatabaseEvent } from "TiFBackendUtils"
 import { z } from "zod"
-import { ServerEnvironment } from "../env.js"
-import { ValidatedRouter } from "../validation.js"
+import { ServerEnvironment } from "../env"
+import { ValidatedRouter } from "../validation"
 
 const eventRequestSchema = z.object({
   eventId: z.string()

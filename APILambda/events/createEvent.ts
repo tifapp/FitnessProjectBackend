@@ -4,9 +4,9 @@ import {
   success
 } from "TiFBackendUtils"
 import { z } from "zod"
-import { ServerEnvironment } from "../env.js"
-import { ValidatedRouter } from "../validation.js"
-import { addUserToAttendeeList } from "./joinEventById.js"
+import { ServerEnvironment } from "../env"
+import { ValidatedRouter } from "../validation"
+import { addUserToAttendeeList } from "./joinEventById"
 
 const CreateEventSchema = z
   .object({

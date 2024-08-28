@@ -1,4 +1,4 @@
-import { resetDB } from "../TiFBackendUtils/MySQLDriver/test/utils.js";
+import { resetDB } from "../TiFBackendUtils/MySQLDriver/test/utils";
 
 /*
 * Resets database before each test

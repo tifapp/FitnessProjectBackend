@@ -4,12 +4,12 @@ import {
   envVars,
   invokeAWSLambda
 } from "TiFBackendUtils"
-import { addBenchmarking, addRoutes, createApp } from "./app.js"
-import { addCognitoTokenVerification } from "./auth.js"
-import { ServerEnvironment } from "./env.js"
-import { addErrorReporting } from "./errorReporting.js"
-import { addEventToRequest } from "./serverlessMiddleware.js"
-import { setProfileCreatedAttribute } from "./user/createUser/setCognitoAttribute.js"
+import { addBenchmarking, addRoutes, createApp } from "./app"
+import { addCognitoTokenVerification } from "./auth"
+import { ServerEnvironment } from "./env"
+import { addErrorReporting } from "./errorReporting"
+import { addEventToRequest } from "./serverlessMiddleware"
+import { setProfileCreatedAttribute } from "./user/createUser/setCognitoAttribute"
 
 const env: ServerEnvironment = {
   environment: envVars.ENVIRONMENT,

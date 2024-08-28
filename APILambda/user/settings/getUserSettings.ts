@@ -1,7 +1,7 @@
 import { conn } from "TiFBackendUtils"
-import { ServerEnvironment } from "../../env.js"
-import { ValidatedRouter } from "../../validation.js"
-import { queryUserSettings } from "./userSettingsQuery.js"
+import { ServerEnvironment } from "../../env"
+import { ValidatedRouter } from "../../validation"
+import { queryUserSettings } from "./userSettingsQuery"
 
 export const getUserSettingsRouter = (
   environment: ServerEnvironment,

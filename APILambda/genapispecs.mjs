@@ -8,8 +8,8 @@ import fs from "fs"
 import path from "path"
 import { fileURLToPath } from "url"
 import { z } from "zod"
-import { addRoutes, createApp } from "./app.js"
-import { addCognitoTokenVerification } from "./auth.js"
+import { addRoutes, createApp } from "./app"
+import { addCognitoTokenVerification } from "./auth"
 
 const APIEnvVarsSchema = z
   .object({

@@ -2,13 +2,13 @@ import { TiFEvent, calcSecondsToStart, calcTodayOrTomorrow, conn } from "TiFBack
 import { randomInt } from "crypto"
 import dayjs from "dayjs"
 import { expectTypeOf } from "expect-type"
-import { addPlacemarkToDB, getTimeZone } from "../../GeocodingLambda/utils.js"
-import { callGetEvent } from "../test/apiCallers/events.js"
-import { callBlockUser } from "../test/apiCallers/users.js"
-import { testEventInput } from "../test/testEvents.js"
-import { createEventFlow } from "../test/userFlows/events.js"
-import { createUserFlow } from "../test/userFlows/users.js"
-import { BlockedTiFEventResponse } from "./getEventById.js"
+import { addPlacemarkToDB, getTimeZone } from "../../GeocodingLambda/utils"
+import { callGetEvent } from "../test/apiCallers/events"
+import { callBlockUser } from "../test/apiCallers/users"
+import { testEventInput } from "../test/testEvents"
+import { createEventFlow } from "../test/userFlows/events"
+import { createUserFlow } from "../test/userFlows/users"
+import { BlockedTiFEventResponse } from "./getEventById"
 
 describe("GetSingleEvent tests", () => {
   const eventLocation = {

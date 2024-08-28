@@ -8,7 +8,7 @@ import express, {
   Router
 } from "express"
 import { AnyZodObject, ZodSchema, z } from "zod"
-import { ResponseContext } from "./auth.js"
+import { ResponseContext } from "./auth"
 
 interface ValidationSchemas {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

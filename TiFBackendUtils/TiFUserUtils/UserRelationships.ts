@@ -1,4 +1,4 @@
-import { DBuserRelations } from "../entities.js"
+import { DBuserRelations } from "../entities"
 
 /**
  * A type representing the relationship status between 2 users.

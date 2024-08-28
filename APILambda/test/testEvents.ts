@@ -1,5 +1,5 @@
 import { faker } from "@faker-js/faker"
-import { CreateEventInput } from "../events/createEvent.js"
+import { CreateEventInput } from "../events/createEvent"
 
 // Coords in the US mainland
 const mockLocationCoordinate2D = () => ({

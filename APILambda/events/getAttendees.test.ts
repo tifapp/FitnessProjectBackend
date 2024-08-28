@@ -1,12 +1,12 @@
 import { conn } from "TiFBackendUtils"
 import dayjs from "dayjs"
-import { decodeAttendeesListCursor } from "../shared/Cursor.js"
-import { callGetAttendees, callSetArrival } from "../test/apiCallers/events.js"
-import { callBlockUser } from "../test/apiCallers/users.js"
-import { testEventInput } from "../test/testEvents.js"
-import { createEventFlow } from "../test/userFlows/events.js"
-import { TestUser, createUserFlow } from "../test/userFlows/users.js"
-import { createEvent } from "./createEvent.js"
+import { decodeAttendeesListCursor } from "../shared/Cursor"
+import { callGetAttendees, callSetArrival } from "../test/apiCallers/events"
+import { callBlockUser } from "../test/apiCallers/users"
+import { testEventInput } from "../test/testEvents"
+import { createEventFlow } from "../test/userFlows/events"
+import { TestUser, createUserFlow } from "../test/userFlows/users"
+import { createEvent } from "./createEvent"
 
 const eventLocation = { latitude: 50, longitude: 50 }
 // TODO: should have a universal "lastpagecursor" value

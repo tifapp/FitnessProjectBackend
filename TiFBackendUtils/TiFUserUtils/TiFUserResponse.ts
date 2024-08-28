@@ -1,7 +1,7 @@
-import { ExtractSuccess } from "TiFShared/lib/Result.js"
-import { MySQLExecutableDriver } from "../MySQLDriver/index.js"
-import { DBuser } from "../entities.js"
-import { UserRelationship } from "./UserRelationships.js"
+import { ExtractSuccess } from "TiFShared/lib/Result"
+import { MySQLExecutableDriver } from "../MySQLDriver/index"
+import { DBuser } from "../entities"
+import { UserRelationship } from "./UserRelationships"
 
 export const findTiFUser = (
   conn: MySQLExecutableDriver,

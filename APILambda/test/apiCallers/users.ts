@@ -1,7 +1,7 @@
 import request from "supertest"
-import { PushTokenPlatformName } from "../../user/registerPushToken.js"
-import { UserSettings } from "../../user/settings/models.js"
-import { testApp } from "../testApp.js"
+import { PushTokenPlatformName } from "../../user/registerPushToken"
+import { UserSettings } from "../../user/settings/models"
+import { testApp } from "../testApp"
 
 export const callPatchSettings = async (
   bearerToken: string,

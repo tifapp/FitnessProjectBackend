@@ -1,6 +1,6 @@
 import { Placemark, conn, failure, success } from "TiFBackendUtils"
-import { resetDB } from "../TiFBackendUtils/MySQLDriver/test/utils.js"
-import { handler } from "./index.js"
+import { resetDB } from "../TiFBackendUtils/MySQLDriver/test/utils"
+import { handler } from "./index"
 
 const testLocation = { latitude: 36.99813840222285, longitude: -122.05564377465653 }
 const storedLocation = { latitude: 36.9981384, longitude: -122.0556438 } // SQL has limited precision

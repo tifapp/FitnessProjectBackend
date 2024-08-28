@@ -1,4 +1,4 @@
-import { MySQLDriver } from "../../MySQLDriver/MySQLDriver.js"
+import { MySQLDriver } from "../../MySQLDriver/MySQLDriver"
 
 export type ExecuteResult = {
   id: string

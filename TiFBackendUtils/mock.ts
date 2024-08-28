@@ -1,4 +1,4 @@
-import { envVars } from "./env.js";
+import { envVars } from "./env";
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore

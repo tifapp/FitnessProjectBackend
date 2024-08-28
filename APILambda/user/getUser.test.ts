@@ -1,8 +1,8 @@
 import {
   callBlockUser,
   callGetUser
-} from "../test/apiCallers/users.js"
-import { createUserFlow } from "../test/userFlows/users.js"
+} from "../test/apiCallers/users"
+import { createUserFlow } from "../test/userFlows/users"
 
 describe("GetUser tests", () => {
   // it("should 401 on non existing user", async () => {

@@ -1,7 +1,7 @@
 import { MySQLExecutableDriver, conn, userWithIdExists } from "TiFBackendUtils"
 import { z } from "zod"
-import { userNotFoundResponse } from "../shared/Responses.js"
-import { ValidatedRouter } from "../validation.js"
+import { userNotFoundResponse } from "../shared/Responses"
+import { ValidatedRouter } from "../validation"
 
 const BlockUserRequestSchema = z.object({
   userId: z.string().uuid()

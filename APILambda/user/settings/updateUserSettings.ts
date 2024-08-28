@@ -1,8 +1,8 @@
 import type { NullablePartial } from "TiFBackendUtils"
 import { MySQLExecutableDriver, conn } from "TiFBackendUtils"
-import { ServerEnvironment } from "../../env.js"
-import { ValidatedRouter } from "../../validation.js"
-import { UserSettings, UserSettingsSchema } from "./models.js"
+import { ServerEnvironment } from "../../env"
+import { ValidatedRouter } from "../../validation"
+import { UserSettings, UserSettingsSchema } from "./models"
 
 /**
  * Updates the user's settings with the specified fields in the settings object.

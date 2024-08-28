@@ -1,8 +1,8 @@
 import { LocationCoordinate2D, promiseResult, success } from "TiFBackendUtils"
-import { handler } from "../../GeocodingLambda/index.js"
-import { addRoutes, createApp } from "../app.js"
-import { addCognitoTokenVerification } from "../auth.js"
-import { ServerEnvironment } from "../env.js"
+import { handler } from "../../GeocodingLambda/index"
+import { addRoutes, createApp } from "../app"
+import { addCognitoTokenVerification } from "../auth"
+import { ServerEnvironment } from "../env"
 
 export const devTestEnv: ServerEnvironment = {
   environment: "devTest",

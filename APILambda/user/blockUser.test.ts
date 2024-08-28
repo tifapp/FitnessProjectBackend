@@ -3,9 +3,9 @@ import {
   callBlockUser,
   callGetUser,
   callPostFriendRequest
-} from "../test/apiCallers/users.js"
-import { withEmptyResponseBody } from "../test/assertions.js"
-import { createUserFlow } from "../test/userFlows/users.js"
+} from "../test/apiCallers/users"
+import { withEmptyResponseBody } from "../test/assertions"
+import { createUserFlow } from "../test/userFlows/users"
 
 describe("Block User tests", () => {
   // TEST THAT USER IS KICKED OUT OF EVENT AFTER BEING BLOCKED

@@ -3,11 +3,11 @@ import { z } from "zod"
 import {
   ChatPermissions,
   createTokenRequest
-} from "../ably.js"
-import { ServerEnvironment } from "../env.js"
-import { ValidatedRouter } from "../validation.js"
-import { getEventById } from "./getEventById.js"
-import { isUserInEvent, isUserNotBlocked } from "./sharedSQL.js"
+} from "../ably"
+import { ServerEnvironment } from "../env"
+import { ValidatedRouter } from "../validation"
+import { getEventById } from "./getEventById"
+import { isUserInEvent, isUserNotBlocked } from "./sharedSQL"
 
 type Role = "admin" | "attendee" | "viewer"
 

@@ -1,3 +1,3 @@
-export * from "./env.js";
-export * from "./lambdaUtils.js";
+export * from "./env";
+export * from "./lambdaUtils";
 

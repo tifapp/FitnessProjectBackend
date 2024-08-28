@@ -1,10 +1,10 @@
-import { Placemark } from "TiFShared/domain-models/Placemark.js"
-import { success } from "TiFShared/lib/Result.js"
+import { Placemark } from "TiFShared/domain-models/Placemark"
+import { success } from "TiFShared/lib/Result"
 import dayjs from "dayjs"
-import duration from "dayjs/plugin/duration.js"
-import { MySQLExecutableDriver } from "./MySQLDriver/index.js"
-import { UserRelationship } from "./TiFUserUtils/UserRelationships.js"
-import { DBEventAttendeeCountView, DBEventAttendeesView, DBTifEventView, DBevent, DBeventAttendance, DBuserRelations } from "./entities.js"
+import duration from "dayjs/plugin/duration"
+import { MySQLExecutableDriver } from "./MySQLDriver/index"
+import { UserRelationship } from "./TiFUserUtils/UserRelationships"
+import { DBEventAttendeeCountView, DBEventAttendeesView, DBTifEventView, DBevent, DBeventAttendance, DBuserRelations } from "./entities"
 dayjs.extend(duration)
 
 // Get the total seconds in the duration
