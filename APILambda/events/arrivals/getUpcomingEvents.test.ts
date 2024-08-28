@@ -1,8 +1,8 @@
 import dayjs from "dayjs"
-import { callCreateEvent, callGetUpcomingEvents, callSetArrival } from "../../test/apiCallers/events"
+import { callCreateEvent, callGetUpcomingEvents, callSetArrival } from "../../test/apiCallers/eventEndpoints"
 import { testEventInput } from "../../test/testEvents"
-import { createEventFlow } from "../../test/userFlows/events"
-import { createUserFlow } from "../../test/userFlows/users"
+import { createEventFlow } from "../../test/userFlows/createEventFlow"
+import { createUserFlow } from "../../test/userFlows/createUserFlow"
 
 describe("getUpcomingEvents tests", () => {
   it("should return 200 with an empty array if the user has no upcoming events", async () => {

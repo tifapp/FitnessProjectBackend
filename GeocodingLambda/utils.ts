@@ -3,11 +3,15 @@ import {
   Place,
   SearchPlaceIndexForPositionCommand
 } from "@aws-sdk/client-location"
-import { AWSEnvVars, LocationCoordinate2D, MySQLExecutableDriver } from "TiFBackendUtils"
+import { AWSEnvVars, MySQLExecutableDriver } from "TiFBackendUtils"
 // https://github.com/evansiroky/node-geo-tz/commit/1b11eda7824a1e6dbc0b0ff65bfea1f50c20d3fa
 import { find } from "geo-tz/dist/find-now"
+import { LocationCoordinate2D } from "TiFShared/domain-models/LocationCoordinate2D"
+import { Placemark } from "TiFShared/domain-models/Placemark"
 
 const locationClient = new LocationClient({ region: AWSEnvVars.AWS_REGION })
+
+export type FlattenedLocation = LocationCoordinate2D & Placemark
 
 /**
  * Converts an AWS location search result into placemark format.
@@ -16,28 +20,24 @@ const locationClient = new LocationClient({ region: AWSEnvVars.AWS_REGION })
  * @param {Place | undefined} place The location search result from AWS.
  * @returns {Placemark} The location search result in placemark format.
  */
-export const SearchForPositionResultToPlacemark = (
+export const AddressSearchResultToFlattenedLocation = (
   location: LocationCoordinate2D,
   place?: Place
-  // TODO: Update in follow up prs
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-): any => {
+): FlattenedLocation => {
   return {
-    latitude: location.latitude,
-    longitude: location.longitude,
+    ...location,
     name: place?.Label,
     city:
       place?.Neighborhood ??
       place?.Municipality ??
       place?.SubRegion,
-    // country: place?.Country, // TODO: Need to get the full country name
+    // country: place?.Country, // TODO: Need to derive the full country name
+    country: undefined,
     street: place?.Street,
     streetNumber: place?.AddressNumber,
     postalCode: place?.PostalCode,
     region: place?.Region,
-    isoCountryCode: place?.Country,
-    country: undefined,
-    timezoneIdentifier: place?.TimeZone?.Name
+    isoCountryCode: place?.Country
   }
 }
 
@@ -53,7 +53,7 @@ export const SearchClosestAddressToCoordinates = async (
     })
   )
 
-  return SearchForPositionResultToPlacemark(
+  return AddressSearchResultToFlattenedLocation(
     location,
     response.Results?.[0]?.Place
   )
@@ -73,7 +73,7 @@ export const checkExistingPlacemarkInDB = (
     .inverted()
     .withFailure("placemark-already-exists" as const)
 
-export const addPlacemarkToDB = (conn: MySQLExecutableDriver, {
+export const addLocationToDB = (conn: MySQLExecutableDriver, {
   latitude,
   longitude,
   name = null,
@@ -84,14 +84,12 @@ export const addPlacemarkToDB = (conn: MySQLExecutableDriver, {
   postalCode = null,
   region = null,
   isoCountryCode = null
-  // TODO: Update in follow up prs
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-}: any, timezoneIdentifier: string) =>
+}: FlattenedLocation, timezoneIdentifier: string) =>
   conn.executeResult(
     `
-        INSERT INTO location (name, city, country, street, streetNumber, postalCode, latitude, longitude, timezoneIdentifier, isoCountryCode)
-        VALUES (:name, :city, :country, :street, :streetNumber, :postalCode, :latitude, :longitude, :timezoneIdentifier, :isoCountryCode)
-        `,
+      INSERT INTO location (name, city, country, street, streetNumber, postalCode, latitude, longitude, timezoneIdentifier, isoCountryCode)
+      VALUES (:name, :city, :country, :street, :streetNumber, :postalCode, :latitude, :longitude, :timezoneIdentifier, :isoCountryCode)
+    `,
     { timezoneIdentifier, latitude, longitude, name, city, country, street, streetNumber, postalCode, region, isoCountryCode }
   )
 

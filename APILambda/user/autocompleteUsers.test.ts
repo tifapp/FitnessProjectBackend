@@ -1,5 +1,5 @@
-import { callAutocompleteUsers, callUpdateUserHandle } from "../test/apiCallers/users"
-import { createUserFlow } from "../test/userFlows/users"
+import { callAutocompleteUsers, callUpdateUserHandle } from "../test/apiCallers/userEndpoints"
+import { createUserFlow } from "../test/userFlows/createUserFlow"
 
 describe("AutocompleteUsers tests", () => {
   test("autocomplete endpoint basic request", async () => {

@@ -1,4 +1,5 @@
-import { DBeventAttendance, DBuser, DBuserArrivals, ExtractSuccess, MySQLExecutableDriver, UserRelationship, conn, promiseResult, success } from "TiFBackendUtils"
+import { DBeventAttendance, DBuser, DBuserArrivals, MySQLExecutableDriver, UserRelationship, conn } from "TiFBackendUtils"
+import { ExtractSuccess, promiseResult, success } from "TiFShared/lib/Result"
 import { z } from "zod"
 import { ServerEnvironment } from "../env"
 import {

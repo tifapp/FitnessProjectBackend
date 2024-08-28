@@ -6,11 +6,11 @@ import {
   callEndEvent,
   callGetAttendees,
   callJoinEvent
-} from "../test/apiCallers/events"
-import { callBlockUser } from "../test/apiCallers/users"
+} from "../test/apiCallers/eventEndpoints"
+import { callBlockUser } from "../test/apiCallers/userEndpoints"
 import { testEventInput } from "../test/testEvents"
-import { createEventFlow } from "../test/userFlows/events"
-import { createUserFlow } from "../test/userFlows/users"
+import { createEventFlow } from "../test/userFlows/createEventFlow"
+import { createUserFlow } from "../test/userFlows/createUserFlow"
 import { createEvent } from "./createEvent"
 
 const eventLocation = { latitude: 50, longitude: 50 }

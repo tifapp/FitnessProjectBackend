@@ -75,22 +75,6 @@ export const callGetUpcomingEvents = async (
     .send()
 }
 
-export const callGetEvent = async (bearerToken: string, eventId: number) => {
-  return await request(testApp)
-    .get(`/event/details/${eventId}`)
-    .set("Authorization", bearerToken)
-    .send()
-}
-
-export const callGetEventChatToken = async (
-  bearerToken: string,
-  eventId: number
-) => {
-  return await request(testApp)
-    .get(`/event/chat/${eventId}`)
-    .set("Authorization", bearerToken)
-    .send()
-}
 
 export const callGetAttendees = async (
   bearerToken: string,
@@ -101,6 +85,35 @@ export const callGetAttendees = async (
   return await request(testApp)
     .get(`/event/attendees/${eventId}`)
     .query({ nextPage, limit })
+    .set("Authorization", bearerToken)
+    .send()
+}
+
+export const callGetEvent = async (bearerToken: string, eventId: number) => {
+  return await request(testApp)
+    .get(`/event/details/${eventId}`)
+    .set("Authorization", bearerToken)
+    .send()
+}
+
+export const callGetEventsByRegion = async (
+  bearerToken: string,
+  userLatitude: number,
+  userLongitude: number,
+  radius: number
+) => {
+  return await request(testApp)
+    .post("/event/region")
+    .set("Authorization", bearerToken)
+    .send({ userLatitude, userLongitude, radius })
+}
+
+export const callGetEventChatToken = async (
+  bearerToken: string,
+  eventId: number
+) => {
+  return await request(testApp)
+    .get(`/event/chat/${eventId}`)
     .set("Authorization", bearerToken)
     .send()
 }

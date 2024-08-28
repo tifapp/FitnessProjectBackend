@@ -1,6 +1,6 @@
-import { callGetSelf, callUpdateUserHandle, callUpdateUserName } from "../test/apiCallers/users"
+import { callGetSelf, callUpdateUserHandle, callUpdateUserName } from "../test/apiCallers/userEndpoints"
 import { withEmptyResponseBody } from "../test/assertions"
-import { createUserFlow } from "../test/userFlows/users"
+import { createUserFlow } from "../test/userFlows/createUserFlow"
 
 describe("Update user profile tests", () => {
   // add auth middleware tests for profile_exists

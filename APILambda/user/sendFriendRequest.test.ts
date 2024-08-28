@@ -1,8 +1,8 @@
 import {
   callBlockUser,
   callPostFriendRequest
-} from "../test/apiCallers/users"
-import { createUserFlow } from "../test/userFlows/users"
+} from "../test/apiCallers/userEndpoints"
+import { createUserFlow } from "../test/userFlows/createUserFlow"
 
 describe("FriendRequest tests", () => {
   it("should have a pending status when no prior relation between users", async () => {

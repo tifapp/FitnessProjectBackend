@@ -1,4 +1,6 @@
-import { LocationCoordinate2D, LocationCoordinate2DSchema, MySQLExecutableDriver, conn, failure, success } from "TiFBackendUtils"
+import { MySQLExecutableDriver, conn } from "TiFBackendUtils"
+import { LocationCoordinate2D, LocationCoordinate2DSchema } from "TiFShared/domain-models/LocationCoordinate2D"
+import { failure, success } from "TiFShared/lib/Result"
 import { z } from "zod"
 import { ServerEnvironment, SetArrivalStatusEnvironment } from "../../env"
 import { ValidatedRouter } from "../../validation"

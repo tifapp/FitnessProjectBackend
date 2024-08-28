@@ -13,10 +13,10 @@ type EventRegion = {
 }
 
 const mapEventsToRegions = (events: UpcomingEvent[]): EventRegion[] => {
-  const eventRegions = new Map<string, EventRegion>();
+  const eventRegions = new Map<string, EventRegion>()
 
   events.forEach(({ id, hasArrived, latitude, longitude }) => {
-    const key = `${hasArrived}-${latitude}-${longitude}`;
+    const key = `${hasArrived}-${latitude}-${longitude}`
 
     if (!eventRegions.has(key)) {
       eventRegions.set(key, {
@@ -26,16 +26,16 @@ const mapEventsToRegions = (events: UpcomingEvent[]): EventRegion[] => {
         // @ts-ignore
         hasArrived: hasArrived === 1 || hasArrived === true, // hasArrived should be treated as int, but is treated as bigint if it occurs in a transaction after TiFEventView
         arrivalRadiusMeters: 500 // TODO: Parameterize
-      });
+      })
     }
 
-    const existingRegion = eventRegions.get(key);
+    const existingRegion = eventRegions.get(key)
     if (existingRegion) {
-      existingRegion.eventIds.push(id);
+      existingRegion.eventIds.push(id)
     }
-  });
+  })
 
-  return Array.from(eventRegions.values());
+  return Array.from(eventRegions.values())
 }
 
 // TODO: 24 hour window should be parameterized based on env variable
