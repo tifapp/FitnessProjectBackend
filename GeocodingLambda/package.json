@@ -1,7 +1,7 @@
 {
-  "name": "sharedBackendResources",
+  "name": "geocodinglambda",
   "version": "1.0.0",
-  "description": "",
+  "description": "Geocodes event addresses",
   "main": "index.js",
   "dependencies": {
     "@aws-sdk/client-location": "^3.515.0",
