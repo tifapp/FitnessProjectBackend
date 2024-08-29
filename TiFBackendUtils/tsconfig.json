@@ -4,7 +4,7 @@
     "module": "commonjs",
     "target": "esnext",
     "strict": true,
-    "declaration": false,
+    "outDir": "dist",
     "removeComments": true,
     "moduleResolution": "node",
     "esModuleInterop": true,

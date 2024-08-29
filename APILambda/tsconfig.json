@@ -4,6 +4,7 @@
     "target": "es2020",
     "strict": true,
     "declaration": false,
+    "outDir": "dist",
     "removeComments": true,
     "allowJs": true,
     "moduleResolution": "node",
