@@ -1,4 +1,4 @@
-import { conn } from "TiFBackendUtils"
+import { conn } from "TiFBackendUtils/MySQLDriver"
 import { randomInt } from "crypto"
 import dayjs from "dayjs"
 import {

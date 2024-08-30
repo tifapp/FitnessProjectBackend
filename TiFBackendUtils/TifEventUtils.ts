@@ -1,10 +1,12 @@
+import "TiFShared/lib/Zod" // needed to compile.
+
 import { Placemark } from "TiFShared/domain-models/Placemark"
 import { success } from "TiFShared/lib/Result"
 import dayjs from "dayjs"
 import duration from "dayjs/plugin/duration"
+import { DBEventAttendeeCountView, DBEventAttendeesView, DBTifEventView, DBevent, DBeventAttendance, DBuserRelations } from "./DBTypes"
 import { MySQLExecutableDriver } from "./MySQLDriver/index"
 import { UserRelationship } from "./TiFUserUtils/UserRelationships"
-import { DBEventAttendeeCountView, DBEventAttendeesView, DBTifEventView, DBevent, DBeventAttendance, DBuserRelations } from "./entities"
 dayjs.extend(duration)
 
 // Get the total seconds in the duration

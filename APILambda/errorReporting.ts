@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/naming-convention */
-import { envVars } from "TiFBackendUtils"
+import { envVars } from "TiFBackendUtils/env"
 import { Application } from "express"
 import https from "https"
 

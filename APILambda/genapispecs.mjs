@@ -3,7 +3,7 @@ import {
   OpenApiGeneratorV3,
   extendZodWithOpenApi
 } from "@asteasolutions/zod-to-openapi"
-import { envVars } from "TiFBackendUtils"
+import { envVars } from "TiFBackendUtils/env"
 import fs from "fs"
 import path from "path"
 import { fileURLToPath } from "url"

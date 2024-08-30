@@ -1,7 +1,4 @@
-import {
-    MySQLExecutableDriver,
-    conn
-} from "TiFBackendUtils"
+import { MySQLExecutableDriver, conn } from "TiFBackendUtils/MySQLDriver"
 import { success } from "TiFShared/lib/Result"
 import { z } from "zod"
 import { ServerEnvironment } from "../env"

@@ -62,7 +62,7 @@ jobs:
         run: |
           npm run resetDB
 
-      - name: Update entities
+      - name: Update DB types
         run: |
           npm run dbtots
       

@@ -1,4 +1,5 @@
-import { MySQLExecutableDriver, UpcomingEvent, conn } from "TiFBackendUtils"
+import { MySQLExecutableDriver, conn } from "TiFBackendUtils/MySQLDriver"
+import { UpcomingEvent } from "TiFBackendUtils/TifEventUtils"
 import { ServerEnvironment } from "../../env"
 import { ValidatedRouter } from "../../validation"
 

@@ -1,4 +1,5 @@
-import { TiFEvent, calcSecondsToStart, calcTodayOrTomorrow, conn } from "TiFBackendUtils"
+import { conn } from "TiFBackendUtils/MySQLDriver"
+import { TiFEvent, calcSecondsToStart, calcTodayOrTomorrow } from "TiFBackendUtils/TifEventUtils"
 import { randomInt } from "crypto"
 import dayjs from "dayjs"
 import { expectTypeOf } from "expect-type"

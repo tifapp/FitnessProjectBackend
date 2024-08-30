@@ -78,15 +78,15 @@ if (process.argv.includes("--run")) {
       const markdownTables = generateMarkdownTable(TiFDBTables)
 
       const schemaPath = path.join(__dirname, "../schema.md")
-      const entitiesPath = path.join(__dirname, "../TiFBackendUtils/entities.ts")
+      const DBTypesPath = path.join(__dirname, "../TiFBackendUtils/DBTypes.ts")
 
       await Promise.all([
         writeFilePromise(schemaPath, markdownTables),
-        writeFilePromise(entitiesPath, tsString)
+        writeFilePromise(DBTypesPath, tsString)
       ])
 
       console.log("Schema generated successfully")
-      console.log("Entities generated successfully")
+      console.log("DB types generated successfully")
     } catch (err) {
       console.error("Error saving files:", err)
     }

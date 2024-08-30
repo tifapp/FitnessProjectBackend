@@ -1,4 +1,5 @@
-import { TiFUser, conn, findTiFUser } from "TiFBackendUtils"
+import { conn } from "TiFBackendUtils/MySQLDriver"
+import { TiFUser, findTiFUser } from "TiFBackendUtils/TiFUserUtils"
 import { z } from "zod"
 import { ServerEnvironment } from "../env"
 import { ValidatedRouter } from "../validation"
