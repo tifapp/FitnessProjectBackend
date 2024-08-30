@@ -1,4 +1,5 @@
 import { Application } from "express"
+import { logger } from "TiFShared/logging"
 import { z } from "zod"
 
 export type ResponseContext = {
@@ -43,6 +44,8 @@ const TransformedAuthClaimsSchema = AuthClaimsSchema.transform((res) => ({
   doesProfileExist: res["custom:profile_created"] === "true"
 }))
 
+const log = logger("tif.backend.auth")
+
 /**
  * Adds AWS cognito token verification to an app.
  */
@@ -53,8 +56,8 @@ export const addCognitoTokenVerification = (
   app.use(async (req, res, next) => {
     const auth = req.headers?.Authorization ?? req.headers?.authorization
 
-    console.debug("authorization is ")
-    console.debug(req.headers?.Authorization ?? req.headers?.authorization)
+    log.debug("authorization is ")
+    log.debug(`${req.headers?.Authorization ?? req.headers?.authorization}`)
 
     if (!auth || Array.isArray(auth)) {
       // TODO: Change error message to generic message for prod api
