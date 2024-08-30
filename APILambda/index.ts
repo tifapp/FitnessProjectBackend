@@ -4,11 +4,7 @@ import "TiFShared/lib/Math"; // needed to compile.
 import "TiFShared/lib/Zod"; // needed to compile. ex. https://github.com/tifapp/FitnessProject/pull/292/files#diff-a4dfe41a791ca7dcea4d8279bf1092ec069a6355c1a16fc815f91ee521a9b053R8
 
 import awsServerlessExpress from "@vendia/serverless-express"
-import {
-  envVars,
-  invokeAWSLambda
-} from "TiFBackendUtils"
-import { LocationCoordinate2D } from "TiFShared/domain-models/LocationCoordinate2D"
+import { envVars } from "TiFBackendUtils/env"
 import { addBenchmarking, addRoutes, createApp } from "./app"
 import { addCognitoTokenVerification } from "./auth"
 import { ServerEnvironment } from "./env"
@@ -22,8 +18,7 @@ const env: ServerEnvironment = {
   eventStartWindowInHours: 1,
   maxArrivals: 100,
   setProfileCreatedAttribute,
-  callGeocodingLambda: (location: LocationCoordinate2D) =>
-    invokeAWSLambda(`geocodingPipeline:${envVars.ENVIRONMENT}`, location)
+  callGeocodingLambda: () => { throw new Error("should show somewhere") }
 }
 
 const app = createApp()
