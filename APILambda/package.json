@@ -26,6 +26,7 @@
   },
   "devDependencies": {
     "@asteasolutions/zod-to-openapi": "^6.4.0",
+    "@aws-sdk/client-cloudwatch-logs": "^3.637.0",
     "@aws-sdk/credential-providers": "^3.515.0",
     "@faker-js/faker": "^7.6.0",
     "@ibm-cloud/openapi-ruleset": "^1.15.3",

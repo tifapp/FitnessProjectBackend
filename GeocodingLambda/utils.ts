@@ -8,6 +8,7 @@ import { AWSEnvVars, MySQLExecutableDriver } from "TiFBackendUtils"
 import { find } from "geo-tz/dist/find-now"
 import { LocationCoordinate2D } from "TiFShared/domain-models/LocationCoordinate2D"
 import { Placemark } from "TiFShared/domain-models/Placemark"
+import type { NullablePartial } from "TiFShared/lib/Types/HelperTypes"
 
 const locationClient = new LocationClient({ region: AWSEnvVars.AWS_REGION })
 
@@ -84,7 +85,7 @@ export const addLocationToDB = (conn: MySQLExecutableDriver, {
   postalCode = null,
   region = null,
   isoCountryCode = null
-}: FlattenedLocation, timezoneIdentifier: string) =>
+}: NullablePartial<FlattenedLocation>, timezoneIdentifier: string) =>
   conn.executeResult(
     `
       INSERT INTO location (name, city, country, street, streetNumber, postalCode, latitude, longitude, timezoneIdentifier, isoCountryCode)
