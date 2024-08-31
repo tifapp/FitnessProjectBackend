@@ -1,4 +1,4 @@
-import { conn } from "TiFBackendUtils"
+import { conn } from "TiFBackendUtils/MySQLDriver"
 import { generateUniqueUsername } from "./generateUserHandle"
 
 describe("generateUniqueUsername", () => {

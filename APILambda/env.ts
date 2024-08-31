@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 // Env variables
-import { EnvSchema } from "TiFBackendUtils"
+import { EnvSchema } from "TiFBackendUtils/env"
 import { LocationCoordinate2D } from "TiFShared/domain-models/LocationCoordinate2D"
 import { PromiseResult } from "TiFShared/lib/Result"
 import { ValidatedRouteParams } from "./validation"

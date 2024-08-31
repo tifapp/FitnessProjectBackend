@@ -1,4 +1,6 @@
-import { DBuserSettings, MySQLExecutableDriver, userWithIdExists } from "TiFBackendUtils"
+import { DBuserSettings } from "TiFBackendUtils/DBTypes"
+import { MySQLExecutableDriver } from "TiFBackendUtils/MySQLDriver"
+import { userWithIdExists } from "TiFBackendUtils/TiFUserUtils"
 import { success } from "TiFShared/lib/Result"
 
 /**

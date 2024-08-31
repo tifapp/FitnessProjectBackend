@@ -1,4 +1,4 @@
-import { MySQLExecutableDriver, conn } from "TiFBackendUtils"
+import { MySQLExecutableDriver, conn } from "TiFBackendUtils/MySQLDriver"
 import type { NullablePartial } from "TiFShared/lib/Types/HelperTypes"
 import { ServerEnvironment } from "../../env"
 import { ValidatedRouter } from "../../validation"

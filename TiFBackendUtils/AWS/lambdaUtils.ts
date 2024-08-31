@@ -60,8 +60,8 @@ export const deleteEventBridgeRule = async (event: {id: string}) => {
   await eventbridge.deleteRule({
     Name: event.id,
     EventBusName: functionName
-  });
-};
+  })
+}
 
 /**
  * Wraps a lambda function to add exponential backoff retry logic.
@@ -74,22 +74,22 @@ export const exponentialFunctionBackoff = <T, U>(
   asyncFn: (event: T) => Promise<PutTargetsCommandOutput | void | U>,
   maxRetries: number = 3
 ) => retryFunction(asyncFn, maxRetries, async (afn, event: T) => {
-  const parsedEvent = typeof event === "string" ? JSON.parse(event) : event;
-  try {
-    await mockInDevTest(deleteEventBridgeRule)(parsedEvent);
-    return await afn(parsedEvent.detail);
-  } catch (e) {
-    console.error(e);
-    const retries = parsedEvent.detail.retries ?? 0;
-    if (retries < maxRetries) {
-      const retryDelay = Math.pow(2, retries);
-      const retryDate = new Date();
-      retryDate.setHours(retryDate.getHours() + retryDelay);
+    const parsedEvent = typeof event === "string" ? JSON.parse(event) : event
+    try {
+      await mockInDevTest(deleteEventBridgeRule)(parsedEvent)
+      return await afn(parsedEvent.detail)
+    } catch (e) {
+      console.error(e)
+      const retries = parsedEvent.detail.retries ?? 0
+      if (retries < maxRetries) {
+        const retryDelay = Math.pow(2, retries)
+        const retryDate = new Date()
+        retryDate.setHours(retryDate.getHours() + retryDelay)
 
-      const newEvent = { ...parsedEvent, detail: { ...parsedEvent.detail, retries: retries + 1 } };
-      return mockInDevTest(scheduleAWSLambda)(retryDate.toISOString(), JSON.stringify(newEvent));
-    } else {
-      throw e;
+        const newEvent = { ...parsedEvent, detail: { ...parsedEvent.detail, retries: retries + 1 } }
+        return mockInDevTest(scheduleAWSLambda)(retryDate.toISOString(), JSON.stringify(newEvent))
+      } else {
+        throw e
+      }
     }
-  }
-});
+  })

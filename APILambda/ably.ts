@@ -1,4 +1,4 @@
-import { envVars } from "TiFBackendUtils"
+import { envVars } from "TiFBackendUtils/env"
 import Ably from "ably"
 
 const rest = new Ably.Rest({ key: envVars.ABLY_KEY })

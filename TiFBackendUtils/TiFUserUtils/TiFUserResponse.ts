@@ -1,6 +1,6 @@
 import { ExtractSuccess } from "TiFShared/lib/Result"
+import { DBuser } from "../DBTypes"
 import { MySQLExecutableDriver } from "../MySQLDriver/index"
-import { DBuser } from "../entities"
 import { UserRelationship } from "./UserRelationships"
 
 export const findTiFUser = (

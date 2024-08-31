@@ -1,4 +1,5 @@
-import { DBuser, MySQLExecutableDriver, conn } from "TiFBackendUtils"
+import { DBuser } from "TiFBackendUtils/DBTypes"
+import { MySQLExecutableDriver, conn } from "TiFBackendUtils/MySQLDriver"
 import { UserHandle, UserHandleSchema } from "TiFShared/domain-models/User"
 import { z } from "zod"
 import { ServerEnvironment } from "../env"

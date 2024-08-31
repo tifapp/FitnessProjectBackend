@@ -1,4 +1,5 @@
-import { conn, getAttendeeCount, getAttendees } from "TiFBackendUtils"
+import { conn } from "TiFBackendUtils/MySQLDriver"
+import { getAttendeeCount, getAttendees } from "TiFBackendUtils/TifEventUtils"
 import dayjs from "dayjs"
 import { addLocationToDB } from "../../GeocodingLambda/utils"
 import { callEndEvent, callGetEventsByRegion } from "../test/apiCallers/eventEndpoints"

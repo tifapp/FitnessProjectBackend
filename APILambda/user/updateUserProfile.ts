@@ -1,4 +1,6 @@
-import { DBuser, MySQLExecutableDriver, conn, userWithHandleDoesNotExist } from "TiFBackendUtils"
+import { DBuser } from "TiFBackendUtils/DBTypes"
+import { MySQLExecutableDriver, conn } from "TiFBackendUtils/MySQLDriver"
+import { userWithHandleDoesNotExist } from "TiFBackendUtils/TiFUserUtils"
 import { UserHandleSchema } from "TiFShared/domain-models/User"
 import { success } from "TiFShared/lib/Result"
 import type { NullablePartial } from "TiFShared/lib/Types/HelperTypes"

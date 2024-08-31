@@ -1,4 +1,4 @@
-import { conn } from "TiFBackendUtils"
+import { conn } from "TiFBackendUtils/MySQLDriver"
 import dayjs from "dayjs"
 import { decodeAttendeesListCursor } from "../shared/Cursor"
 import { callGetAttendees, callSetArrival } from "../test/apiCallers/eventEndpoints"

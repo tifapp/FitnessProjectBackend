@@ -1,4 +1,4 @@
-import { DBuserRelations } from "../entities"
+import { DBuserRelations } from "../DBTypes"
 
 /**
  * A type representing the relationship status between 2 users.

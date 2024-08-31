@@ -1,4 +1,5 @@
-import { MySQLExecutableDriver, userWithHandleDoesNotExist } from "TiFBackendUtils"
+import { MySQLExecutableDriver } from "TiFBackendUtils/MySQLDriver"
+import { userWithHandleDoesNotExist } from "TiFBackendUtils/TiFUserUtils"
 import { PromiseResult, failure, promiseResult } from "TiFShared/lib/Result"
 import crypto from "crypto"
 

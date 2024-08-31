@@ -1,6 +1,4 @@
-import {
-  conn
-} from "TiFBackendUtils"
+import { conn } from "TiFBackendUtils/MySQLDriver"
 import dayjs from "dayjs"
 import { addLocationToDB } from "../../GeocodingLambda/utils"
 import { callCreateEvent, callGetEvent } from "../test/apiCallers/eventEndpoints"

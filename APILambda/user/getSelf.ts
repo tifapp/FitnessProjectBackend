@@ -1,4 +1,5 @@
-import { DBuser, MySQLExecutableDriver, conn } from "TiFBackendUtils"
+import { DBuser } from "TiFBackendUtils/DBTypes"
+import { MySQLExecutableDriver, conn } from "TiFBackendUtils/MySQLDriver"
 import { ServerEnvironment } from "../env"
 import { ValidatedRouter } from "../validation"
 

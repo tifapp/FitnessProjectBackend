@@ -3,7 +3,8 @@ import {
   Place,
   SearchPlaceIndexForPositionCommand
 } from "@aws-sdk/client-location"
-import { AWSEnvVars, MySQLExecutableDriver } from "TiFBackendUtils"
+import { AWSEnvVars } from "TiFBackendUtils/AWS"
+import { MySQLExecutableDriver } from "TiFBackendUtils/MySQLDriver"
 // https://github.com/evansiroky/node-geo-tz/commit/1b11eda7824a1e6dbc0b0ff65bfea1f50c20d3fa
 import { find } from "geo-tz/dist/find-now"
 import { LocationCoordinate2D } from "TiFShared/domain-models/LocationCoordinate2D"
