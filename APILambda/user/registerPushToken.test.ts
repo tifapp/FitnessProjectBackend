@@ -1,6 +1,6 @@
 import { randomUUID } from "crypto"
-import { callRegisterPushToken } from "../test/apiCallers/users"
-import { createUserFlow } from "../test/userFlows/users"
+import { callRegisterPushToken } from "../test/apiCallers/userEndpoints"
+import { createUserFlow } from "../test/userFlows/createUserFlow"
 
 describe("RegisterPushToken tests", () => {
   const TEST_SUCCESS_RESPONSE = {

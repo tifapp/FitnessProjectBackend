@@ -4,9 +4,9 @@ import {
   callGetUser,
   callPostFriendRequest,
   callUnblockUser
-} from "../test/apiCallers/users"
+} from "../test/apiCallers/userEndpoints"
 import { withEmptyResponseBody } from "../test/assertions"
-import { createUserFlow } from "../test/userFlows/users"
+import { createUserFlow } from "../test/userFlows/createUserFlow"
 
 describe("UnblockUser tests", () => {
   it("should 403 when the unblocked user exists, but has no prior relation to user", async () => {

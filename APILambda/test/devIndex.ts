@@ -1,4 +1,7 @@
-import { LocationCoordinate2D, promiseResult, success } from "TiFBackendUtils"
+import "TiFShared"
+
+import { LocationCoordinate2D } from "TiFShared/domain-models/LocationCoordinate2D"
+import { promiseResult, success } from "TiFShared/lib/Result"
 import { handler } from "../../GeocodingLambda/index"
 import { addRoutes, createApp } from "../app"
 import { addCognitoTokenVerification } from "../auth"

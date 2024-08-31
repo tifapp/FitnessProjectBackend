@@ -1,4 +1,5 @@
-import { DBuserSettings, MySQLExecutableDriver, success, userWithIdExists } from "TiFBackendUtils"
+import { DBuserSettings, MySQLExecutableDriver, userWithIdExists } from "TiFBackendUtils"
+import { success } from "TiFShared/lib/Result"
 
 /**
  * The default user settings, which enables all fields.

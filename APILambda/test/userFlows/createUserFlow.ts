@@ -1,4 +1,4 @@
-import { callPostUser } from "../apiCallers/users";
+import { callPostUser } from "../apiCallers/userEndpoints";
 
 export type TestUser = {handle: string, userId: string, token: string, name: string};
 

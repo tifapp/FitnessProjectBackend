@@ -1,9 +1,7 @@
-import { conn, success } from "TiFBackendUtils"
+import { conn } from "TiFBackendUtils"
+import { success } from "TiFShared/lib/Result"
 import { z } from "zod"
-import {
-  ChatPermissions,
-  createTokenRequest
-} from "../ably"
+import { ChatPermissions, createTokenRequest } from "../ably"
 import { ServerEnvironment } from "../env"
 import { ValidatedRouter } from "../validation"
 import { getEventById } from "./getEventById"

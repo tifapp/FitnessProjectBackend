@@ -1,7 +1,7 @@
 import dayjs from "dayjs"
-import { callEndEvent, callLeaveEvent } from "../test/apiCallers/events"
-import { createEventFlow } from "../test/userFlows/events"
-import { createUserFlow } from "../test/userFlows/users"
+import { callEndEvent, callLeaveEvent } from "../test/apiCallers/eventEndpoints"
+import { createEventFlow } from "../test/userFlows/createEventFlow"
+import { createUserFlow } from "../test/userFlows/createUserFlow"
 
 describe("Leave event tests", () => {
   const eventLocation = { latitude: 50, longitude: 50 }

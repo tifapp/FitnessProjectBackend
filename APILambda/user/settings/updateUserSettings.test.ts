@@ -1,10 +1,6 @@
-import {
-  callGetSettings,
-  callPatchSettings,
-  callPostUser
-} from "../../test/apiCallers/users"
+import { callGetSettings, callPatchSettings, callPostUser } from "../../test/apiCallers/userEndpoints"
 import { withEmptyResponseBody } from "../../test/assertions"
-import { createUserFlow } from "../../test/userFlows/users"
+import { createUserFlow } from "../../test/userFlows/createUserFlow"
 
 describe("Update Settings tests", () => {
   // it("should 401 when patching settings for a user without a profile", async () => {
