@@ -9,7 +9,6 @@ import { MySQLExecutableDriver } from "TiFBackendUtils/MySQLDriver"
 import { find } from "geo-tz/dist/find-now"
 import { LocationCoordinate2D } from "TiFShared/domain-models/LocationCoordinate2D"
 import { Placemark } from "TiFShared/domain-models/Placemark"
-import type { NullablePartial } from "TiFShared/lib/Types/HelperTypes"
 
 const locationClient = new LocationClient({ region: AWSEnvVars.AWS_REGION })
 
@@ -78,15 +77,15 @@ export const checkExistingPlacemarkInDB = (
 export const addLocationToDB = (conn: MySQLExecutableDriver, {
   latitude,
   longitude,
-  name = null,
-  city = null,
-  country = null,
-  street = null,
-  streetNumber = null,
-  postalCode = null,
-  region = null,
-  isoCountryCode = null
-}: NullablePartial<FlattenedLocation>, timezoneIdentifier: string) =>
+  name,
+  city,
+  country,
+  street,
+  streetNumber,
+  postalCode,
+  region,
+  isoCountryCode
+}: FlattenedLocation, timezoneIdentifier: string) =>
   conn.executeResult(
     `
       INSERT INTO location (name, city, country, street, streetNumber, postalCode, latitude, longitude, timezoneIdentifier, isoCountryCode)

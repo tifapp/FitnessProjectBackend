@@ -1,4 +1,5 @@
-import { MySQLExecutableDriver, conn } from "TiFBackendUtils/MySQLDriver"
+import { conn } from "TiFBackendUtils"
+import { MySQLExecutableDriver } from "TiFBackendUtils/MySQLDriver"
 import { success } from "TiFShared/lib/Result"
 import { z } from "zod"
 import { ServerEnvironment } from "../env"
@@ -107,6 +108,7 @@ export const createEventRouter = (
                     latitude:
                     req.body.latitude
                   })
+                  // prone to error, log is useful here
                   console.debug(JSON.stringify(resp, null, 4))
                 } catch (e) {
                   console.error("Could not create placemark for ", req.body)

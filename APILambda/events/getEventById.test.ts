@@ -1,4 +1,4 @@
-import { conn } from "TiFBackendUtils/MySQLDriver"
+import { conn } from "TiFBackendUtils"
 import { TiFEvent, calcSecondsToStart, calcTodayOrTomorrow } from "TiFBackendUtils/TifEventUtils"
 import { randomInt } from "crypto"
 import dayjs from "dayjs"
@@ -113,7 +113,6 @@ describe("GetSingleEvent tests", () => {
           id: host.userId,
           username: host.name,
           handle: host.handle,
-          profileImageURL: null
         },
         settings: {
           shouldHideAfterStartDate: true,
@@ -122,9 +121,7 @@ describe("GetSingleEvent tests", () => {
         updatedDateTime: expect.any(String),
         createdDateTime: expect.any(String),
         userAttendeeStatus: "not-participating",
-        joinedDateTime: null,
         hasArrived: false,
-        endedDateTime: null
       })
     expect(resp.status).toEqual(200)
   })

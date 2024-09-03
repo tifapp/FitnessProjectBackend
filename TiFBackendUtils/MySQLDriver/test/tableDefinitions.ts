@@ -13,7 +13,7 @@ export const tableDefintionsByFamily = [
     UNIQUE KEY handle (handle),
     CONSTRAINT format_user_handle CHECK (REGEXP_LIKE(handle, _utf8mb4 '^[a-z_0-9]{1,15}$'))
     )
-    `,
+    `
   ],
   [
     `
@@ -40,7 +40,7 @@ export const tableDefintionsByFamily = [
     CONSTRAINT event_must_end_after_start CHECK (startDateTime < endDateTime),
     CONSTRAINT format_event_color CHECK (REGEXP_LIKE(color, _utf8mb4 '^#[0-9A-Fa-f]{6}$'))
     )
-    `,
+    `
   ],
   [
     `
@@ -130,7 +130,17 @@ export const tableDefintionsByFamily = [
     CREATE TABLE IF NOT EXISTS userReports (
     userReporting bigint NOT NULL,
     userReported bigint NOT NULL,
-    reportingReason enum('Spam', 'Harassment', 'Hate Speech', 'Violence', 'Scam or fraud', 'Suicide or self-harm', 'False information', 'Sale of illegal or regulated goods', 'Other') NOT NULL,
+    reportingReason enum(
+      'Spam', 
+      'Harassment', 
+      'Hate Speech', 
+      'Violence', 
+      'Scam or fraud', 
+      'Suicide or self-harm', 
+      'False information', 
+      'Sale of illegal or regulated goods', 
+      'Other'
+    ) NOT NULL,
     reportDate datetime NOT NULL DEFAULT current_timestamp(),
     PRIMARY KEY (userReporting, userReported)
     )
@@ -138,13 +148,37 @@ export const tableDefintionsByFamily = [
     `
     CREATE TABLE IF NOT EXISTS userSettings (
     userId varchar(36) NOT NULL,
-    isEventNotificationsEnabled tinyint(1) NOT NULL DEFAULT '1',
-    isMentionsNotificationsEnabled tinyint(1) NOT NULL DEFAULT '1',
-    isChatNotificationsEnabled tinyint(1) NOT NULL DEFAULT '1',
-    isFriendRequestNotificationsEnabled tinyint(1) NOT NULL DEFAULT '1',
     isAnalyticsEnabled tinyint(1) NOT NULL DEFAULT '1',
     isCrashReportingEnabled tinyint(1) NOT NULL DEFAULT '1',
+    canShareArrivalStatus tinyint(1) NOT NULL DEFAULT '1',
+    eventCalendarStartOfWeekDay enum('sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday') NOT NULL DEFAULT 'monday',
+    eventCalendarDefaultLayout enum('single-day-layout', 'week-layout', 'month-layout') NOT NULL DEFAULT 'month-layout',
+    eventPresetShouldHideAfterStartDate tinyint(1) NOT NULL DEFAULT '1',
+    eventPresetPlacemark JSON, 
+    eventPresetDurations JSON,
+    version bigint NOT NULL DEFAULT '0',
     updatedDateTime timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+    pushNotificationTriggerIds JSON,
+    CHECK (
+        JSON_CONTAINS(
+          JSON_ARRAY(
+            '"friend-request-received"', 
+            '"friend-request-accepted"', 
+            '"user-entered-region"', 
+            '"event-attendance-headcount"', 
+            '"event-periodic-arrivals"', 
+            '"event-starting-soon"', 
+            '"event-started"', 
+            '"event-ended"',
+            '"event-name-changed"',
+            '"event-description-changed"',
+            '"event-time-changed"',
+            '"event-location-changed"',
+            '"event-cancelled"'
+          ), 
+          JSON_EXTRACT(pushNotificationTriggerIds, '$[*]')
+        )
+    ),
     PRIMARY KEY (userId),
     CONSTRAINT user_must_exist FOREIGN KEY (userId) REFERENCES user (id)
     )
@@ -191,6 +225,6 @@ export const tableDefintionsByFamily = [
     ORDER BY ea1.joinedDateTime ASC SEPARATOR ',') AS userIds 
     FROM eventAttendance AS ea1 
     GROUP BY ea1.eventId;
-    `,
+    `
   ]
 ]

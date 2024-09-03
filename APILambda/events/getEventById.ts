@@ -1,4 +1,5 @@
-import { MySQLExecutableDriver, conn } from "TiFBackendUtils/MySQLDriver"
+import { conn } from "TiFBackendUtils"
+import { MySQLExecutableDriver } from "TiFBackendUtils/MySQLDriver"
 import { DBTifEvent, TiFEvent, setEventAttendeesFields, tifEventResponseFromDatabaseEvent } from "TiFBackendUtils/TifEventUtils"
 import { success } from "TiFShared/lib/Result"
 import { z } from "zod"
@@ -20,7 +21,6 @@ const getEventWhenBlockedResponse = (
     username: event.hostUsername,
     id: event.hostId,
     handle: event.hostHandle,
-    profileImageURL: null,
     relations: {
       fromThemToYou: event.fromThemToYou,
       fromYouToThem: event.fromYouToThem

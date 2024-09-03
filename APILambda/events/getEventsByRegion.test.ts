@@ -1,4 +1,4 @@
-import { conn } from "TiFBackendUtils/MySQLDriver"
+import { conn } from "TiFBackendUtils"
 import { getAttendeeCount, getAttendees } from "TiFBackendUtils/TifEventUtils"
 import dayjs from "dayjs"
 import { addLocationToDB } from "../../GeocodingLambda/utils"
@@ -14,8 +14,8 @@ let attendeeTestId: string
 let futureEventTestId: number
 let ongoingEventTestId: number
 
-export const setupDB = async () => {
-  addLocationToDB(
+const setupDB = async () => {
+  await addLocationToDB(
     conn,
     {
       latitude: testEventInput.latitude,

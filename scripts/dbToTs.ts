@@ -1,92 +1,80 @@
-import sqlts from "@rmp135/sql-ts"
-import fs from "fs"
+import sqlts, { Config } from "@rmp135/sql-ts"
+import { promises as fs } from "fs"
 import path from "path"
 import { envVars } from "../TiFBackendUtils/env"
-import { createDatabaseConnection } from "../TiFBackendUtils/MySQLDriver/dbConnection"
-import { resetDB } from "../TiFBackendUtils/MySQLDriver/test/utils"
+import { generateMarkdownTable } from "./utils/generateMarkdownTable"
+import { getTableNames } from "./utils/getTableNames"
+
+const options = {
+  schemaOutput: "../schema.md",
+  typesOutput: "../TiFBackendUtils/DBTypes.ts",
+  optionalValueUndefined: true,
+  assignColumnType: {
+    hostHandle: "import(\"./node_modules/TiFShared/domain-models/User\").UserHandle",
+    handle: "import(\"./node_modules/TiFShared/domain-models/User\").UserHandle",
+    color: "import(\"./node_modules/TiFShared/domain-models/ColorString\").ColorString",
+    hasArrived: "boolean",
+    pushNotificationTriggerIds: "import(\"./node_modules/TiFShared/domain-models/Settings\").UserSettings[\"pushNotificationTriggerIds\"]"
+  },
+  typeMap: {
+    boolean: ["tinyint"],
+    number: ["bigint"]
+  }
+}
 
 if (process.argv.includes("--run")) {
-  const config = {
+  const sqltsConfig: Config = {
     client: "mysql2",
     connection: {
       host: envVars.DATABASE_HOST,
       user: envVars.DATABASE_USERNAME,
       password: envVars.DATABASE_PASSWORD,
-      database: envVars.DATABASE_NAME,
-      ssl: {
-        rejectUnauthorized: false
-      }
+      database: envVars.DATABASE_NAME
     },
-    typeMap: {
-      boolean: ["tinyint"],
-      number: ["bigint"]
-    },
-    typeOverrides: {
-      [`${envVars.DATABASE_NAME}.TifEventView.hasArrived`]: "boolean" as const
-    },
-    columnOptionality: {
-      [`${envVars.DATABASE_NAME}.TifEventView.hasArrived`]: "required" as const
-    },
+    typeMap: options.typeMap,
     globalOptionality: "required" as const,
     // eslint-disable-next-line no-template-curly-in-string
     interfaceNameFormat: "DB${table}"
-  }
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const generateMarkdownTable = (data: any[]): string => {
-    let markdownContent = ""
-
-    data.forEach(table => {
-      markdownContent += `### ${table.name}\n\n`
-      markdownContent += "| Property | Data Type | Nullable | Default Value |\n"
-      markdownContent += "|----------|-----------|----------|---------------|\n"
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      table.columns.forEach((column: any) => {
-        markdownContent += `| ${column.propertyName} | ${column.propertyType} | ${column.nullable ? "Yes" : "No"} | ${column.defaultValue || "None"} |\n`
-      })
-
-      markdownContent += "\n"
-    })
-
-    return markdownContent
-  }
-
-  const writeFilePromise = (filePath, content) => new Promise<void>((resolve, reject) => {
-    fs.writeFile(filePath, content, (err) => {
-      if (err) {
-        reject(err)
-      } else {
-        resolve()
-      }
-    })
-  });
+  };
 
   (async () => {
     try {
-      await resetDB()
-      const DBconnection = await createDatabaseConnection()
-      const tables = await DBconnection.query("SHOW TABLES;")
-      // @ts-expect-error Only for development
-      const tableNames = tables[0].map(name => `DB${name[`Tables_in_${envVars.DATABASE_NAME}`]}`)
-      DBconnection.end()
+      const DB = await sqlts.toObject(sqltsConfig)
 
-      const DB = await sqlts.toObject(config)
+      const tableNames = await getTableNames()
+
       const TiFDBTables = DB.tables.filter(table => tableNames.includes(`${table.interfaceName}`))
 
-      const tsString = await sqlts.fromObject({ tables: TiFDBTables, enums: DB.enums }, config)
-      const markdownTables = generateMarkdownTable(TiFDBTables)
+      if (options.assignColumnType) {
+        TiFDBTables.forEach(table => {
+          table.columns.forEach(column => {
+            if (options.assignColumnType[column.name]) {
+              column.propertyType = options.assignColumnType[column.name]
+            }
+          })
+        })
+      }
 
-      const schemaPath = path.join(__dirname, "../schema.md")
-      const DBTypesPath = path.join(__dirname, "../TiFBackendUtils/DBTypes.ts")
+      let tsString = await sqlts.fromObject({ tables: TiFDBTables, enums: DB.enums }, sqltsConfig)
+
+      if (options.optionalValueUndefined) {
+        tsString = tsString.replace(/ null/g, " undefined")
+      }
+
+      const schemaMarkdownTable = TiFDBTables.map(table =>
+        `### ${table.name}\n${generateMarkdownTable(table.columns.map(
+          ({ propertyName: Property, propertyType: Type, nullable: Optional, defaultValue: DefaultValue }) =>
+            ({ Property, Type, Optional, DefaultValue })
+        ))}`
+      ).join("\n")
 
       await Promise.all([
-        writeFilePromise(schemaPath, markdownTables),
-        writeFilePromise(DBTypesPath, tsString)
+        fs.writeFile(path.join(__dirname, options.schemaOutput), schemaMarkdownTable),
+        fs.writeFile(path.join(__dirname, options.typesOutput), tsString)
       ])
 
       console.log("Schema generated successfully")
-      console.log("DB types generated successfully")
+      console.log("DB Types generated successfully")
     } catch (err) {
       console.error("Error saving files:", err)
     }

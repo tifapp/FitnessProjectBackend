@@ -1,4 +1,4 @@
-import { conn } from "TiFBackendUtils/MySQLDriver"
+import { conn } from "TiFBackendUtils"
 import { TiFUser, findTiFUser } from "TiFBackendUtils/TiFUserUtils"
 import { z } from "zod"
 import { ServerEnvironment } from "../env"

@@ -1,31 +1,37 @@
 import { AwaitableResult, failure, promiseResult, success } from "TiFShared/lib/Result"
 import mysql, { FieldPacket, ResultSetHeader, RowDataPacket } from "mysql2/promise"
+import { domainModelColumns } from "../domain-models"
 import { createDatabaseConnection } from "./dbConnection"
+import { paramifyArgs, SQLParams } from "./paramify"
 
 export type DBExecution = {
   insertId: string
   rowsAffected: number
 }
 
-const isResultSetHeader = (result: ResultSetHeader): result is ResultSetHeader => {
+const hasInsertionHeader = (result: ResultSetHeader): result is ResultSetHeader => {
   return "insertId" in result && "affectedRows" in result
 }
 
 const typecasts: Record<number, (value: string | null) => unknown> = {
-  3: (value) => parseInt(value ?? "0") > 0, // INT or LONG as BOOLEAN
-  1: (value) => parseInt(value ?? "0") > 0, // TINYINT as BOOLEAN
-  7: (value) => value ? new Date(value) : value, // TIMESTAMP
-  12: (value) => value ? new Date(value) : value, // DATETIME
-  246: (value) => value ? parseFloat(value) : value // NEWDECIMAL (DECIMAL/NUMERIC)
+  3: (value) => value == null ? value : parseInt(value) > 0, // INT or LONG -> BOOLEAN
+  1: (value) => value == null ? value : parseInt(value) > 0, // TINYINT -> BOOLEAN
+  7: (value) => value == null ? value : new Date(value), // TIMESTAMP -> DATE
+  12: (value) => value == null ? value : new Date(value), // DATETIME -> DATE
+  246: (value) => value == null ? value : parseFloat(value), // NEWDECIMAL (DECIMAL/NUMERIC) -> NUMBER
 }
 
-const castTypes = (rows: RowDataPacket[], fields: FieldPacket[]): RowDataPacket[] => {
+const castMySQLValues = (rows: RowDataPacket[], fields: FieldPacket[]): RowDataPacket[] => {
   return rows.map(row => {
-    fields.forEach(field => {
-      const type = field.type
-      const key = field.name
+    fields.forEach(({name: key, type}) => {
       if (type !== undefined && typecasts[type]) {
         row[key] = typecasts[type](row[key])
+      }
+      if (row[key] === null) {
+        delete row[key]
+      }
+      if (Object.keys(domainModelColumns).includes(key)) {
+        row[key] = domainModelColumns[key as keyof typeof domainModelColumns](row[key])
       }
     })
     return row
@@ -88,13 +94,13 @@ export class MySQLDriver {
    */
   private async execute (
     query: string,
-    args: object | (number | string)[] | null = null
+    args?: SQLParams
   ): Promise<DBExecution> {
     // Use this.conn to execute the query and return the result rows
     // This will be the only function to directly use the database library's execute method.
     const conn = await this.connectionHandler.useConnection()
-    const [result] = await conn.execute<ResultSetHeader>(query, args)
-    if (isResultSetHeader(result)) {
+    const [result] = await conn.execute<ResultSetHeader>(query, paramifyArgs(args))
+    if (hasInsertionHeader(result)) {
       return {
         insertId: result.insertId.toString(),
         rowsAffected: result.affectedRows
@@ -118,12 +124,12 @@ export class MySQLDriver {
 
   private async query<Value> (
     query: string,
-    args: object | (number | string)[] | null = null
+    args?: SQLParams
   ): Promise<Value[]> {
     const conn = await this.connectionHandler.useConnection()
-    const [rows, fields] = await conn.query(query, args)
+    const [rows, fields] = await conn.query(query, paramifyArgs(args))
     if (Array.isArray(rows) && Array.isArray(fields)) {
-      return castTypes(rows as RowDataPacket[], fields) as Value[]
+      return castMySQLValues(rows as RowDataPacket[], fields) as Value[]
     } else {
       throw new Error("Query did not return an array of rows and fields.")
     }
@@ -132,7 +138,7 @@ export class MySQLDriver {
   /**
    * Runs the given SQL query and returns a success result containing the insertId of the query.
    */
-  executeResult (query: string, args: object | (number | string)[] | null = null) {
+  executeResult (query: string, args?: SQLParams) {
     return promiseResult(
       this.execute(query, args).then((executeResult) =>
         success(executeResult)
@@ -143,7 +149,7 @@ export class MySQLDriver {
   /**
    * Runs the given SQL query and returns a success result containing the result of the query.
    */
-  queryResult<Value> (query: string, args: object | (number | string)[] | null = null) {
+  queryResult<Value> (query: string, args?: SQLParams) {
     return promiseResult(
       this.query<Value>(query, args).then((result) => success(result))
     )
@@ -184,7 +190,7 @@ export class MySQLDriver {
    * console.log(result?.id) // ✅ Typesafe
    * ```
    */
-  queryFirstResult<Value> (query: string, args: object | (number | string)[] | null = null) {
+  queryFirstResult<Value> (query: string, args?: SQLParams) {
     return promiseResult(
       this.query<Value>(query, args).then((results) =>
         results[0] ? success(results[0]) : failure("no-results" as const)
@@ -198,7 +204,7 @@ export class MySQLDriver {
    * You should not query specific data with this method, instead use a `"SELECT TRUE"`
    * if you need to perform a select.
    */
-  queryHasResults (query: string, args: object | (number | string)[] | null = null) {
+  queryHasResults (query: string, args?: SQLParams) {
     return promiseResult(
       this.query(query, args).then((results) => {
         const hasResults = results.length > 0

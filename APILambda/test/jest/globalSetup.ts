@@ -1,10 +1,7 @@
-// WARNING: Cannot import modules with extensions here
-
-/* eslint-disable import/extensions */ // todo: allow ts imports here
+import { envVars } from "TiFBackendUtils/env"
 import { TestUser, TestUserInput } from "../../global"
 import { createCognitoTestAuthToken } from "../createCognitoUsers"
 import { createMockAuthToken } from "../createMockUsers"
-import { testEnvVars } from "../testEnv"
 
 const setGlobalVariables = async ({ createUser, maxUsers }: {createUser: (user?: TestUserInput) => Promise<TestUser>, maxUsers: number}) => {
   global.registerUser = createUser
@@ -17,7 +14,7 @@ const setGlobalVariables = async ({ createUser, maxUsers }: {createUser: (user?:
 export default async (): Promise<void> => {
   process.env.TZ = "UTC"
 
-  if (!testEnvVars.API_ENDPOINT) {
+  if (envVars.ENVIRONMENT !== "stagingTest") {
     await setGlobalVariables({ createUser: createMockAuthToken, maxUsers: 5 })
   } else {
     await setGlobalVariables({ createUser: createCognitoTestAuthToken, maxUsers: 5 })

@@ -17,11 +17,8 @@ describe("Get Settings tests", () => {
       status: 200,
       body: {
         isAnalyticsEnabled: true,
-        isCrashReportingEnabled: true,
-        isEventNotificationsEnabled: true,
-        isMentionsNotificationsEnabled: true,
-        isChatNotificationsEnabled: true,
-        isFriendRequestNotificationsEnabled: true
+        isCrashReportingEnabled: true
+        // TODO: Update with models from tifshared api
       }
     })
   })

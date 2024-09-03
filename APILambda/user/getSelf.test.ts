@@ -25,9 +25,7 @@ describe("GetSelf tests", () => {
     expect(resp).toMatchObject({
       status: 200,
       body: expect.objectContaining({
-        id: userId,
-        bio: null,
-        profileImageURL: null
+        id: userId
       })
     })
     expect(Date.parse(resp.body.createdDateTime)).not.toBeNaN()

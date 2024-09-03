@@ -1,8 +1,9 @@
+import { conn } from "TiFBackendUtils"
 import { DBuser } from "TiFBackendUtils/DBTypes"
-import { MySQLExecutableDriver, conn } from "TiFBackendUtils/MySQLDriver"
+import { MySQLExecutableDriver } from "TiFBackendUtils/MySQLDriver"
 import { userWithHandleDoesNotExist } from "TiFBackendUtils/TiFUserUtils"
-import { UserHandleSchema } from "TiFShared/domain-models/User"
-import { success } from "TiFShared/lib/Result"
+import { UserHandle } from "TiFShared/domain-models/User"
+import { failure, success } from "TiFShared/lib/Result"
 import type { NullablePartial } from "TiFShared/lib/Types/HelperTypes"
 import { z } from "zod"
 import { ServerEnvironment } from "../env"
@@ -11,12 +12,32 @@ import { ValidatedRouter } from "../validation"
 const UpdateUserRequestSchema = z.object({
   name: z.string().optional(),
   bio: z.string().max(250).optional(),
-  handle: UserHandleSchema.optional().transform(handle => handle?.rawValue)
+  //TODO: Find out why putting "userhandleschema" here throws an error when genapispecs script runs
+  handle: z.string().optional()
 })
 
 type UpdateUserRequest = z.infer<typeof UpdateUserRequestSchema>
 
 type EditableProfileFields = Pick<DBuser, "bio" | "handle" | "name">
+
+//TODO: Replace with userhandleschema
+const parseHandle = (
+  conn: MySQLExecutableDriver,
+  handle?: string
+) => {
+  let parsedHandle: undefined | UserHandle;
+
+  if (handle) {
+    parsedHandle = UserHandle.optionalParse(handle)
+    if (parsedHandle) {
+      return userWithHandleDoesNotExist(conn, parsedHandle).withSuccess(parsedHandle)
+    } else {
+      return failure("invalid-request")
+    }
+  } else {
+    return success()
+  }
+}
 
 /**
  * Creates routes related to user operations.
@@ -47,10 +68,9 @@ export const updateUserProfileRouter = (
 const updateProfileTransaction = (
   conn: MySQLExecutableDriver,
   userId: string,
-  updatedProfile: UpdateUserRequest
+  { handle, name, bio }: UpdateUserRequest
 ) =>
-  (updatedProfile.handle ? userWithHandleDoesNotExist(conn, updatedProfile.handle) : success())
-    .flatMapSuccess(() => updateProfile(conn, userId, updatedProfile))
+  parseHandle(conn, handle).flatMapSuccess((parsedHandle) => updateProfile(conn, userId, { handle: parsedHandle, name, bio }))
 
 const updateProfile = (
   conn: MySQLExecutableDriver,

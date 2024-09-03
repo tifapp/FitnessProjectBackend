@@ -1,5 +1,6 @@
 import { MySQLExecutableDriver } from "TiFBackendUtils/MySQLDriver"
 import { userWithHandleDoesNotExist } from "TiFBackendUtils/TiFUserUtils"
+import { UserHandle } from "TiFShared/domain-models/User"
 import { PromiseResult, failure, promiseResult } from "TiFShared/lib/Result"
 import crypto from "crypto"
 
@@ -15,7 +16,7 @@ const generateUniqueUsernameAttempt = (conn: MySQLExecutableDriver, name: string
   const potentialUsername = `${name}${generateNumericHash(
     `${name}${Date.now()}`
   )}`
-  return userWithHandleDoesNotExist(conn, potentialUsername)
+  return userWithHandleDoesNotExist(conn, UserHandle.optionalParse(potentialUsername)!)
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore Retry function
     .mapSuccess(() => potentialUsername)

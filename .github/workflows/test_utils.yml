@@ -10,7 +10,10 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 5
+    concurrency:
+      group: testUtils-${{ github.head_ref }}
+      cancel-in-progress: true
 
     services:
       mysql:
@@ -63,3 +66,8 @@ jobs:
         run: |
           cd TiFBackendUtils
           npm run test:ci
+
+      - name: Build backend utils js
+        run: |
+          cd TiFBackendUtils
+          npm run build

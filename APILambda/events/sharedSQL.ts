@@ -1,4 +1,5 @@
-import { MySQLExecutableDriver, conn } from "TiFBackendUtils/MySQLDriver"
+import { conn } from "TiFBackendUtils"
+import { MySQLExecutableDriver } from "TiFBackendUtils/MySQLDriver"
 
 export const isUserInEvent = (
   conn: MySQLExecutableDriver,

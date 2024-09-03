@@ -1,9 +1,8 @@
-/* eslint-disable import/extensions */ // todo: allow ts imports here
-import { testEnvVars } from "../testEnv"
+import { envVars } from "TiFBackendUtils/env"
 
 export default async (): Promise<void> => {
   console.log(process.memoryUsage())
-  if (testEnvVars.API_ENDPOINT) {
+  if (envVars.ENVIRONMENT === "stagingTest") {
     // delete cognito users
   }
 }

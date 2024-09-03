@@ -1,4 +1,4 @@
-import { conn } from "TiFBackendUtils/MySQLDriver"
+import { conn } from "TiFBackendUtils"
 import { success } from "TiFShared/lib/Result"
 import { z } from "zod"
 import { ChatPermissions, createTokenRequest } from "../ably"

@@ -1,5 +1,5 @@
-import { MySQLExecutableDriver, conn } from "TiFBackendUtils/MySQLDriver"
-import type { NullablePartial } from "TiFShared/lib/Types/HelperTypes"
+import { conn } from "TiFBackendUtils"
+import { MySQLExecutableDriver } from "TiFBackendUtils/MySQLDriver"
 import { ServerEnvironment } from "../../env"
 import { ValidatedRouter } from "../../validation"
 import { UserSettings, UserSettingsSchema } from "./models"
@@ -17,49 +17,32 @@ const insertUserSettings = (
   conn: MySQLExecutableDriver,
   userId: string,
   {
-    isAnalyticsEnabled = null,
-    isCrashReportingEnabled = null,
-    isEventNotificationsEnabled = null,
-    isMentionsNotificationsEnabled = null,
-    isChatNotificationsEnabled = null,
-    isFriendRequestNotificationsEnabled = null
-  }: NullablePartial<UserSettings>
+    isAnalyticsEnabled,
+    isCrashReportingEnabled
+    // TODO: Update with models from tifshared api
+  }: UserSettings
 ) =>
+  // TODO: Update with models from tifshared api
   conn.executeResult(
     `
     INSERT INTO userSettings (
       userId, 
       isAnalyticsEnabled, 
-      isCrashReportingEnabled,
-      isEventNotificationsEnabled, 
-      isMentionsNotificationsEnabled, 
-      isChatNotificationsEnabled, 
-      isFriendRequestNotificationsEnabled
+      isCrashReportingEnabled
     ) VALUES (
       :userId, 
       COALESCE(:isAnalyticsEnabled, 1), 
-      COALESCE(:isCrashReportingEnabled, 1), 
-      COALESCE(:isEventNotificationsEnabled, 1), 
-      COALESCE(:isMentionsNotificationsEnabled, 1),
-      COALESCE(:isChatNotificationsEnabled, 1), 
-      COALESCE(:isFriendRequestNotificationsEnabled, 1)
+      COALESCE(:isCrashReportingEnabled, 1)
     )
     ON DUPLICATE KEY UPDATE 
       isAnalyticsEnabled = COALESCE(:isAnalyticsEnabled, isAnalyticsEnabled), 
-      isCrashReportingEnabled = COALESCE(:isCrashReportingEnabled, isCrashReportingEnabled),
-      isEventNotificationsEnabled = COALESCE(:isEventNotificationsEnabled, isEventNotificationsEnabled),
-      isMentionsNotificationsEnabled = COALESCE(:isMentionsNotificationsEnabled, isMentionsNotificationsEnabled),
-      isChatNotificationsEnabled = COALESCE(:isChatNotificationsEnabled, isChatNotificationsEnabled),
-      isFriendRequestNotificationsEnabled = COALESCE(:isFriendRequestNotificationsEnabled, isFriendRequestNotificationsEnabled);    
+      isCrashReportingEnabled = COALESCE(:isCrashReportingEnabled, isCrashReportingEnabled);    
   `,
     {
       userId,
       isAnalyticsEnabled,
-      isCrashReportingEnabled,
-      isEventNotificationsEnabled,
-      isMentionsNotificationsEnabled,
-      isChatNotificationsEnabled,
-      isFriendRequestNotificationsEnabled
+      isCrashReportingEnabled
+      // TODO: Update with models from tifshared api
     }
   )
 

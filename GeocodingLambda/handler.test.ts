@@ -1,4 +1,4 @@
-import { conn } from "TiFBackendUtils/MySQLDriver"
+import { conn } from "TiFBackendUtils"
 import { Placemark } from "TiFShared/domain-models/Placemark"
 import { failure, success } from "TiFShared/lib/Result"
 import { resetDB } from "../TiFBackendUtils/MySQLDriver/test/utils"
@@ -38,11 +38,9 @@ describe("Geocoding lambda tests", () => {
     const address = await conn.queryFirstResult<Placemark>("SELECT * FROM location WHERE latitude = :latitude AND longitude = :longitude", { latitude: 36.9981384, longitude: -122.0556438 })
     expect(address.value).toMatchObject({
       city: "Westside",
-      country: null,
       isoCountryCode: "USA",
       name: "420 Hagar Dr, Santa Cruz, CA 95064, United States",
       postalCode: "95064",
-      region: null,
       street: "Hagar Dr",
       streetNumber: "420",
       timezoneIdentifier: "America/Los_Angeles",

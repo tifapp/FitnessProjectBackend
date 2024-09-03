@@ -1,3 +1,4 @@
+import { envVars } from "TiFBackendUtils/env"
 import { app } from "./devIndex"
 import { testEnvVars } from "./testEnv"
 
@@ -6,4 +7,4 @@ import { testEnvVars } from "./testEnv"
  *
  * @returns an express app instance suitable for testing
  */
-export const testApp = testEnvVars.API_ENDPOINT ?? app
+export const testApp = envVars.ENVIRONMENT === "stagingTest" ? testEnvVars.API_ENDPOINT : app

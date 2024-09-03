@@ -189,6 +189,10 @@ describe("GET /new-product/:id", () => {
 
 These tests make HTTP requests to the new "products" route and assert that the response is as expected. The first test is for a successful transaction with a valid ID, while the second test is for an error scenario where an invalid ID is provided.
 
+### Open Handles Warnings
+
+You'll see these at the end of a test suite if a promise has not resolved by the time the tests finish. Usually these are caused by not closing the db connection at the end of tests, or forgetting to await DB operations like conn.executeResult() or conn.queryResult().
+
 #### Staging Tests
 
 Currently npm run test:staging-unix only works on unix devices.

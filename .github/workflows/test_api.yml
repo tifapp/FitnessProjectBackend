@@ -9,7 +9,10 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 5
+    concurrency:
+      group: testAPI-${{ github.head_ref }}
+      cancel-in-progress: true
 
     services:
       mysql:
@@ -38,6 +41,8 @@ jobs:
       ABLY_KEY: ${{ secrets.ABLY_KEY }}
       COGNITO_USER_POOL_ID: ${{ secrets.COGNITO_USER_POOL_ID }}
       AWS_LAMBDA_FUNCTION_NAME: lambdaSQLRoute
+      API_ENDPOINT: ${{ secrets.API_ENDPOINT }}
+      API_LAMBDA_ID: ${{ secrets.API_LAMBDA_ID }}
 
     steps:
       - name: Checkout code
@@ -57,19 +62,10 @@ jobs:
           npm ci
         env:
           CI: true
-          
-      - name: Initialize DB
-        run: |
-          npm run resetDB
-
-      - name: Update DB types
-        run: |
-          npm run dbtots
       
-      - name: Validate openapi specs
+      - name: Initialize DB, Update DB Types, Validate openapi specs
         run: |
-          cd APILambda
-          npx lint-openapi specs.json
+          npm run genapispecs
 
       - name: Run tests
         run: |
@@ -84,7 +80,7 @@ jobs:
   
   deploy_for_staging_tests:
     concurrency: 
-      group: stagingTest
+      group: APIstagingTest
       cancel-in-progress: false
     needs: build
     uses: ./.github/workflows/deploy_api.yml
@@ -94,7 +90,7 @@ jobs:
   
   test_on_staging:
     concurrency: 
-      group: stagingTest
+      group: APIstagingTest
       cancel-in-progress: false
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -145,4 +141,4 @@ jobs:
       run: |
         cd APILambda
         export NODE_OPTIONS="--max_old_space_size=4096"
-        API_ENDPOINT=https://623qsegfb9.execute-api.us-west-2.amazonaws.com/stagingTest ENVIRONMENT=stagingTest npm run test:ci -- --testPathIgnorePatterns=createUserProfile\\.test\\.ts
+        API_ENDPOINT=${{ secrets.API_ENDPOINT }}/stagingTest ENVIRONMENT=stagingTest npm run test:ci -- --testPathIgnorePatterns=createUserProfile\\.test\\.ts
