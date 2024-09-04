@@ -1,5 +1,3 @@
-const defaultJoinDate = "1970-01-01T00:00:00Z"
-
 /**
  * Encodes the cursor for the attendees list using Buffer.
  *
@@ -11,11 +9,9 @@ export const encodeAttendeesListCursor = ({ userId = "firstPage", joinedDateTime
   joinedDateTime?: Date
   arrivedDateTime?: Date
 }): string => {
-  const joinDateToEncode = joinedDateTime ?? defaultJoinDate
-  const encodedCursor = Buffer.from(
-    `${userId}|${joinDateToEncode}|${arrivedDateTime}`
+  return Buffer.from(
+    `${userId}|${joinedDateTime?.toISOString()}|${arrivedDateTime?.toISOString()}`
   ).toString("base64")
-  return encodedCursor
 }
 
 /**
@@ -27,10 +23,8 @@ export const encodeAttendeesListCursor = ({ userId = "firstPage", joinedDateTime
 export const decodeAttendeesListCursor = (
   cursor: string | undefined
 ): { userId: string; joinedDateTime?: Date; arrivedDateTime?: Date } => {
-  let joinedDateTime = new Date(defaultJoinDate)
-
   if (cursor === undefined) {
-    return { userId: "firstPage", joinedDateTime }
+    return { userId: "firstPage", joinedDateTime: undefined }
   }
 
   const decodedString = Buffer.from(cursor, "base64").toString("utf-8")
@@ -40,8 +34,7 @@ export const decodeAttendeesListCursor = (
   if (decodedUserId === "lastPage") {
     return { userId: "lastPage" }
   }
-  joinedDateTime =
-    decodedJoinDate !== defaultJoinDate ? new Date(decodedJoinDate) : joinedDateTime
+  const joinedDateTime = decodedJoinDate ? new Date(decodedJoinDate) : undefined
   const arrivedDateTime = decodedArrivedDateTime !== "undefined" ? new Date(decodedArrivedDateTime) : undefined
 
   return { userId: decodedUserId, joinedDateTime, arrivedDateTime }

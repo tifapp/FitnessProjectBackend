@@ -16,14 +16,12 @@ const hasInsertionHeader = (result: ResultSetHeader): result is ResultSetHeader 
 const typecasts: Record<number, (value: string | null) => unknown> = {
   3: (value) => value == null ? value : parseInt(value) > 0, // INT or LONG -> BOOLEAN
   1: (value) => value == null ? value : parseInt(value) > 0, // TINYINT -> BOOLEAN
-  7: (value) => value == null ? value : new Date(value), // TIMESTAMP -> DATE
-  12: (value) => value == null ? value : new Date(value), // DATETIME -> DATE
-  246: (value) => value == null ? value : parseFloat(value), // NEWDECIMAL (DECIMAL/NUMERIC) -> NUMBER
+  246: (value) => value == null ? value : parseFloat(value) // NEWDECIMAL (DECIMAL/NUMERIC) -> NUMBER
 }
 
 const castMySQLValues = (rows: RowDataPacket[], fields: FieldPacket[]): RowDataPacket[] => {
   return rows.map(row => {
-    fields.forEach(({name: key, type}) => {
+    fields.forEach(({ name: key, type }) => {
       if (type !== undefined && typecasts[type]) {
         row[key] = typecasts[type](row[key])
       }
