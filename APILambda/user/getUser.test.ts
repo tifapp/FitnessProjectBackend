@@ -1,65 +1,63 @@
-import {
-  callBlockUser,
-  callGetUser
-} from "../test/apiCallers/userEndpoints"
+import { UserID } from "TiFShared/domain-models/User"
+import { testAPI } from "../test/testApp"
 import { createUserFlow } from "../test/userFlows/createUserFlow"
 
 describe("GetUser tests", () => {
   // it("should 401 on non existing user", async () => {
   //   const userId = randomUUID()
-  //   const resp = await callGetUser(global.defaultUser.auth, userId)
+  //   const resp = await testAPI.getUser(global.defaultUser.auth, userId)
 
   //   expect(resp).toMatchObject({
   //     status: 401,
-  //     body: { error: "user-does-not-exist" }
+  //     data: { error: "user-does-not-exist" }
   //   })
   // })
 
   it("should retrieve self", async () => {
-    const { token: searchingUserToken, userId: searchedUserId, name: searchedUserName, handle: searchedUserHandle } = await createUserFlow()
-    const resp = await callGetUser(searchingUserToken, searchedUserId)
+    const newUser = await createUserFlow()
 
-    expect(resp).toMatchObject({
+    await expect(
+      testAPI.getUser({ auth: newUser.auth, params: { userId: newUser.id as UserID } })
+    ).resolves.toMatchObject({
       status: 200,
-      body: expect.objectContaining({
-        id: searchedUserId,
-        name: searchedUserName,
-        handle: searchedUserHandle,
+      data: expect.objectContaining({
+        id: newUser.id,
+        name: newUser.name,
+        handle: newUser.handle,
         relations: { fromThemToYou: "current-user", fromYouToThem: "current-user" }
       })
     })
   })
 
   it("should retrieve a user that exists", async () => {
-    const { token: searchingUserToken } = await createUserFlow()
+    const searchingUser = await createUserFlow()
+    const searchedUser = await createUserFlow()
 
-    const { userId: searchedUserId, name: searchedUserName, handle: searchedUserHandle } = await createUserFlow()
-    const resp = await callGetUser(searchingUserToken, searchedUserId)
-
-    expect(resp).toMatchObject({
+    await expect(
+      testAPI.getUser({ auth: searchingUser.auth, params: { userId: searchedUser.id as UserID } })
+    ).resolves.toMatchObject({
       status: 200,
-      body: expect.objectContaining({
-        id: searchedUserId,
-        name: searchedUserName,
-        handle: searchedUserHandle,
+      data: expect.objectContaining({
+        id: searchedUser.id,
+        name: searchedUser.name,
+        handle: searchedUser.handle,
         relations: { fromThemToYou: "not-friends", fromYouToThem: "not-friends" }
       })
     })
   })
 
-  it("should return blocked user's profile name and fromThemToYou status of blocked", async () => {
-    const { token, userId, name, handle } = await createUserFlow()
-    const { token: blockedToken, userId: blockedUserId } = await createUserFlow()
+  it("should return error if you've been blocked", async () => {
+    const newUser = await createUserFlow()
+    const blockedUser = await createUserFlow()
 
-    await callBlockUser(token, blockedUserId)
-    const resp = await callGetUser(blockedToken, userId)
+    await testAPI.blockUser({ auth: newUser.auth, params: { userId: blockedUser.id as UserID } })
+    const resp = await testAPI.getUser({ auth: blockedUser.auth, params: { userId: newUser.id as UserID } })
 
     expect(resp).toMatchObject({
       status: 403,
-      body: {
-        name,
-        handle,
-        relations: { fromThemToYou: "blocked" }
+      data: {
+        userId: newUser.id,
+        error: "blocked"
       }
     })
   })

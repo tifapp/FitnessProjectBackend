@@ -1,4 +1,5 @@
-import { conn, findTiFUser } from "TiFBackendUtils"
+import { conn } from "TiFBackendUtils"
+import { findTiFUser } from "TiFBackendUtils/TiFUserUtils"
 import { resp } from "TiFShared/api/Transport"
 import { TiFAPIRouter } from "../router"
 import { userNotFoundBody } from "../utils/Responses"

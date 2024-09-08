@@ -2,15 +2,14 @@ import { conn } from "TiFBackendUtils"
 import { DBuser } from "TiFBackendUtils/DBTypes"
 import { MySQLExecutableDriver } from "TiFBackendUtils/MySQLDriver"
 import { resp } from "TiFShared/api/Transport"
-import { UserHandle } from "TiFShared/domain-models/User"
-import { failure, promiseResult, success } from "TiFShared/lib/Result"
+import { failure, success } from "TiFShared/lib/Result"
 import { TiFAPIRouter } from "../../router"
 import { generateUniqueUsername } from "../generateUserHandle"
 
 type CreateUserInput = Pick<DBuser, "id" | "handle" | "name">
 
 const checkValidName = (name: string) => {
-  console.log("checking valid name")
+  // TODO: add more conditions or use a zod schema
   if (name === "") {
     return failure("invalid-claims" as const)
   }
@@ -19,15 +18,17 @@ const checkValidName = (name: string) => {
 }
 
 const userWithHandleOrIdExists = (conn: MySQLExecutableDriver, { id, handle }: CreateUserInput) => {
-  return promiseResult(handle ? success() : failure("missing-handle" as const))
-    .flatMapSuccess(() => conn
-      .queryFirstResult<DBuser>("SELECT TRUE FROM user WHERE handle = :handle OR id = :id", {
-        handle,
-        id
-      })
-      .inverted()
-      .mapFailure(user => user.handle === handle ? "duplicate-handle" as const : "user-exists")
-    )
+  return handle
+    ? success()
+    : failure("missing-handle" as const)
+      .flatMapSuccess(() => conn
+        .queryFirstResult<DBuser>("SELECT TRUE FROM user WHERE handle = :handle OR id = :id", {
+          handle,
+          id
+        })
+        .inverted()
+        .mapFailure(user => user.handle === handle ? "duplicate-handle" as const : "user-exists")
+      )
 }
 
 /**
@@ -61,14 +62,14 @@ const createUserProfileTransaction = (
   )
 
 export const createCurrentUserProfile: TiFAPIRouter["createCurrentUserProfile"] = async ({ context: { selfId, name }, environment: { setProfileCreatedAttribute } }) =>
-  promiseResult(checkValidName(name))
+  checkValidName(name)
     .flatMapSuccess(() =>
       generateUniqueUsername(
         conn,
         name
       )
     )
-    .flatMapSuccess(handle => createUserProfileTransaction({ id: selfId, name, handle: UserHandle.optionalParse(handle)! }))
+    .flatMapSuccess(handle => createUserProfileTransaction({ id: selfId, name, handle }))
     .passthroughSuccess(() => setProfileCreatedAttribute(selfId))
     .mapFailure(error => error === "user-exists" ? resp(400, { error }) as never : resp(401, { error }) as never)
     .mapSuccess(profile => resp(201, profile))

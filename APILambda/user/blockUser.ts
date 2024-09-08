@@ -1,4 +1,6 @@
-import { MySQLExecutableDriver, UserRelationsInput, conn, userWithIdExists } from "TiFBackendUtils"
+import { conn } from "TiFBackendUtils"
+import { MySQLExecutableDriver } from "TiFBackendUtils/MySQLDriver"
+import { UserRelationsInput, userWithIdExists } from "TiFBackendUtils/TiFUserUtils"
 import { resp } from "TiFShared/api/Transport"
 import { TiFAPIRouter } from "../router"
 import { userNotFoundBody } from "../utils/Responses"

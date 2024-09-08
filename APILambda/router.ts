@@ -1,11 +1,28 @@
 import express from "express"
-import { implementTiFAPI, TiFAPIClient } from "TiFShared/api/TiFAPISchema"
-import { APIHandler } from "TiFShared/api/TransportTypes"
+import { APIHandler, APIMiddleware } from "TiFShared/api"
+import { tryParseAPICall } from "TiFShared/api/APIValidation"
+import { TiFAPIClient, TiFAPISchema } from "TiFShared/api/TiFAPISchema"
+import { middlewareRunner } from "TiFShared/lib/Middleware"
 import { MatchFnCollection } from "TiFShared/lib/Types/MatchType"
 import { ResponseContext } from "./auth"
 import { ServerEnvironment } from "./env"
 
-export type TiFAPIRouter = TiFAPIClient<{context: ResponseContext, environment: ServerEnvironment}>
+type RouterParams = {context: ResponseContext, environment: ServerEnvironment}
+
+export type TiFAPIRouter = TiFAPIClient<RouterParams>
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const catchAPIErrors: APIMiddleware<any> = async (input, next) => {
+  try {
+    return await next(input)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (error: any) {
+    return {
+      status: error.message.includes("invalid-request") ? 400 : 500,
+      data: { error: error.message }
+    }
+  }
+}
 
 /**
  * Adds the main routes to an app.
@@ -13,16 +30,17 @@ export type TiFAPIRouter = TiFAPIClient<{context: ResponseContext, environment: 
  * @param app see {@link Application}
  * @param environment see {@link ServerEnvironment}
  */
-export const TiFRouter = <Fns extends TiFAPIRouter>(implementations: MatchFnCollection<TiFAPIRouter, Fns>, environment: ServerEnvironment) => {
+export const TiFRouter = <Fns extends TiFAPIRouter>(apiClient: MatchFnCollection<TiFAPIRouter, Fns>, environment: ServerEnvironment) => {
   const router = express.Router()
 
-  implementTiFAPI(
-    undefined,
-    (endpointName, { httpRequest: { method, endpoint } }) => {
+  Object.entries(TiFAPISchema).forEach(
+    ([endpointName, endpointSchema]) => {
+      const { httpRequest: { method, endpoint } } = endpointSchema
+      const handler: APIHandler<RouterParams> = middlewareRunner(catchAPIErrors, tryParseAPICall, apiClient[endpointName as keyof TiFAPIRouter])
       router[method.toLowerCase() as Lowercase<typeof method>](
         endpoint,
-        async ({ body, query, params }, res) => {
-          const { status, data } = await (implementations[endpointName as keyof TiFAPIRouter] as APIHandler)({ body, query, params, context: res.locals, environment })
+        async (req, res) => {
+          const { status, data } = await handler({ ...req, endpointName, endpointSchema, environment, context: res.locals as ResponseContext })
           res.status(status).json(data)
         }
       )

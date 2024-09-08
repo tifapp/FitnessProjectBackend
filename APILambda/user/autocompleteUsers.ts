@@ -1,4 +1,6 @@
-import { DBuser, MySQLExecutableDriver, conn } from "TiFBackendUtils"
+import { conn } from "TiFBackendUtils"
+import { DBuser } from "TiFBackendUtils/DBTypes"
+import { MySQLExecutableDriver } from "TiFBackendUtils/MySQLDriver"
 import { resp } from "TiFShared/api/Transport"
 import { UserHandle } from "TiFShared/domain-models/User"
 import { TiFAPIRouter } from "../router"

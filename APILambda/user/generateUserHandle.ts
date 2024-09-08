@@ -1,7 +1,7 @@
 import { MySQLExecutableDriver } from "TiFBackendUtils/MySQLDriver"
 import { userWithHandleDoesNotExist } from "TiFBackendUtils/TiFUserUtils"
 import { UserHandle } from "TiFShared/domain-models/User"
-import { PromiseResult, failure, promiseResult } from "TiFShared/lib/Result"
+import { PromiseResult, failure } from "TiFShared/lib/Result"
 import crypto from "crypto"
 
 const generateNumericHash = (input: string) => {
@@ -12,15 +12,15 @@ const generateNumericHash = (input: string) => {
 }
 
 // make retry function util?
-const generateUniqueUsernameAttempt = (conn: MySQLExecutableDriver, name: string, retries: number): PromiseResult<string, "could-not-generate-username"> => {
-  const potentialUsername = `${name}${generateNumericHash(
+const generateUniqueUsernameAttempt = (conn: MySQLExecutableDriver, name: string, retries: number): PromiseResult<UserHandle, "could-not-generate-username"> => {
+  const potentialUsername = UserHandle.optionalParse(`${name}${generateNumericHash(
     `${name}${Date.now()}`
-  )}`
-  return userWithHandleDoesNotExist(conn, UserHandle.optionalParse(potentialUsername)!)
+  )}`)!
+  return userWithHandleDoesNotExist(conn, potentialUsername)
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore Retry function
-    .mapSuccess(() => potentialUsername)
-    .flatMapFailure(() => retries > 0 ? generateUniqueUsernameAttempt(conn, name, retries - 1) : promiseResult(failure("could-not-generate-username" as const)))
+    .withSuccess(potentialUsername)
+    .flatMapFailure(() => retries > 0 ? generateUniqueUsernameAttempt(conn, name, retries - 1) : failure("could-not-generate-username" as const))
 }
 
 export const generateUniqueUsername = (

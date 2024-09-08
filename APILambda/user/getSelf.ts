@@ -11,11 +11,8 @@ const getSelfSQL = (conn: MySQLExecutableDriver, userId: string) =>
     })
     .withFailure("self-not-found" as const)
 
-export const getSelf: TiFAPIRouter["getSelf"] = ({ context: { selfId } }) => {
-  console.log("getSelf is executing")
-
-  return getSelfSQL(conn, selfId)
+export const getSelf: TiFAPIRouter["getSelf"] = ({ context: { selfId } }) =>
+  getSelfSQL(conn, selfId)
     .mapSuccess((user) => resp(200, user))
     .mapFailure((error) => resp(500, { error }) as never)
     .unwrap()
-}
