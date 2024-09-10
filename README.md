@@ -6,6 +6,88 @@ Todo: Add table of contents
 
 # FitnessProject
 
+Getting Started:
+
+# MySQL setup for Mac 
+
+1. Download the MySQL DMG installer https://dev.mysql.com/downloads/mysql/
+2. Open the DMG file and follow the installation instructions.
+3. Open Terminal and edit your .zshrc (or .bash_profile if you're using Bash): nano ~/.zshrc
+4. Add the following line at the end of the file: export PATH="/usr/local/mysql/bin:$PATH"
+5. Save and close the file
+6. In Terminal, connect to the MySQL server: mysql -u root -p
+7. Enter your password when prompted.
+
+# MySQL setup for Windows TODO
+
+Case-insensitive table names
+
+# Local MySQL database
+
+We have migrated from PlanetScale to a local MySQL database at the moment. This section will be updated once we complete the data migration over to a new db provider.
+
+# Environment variables
+- Ask a team member for the .env variables
+
+Setup:
+1. Npm install
+2. Npm run pr - creates a pr and attaches trello card description
+- Use case: when the ticket id is in the branch name or specified as an argument to the command
+3. Npm run genapispecs - generates the specs.json
+4. Npm run resetDB - deletes the data from the db tables
+5. Npm run dbtots - generates the schema and interface for each table in the db
+
+# VSCode Setup
+
+Packages/Extensions to install when working with VSCode ->
+
+```typescript
+Linter tool: Prettier
+ESLint
+Git History
+Git Lens
+{
+    "editor.tabSize": 2,
+    "editor.indentSize": "tabSize",
+    "diffEditor.renderSideBySide": false,
+    "editor.codeActionsOnSave": {
+        "source.fixAll": "explicit",
+        "source.fixAll.eslint": "explicit",
+        "source.organizeImports": "explicit",
+        "source.addMissingImports": "explicit"
+    },
+    "javascript.updateImportsOnFileMove.enabled": "always",
+    "typescript.updateImportsOnFileMove.enabled": "always",
+    "[json]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[typescript]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    }
+}
+```
+
+# Environments
+
+1. Local
+2. Staging
+3. Prod
+
+# Workflow Process
+
+Contributing ->
+
+In order to contribute changes, you can checkout a branch off of "development", make changes, and then open a PR. We'll often review PRs during our regular meetings.
+We have a pull request template here to help inspire your PR descriptions: https://github.com/tifapp/FitnessProjectBackend/blob/main/.github/pull_request_template.md
+
+For each change, please explain WHY you’re making it before explaining WHAT the change is. This helps ensure all changes are meaningful and valuable, and helps inspire better suggestions from reviewers. PR descriptions serve as a crucial reference point of documentation, so don't skimp on this part.
+
+Ideally, each PR should have a trello ticket linked to it so the team can prioritize and track the change. You can link a ticket by putting the URL to the ticket at the bottom of the PR. If your PR does not cover an explicit ticket (eg. in the moment fix, or the ticket hasn't been created for some reason), you can put TASK_UNTRACKED at the bottom of the PR. However, only do this sparingly.
+
+1. Ticket URL in pr description
+2. Ticket ID in pr description
+3. Ticket ID in branch name
+
 # Adding a New SQL Route to the Backend API
 
 Our backend API is designed with a structured layered architecture to streamline data handling and facilitate testing. This guide will explain the process of adding a new SQL route to our backend API.
