@@ -2,11 +2,9 @@ import { conn } from "TiFBackendUtils"
 import { DBTifEvent } from "TiFBackendUtils/TifEventUtils"
 import { EventID } from "TiFShared/domain-models/Event"
 import { UserID } from "TiFShared/domain-models/User"
-import { z } from "zod"
 import { ChatPermissions, createTokenRequest } from "../ably"
 import { ServerEnvironment } from "../env"
 import { isUserBlocked, isUserInEvent } from "../utils/sharedSQL"
-import { ValidatedRouter } from "../validation"
 import { eventDetailsSQL } from "./getEventById"
 
 type Role = "admin" | "attendee" | "viewer"
@@ -83,28 +81,24 @@ export const checkChatPermissionsTransaction = (
       return await getTokenRequest(event, userId)
     })
 
-const eventRequestSchema = z.object({
-  eventId: z.string()
-})
-
 /**
  * Creates routes related to event operations.
  *
  * @param environment see {@link ServerEnvironment}.
  */
-export const getChatTokenRouter = (
-  environment: ServerEnvironment,
-  router: ValidatedRouter
-) => {
-  /**
-   * Get token for event's chat room
-   */
-  router.getWithValidation(
-    "/chat/:eventId",
-    { pathParamsSchema: eventRequestSchema },
-    (req, res) =>
-      checkChatPermissionsTransaction(Number(req.params.eventId), res.locals.selfId)
-        .mapFailure(error => res.status(error === "event-not-found" ? 404 : error === "user-not-attendee" || error === "user-is-blocked" ? 403 : 500).json({ error }))
-        .mapSuccess(event => res.status(200).json(event))
-  )
-}
+// export const getChatTokenRouter = (
+//   environment: ServerEnvironment,
+//   router: ValidatedRouter
+// ) => {
+//   /**
+//    * Get token for event's chat room
+//    */
+//   router.getWithValidation(
+//     "/chat/:eventId",
+//     { pathParamsSchema: eventRequestSchema },
+//     (req, res) =>
+//       checkChatPermissionsTransaction(Number(req.params.eventId), res.locals.selfId)
+//         .mapFailure(error => res.status(error === "event-not-found" ? 404 : error === "user-not-attendee" || error === "user-is-blocked" ? 403 : 500).json({ error }))
+//         .mapSuccess(event => res.status(200).json(event))
+//   )
+// }

@@ -21,6 +21,7 @@ export const joinEvent: TiFAPIRouter["joinEvent"] = async ({ context: { selfId }
       )
       .passthroughSuccess(event =>
         isUserBlocked(tx, event.hostId, selfId)
+          .inverted()
           .withFailure(resp(403, { error: "user-is-blocked" }))
       )
       .mapSuccess(async (event) => {

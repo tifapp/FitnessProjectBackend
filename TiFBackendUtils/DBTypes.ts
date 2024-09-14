@@ -126,12 +126,12 @@ export interface DBuserSettings {
   'canShareArrivalStatus': boolean;
   'eventCalendarDefaultLayout': 'single-day-layout'|'week-layout'|'month-layout';
   'eventCalendarStartOfWeekDay': 'sunday'|'monday'|'tuesday'|'wednesday'|'thursday'|'friday'|'saturday';
-  'eventPresetDurations': Object | undefined;
-  'eventPresetPlacemark': Object | undefined;
+  'eventPresetDurations': number[];
+  'eventPresetPlacemark': import("./node_modules/TiFShared/domain-models/Event").EventEditLocation | undefined;
   'eventPresetShouldHideAfterStartDate': boolean;
   'isAnalyticsEnabled': boolean;
   'isCrashReportingEnabled': boolean;
-  'pushNotificationTriggerIds': import("./node_modules/TiFShared/domain-models/Settings").UserSettings["pushNotificationTriggerIds"] | undefined;
+  'pushNotificationTriggerIds': import("./node_modules/TiFShared/domain-models/Settings").UserSettings["pushNotificationTriggerIds"];
   'updatedDateTime': Date | undefined;
   'userId': string;
   'version': number;

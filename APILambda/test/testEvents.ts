@@ -22,3 +22,5 @@ const createTestEvent = (): CreateEvent =>
   })
 
 export const testEventInput: CreateEvent = createTestEvent()
+
+export const upcomingEventDateRange = dateRange(dayjs().add(12, "hour").toDate(), dayjs().add(1, "year").toDate())

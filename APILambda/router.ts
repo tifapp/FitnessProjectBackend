@@ -34,6 +34,8 @@ const validateAPIRouterCall = validateAPICall((status, value) => {
   return value
 })
 
+const emptyToUndefined = (obj: any) => Object.keys(obj).length === 0 && obj.constructor === Object ? undefined : obj;
+
 /**
  * Adds the main routes to an app.
  *
@@ -50,7 +52,7 @@ export const TiFRouter = <Fns extends TiFAPIRouter>(apiClient: MatchFnCollection
       router[method.toLowerCase() as Lowercase<typeof method>](
         endpoint,
         async ({ body, query, params }, res) => {
-          const { status, data } = await handler({ body, query, params, endpointName, endpointSchema, environment, context: res.locals as ResponseContext })
+          const { status, data } = await handler({ body: emptyToUndefined(body), query: emptyToUndefined(query), params: emptyToUndefined(params), endpointName, endpointSchema, environment, context: res.locals as ResponseContext })
           res.status(status).json(data)
         }
       )

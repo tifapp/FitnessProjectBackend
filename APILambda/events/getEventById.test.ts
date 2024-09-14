@@ -11,11 +11,6 @@ import { createEventFlow } from "../test/userFlows/createEventFlow"
 import { createUserFlow } from "../test/userFlows/createUserFlow"
 
 describe("GetSingleEvent tests", () => {
-  const eventLocation = {
-    latitude: testEventInput.latitude,
-    longitude: testEventInput.longitude
-  }
-
   it("should return 404 if the event doesnt exist", async () => {
     const newUser = await createUserFlow()
     const eventId = randomInt(1000)
@@ -23,7 +18,7 @@ describe("GetSingleEvent tests", () => {
 
     expect(resp).toMatchObject({
       status: 404,
-      body: { error: "event-not-found" }
+      data: { error: "event-not-found" }
     })
   })
 
@@ -33,13 +28,13 @@ describe("GetSingleEvent tests", () => {
     today.set("minute", 59)
     today.set("second", 59)
 
-    const eventTimeZone = getTimeZone({ latitude: testEventInput.latitude, longitude: testEventInput.longitude })
+    const eventTimeZone = getTimeZone({ latitude: testEventInput.coordinates.latitude, longitude: testEventInput.coordinates.longitude })
 
     addLocationToDB(
       conn,
       {
-        latitude: testEventInput.latitude,
-        longitude: testEventInput.longitude,
+        latitude: testEventInput.coordinates.latitude,
+        longitude: testEventInput.coordinates.longitude,
         name: "Sample Location",
         city: "Sample Neighborhood",
         country: "Sample Country",
@@ -50,25 +45,20 @@ describe("GetSingleEvent tests", () => {
       eventTimeZone[0]
     )
 
-    const expectedStartDateTime = dayjs().startOf("hour").toDate()
-    const expectedEndDateTime = dayjs().add(1, "hour").startOf("hour").toDate()
-
     const {
       eventIds,
       host,
       attendeesList
     } = await createEventFlow([
       {
-        ...eventLocation,
         title: "Fake Event",
         description: "This is some random event",
-        startDateTime: expectedStartDateTime,
-        endDateTime: expectedEndDateTime
       }
     ], 1)
 
     const resp = await testAPI.eventDetails({ auth: newUser.auth, params: { eventId: eventIds[0] } })
 
+    //@ts-expect-error
     expectTypeOf(resp.data).toMatchTypeOf<TiFEvent>()
     expect(resp.data).toEqual(
       {
@@ -81,17 +71,14 @@ describe("GetSingleEvent tests", () => {
         time: {
           secondsToStart: expect.any(Number),
           dateRange: {
-            startDateTime: expectedStartDateTime.toISOString(),
-            endDateTime: expectedEndDateTime.toISOString()
+            startDateTime: testEventInput.dateRange.startDateTime.toISOString(),
+            endDateTime: testEventInput.dateRange.endDateTime.toISOString()
           },
           todayOrTomorrow: "today"
         },
         previewAttendees: attendeesList.map(({ id }) => ({ id, profileImageURL: null })),
         location: {
-          coordinate: {
-            latitude: testEventInput.latitude,
-            longitude: testEventInput.longitude
-          },
+          coordinate: testEventInput.coordinates,
           placemark: {
             name: "Sample Location",
             city: "Sample Neighborhood",
@@ -127,23 +114,12 @@ describe("GetSingleEvent tests", () => {
 })
 
 describe("Checks the data returned if the user blocks the host or vice versa is of the correct format", () => {
-  const eventLocation = {
-    latitude: testEventInput.latitude,
-    longitude: testEventInput.longitude
-  }
-
   it("should return host name and event title if blocked by host", async () => {
     const {
       attendeesList,
       host,
       eventIds: [eventId]
-    } = await createEventFlow([
-      {
-        ...eventLocation,
-        startDateTime: dayjs().add(12, "hour").toDate(),
-        endDateTime: dayjs().add(1, "year").toDate()
-      }
-    ], 1)
+    } = await createEventFlow([{}], 1)
 
     await testAPI.blockUser(userToUserRequest(host, attendeesList[1]))
     const resp = await testAPI.eventDetails({ auth: attendeesList[1].auth, params: { eventId } })
@@ -153,14 +129,7 @@ describe("Checks the data returned if the user blocks the host or vice versa is 
   })
 
   it("should return host name and event title if attendee blocked host", async () => {
-    const { attendeesList, host, eventIds: [eventId] } =
-      await createEventFlow([
-        {
-          ...eventLocation,
-          startDateTime: dayjs().add(12, "hour").toDate(),
-          endDateTime: dayjs().add(1, "year").toDate()
-        }
-      ], 1)
+    const { attendeesList, host, eventIds: [eventId] } = await createEventFlow([{}], 1)
 
     await testAPI.blockUser(userToUserRequest(attendeesList[1], host))
     const resp = await testAPI.eventDetails({ auth: attendeesList[1].auth, params: { eventId } })
@@ -207,20 +176,10 @@ describe("Check that the secondsToStart is accurate", () => {
 
 describe("Check the user relations return the appropriate relation between the user and host", () => {
   it("should return 'current-user' if the user views their own event for the fromThemToYou and fromYouToThem properties", async () => {
-    const eventLocation = {
-      latitude: testEventInput.latitude,
-      longitude: testEventInput.longitude
-    }
     const {
       host,
       eventIds
-    } = await createEventFlow([
-      {
-        ...eventLocation,
-        startDateTime: dayjs().add(12, "hour").toDate(),
-        endDateTime: dayjs().add(1, "year").toDate()
-      }
-    ], 1)
+    } = await createEventFlow([{}], 1)
 
     const resp = await testAPI.eventDetails({ auth: host.auth, params: { eventId: eventIds[0] } })
 

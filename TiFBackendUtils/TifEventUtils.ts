@@ -149,9 +149,7 @@ export const tifEventResponseFromDatabaseEvent = (event: DBTifEvent) : TiFEvent 
     userAttendeeStatus: event.userAttendeeStatus,
     joinedDateTime: event.joinedDateTime,
     isChatExpired: isChatExpired(event.endedDateTime),
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    hasArrived: event.hasArrived === 1,
+    hasArrived: event.hasArrived,
     updatedDateTime: new Date(event.updatedDateTime),
     createdDateTime: new Date(event.createdDateTime),
     endedDateTime: event.endedDateTime
@@ -244,19 +242,20 @@ export const setEventAttendeesFields = (
     return success([])
   }
 
-  const eventsByRegion = getAttendees(conn, eventIds).flatMapSuccess(
-    (attendeesPreviews) =>
-      getAttendeeCount(conn, eventIds).flatMapSuccess((eventsWithAttendeeCount) =>
-        getEventAttendanceFields(conn, userId, eventIds).mapSuccess((joinTimestampAndRoleData) =>
-          setAttendeesPreviewForEvent(
-            events,
-            attendeesPreviews,
-            eventsWithAttendeeCount,
-            joinTimestampAndRoleData
+  const eventsByRegion = getAttendees(conn, eventIds)
+    .flatMapSuccess(
+      (attendeesPreviews) =>
+        getAttendeeCount(conn, eventIds).flatMapSuccess((eventsWithAttendeeCount) =>
+          getEventAttendanceFields(conn, userId, eventIds).mapSuccess((joinTimestampAndRoleData) =>
+            setAttendeesPreviewForEvent(
+              events,
+              attendeesPreviews,
+              eventsWithAttendeeCount,
+              joinTimestampAndRoleData
+            )
           )
         )
-      )
-  )
+    )
 
   return eventsByRegion.mapSuccess((events) => {
     return events

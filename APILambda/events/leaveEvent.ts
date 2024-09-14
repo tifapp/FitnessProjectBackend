@@ -62,15 +62,15 @@ export const leaveEvent: TiFAPIRouter["leaveEvent"] = ({ context: { selfId }, pa
       )
       .flatMapSuccess(() =>
         isHostUserNotFromOwnEvent(tx, selfId, eventId)
-          .flatMapSuccess(() =>
-            removeUserFromAttendeeList(tx, selfId, eventId)
-          )
-          .mapSuccess(({ rowsAffected }) =>
-            rowsAffected > 0 ? resp(204) : resp(400, { error: "already-left-event" })
-          )
           .mapFailure((error) =>
             resp(400, { error })
           )
+      )
+      .flatMapSuccess(() =>
+        removeUserFromAttendeeList(tx, selfId, eventId)
+      )
+      .mapSuccess(({ rowsAffected }) =>
+        rowsAffected > 0 ? resp(204) : resp(400, { error: "already-left-event" })
       )
   )
     .unwrap()

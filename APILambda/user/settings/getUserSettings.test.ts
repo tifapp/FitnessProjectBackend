@@ -15,7 +15,7 @@ describe("Get Settings tests", () => {
     const resp = await testAPI.userSettings({ auth: newUser.auth })
     expect(resp).toMatchObject({
       status: 200,
-      body: {
+      data: {
         isAnalyticsEnabled: true,
         isCrashReportingEnabled: true
         // TODO: Update with models from tifshared api

@@ -1,5 +1,4 @@
 import { conn } from "TiFBackendUtils"
-import dayjs from "dayjs"
 import { userToUserRequest } from "../test/shortcuts"
 import { testAPI } from "../test/testApp"
 import { testEventInput } from "../test/testEvents"
@@ -32,7 +31,7 @@ const createTestAttendeesList = async ({
     host,
     attendeesList,
     eventIds: [eventId]
-  } = await createEventFlow([{ ...eventLocation }], numOfAttendees)
+  } = await createEventFlow([{ coordinates: eventLocation }], numOfAttendees)
 
   return {
     attendeesList,
@@ -68,7 +67,7 @@ describe("getAttendeesList endpoint", () => {
 
     expect(resp).toMatchObject({
       status: 400,
-      body: {
+      data: {
         error: "invalid-request"
       }
     })
@@ -83,7 +82,7 @@ describe("getAttendeesList endpoint", () => {
 
     expect(resp).toMatchObject({
       status: 400,
-      body: {
+      data: {
         error: "invalid-request"
       }
     })
@@ -95,15 +94,7 @@ describe("getAttendeesList endpoint", () => {
     // We must use createEventSQL directly because createEventFlow() makes an event with the host in the attendees list.
     const {
       value: { insertId }
-    } = await createEventSQL(
-      conn,
-      {
-        ...testEventInput,
-        startDateTime: dayjs().add(12, "hour").toDate(),
-        endDateTime: dayjs().add(24, "hour").toDate()
-      },
-      currentUser.id
-    )
+    } = await createEventSQL( conn, testEventInput, currentUser.id )
 
     const resp = await testAPI.attendeesList({
       auth: currentUser.auth,
@@ -354,7 +345,7 @@ describe("getAttendeesList endpoint", () => {
 
     expect(resp).toMatchObject({
       status: 200,
-      body: {
+      data: {
         attendees: [
           {
             id: host.id,
@@ -392,7 +383,7 @@ describe("getAttendeesList endpoint", () => {
 
     expect(resp).toMatchObject({
       status: 200,
-      body: {
+      data: {
         attendees: [
           {
             id: attendeesList[2].id,
@@ -438,7 +429,7 @@ describe("getAttendeesList endpoint", () => {
 
     expect(resp).toMatchObject({
       status: 200,
-      body: {
+      data: {
         attendees: [
           {
             id: attendeesList[0].id,
@@ -477,7 +468,7 @@ describe("getAttendeesList endpoint", () => {
 
     expect(resp).toMatchObject({
       status: 403,
-      body: { error: "blocked-by-host" }
+      data: { error: "blocked-by-host" }
     })
   })
 
@@ -508,7 +499,7 @@ describe("getAttendeesList endpoint", () => {
 
     expect(resp).toMatchObject({
       status: 200,
-      body: {
+      data: {
         attendees: [
           {
             id: attendeesList[0].id,
@@ -556,7 +547,7 @@ describe("getAttendeesList endpoint", () => {
 
     expect(resp).toMatchObject({
       status: 200,
-      body: {
+      data: {
         attendees: [
           {
             id: attendeesList[0].id,
@@ -600,7 +591,7 @@ describe("getAttendeesList endpoint", () => {
 
     expect(resp).toMatchObject({
       status: 403,
-      body: { error: "blocked-by-host" }
+      data: { error: "blocked-by-host" }
     })
   })
 })

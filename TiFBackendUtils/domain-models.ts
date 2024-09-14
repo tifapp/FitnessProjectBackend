@@ -4,5 +4,6 @@ import { UserHandle } from "TiFShared/domain-models/User"
 export const domainModelColumns = {
   hostHandle: UserHandle.optionalParse,
   handle: UserHandle.optionalParse,
-  color: ColorString.parse
+  color: ColorString.parse,
+  hasArrived: (value: any) => value === 1 || value === true
 }

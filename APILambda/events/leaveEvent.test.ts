@@ -8,10 +8,7 @@ describe("Leave event tests", () => {
   const eventLocation = { latitude: 50, longitude: 50 }
 
   it("should return 204 if user leaves the event", async () => {
-    const {
-      attendeesList,
-      eventIds: [eventId]
-    } = await createEventFlow(
+    const {attendeesList: [,attendee], eventIds: [eventId]} = await createEventFlow(
       [
         {
           coordinates: eventLocation
@@ -20,7 +17,7 @@ describe("Leave event tests", () => {
       1
     )
 
-    const resp = await testAPI.leaveEvent({ auth: attendeesList[1].auth, params: { eventId } })
+    const resp = await testAPI.leaveEvent({ auth: attendee.auth, params: { eventId } })
 
     expect(resp).toMatchObject({
       status: 204
@@ -43,30 +40,20 @@ describe("Leave event tests", () => {
     const resp = await testAPI.leaveEvent({ auth: host.auth, params: { eventId } })
     expect(resp).toMatchObject({
       status: 400,
-      body: { error: "co-host-not-found" }
+      data: { error: "co-host-not-found" }
     })
   })
 
   // use different status message if leaving twice?
   it("should return 400 if user leaves event twice", async () => {
-    const {
-      attendeesList,
-      eventIds
-    } = await createEventFlow(
-      [
-        {
-          coordinates: eventLocation
-        }
-      ],
-      1
-    )
+    const {attendeesList,eventIds: [eventId]} = await createEventFlow([{coordinates: eventLocation}], 1)
 
-    await testAPI.leaveEvent({ auth: attendeesList[1].auth, params: { eventIds } }[0])
-    const resp = await testAPI.leaveEvent({ auth: attendeesList[1].auth, params: { eventIds } }[0])
+    await testAPI.leaveEvent({ auth: attendeesList[1].auth, params: { eventId } })
+    const resp = await testAPI.leaveEvent({ auth: attendeesList[1].auth, params: { eventId } })
 
     expect(resp).toMatchObject({
       status: 400,
-      body: { error: "already-left-event" }
+      data: { error: "already-left-event" }
     })
   })
 
@@ -77,58 +64,36 @@ describe("Leave event tests", () => {
 
     expect(resp).toMatchObject({
       status: 404,
-      body: { error: "event-not-found" }
+      data: { error: "event-not-found" }
     })
   })
 
   it("should return 400 if user leaves an event that they haven't joined", async () => {
     const attendee = await createUserFlow()
-    const { eventIds } = await createEventFlow(
-      [
-        {
-          coordinates: eventLocation
-        }
-      ],
-      1
-    )
+    const { eventIds: [eventId] } = await createEventFlow([{coordinates: eventLocation}],1)
 
-    const resp = await testAPI.leaveEvent({ auth: attendee.auth, params: { eventId: eventIds[0] } })
+    const resp = await testAPI.leaveEvent({ auth: attendee.auth, params: { eventId } })
 
     expect(resp).toMatchObject({
       status: 400,
-      body: { error: "already-left-event" }
+      data: { error: "already-left-event" }
     })
   })
 
   it("should return 403 if user leaves an event that ended before it starts", async () => {
-    const {
-      eventIds,
-      host,
-      attendeesList
-    } = await createEventFlow(
-      [
-        {
-          coordinates: eventLocation
-        }
-      ],
-      1
-    )
+    const {eventIds: [eventId],host,attendeesList: [,attendee]} = await createEventFlow([{coordinates: eventLocation}],1)
 
-    await testAPI.endEvent({ auth: host.auth, params: { eventId: eventIds[0] } })
-    const resp = await testAPI.leaveEvent({ auth: attendeesList[1].auth, params: { eventIds } }[0])
+    await testAPI.endEvent({ auth: host.auth, params: { eventId } })
+    const resp = await testAPI.leaveEvent({ auth: attendee.auth, params: { eventId } })
 
     expect(resp).toMatchObject({
       status: 403,
-      body: { error: "event-has-been-cancelled" }
+      data: { error: "event-has-been-cancelled" }
     })
   })
 
   it("should return 403 if user leaves an event that ended", async () => {
-    const {
-      eventIds,
-      host,
-      attendeesList
-    } = await createEventFlow(
+    const {eventIds: [eventId],host,attendeesList: [,attendee]} = await createEventFlow(
       [
         {
           ...eventLocation,
@@ -138,12 +103,12 @@ describe("Leave event tests", () => {
       1
     )
 
-    await testAPI.endEvent({ auth: host.auth, params: { eventId: eventIds[0] } })
-    const resp = await testAPI.leaveEvent({ auth: attendeesList[1].auth, params: { eventIds } }[0])
+    await testAPI.endEvent({ auth: host.auth, params: { eventId } })
+    const resp = await testAPI.leaveEvent({ auth: attendee.auth, params: { eventId } })
 
     expect(resp).toMatchObject({
       status: 403,
-      body: { error: "event-has-ended" }
+      data: { error: "event-has-ended" }
     })
   })
 

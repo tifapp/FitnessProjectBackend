@@ -1,4 +1,3 @@
-import dayjs from "dayjs"
 import { testAPI } from "../test/testApp"
 import { createEventFlow } from "../test/userFlows/createEventFlow"
 
@@ -9,9 +8,7 @@ describe("End/cancel event tests", () => {
     const { eventIds, host } = await createEventFlow(
       [
         {
-          ...eventLocation,
-          startDateTime: dayjs().add(12, "hour").toDate(),
-          endDateTime: dayjs().add(1, "year").toDate()
+          coordinates: eventLocation,
         }
       ],
       0
@@ -30,9 +27,7 @@ describe("End/cancel event tests", () => {
     } = await createEventFlow(
       [
         {
-          ...eventLocation,
-          startDateTime: dayjs().add(12, "hour").toDate(),
-          endDateTime: dayjs().add(1, "year").toDate()
+          coordinates: eventLocation,
         }
       ],
       1
@@ -41,30 +36,28 @@ describe("End/cancel event tests", () => {
     const resp = await testAPI.endEvent({ auth: attendeesList[1].auth, params: { eventId: eventIds[0] } })
     expect(resp).toMatchObject({
       status: 403,
-      body: { error: "cannot-end-event" }
+      data: { error: "cannot-end-event" }
     })
   })
 
   it("should return 403 if host tries to cancel an ended event", async () => {
     const {
-      eventIds,
+      eventIds: [eventId],
       host
     } = await createEventFlow(
       [
         {
-          ...eventLocation,
-          startDateTime: dayjs().add(12, "hour").toDate(),
-          endDateTime: dayjs().add(1, "year").toDate()
+          coordinates: eventLocation,
         }
       ],
       1
     )
 
-    await testAPI.endEvent({ auth: host.auth, params: { eventId: eventIds[0] } })
-    const resp = testAPI.endEvent({ auth: host.auth, params: { eventId: eventIds[0] } })
+    await testAPI.endEvent({ auth: host.auth, params: { eventId } })
+    const resp = await testAPI.endEvent({ auth: host.auth, params: { eventId } })
     expect(resp).toMatchObject({
       status: 403,
-      body: { error: "cannot-end-event" }
+      data: { error: "cannot-end-event" }
     })
   })
 })

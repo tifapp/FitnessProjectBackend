@@ -3,6 +3,7 @@ import { MySQLExecutableDriver } from "TiFBackendUtils/MySQLDriver"
 import { resp } from "TiFShared/api/Transport"
 import { UserSettings } from "TiFShared/domain-models/Settings"
 import { TiFAPIRouter } from "../../router"
+import { queryUserSettings } from "./userSettingsQuery"
 
 /**
  * Updates the user's settings with the specified fields in the settings object.
@@ -51,7 +52,8 @@ const updateUserSettingsSQL = (
     )
     ON DUPLICATE KEY UPDATE 
       isAnalyticsEnabled = COALESCE(:isAnalyticsEnabled, isAnalyticsEnabled), 
-      isCrashReportingEnabled = COALESCE(:isCrashReportingEnabled, isCrashReportingEnabled);    
+      isCrashReportingEnabled = COALESCE(:isCrashReportingEnabled, isCrashReportingEnabled),
+      version = version + 1;
   `,
     {
       userId,
@@ -70,5 +72,6 @@ const updateUserSettingsSQL = (
 
 export const saveUserSettings: TiFAPIRouter["saveUserSettings"] = ({ context: { selfId }, body: newSettings }) =>
   updateUserSettingsSQL(conn, selfId, newSettings)
-    .mapSuccess(() => resp(204))
+    .flatMapSuccess(() => queryUserSettings(conn, selfId))
+    .mapSuccess((updatedSettings) => resp(200, updatedSettings))
     .unwrap()

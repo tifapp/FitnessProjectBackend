@@ -1,17 +1,8 @@
 import { DBuserSettings } from "TiFBackendUtils/DBTypes"
 import { MySQLExecutableDriver } from "TiFBackendUtils/MySQLDriver"
 import { userWithIdExists } from "TiFBackendUtils/TiFUserUtils"
+import { DEFAULT_USER_SETTINGS } from "TiFShared/domain-models/Settings"
 import { success } from "TiFShared/lib/Result"
-
-/**
- * The default user settings, which enables all fields.
- */
-const DEFAULT_USER_SETTINGS = {
-  isAnalyticsEnabled: true,
-  isCrashReportingEnabled: true
-  // TODO: Update with models from tifshared api
-} as const
-
 /**
  * Queries a given user's settings. If the user has never edited their settings,
  * undefined will be returned if no errors occur.

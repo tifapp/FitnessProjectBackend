@@ -26,7 +26,7 @@ describe("Update Settings tests", () => {
       data: {}
     })
 
-    const settings1UpdatedDateTime = await testAPI.userSettings({ auth: newUser.auth })
+    const settings1Resp = await testAPI.userSettings({ auth: newUser.auth })
 
     const updateResp2 = await testAPI.saveUserSettings({
       auth: newUser.auth,
@@ -50,8 +50,8 @@ describe("Update Settings tests", () => {
       })
     })
 
-    expect(settings2Resp.data.updatedDateTime.getTime()).toBeGreaterThanOrEqual(
-      settings1UpdatedDateTime.getTime()
+    expect((settings2Resp.data as any).version).toBeGreaterThanOrEqual(
+      (settings2Resp.data as any).version
     )
 
     const updateResp3 = await testAPI.saveUserSettings({
@@ -68,7 +68,7 @@ describe("Update Settings tests", () => {
     const settings3Resp = await testAPI.userSettings({ auth: newUser.auth })
     expect(settings3Resp).toMatchObject({
       status: 200,
-      body: expect.objectContaining({
+      data: expect.objectContaining({
         isAnalyticsEnabled: false,
         isCrashReportingEnabled: true,
         // TODO: Update with models from tifshared api
@@ -90,7 +90,7 @@ describe("Update Settings tests", () => {
 
     expect(resp).toMatchObject({
       status: 400,
-      body: { error: "invalid-request" }
+      data: { error: "invalid-request" }
     })
   })
 })

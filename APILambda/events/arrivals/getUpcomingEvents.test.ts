@@ -1,7 +1,7 @@
 import dayjs from "dayjs"
 import { dateRange } from "TiFShared/domain-models/FixedDateRange"
 import { testAPI } from "../../test/testApp"
-import { testEventInput } from "../../test/testEvents"
+import { testEventInput, upcomingEventDateRange } from "../../test/testEvents"
 import { createEventFlow } from "../../test/userFlows/createEventFlow"
 import { createUserFlow } from "../../test/userFlows/createUserFlow"
 
@@ -11,7 +11,7 @@ describe("getUpcomingEvents tests", () => {
 
     expect(await testAPI.upcomingEventArrivalRegions({ auth: attendee.auth })).toMatchObject({
       status: 200,
-      data: { upcomingRegions: [] }
+      data: { trackableRegions: [] }
     })
   })
 
@@ -21,7 +21,7 @@ describe("getUpcomingEvents tests", () => {
     const { attendeesList, host, eventIds: [arrivedTestEventId, ongoingTestEventId, notArrivedTestEventId] } = await createEventFlow([
       {
         coordinates: eventLocation,
-        dateRange: dateRange(dayjs().add(12, "hour").toDate(), dayjs().add(1, "year").toDate())
+        dateRange: upcomingEventDateRange
       },
       {
         coordinates: eventLocation,
@@ -32,7 +32,7 @@ describe("getUpcomingEvents tests", () => {
           latitude: 25,
           longitude: 25
         },
-        dateRange: dateRange(dayjs().add(12, "hour").toDate(), dayjs().add(1, "year").toDate())
+        dateRange: upcomingEventDateRange
       },
       {
         coordinates: eventLocation,
@@ -46,7 +46,7 @@ describe("getUpcomingEvents tests", () => {
       body: {
         ...testEventInput,
         coordinates: eventLocation,
-        dateRange: dateRange(dayjs().add(12, "hour").toDate(), dayjs().add(1, "year").toDate())!
+        dateRange: upcomingEventDateRange!
       }
     })
 

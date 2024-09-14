@@ -3,11 +3,11 @@ import { testAPI } from "../../test/testApp"
 describe("Create User Profile tests", () => {
   // TODO: Move to separate unit test file for auth middleware
   it("should 401 when no token is passed", async () => {
-    const resp = await testAPI.createCurrentUserProfile()
+    const resp = await testAPI.createCurrentUserProfile({auth: ""})
 
     expect(resp).toMatchObject({
       status: 401,
-      body: { error: "invalid-headers" }
+      data: { error: "invalid-headers" }
     })
   })
 
@@ -17,7 +17,7 @@ describe("Create User Profile tests", () => {
 
     expect(resp).toMatchObject({
       status: 401,
-      body: { error: "unverified-user" }
+      data: { error: "unverified-user" }
     })
   })
 
@@ -27,7 +27,7 @@ describe("Create User Profile tests", () => {
 
     expect(resp).toMatchObject({
       status: 401,
-      body: { error: "invalid-claims" }
+      data: { error: "invalid-claims" }
     })
   })
 
@@ -38,7 +38,7 @@ describe("Create User Profile tests", () => {
 
     expect(resp).toMatchObject({
       status: 400,
-      body: { error: "user-exists" }
+      data: { error: "user-exists" }
     })
   })
 
@@ -61,7 +61,7 @@ describe("Create User Profile tests", () => {
 
     expect(resp).toMatchObject({
       status: 201,
-      body: { id: user.id, handle: expect.anything() }
+      data: { id: user.id, handle: expect.anything() }
     })
   })
 })

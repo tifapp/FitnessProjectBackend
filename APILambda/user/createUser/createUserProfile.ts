@@ -18,17 +18,15 @@ const checkValidName = (name: string) => {
 }
 
 const userWithHandleOrIdExists = (conn: MySQLExecutableDriver, { id, handle }: CreateUserInput) => {
-  return handle
-    ? success()
-    : failure("missing-handle" as const)
-      .flatMapSuccess(() => conn
-        .queryFirstResult<DBuser>("SELECT TRUE FROM user WHERE handle = :handle OR id = :id", {
-          handle,
-          id
-        })
-        .inverted()
-        .mapFailure(user => user.handle === handle ? "duplicate-handle" as const : "user-exists")
-      )
+  return (handle ? success() : failure("missing-handle" as const))
+    .flatMapSuccess(() => conn
+      .queryFirstResult<DBuser>("SELECT TRUE FROM user WHERE handle = :handle OR id = :id", {
+        handle,
+        id
+      })
+      .inverted()
+      .mapFailure(user => user.handle === handle ? "duplicate-handle" as const : "user-exists")
+    )
 }
 
 /**

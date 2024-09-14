@@ -162,11 +162,11 @@ export const tableDefintionsByFamily = [
     eventCalendarStartOfWeekDay enum('sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday') NOT NULL DEFAULT 'monday',
     eventCalendarDefaultLayout enum('single-day-layout', 'week-layout', 'month-layout') NOT NULL DEFAULT 'month-layout',
     eventPresetShouldHideAfterStartDate tinyint(1) NOT NULL DEFAULT '1',
-    eventPresetPlacemark JSON, 
-    eventPresetDurations JSON,
+    eventPresetPlacemark JSON,
+    eventPresetDurations JSON NOT NULL DEFAULT (JSON_ARRAY()),
     version bigint NOT NULL DEFAULT '0',
     updatedDateTime timestamp(${timePrecision}) NULL DEFAULT current_timestamp(${timePrecision}) ON UPDATE current_timestamp(${timePrecision}),
-    pushNotificationTriggerIds JSON,
+    pushNotificationTriggerIds JSON NOT NULL DEFAULT (JSON_ARRAY()),
     CHECK (
         JSON_CONTAINS(
           JSON_ARRAY(

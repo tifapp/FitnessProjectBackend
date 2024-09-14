@@ -147,12 +147,12 @@
 | canShareArrivalStatus | boolean | false | 1 |
 | eventCalendarDefaultLayout | 'single-day-layout'|'week-layout'|'month-layout' | false | month-layout |
 | eventCalendarStartOfWeekDay | 'sunday'|'monday'|'tuesday'|'wednesday'|'thursday'|'friday'|'saturday' | false | monday |
-| eventPresetDurations | Object | true | None |
-| eventPresetPlacemark | Object | true | None |
+| eventPresetDurations | number[] | false | json_array() |
+| eventPresetPlacemark | import("./node_modules/TiFShared/domain-models/Event").EventEditLocation | true | None |
 | eventPresetShouldHideAfterStartDate | boolean | false | 1 |
 | isAnalyticsEnabled | boolean | false | 1 |
 | isCrashReportingEnabled | boolean | false | 1 |
-| pushNotificationTriggerIds | import("./node_modules/TiFShared/domain-models/Settings").UserSettings["pushNotificationTriggerIds"] | true | None |
+| pushNotificationTriggerIds | import("./node_modules/TiFShared/domain-models/Settings").UserSettings["pushNotificationTriggerIds"] | false | json_array() |
 | updatedDateTime | Date | true | CURRENT_TIMESTAMP |
 | userId | string | false | None |
 | version | number | false | 0 |

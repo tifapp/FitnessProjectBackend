@@ -4,7 +4,7 @@ import { randomInt } from "crypto"
 import dayjs from "dayjs"
 import { userToUserRequest } from "../test/shortcuts"
 import { testAPI } from "../test/testApp"
-import { testEventInput } from "../test/testEvents"
+import { testEventInput, upcomingEventDateRange } from "../test/testEvents"
 import { createEventFlow } from "../test/userFlows/createEventFlow"
 import { createUserFlow } from "../test/userFlows/createUserFlow"
 import { createEventSQL } from "./createEvent"
@@ -29,7 +29,7 @@ describe("Join the event by id tests", () => {
 
     expect(resp).toMatchObject({
       status: 201,
-      body: { id: event.data.id, token: expect.anything(), hasArrived: false }
+      data: { id: event.data.id, chatToken: expect.anything(), hasArrived: false }
     })
 
     const attendeesResp = await testAPI.attendeesList({
@@ -40,7 +40,7 @@ describe("Join the event by id tests", () => {
 
     expect(attendeesResp).toMatchObject({
       status: 200,
-      body: {
+      data: {
         attendees: expect.arrayContaining([
           expect.objectContaining({
             id: attendee.id,
@@ -67,7 +67,7 @@ describe("Join the event by id tests", () => {
 
     expect(resp).toMatchObject({
       status: 201,
-      body: { id: eventId, token: expect.anything(), hasArrived: true }
+      data: { id: eventId, chatToken: expect.anything(), hasArrived: true }
     })
 
     const attendeesResp = await testAPI.attendeesList({
@@ -78,7 +78,7 @@ describe("Join the event by id tests", () => {
 
     expect(attendeesResp).toMatchObject({
       status: 200,
-      body: {
+      data: {
         attendees: expect.arrayContaining([
           expect.objectContaining({
             id: attendee.id,
@@ -90,15 +90,15 @@ describe("Join the event by id tests", () => {
   })
 
   it("should return 201 when the user is able to successfully join the event", async () => {
-    const { eventIds: [eventId] } = await createEventFlow([{}])
+    const { eventIds: [eventId] } = await createEventFlow([{dateRange: upcomingEventDateRange}])
     const attendee = await createUserFlow()
     const resp = await testAPI.joinEvent({ auth: attendee.auth, params: { eventId }, body: undefined })
     expect(resp).toMatchObject({
       status: 201,
-      body: {
+      data: {
         id: eventId,
-        token: expect.anything(),
-        upcomingRegions: [
+        chatToken: expect.anything(),
+        trackableRegions: [
           {
             eventIds: [eventId],
             coordinate: testEventInput.coordinates,
@@ -117,7 +117,7 @@ describe("Join the event by id tests", () => {
     const resp = await testAPI.joinEvent({ auth: attendee.auth, params: { eventId }, body: undefined })
     expect(resp).toMatchObject({
       status: 403,
-      body: { error: "user-is-blocked" }
+      data: { error: "user-is-blocked" }
     })
   })
 
@@ -127,7 +127,7 @@ describe("Join the event by id tests", () => {
     const resp = await testAPI.joinEvent({ auth: attendee.auth, params: { eventId }, body: undefined })
     expect(resp).toMatchObject({
       status: 404,
-      body: { error: "event-not-found" } // will need to add some middleware similar to auth middleware to assert event exists
+      data: { error: "event-not-found" } // will need to add some middleware similar to auth middleware to assert event exists
     })
   })
 
@@ -145,7 +145,7 @@ describe("Join the event by id tests", () => {
 
     expect(resp).toMatchObject({
       status: 403,
-      body: { error: "event-has-ended" }
+      data: { error: "event-has-ended" }
     })
   })
 
@@ -156,7 +156,7 @@ describe("Join the event by id tests", () => {
     const resp = await testAPI.joinEvent({ auth: attendee.auth, params: { eventId }, body: undefined })
     expect(resp).toMatchObject({
       status: 200,
-      body: { id: eventId, token: expect.anything() }
+      data: { id: eventId, chatToken: expect.anything() }
     })
   })
 
@@ -179,7 +179,7 @@ describe("Join the event by id tests", () => {
 
     expect(resp).toMatchObject({
       status: 403,
-      body: { error: "event-has-ended" }
+      data: { error: "event-has-ended" }
     })
   })
 })

@@ -69,10 +69,10 @@ describe("exploreEvents endpoint tests", () => {
     })
 
     expect(resp.status).toEqual(200)
-    expect(resp.data.events).toHaveLength(2)
+    expect((resp.data as any).events).toHaveLength(2)
     const eventIds = [
-      resp.data.events[0].id,
-      resp.data.events[1].id
+      (resp.data as any).events[0].id,
+      (resp.data as any).events[1].id
     ]
     expect(eventIds).toContain(ongoingEventTestId)
     expect(eventIds).toContain(futureEventTestId)
@@ -89,7 +89,7 @@ describe("exploreEvents endpoint tests", () => {
         radius: 1
       }
     })
-    expect(events.data.events).toHaveLength(0)
+    expect((events.data as any).events).toHaveLength(0)
   })
 
   it("should remove the events where the attendee blocks the host", async () => {
@@ -102,7 +102,7 @@ describe("exploreEvents endpoint tests", () => {
         radius: 50000
       }
     })
-    expect(events.data.events).toHaveLength(0)
+    expect((events.data as any).events).toHaveLength(0)
   })
 
   it("should remove the events where the host blocks the attendee", async () => {
@@ -115,7 +115,7 @@ describe("exploreEvents endpoint tests", () => {
         radius: 50000
       }
     })
-    expect(events.data.events).toHaveLength(0)
+    expect((events.data as any).events).toHaveLength(0)
   })
 
   it("should not return events that have ended", async () => {
@@ -129,7 +129,7 @@ describe("exploreEvents endpoint tests", () => {
         radius: 50000
       }
     })
-    expect(events.data.events).toHaveLength(0)
+    expect((events.data as any).events).toHaveLength(0)
   })
 
   describe("tests for attendee count and attendee list queries within exploreEvents", () => {

@@ -14,7 +14,9 @@ const options = {
     handle: "import(\"./node_modules/TiFShared/domain-models/User\").UserHandle",
     color: "import(\"./node_modules/TiFShared/domain-models/ColorString\").ColorString",
     hasArrived: "boolean",
-    pushNotificationTriggerIds: "import(\"./node_modules/TiFShared/domain-models/Settings\").UserSettings[\"pushNotificationTriggerIds\"]"
+    pushNotificationTriggerIds: "import(\"./node_modules/TiFShared/domain-models/Settings\").UserSettings[\"pushNotificationTriggerIds\"]",
+    eventPresetDurations: "number[]",
+    eventPresetPlacemark: "import(\"./node_modules/TiFShared/domain-models/Event\").EventEditLocation"
   },
   typeMap: {
     boolean: ["tinyint"],
