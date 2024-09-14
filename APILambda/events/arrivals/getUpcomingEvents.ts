@@ -59,12 +59,12 @@ export const upcomingEventArrivalRegionsSQL = (conn: MySQLExecutableDriver, user
   `,
   { userId }
 )
+  .mapSuccess(mapEventsToRegions)
 
 export const upcomingEventArrivalRegions: TiFAPIRouter["upcomingEventArrivalRegions"] = ({ context: { selfId } }) =>
   upcomingEventArrivalRegionsSQL(
     conn,
     selfId
   )
-    .mapSuccess(mapEventsToRegions)
     .mapSuccess((trackableRegions) => resp(200, { trackableRegions }))
     .unwrap()

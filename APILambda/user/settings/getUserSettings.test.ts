@@ -1,4 +1,4 @@
-import { callGetSettings } from "../../test/apiCallers/userEndpoints"
+import { testAPI } from "../../test/testApp"
 import { createUserFlow } from "../../test/userFlows/createUserFlow"
 
 describe("Get Settings tests", () => {
@@ -11,8 +11,8 @@ describe("Get Settings tests", () => {
   // })
 
   it("should return the default settings when settings not edited", async () => {
-    const { token } = await createUserFlow()
-    const resp = await callGetSettings(token)
+    const newUser = await createUserFlow()
+    const resp = await testAPI.userSettings({ auth: newUser.auth })
     expect(resp).toMatchObject({
       status: 200,
       body: {

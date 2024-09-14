@@ -88,7 +88,6 @@ export const arriveAtRegion: TiFAPIRouter["arriveAtRegion"] = ({
         .passthroughSuccess(() => deleteMaxArrivals(tx, selfId, maxArrivals))
         .passthroughSuccess(() => insertArrival(tx, selfId, coordinate))
         .flatMapSuccess(() => upcomingEventArrivalRegionsSQL(conn, selfId))
-        .mapSuccess(mapEventsToRegions)
   )
     .mapSuccess((trackableRegions) => (resp(200, { trackableRegions })))
     .unwrap()

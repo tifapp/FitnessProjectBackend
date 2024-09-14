@@ -4,6 +4,7 @@ import { resp } from "TiFShared/api/Transport"
 import { LocationCoordinate2D } from "TiFShared/domain-models/LocationCoordinate2D"
 import { UserID } from "TiFShared/domain-models/User"
 import { TiFAPIRouter } from "../../router"
+import { upcomingEventArrivalRegionsSQL } from "./getUpcomingEvents"
 
 export const departFromRegion: TiFAPIRouter["departFromRegion"] = ({ context: { selfId }, body: { coordinate } }) =>
   conn.transaction((tx) =>
@@ -13,7 +14,6 @@ export const departFromRegion: TiFAPIRouter["departFromRegion"] = ({ context: { 
       coordinate
     )
       .flatMapSuccess(() => upcomingEventArrivalRegionsSQL(conn, selfId))
-      .mapSuccess(mapEventsToRegions)
   )
     .mapSuccess((trackableRegions) => (resp(200, { trackableRegions })))
     .unwrap()

@@ -1,6 +1,6 @@
 import express from "express"
-import { APIHandler, APIMiddleware } from "TiFShared/api"
-import { tryParseAPICall } from "TiFShared/api/APIValidation"
+import { APIHandler, APIMiddleware, resp } from "TiFShared/api"
+import { validateAPICall } from "TiFShared/api/APIValidation"
 import { TiFAPIClient, TiFAPISchema } from "TiFShared/api/TiFAPISchema"
 import { middlewareRunner } from "TiFShared/lib/Middleware"
 import { MatchFnCollection } from "TiFShared/lib/Types/MatchType"
@@ -18,11 +18,21 @@ const catchAPIErrors: APIMiddleware<any> = async (input, next) => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
     return {
-      status: error.message.includes("invalid-request") ? 400 : 500,
+      status: 500,
       data: { error: error.message }
     }
   }
 }
+
+const validateAPIRouterCall = validateAPICall((status, value) => {
+  if (status === "invalid-request") {
+    return resp(400, { error: status })
+  } else if (status === "invalid-response") {
+    return resp(500, { error: status })
+  }
+
+  return value
+})
 
 /**
  * Adds the main routes to an app.
@@ -36,11 +46,11 @@ export const TiFRouter = <Fns extends TiFAPIRouter>(apiClient: MatchFnCollection
   Object.entries(TiFAPISchema).forEach(
     ([endpointName, endpointSchema]) => {
       const { httpRequest: { method, endpoint } } = endpointSchema
-      const handler: APIHandler<RouterParams> = middlewareRunner(catchAPIErrors, tryParseAPICall, apiClient[endpointName as keyof TiFAPIRouter])
+      const handler: APIHandler<RouterParams> = middlewareRunner(catchAPIErrors, validateAPIRouterCall, apiClient[endpointName as keyof TiFAPIRouter])
       router[method.toLowerCase() as Lowercase<typeof method>](
         endpoint,
-        async (req, res) => {
-          const { status, data } = await handler({ ...req, endpointName, endpointSchema, environment, context: res.locals as ResponseContext })
+        async ({ body, query, params }, res) => {
+          const { status, data } = await handler({ body, query, params, endpointName, endpointSchema, environment, context: res.locals as ResponseContext })
           res.status(status).json(data)
         }
       )

@@ -59,14 +59,13 @@ describe("Update user profile tests", () => {
 
     it("should 400 for an invalid handle", async () => {
       const newUser = await createUserFlow()
-      const newHandle = "@#($@(#$R%U*@#("
       const resp = await testAPI.updateCurrentUserProfile({
         auth: newUser.auth,
         body: {
           // need to test if invalid handles throw errors
           // eslint-disable-next-line @typescript-eslint/ban-ts-comment
           // @ts-ignore
-          handle: newHandle
+          handle: "@#($@(#$R%U*@#("
         }
       })
 

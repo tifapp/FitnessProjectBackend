@@ -8,14 +8,15 @@ import { failure, success } from "TiFShared/lib/Result"
 import { z } from "zod"
 import { TiFAPIRouter } from "../router"
 import {
+  AttendeesListCursor,
   decodeAttendeesListCursor,
   encodeAttendeesListCursor
 } from "../utils/Cursor"
 
 const DecodedCursorValidationSchema = z.object({
-  userIdCursor: z.string(),
-  joinedDateTimeCursor: z.date().nullable(),
-  arrivedDateTimeCursor: z.date().nullable()
+  userId: z.string(),
+  joinedDateTime: z.date().optional(),
+  arrivedDateTime: z.date().optional()
 })
 
 // TODO: use index as cursor instead of userid+joindate
@@ -23,7 +24,7 @@ const getTiFAttendeesSQL = (
   conn: MySQLExecutableDriver,
   eventId: number,
   userId: string,
-  { userIdCursor, joinedDateTimeCursor, arrivedDateTimeCursor }: AttendeesListCursor,
+  { userId: nextPageUserId, joinedDateTime: nextPageJoinDateTime, arrivedDateTime: nextPageArrivedDateTime }: AttendeesListCursor,
   limit: number
 ) =>
   conn.queryResult<DBeventAttendance & DBuserArrivals & BidirectionalUserRelations & Pick<DBuser, "id" | "name" | "profileImageURL" | "handle"> & {hasArrived: boolean}>(
@@ -45,18 +46,18 @@ const getTiFAttendeesSQL = (
     LEFT JOIN userRelations AS ur ON (ur.fromUserId = u.id AND ur.toUserId = :userId)
                                 OR (ur.fromUserId = :userId AND ur.toUserId = u.id)
     WHERE e.id = :eventId
-    AND (:nextPageUserIdCursor = 'firstPage' 
-      OR (ua.arrivedDateTime > :nextPageArrivedDateTimeCursor OR (ua.arrivedDateTime IS NULL AND :nextPageArrivedDateTimeCursor IS NOT NULL))
-        OR (ua.arrivedDateTime IS NULL AND :nextPageArrivedDateTimeCursor IS NULL AND ea.joinedDateTime > :nextPageJoinDateCursor)
-        OR (ua.arrivedDateTime IS NULL AND :nextPageArrivedDateTimeCursor IS NULL AND ea.joinedDateTime = :nextPageJoinDateCursor AND u.id > :nextPageUserIdCursor)
+    AND (:nextPageUserId = 'firstPage' 
+      OR (ua.arrivedDateTime > :nextPageArrivedDateTime OR (ua.arrivedDateTime IS NULL AND :nextPageArrivedDateTime IS NOT NULL))
+        OR (ua.arrivedDateTime IS NULL AND :nextPageArrivedDateTime IS NULL AND ea.joinedDateTime > :nextPageJoinDateTime)
+        OR (ua.arrivedDateTime IS NULL AND :nextPageArrivedDateTime IS NULL AND ea.joinedDateTime = :nextPageJoinDateTime AND u.id > :nextPageUserId)
       )
-    AND (ea.role <> 'hosting' OR :nextPageUserIdCursor = 'firstPage')
+    AND (ea.role <> 'hosting' OR :nextPageUserId = 'firstPage')
     AND (ua.longitude = e.longitude AND ua.latitude = e.latitude
       OR ua.arrivedDateTime IS NULL)
     GROUP BY u.id, ua.arrivedDateTime
     HAVING fromThemToYou IS NULL OR MAX(CASE WHEN ur.toUserId = :userId THEN ur.status END) <> 'blocked' OR ea.role = 'hosting'
     ORDER BY
-    CASE WHEN :nextPageUserIdCursor = 'firstPage' THEN CASE WHEN ea.role = 'hosting' THEN 0 ELSE 1 END ELSE 1 END,
+    CASE WHEN :nextPageUserId = 'firstPage' THEN CASE WHEN ea.role = 'hosting' THEN 0 ELSE 1 END ELSE 1 END,
     COALESCE(ua.arrivedDateTime, '9999-12-31 23:59:59.999') ASC,
     ea.joinedDateTime ASC,
     u.id ASC
@@ -65,9 +66,9 @@ const getTiFAttendeesSQL = (
     {
       eventId,
       userId,
-      userIdCursor,
-      joinedDateTimeCursor,
-      arrivedDateTimeCursor,
+      nextPageUserId,
+      nextPageJoinDateTime,
+      nextPageArrivedDateTime,
       limit
     }
   ).mapSuccess((attendees) => attendees.map((attendee) => ({
@@ -92,23 +93,19 @@ const paginatedAttendeesResponse = (
 ): EventAttendeesPage => {
   const hasMoreAttendees = attendees.length > limit
 
-  const nextPageUserIdCursor = hasMoreAttendees
-    ? attendees[limit - 1].id
-    : "lastPage"
-  const nextPageJoinDateCursor = hasMoreAttendees
-    ? attendees[limit - 1].joinedDateTime
-    : undefined
-  const nextPageArrivedDateTimeCursor = hasMoreAttendees
-    ? attendees[limit - 1].arrivedDateTime
-    : undefined
-
   let paginatedAttendees = []
   paginatedAttendees = attendees.slice(0, limit)
 
   const encondedNextPageCursor = encodeAttendeesListCursor({
-    userId: nextPageUserIdCursor,
-    joinedDateTime: nextPageJoinDateCursor,
-    arrivedDateTime: nextPageArrivedDateTimeCursor
+    userId: hasMoreAttendees
+      ? attendees[limit - 1].id
+      : "lastPage",
+    joinedDateTime: hasMoreAttendees
+      ? attendees[limit - 1].joinedDateTime
+      : undefined,
+    arrivedDateTime: hasMoreAttendees
+      ? attendees[limit - 1].arrivedDateTime
+      : undefined
   })
 
   return {

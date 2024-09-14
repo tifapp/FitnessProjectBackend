@@ -2,7 +2,7 @@ import { conn } from "TiFBackendUtils"
 import { resp } from "TiFShared/api/Transport"
 import { failure, success } from "TiFShared/lib/Result"
 import { TiFAPIRouter } from "../router"
-import { getEventById } from "./getEventById"
+import { eventDetailsSQL } from "./getEventById"
 
 /**
  * End or cancel an event given an event id.
@@ -11,7 +11,7 @@ import { getEventById } from "./getEventById"
  */
 export const endEvent: TiFAPIRouter["endEvent"] = ({ context: { selfId: hostId }, params: { eventId } }) =>
   conn.transaction((tx) =>
-    getEventById(tx, eventId, hostId)
+    eventDetailsSQL(tx, eventId, hostId)
       .withFailure(resp(404, { error: "event-not-found" }))
       .passthroughSuccess(event =>
         event.hostId === hostId ? success() : failure(resp(403, { error: "user-not-host" }))

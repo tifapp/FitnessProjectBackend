@@ -1,17 +1,18 @@
-import { conn, MySQLExecutableDriver } from "TiFBackendUtils"
+import { conn } from "TiFBackendUtils"
+import { MySQLExecutableDriver } from "TiFBackendUtils/MySQLDriver"
 import { resp } from "TiFShared/api/Transport"
 import { areCoordinatesEqual } from "TiFShared/domain-models/LocationCoordinate2D"
 import { failure, success } from "TiFShared/lib/Result"
 import { TiFAPIRouter } from "../router"
 import { isUserBlocked } from "../utils/sharedSQL"
-import { getUpcomingEventsByRegion } from "./arrivals/getUpcomingEvents"
+import { upcomingEventArrivalRegionsSQL } from "./arrivals/getUpcomingEvents"
 import { insertArrival } from "./arrivals/setArrivalStatus"
 import { getTokenRequest } from "./getChatToken"
-import { getEventById } from "./getEventById"
+import { eventDetailsSQL } from "./getEventById"
 
 export const joinEvent: TiFAPIRouter["joinEvent"] = async ({ context: { selfId }, params: { eventId }, body: { region: { coordinate } = { coordinate: undefined } } = {} }) =>
-  conn.transaction(async (tx) =>
-    getEventById(tx, eventId, selfId)
+  conn.transaction((tx) =>
+    eventDetailsSQL(tx, eventId, selfId)
       .withFailure(resp(404, { error: "event-not-found" }))
       .passthroughSuccess(event =>
         event.endedDateTime
@@ -33,7 +34,7 @@ export const joinEvent: TiFAPIRouter["joinEvent"] = async ({ context: { selfId }
             ? insertArrival(tx, selfId, coordinate).withSuccess(true).unwrap()
             : success(true).unwrap(),
           getTokenRequest(event, selfId),
-          getUpcomingEventsByRegion(tx, selfId).unwrap()
+          upcomingEventArrivalRegionsSQL(tx, selfId).unwrap()
         ])
 
         if (status === 201) {

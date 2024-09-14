@@ -1,4 +1,4 @@
-import { UserID } from "TiFShared/domain-models/User"
+import { userToUserRequest } from "../test/shortcuts"
 import { testAPI } from "../test/testApp"
 import { createUserFlow } from "../test/userFlows/createUserFlow"
 
@@ -17,7 +17,7 @@ describe("GetUser tests", () => {
     const newUser = await createUserFlow()
 
     await expect(
-      testAPI.getUser({ auth: newUser.auth, params: { userId: newUser.id as UserID } })
+      testAPI.getUser(userToUserRequest(newUser, newUser))
     ).resolves.toMatchObject({
       status: 200,
       data: expect.objectContaining({
@@ -30,11 +30,11 @@ describe("GetUser tests", () => {
   })
 
   it("should retrieve a user that exists", async () => {
-    const searchingUser = await createUserFlow()
+    const newUser = await createUserFlow()
     const searchedUser = await createUserFlow()
 
     await expect(
-      testAPI.getUser({ auth: searchingUser.auth, params: { userId: searchedUser.id as UserID } })
+      testAPI.getUser(userToUserRequest(newUser, searchedUser))
     ).resolves.toMatchObject({
       status: 200,
       data: expect.objectContaining({
@@ -50,8 +50,8 @@ describe("GetUser tests", () => {
     const newUser = await createUserFlow()
     const blockedUser = await createUserFlow()
 
-    await testAPI.blockUser({ auth: newUser.auth, params: { userId: blockedUser.id as UserID } })
-    const resp = await testAPI.getUser({ auth: blockedUser.auth, params: { userId: newUser.id as UserID } })
+    await testAPI.blockUser(userToUserRequest(newUser, blockedUser))
+    const resp = await testAPI.getUser(userToUserRequest(blockedUser, newUser))
 
     expect(resp).toMatchObject({
       status: 403,

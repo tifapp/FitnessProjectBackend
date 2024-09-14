@@ -1,19 +1,19 @@
 import { conn } from "TiFBackendUtils"
 import dayjs from "dayjs"
-import { decodeAttendeesListCursor } from "../shared/Cursor"
-import { callGetAttendees, callSetArrival } from "../test/apiCallers/eventEndpoints"
-import { callBlockUser } from "../test/apiCallers/userEndpoints"
+import { userToUserRequest } from "../test/shortcuts"
+import { testAPI } from "../test/testApp"
 import { testEventInput } from "../test/testEvents"
 import { createEventFlow } from "../test/userFlows/createEventFlow"
 import { TestUser, createUserFlow } from "../test/userFlows/createUserFlow"
-import { createEvent } from "./createEvent"
+import { decodeAttendeesListCursor } from "../utils/Cursor"
+import { createEventSQL } from "./createEvent"
 
 const eventLocation = { latitude: 50, longitude: 50 }
 // TODO: should have a universal "lastpagecursor" value
 const lastPageCursorResponse = {
-  userId: "lastPage"
+  id: "lastPage"
 }
-const paginationLimit = 2
+const limit = 2
 
 /**
  * Retrieve a response containing a list of attendees for a given event.
@@ -31,13 +31,12 @@ const createTestAttendeesList = async ({
   const {
     host,
     attendeesList,
-    eventIds: [testEventId]
+    eventIds: [eventId]
   } = await createEventFlow([{ ...eventLocation }], numOfAttendees)
 
   return {
-    attendeeToken: attendeesList?.[1]?.token,
     attendeesList,
-    testEventId,
+    eventId,
     host
   }
 }
@@ -47,25 +46,25 @@ const createTestAttendeesList = async ({
  *
  * @param {Array} testAttendees - An array containing information about all attendees.
  * @param {number} index - The index indicating the position of the attendee for which the response is generated.
- * @returns {AttendeesCursorResponse} - An object representing the next page cursor response with userId, joinedDateTime, and arrivedDateTime properties.
+ * @returns {AttendeesCursorResponse} - An object representing the next page cursor response with id, joinedDateTime, and arrivedDateTime properties.
  */
 const getNextPageCursorResp = (
   testAttendees: Array<TestUser>,
   index: number
 ): Omit<unknown, "arrivedDateTime"> => {
   return {
-    userId: testAttendees[index].userId,
+    id: testAttendees[index].id,
     joinedDateTime: index >= testAttendees.length ? undefined : expect.any(Date)
   }
 }
 
 describe("getAttendeesList endpoint", () => {
   it("should return 400 if limit is less than one", async () => {
-    const { attendeeToken, testEventId } = await createTestAttendeesList({
+    const { attendeesList: [, attendee], eventId } = await createTestAttendeesList({
       numOfAttendees: 1
     })
 
-    const resp = await callGetAttendees(attendeeToken, testEventId, 0)
+    const resp = await testAPI.attendeesList({ auth: attendee.auth, params: { eventId }, query: { limit: 0 } })
 
     expect(resp).toMatchObject({
       status: 400,
@@ -76,11 +75,11 @@ describe("getAttendeesList endpoint", () => {
   })
 
   it("should return 400 if limit is greater than fifty", async () => {
-    const { attendeeToken, testEventId } = await createTestAttendeesList({
+    const { attendeesList: [, attendee], eventId } = await createTestAttendeesList({
       numOfAttendees: 1
     })
 
-    const resp = await callGetAttendees(attendeeToken, testEventId, 51)
+    const resp = await testAPI.attendeesList({ auth: attendee.auth, params: { eventId }, query: { limit: 51 } })
 
     expect(resp).toMatchObject({
       status: 400,
@@ -103,22 +102,22 @@ describe("getAttendeesList endpoint", () => {
         startDateTime: dayjs().add(12, "hour").toDate(),
         endDateTime: dayjs().add(24, "hour").toDate()
       },
-      currentUser.userId
+      currentUser.id
     )
 
-    const resp = await callGetAttendees(
-      currentUser.token,
-      Number(insertId),
-      paginationLimit
-    )
+    const resp = await testAPI.attendeesList({
+      auth: currentUser.auth,
+      params: { eventId: Number(insertId) },
+      query: { limit }
+    });
 
-    resp.body.nextPageCursor = decodeAttendeesListCursor(
-      resp.body.nextPageCursor
+    (resp.data as any).nextPageCursor = decodeAttendeesListCursor(
+      (resp.data as any).nextPageCursor
     )
 
     expect(resp).toMatchObject({
       status: 404,
-      body: {
+      data: {
         nextPageCursor: lastPageCursorResponse,
         totalAttendeeCount: 0,
         attendees: []
@@ -130,54 +129,54 @@ describe("getAttendeesList endpoint", () => {
     const currentUser = await createUserFlow()
 
     const eventId = 9999
-    const resp = await callGetAttendees(
-      currentUser.token,
-      eventId,
-      paginationLimit
-    )
-
-    resp.body.nextPageCursor = decodeAttendeesListCursor(
-      resp.body.nextPageCursor
-    )
+    const resp = await testAPI.attendeesList({
+      auth:
+      currentUser.auth,
+      params: { eventId },
+      query: { limit }
+    })
 
     expect(resp).toMatchObject({
       status: 404,
-      body: {
-        nextPageCursor: lastPageCursorResponse,
+      data: {
         totalAttendeeCount: 0,
         attendees: []
       }
     })
+    expect(decodeAttendeesListCursor((resp.data as any).nextPageCursor)).toMatchObject(lastPageCursorResponse)
   })
 
   it("should return 200 after paginating the first page of attendees list", async () => {
-    const { attendeesList, attendeeToken, testEventId } =
+    const { attendeesList, eventId } =
       await createTestAttendeesList({
         numOfAttendees: 3
       })
 
-    const resp = await callGetAttendees(
-      attendeeToken,
-      testEventId,
-      paginationLimit
-    )
+    const [, attendee1, attendee2] = attendeesList
 
-    resp.body.nextPageCursor = decodeAttendeesListCursor(
-      resp.body.nextPageCursor
+    const resp = await testAPI.attendeesList({
+      auth:
+      attendee1.auth,
+      params: { eventId },
+      query: { limit }
+    });
+
+    (resp.data as any).nextPageCursor = decodeAttendeesListCursor(
+      (resp.data as any).nextPageCursor
     )
 
     expect(resp).toMatchObject({
       status: 200,
-      body: {
+      data: {
         attendees: [
           {
-            id: attendeesList[0].userId,
-            name: attendeesList[0].name,
+            id: attendee1.id,
+            name: attendee1.name,
             role: "hosting"
           },
           {
-            id: attendeesList[1].userId,
-            name: attendeesList[1].name,
+            id: attendee2.id,
+            name: attendee2.name,
             role: "attending"
           }
         ],
@@ -194,22 +193,23 @@ describe("getAttendeesList endpoint", () => {
       eventIds: [eventId]
     } = await createEventFlow()
 
-    const resp = await callGetAttendees(
-      currentUser.token,
-      eventId,
-      paginationLimit
-    )
+    const resp = await testAPI.attendeesList({
+      auth:
+      currentUser.auth,
+      params: { eventId },
+      query: { limit }
+    });
 
-    resp.body.nextPageCursor = decodeAttendeesListCursor(
-      resp.body.nextPageCursor
+    (resp.data as any).nextPageCursor = decodeAttendeesListCursor(
+      (resp.data as any).nextPageCursor
     )
 
     expect(resp).toMatchObject({
       status: 200,
-      body: {
+      data: {
         attendees: [
           {
-            id: host.userId,
+            id: host.id,
             name: host.name,
             role: "hosting"
           }
@@ -221,33 +221,34 @@ describe("getAttendeesList endpoint", () => {
   })
 
   it("should return 200 after paginating middle of page", async () => {
-    const { attendeesList, attendeeToken, testEventId } =
+    const { attendeesList, eventId } =
       await createTestAttendeesList({
         numOfAttendees: 4
       })
 
-    let resp = await callGetAttendees(
-      attendeeToken,
-      testEventId,
-      paginationLimit
-    )
+    const [attendee] = attendeesList
 
-    const middlePageCursorResp = resp.body.nextPageCursor
-    resp = await callGetAttendees(
-      attendeeToken,
-      testEventId,
-      paginationLimit,
-      middlePageCursorResp
-    )
+    let resp = await testAPI.attendeesList({
+      auth: attendee.auth,
+      params: { eventId },
+      query: { limit }
+    })
 
-    resp.body.nextPageCursor = decodeAttendeesListCursor(
-      resp.body.nextPageCursor
+    const middlePageCursorResp = (resp.data as any).nextPageCursor
+    resp = await testAPI.attendeesList({
+      auth: attendee.auth,
+      params: { eventId },
+      query: { limit, nextPage: middlePageCursorResp }
+    });
+
+    (resp.data as any).nextPageCursor = decodeAttendeesListCursor(
+      (resp.data as any).nextPageCursor
     )
 
     expect(resp).toMatchObject({
       status: 200,
-      body: {
-        attendees: attendeesList.slice(2, 4).map(({ userId: id, name }) => ({
+      data: {
+        attendees: attendeesList.slice(2, 4).map(({ id, name }) => ({
           id,
           name,
           role: "attending"
@@ -259,35 +260,36 @@ describe("getAttendeesList endpoint", () => {
   })
 
   it("should return 200 after paginating the last page of attendees list", async () => {
-    const { attendeesList, attendeeToken, testEventId } =
+    const { attendeesList, eventId } =
       await createTestAttendeesList({
         numOfAttendees: 2
       })
 
-    let resp = await callGetAttendees(
-      attendeeToken,
-      testEventId,
-      paginationLimit
-    )
+    const [, attendee] = attendeesList
 
-    const nextPageCursorResp = resp.body.nextPageCursor
-    resp = await callGetAttendees(
-      attendeeToken,
-      testEventId,
-      paginationLimit,
-      nextPageCursorResp
-    )
+    let resp = await testAPI.attendeesList({
+      auth: attendee.auth,
+      params: { eventId },
+      query: { limit }
+    })
 
-    resp.body.nextPageCursor = decodeAttendeesListCursor(
-      resp.body.nextPageCursor
+    const nextPageCursorResp = (resp.data as any).nextPageCursor
+    resp = await testAPI.attendeesList({
+      auth: attendee.auth,
+      params: { eventId },
+      query: { limit, nextPage: nextPageCursorResp }
+    });
+
+    (resp.data as any).nextPageCursor = decodeAttendeesListCursor(
+      (resp.data as any).nextPageCursor
     )
 
     expect(resp).toMatchObject({
       status: 200,
-      body: {
+      data: {
         attendees: [
           {
-            id: attendeesList[attendeesList.length - 1].userId,
+            id: attendeesList[attendeesList.length - 1].id,
             name: attendeesList[attendeesList.length - 1].name,
             role: "attending"
           }
@@ -299,32 +301,32 @@ describe("getAttendeesList endpoint", () => {
   })
 
   it("should return 200 if going past last page of attendees list", async () => {
-    const { attendeeToken, testEventId } = await createTestAttendeesList({
+    const { attendeesList: [, attendee], eventId } = await createTestAttendeesList({
       numOfAttendees: 1
     })
 
-    let resp = await callGetAttendees(
-      attendeeToken,
-      testEventId,
-      paginationLimit
+    let resp = await testAPI.attendeesList({
+      auth: attendee.auth,
+      params: { eventId },
+      query: { limit }
+    }
     )
 
-    const nextPageCursorResp = resp.body.nextPageCursor
+    const nextPageCursorResp = (resp.data as any).nextPageCursor
 
-    resp = await callGetAttendees(
-      attendeeToken,
-      testEventId,
-      paginationLimit,
-      nextPageCursorResp
-    )
+    resp = await testAPI.attendeesList({
+      auth: attendee.auth,
+      params: { eventId },
+      query: { limit, nextPage: nextPageCursorResp }
+    });
 
-    resp.body.nextPageCursor = decodeAttendeesListCursor(
-      resp.body.nextPageCursor
+    (resp.data as any).nextPageCursor = decodeAttendeesListCursor(
+      (resp.data as any).nextPageCursor
     )
 
     expect(resp).toMatchObject({
       status: 200,
-      body: {
+      data: {
         attendees: [],
         nextPageCursor: lastPageCursorResponse,
         totalAttendeeCount: 2
@@ -333,28 +335,21 @@ describe("getAttendeesList endpoint", () => {
   })
 
   it("check that attendee list is sorted by role, arrivedDateTime, then joinedDateTime", async () => {
-    const { attendeeToken, attendeesList, testEventId } =
-      await createTestAttendeesList({ numOfAttendees: 3 })
+    const { host, attendeesList, eventId } = await createTestAttendeesList({ numOfAttendees: 3 })
 
-    await callSetArrival(attendeesList[1].token, { coordinate: eventLocation })
+    const [, attendee] = attendeesList
 
-    let resp = await callGetAttendees(
-      attendeeToken,
-      testEventId,
-      paginationLimit
-    )
+    await testAPI.arriveAtRegion({ auth: attendee.auth, body: { coordinate: eventLocation, arrivalRadiusMeters: 500 } })
 
-    const nextPageCursorResp = resp.body.nextPageCursor
-    resp.body.nextPageCursor = decodeAttendeesListCursor(
-      resp.body.nextPageCursor
-    )
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    resp.body.attendees.forEach((attendee: any) => {
-      attendee.joinedDateTime = new Date(attendee.joinedDateTime)
+    let resp = await testAPI.attendeesList({
+      auth: attendee.auth,
+      params: { eventId },
+      query: { limit }
     })
-    resp.body.attendees[1].arrivedDateTime = new Date(
-      resp.body.attendees[1].arrivedDateTime
+
+    const nextPageCursorResp = (resp.data as any).nextPageCursor
+    (resp.data as any).nextPageCursor = decodeAttendeesListCursor(
+      (resp.data as any).nextPageCursor
     )
 
     expect(resp).toMatchObject({
@@ -362,15 +357,15 @@ describe("getAttendeesList endpoint", () => {
       body: {
         attendees: [
           {
-            id: attendeesList[0].userId,
-            name: attendeesList[0].name,
+            id: host.id,
+            name: host.name,
             joinedDateTime: expect.any(Date),
             hasArrived: false,
             role: "hosting"
           },
           {
-            id: attendeesList[1].userId,
-            name: attendeesList[1].name,
+            id: attendee.id,
+            name: attendee.name,
             joinedDateTime: expect.any(Date),
             hasArrived: true,
             arrivedDateTime: expect.any(Date),
@@ -378,27 +373,21 @@ describe("getAttendeesList endpoint", () => {
           }
         ],
         nextPageCursor: getNextPageCursorResp(
-          [attendeesList[0], attendeesList[1]],
+          [host, attendee],
           1
         ),
         totalAttendeeCount: 4
       }
     })
 
-    resp = await callGetAttendees(
-      attendeeToken,
-      testEventId,
-      paginationLimit,
-      nextPageCursorResp
-    )
+    resp = await testAPI.attendeesList({
+      auth: attendee.auth,
+      params: { eventId },
+      query: { limit, nextPage: nextPageCursorResp }
+    });
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    resp.body.attendees.forEach((attendee: any) => {
-      attendee.joinedDateTime = new Date(attendee.joinedDateTime)
-    })
-
-    resp.body.nextPageCursor = decodeAttendeesListCursor(
-      resp.body.nextPageCursor
+    (resp.data as any).nextPageCursor = decodeAttendeesListCursor(
+      (resp.data as any).nextPageCursor
     )
 
     expect(resp).toMatchObject({
@@ -406,14 +395,14 @@ describe("getAttendeesList endpoint", () => {
       body: {
         attendees: [
           {
-            id: attendeesList[2].userId,
+            id: attendeesList[2].id,
             joinedDateTime: expect.any(Date),
             name: attendeesList[2].name,
             role: "attending",
             hasArrived: false
           },
           {
-            id: attendeesList[3].userId,
+            id: attendeesList[3].id,
             joinedDateTime: expect.any(Date),
             name: attendeesList[3].name,
             hasArrived: false,
@@ -428,22 +417,23 @@ describe("getAttendeesList endpoint", () => {
 
   it("should return total attendee count and attendees, excluding ones that blocked current user", async () => {
     const currentUser = await createUserFlow()
-    const { attendeesList, testEventId } = await createTestAttendeesList({
+    const { attendeesList, eventId } = await createTestAttendeesList({
       numOfAttendees: 3
     })
 
     for (let i = 1; i < 3; i++) {
-      await callBlockUser(attendeesList[i].token, currentUser.userId)
+      await testAPI.blockUser(userToUserRequest(attendeesList[i], currentUser))
     }
 
-    const resp = await callGetAttendees(
-      currentUser.token,
-      testEventId,
-      paginationLimit
-    )
+    const resp = await testAPI.attendeesList({
+      auth:
+      currentUser.auth,
+      params: { eventId },
+      query: { limit }
+    });
 
-    resp.body.nextPageCursor = decodeAttendeesListCursor(
-      resp.body.nextPageCursor
+    (resp.data as any).nextPageCursor = decodeAttendeesListCursor(
+      (resp.data as any).nextPageCursor
     )
 
     expect(resp).toMatchObject({
@@ -451,14 +441,14 @@ describe("getAttendeesList endpoint", () => {
       body: {
         attendees: [
           {
-            id: attendeesList[0].userId,
+            id: attendeesList[0].id,
             name: attendeesList[0].name,
             hasArrived: false,
             role: "hosting",
             relations: { fromYouToThem: "not-friends", fromThemToYou: "not-friends" }
           },
           {
-            id: attendeesList[3].userId,
+            id: attendeesList[3].id,
             name: attendeesList[3].name,
             hasArrived: false,
             role: "attending",
@@ -473,16 +463,17 @@ describe("getAttendeesList endpoint", () => {
 
   it("should return 403 if host blocked current user", async () => {
     const currentUser = await createUserFlow()
-    const { host, testEventId } = await createTestAttendeesList({
+    const { host, eventId } = await createTestAttendeesList({
       numOfAttendees: 2
     })
-    await callBlockUser(host.token, currentUser.userId)
+    await testAPI.blockUser(userToUserRequest(host, currentUser))
 
-    const resp = await callGetAttendees(
-      currentUser.token,
-      testEventId,
-      paginationLimit
-    )
+    const resp = await testAPI.attendeesList({
+      auth:
+      currentUser.auth,
+      params: { eventId },
+      query: { limit }
+    })
 
     expect(resp).toMatchObject({
       status: 403,
@@ -492,26 +483,27 @@ describe("getAttendeesList endpoint", () => {
 
   it("should hide attendees who block the current user even if the current user blocks them", async () => {
     const currentUser = await createUserFlow()
-    const { attendeesList, testEventId } = await createTestAttendeesList({
+    const { attendeesList, eventId } = await createTestAttendeesList({
       numOfAttendees: 3
     })
 
     for (let i = 1; i < 3; i++) {
-      await callBlockUser(attendeesList[i].token, currentUser.userId)
+      await testAPI.blockUser(userToUserRequest(attendeesList[i], currentUser))
     }
 
     for (let i = 1; i < 3; i++) {
-      await callBlockUser(currentUser.token, attendeesList[i].userId)
+      await testAPI.blockUser(userToUserRequest(currentUser, attendeesList[i]))
     }
 
-    const resp = await callGetAttendees(
-      currentUser.token,
-      testEventId,
-      paginationLimit
-    )
+    const resp = await testAPI.attendeesList({
+      auth:
+      currentUser.auth,
+      params: { eventId },
+      query: { limit }
+    });
 
-    resp.body.nextPageCursor = decodeAttendeesListCursor(
-      resp.body.nextPageCursor
+    (resp.data as any).nextPageCursor = decodeAttendeesListCursor(
+      (resp.data as any).nextPageCursor
     )
 
     expect(resp).toMatchObject({
@@ -519,14 +511,14 @@ describe("getAttendeesList endpoint", () => {
       body: {
         attendees: [
           {
-            id: attendeesList[0].userId,
+            id: attendeesList[0].id,
             name: attendeesList[0].name,
             hasArrived: false,
             role: "hosting",
             relations: { fromYouToThem: "not-friends", fromThemToYou: "not-friends" }
           },
           {
-            id: attendeesList[3].userId,
+            id: attendeesList[3].id,
             name: attendeesList[3].name,
             hasArrived: false,
             role: "attending",
@@ -541,23 +533,25 @@ describe("getAttendeesList endpoint", () => {
 
   it("include blocked users in total attendees count when user blocks an attendee or the host", async () => {
     const currentUser = await createUserFlow()
-    const { attendeesList, testEventId } = await createTestAttendeesList({
+    const { host, attendeesList, eventId } = await createTestAttendeesList({
       numOfAttendees: 3
     })
-    await callBlockUser(currentUser.token, attendeesList[0].userId)
+    await testAPI.blockUser(userToUserRequest(currentUser, host))
 
     for (let i = 1; i < 3; i++) {
-      await callBlockUser(currentUser.token, attendeesList[i].userId)
+      await testAPI.blockUser(userToUserRequest(currentUser, attendeesList[i]))
     }
 
-    const resp = await callGetAttendees(
-      currentUser.token,
-      testEventId,
-      paginationLimit
-    )
+    const resp = await testAPI.attendeesList({
+      auth:
+      currentUser.auth,
+      params: { eventId },
+      query: { limit }
+    }
+    );
 
-    resp.body.nextPageCursor = decodeAttendeesListCursor(
-      resp.body.nextPageCursor
+    (resp.data as any).nextPageCursor = decodeAttendeesListCursor(
+      (resp.data as any).nextPageCursor
     )
 
     expect(resp).toMatchObject({
@@ -565,14 +559,14 @@ describe("getAttendeesList endpoint", () => {
       body: {
         attendees: [
           {
-            id: attendeesList[0].userId,
+            id: attendeesList[0].id,
             name: attendeesList[0].name,
             hasArrived: false,
             role: "hosting",
             relations: { fromYouToThem: "blocked", fromThemToYou: "not-friends" }
           },
           {
-            id: attendeesList[1].userId,
+            id: attendeesList[1].id,
             name: attendeesList[1].name,
             hasArrived: false,
             role: "attending",
@@ -587,20 +581,21 @@ describe("getAttendeesList endpoint", () => {
 
   it("should return 403 if trying to see attendees list when host and user block each other", async () => {
     const currentUser = await createUserFlow()
-    const { host, testEventId } = await createTestAttendeesList({
+    const { host, eventId } = await createTestAttendeesList({
       numOfAttendees: 3
     })
-    await callBlockUser(host.token, currentUser.userId)
-    await callBlockUser(currentUser.token, host.userId)
+    await testAPI.blockUser(userToUserRequest(host, currentUser))
+    await testAPI.blockUser(userToUserRequest(currentUser, host))
 
-    const resp = await callGetAttendees(
-      currentUser.token,
-      testEventId,
-      paginationLimit
-    )
+    const resp = await testAPI.attendeesList({
+      auth:
+      currentUser.auth,
+      params: { eventId },
+      query: { limit }
+    });
 
-    resp.body.nextPageCursor = decodeAttendeesListCursor(
-      resp.body.nextPageCursor
+    (resp.data as any).nextPageCursor = decodeAttendeesListCursor(
+      (resp.data as any).nextPageCursor
     )
 
     expect(resp).toMatchObject({

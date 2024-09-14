@@ -1,10 +1,11 @@
-import { CreateEventInput } from "../../events/createEvent"
-import { callCreateEvent, callJoinEvent } from "../apiCallers/eventEndpoints"
+import { CreateEvent } from "TiFShared/api/models/Event"
+import { EventID } from "TiFShared/domain-models/Event"
+import { testAPI } from "../testApp"
 import { testEventInput } from "../testEvents"
 import { TestUser, createUserFlow } from "./createUserFlow"
 
 export const createEventFlow = async (
-  eventInputs: Partial<CreateEventInput>[] = [{}],
+  eventInputs: Partial<CreateEvent>[] = [{}],
   attendeeCount: number = 0
 ): Promise<{
   attendeesList: TestUser[]
@@ -21,12 +22,12 @@ export const createEventFlow = async (
 
   const eventResponses = await Promise.all(
     eventInputs.map((details) =>
-      callCreateEvent(host.token, { ...testEventInput, ...details })
+      testAPI.createEvent({ auth: host.auth, body: { ...testEventInput, ...details } })
     )
   )
 
-  const eventIds = eventResponses.map((event, i) => {
-    if (event.ok) { return parseInt(event.body.id) } else { console.error(eventInputs[i]); throw new Error("invalid test event given") }
+  const eventIds = eventResponses.map((event) => {
+    if (event.status === 201) { return event.data.id } else { console.error(event); throw new Error("invalid test event given") }
   })
 
   const attendeesList: TestUser[] = []
@@ -37,7 +38,7 @@ export const createEventFlow = async (
     attendeesList.push(attendee)
 
     for (const eventId of eventIds) {
-      await callJoinEvent(attendee.token, eventId)
+      await testAPI.joinEvent({ auth: attendee.auth, params: { eventId: eventId as EventID }, body: undefined })
     }
   }
 

@@ -4,12 +4,11 @@ import { randomInt } from "crypto"
 import dayjs from "dayjs"
 import { expectTypeOf } from "expect-type"
 import { addLocationToDB, getTimeZone } from "../../GeocodingLambda/utils"
-import { callGetEvent } from "../test/apiCallers/eventEndpoints"
-import { callBlockUser } from "../test/apiCallers/userEndpoints"
+import { userToUserRequest } from "../test/shortcuts"
+import { testAPI } from "../test/testApp"
 import { testEventInput } from "../test/testEvents"
 import { createEventFlow } from "../test/userFlows/createEventFlow"
 import { createUserFlow } from "../test/userFlows/createUserFlow"
-import { BlockedTiFEventResponse } from "./getEventById"
 
 describe("GetSingleEvent tests", () => {
   const eventLocation = {
@@ -18,9 +17,9 @@ describe("GetSingleEvent tests", () => {
   }
 
   it("should return 404 if the event doesnt exist", async () => {
-    const { token } = await createUserFlow()
+    const newUser = await createUserFlow()
     const eventId = randomInt(1000)
-    const resp = await callGetEvent(token, eventId)
+    const resp = await testAPI.eventDetails({ auth: newUser.auth, params: { eventId } })
 
     expect(resp).toMatchObject({
       status: 404,
@@ -29,7 +28,7 @@ describe("GetSingleEvent tests", () => {
   })
 
   it("should return event details if the event exists", async () => {
-    const { token } = await createUserFlow()
+    const newUser = await createUserFlow()
     const today = dayjs()
     today.set("minute", 59)
     today.set("second", 59)
@@ -68,10 +67,10 @@ describe("GetSingleEvent tests", () => {
       }
     ], 1)
 
-    const resp = await callGetEvent(token, eventIds[0])
+    const resp = await testAPI.eventDetails({ auth: newUser.auth, params: { eventId: eventIds[0] } })
 
-    expectTypeOf(resp.body).toMatchTypeOf<TiFEvent>()
-    expect(resp.body).toEqual(
+    expectTypeOf(resp.data).toMatchTypeOf<TiFEvent>()
+    expect(resp.data).toEqual(
       {
         id: eventIds[0],
         title: "Fake Event",
@@ -87,7 +86,7 @@ describe("GetSingleEvent tests", () => {
           },
           todayOrTomorrow: "today"
         },
-        previewAttendees: attendeesList.map(({ userId }) => ({ id: userId, profileImageURL: null })),
+        previewAttendees: attendeesList.map(({ id }) => ({ id, profileImageURL: null })),
         location: {
           coordinate: {
             latitude: testEventInput.latitude,
@@ -110,9 +109,9 @@ describe("GetSingleEvent tests", () => {
             fromThemToYou: "not-friends",
             fromYouToThem: "not-friends"
           },
-          id: host.userId,
+          id: host.id,
           username: host.name,
-          handle: host.handle,
+          handle: host.handle
         },
         settings: {
           shouldHideAfterStartDate: true,
@@ -121,7 +120,7 @@ describe("GetSingleEvent tests", () => {
         updatedDateTime: expect.any(String),
         createdDateTime: expect.any(String),
         userAttendeeStatus: "not-participating",
-        hasArrived: false,
+        hasArrived: false
       })
     expect(resp.status).toEqual(200)
   })
@@ -137,7 +136,7 @@ describe("Checks the data returned if the user blocks the host or vice versa is 
     const {
       attendeesList,
       host,
-      eventIds
+      eventIds: [eventId]
     } = await createEventFlow([
       {
         ...eventLocation,
@@ -146,15 +145,15 @@ describe("Checks the data returned if the user blocks the host or vice versa is 
       }
     ], 1)
 
-    await callBlockUser(host.token, attendeesList[1].userId)
-    const resp = await callGetEvent(attendeesList[1].token, eventIds[0])
+    await testAPI.blockUser(userToUserRequest(host, attendeesList[1]))
+    const resp = await testAPI.eventDetails({ auth: attendeesList[1].auth, params: { eventId } })
 
     expect(resp.status).toEqual(403)
-    expectTypeOf(resp.body).toMatchTypeOf<BlockedTiFEventResponse>()
+    expect(resp.data).toMatchObject({ error: "unauthorized" })
   })
 
   it("should return host name and event title if attendee blocked host", async () => {
-    const { attendeesList, host, eventIds } =
+    const { attendeesList, host, eventIds: [eventId] } =
       await createEventFlow([
         {
           ...eventLocation,
@@ -163,11 +162,11 @@ describe("Checks the data returned if the user blocks the host or vice versa is 
         }
       ], 1)
 
-    await callBlockUser(attendeesList[1].token, host.userId)
-    const resp = await callGetEvent(attendeesList[1].token, eventIds[0])
+    await testAPI.blockUser(userToUserRequest(attendeesList[1], host))
+    const resp = await testAPI.eventDetails({ auth: attendeesList[1].auth, params: { eventId } })
 
     expect(resp.status).toEqual(403)
-    expectTypeOf(resp.body).toMatchTypeOf<BlockedTiFEventResponse>()
+    expect(resp.data).toMatchObject({ error: "unauthorized" })
   })
 })
 
@@ -223,11 +222,11 @@ describe("Check the user relations return the appropriate relation between the u
       }
     ], 1)
 
-    const resp = await callGetEvent(host.token, eventIds[0])
+    const resp = await testAPI.eventDetails({ auth: host.auth, params: { eventId: eventIds[0] } })
 
     expect(resp).toMatchObject({
       status: 200,
-      body: expect.objectContaining({
+      data: expect.objectContaining({
         host: expect.objectContaining({
           relations: expect.objectContaining({
             fromYouToThem: "current-user",

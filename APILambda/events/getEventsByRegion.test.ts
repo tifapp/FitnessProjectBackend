@@ -1,16 +1,17 @@
 import { conn } from "TiFBackendUtils"
 import { getAttendeeCount, getAttendees } from "TiFBackendUtils/TifEventUtils"
+import { dateRange } from "TiFShared/domain-models/FixedDateRange"
 import dayjs from "dayjs"
+import { it } from "node:test"
 import { addLocationToDB } from "../../GeocodingLambda/utils"
-import { callEndEvent, callGetEventsByRegion } from "../test/apiCallers/eventEndpoints"
-import { callBlockUser } from "../test/apiCallers/userEndpoints"
+import { userToUserRequest } from "../test/shortcuts"
+import { testAPI } from "../test/testApp"
 import { testEventInput } from "../test/testEvents"
 import { createEventFlow } from "../test/userFlows/createEventFlow"
+import { TestUser } from "../test/userFlows/createUserFlow"
 
-let eventOwnerTestToken: string
-let attendeeTestToken: string
-let eventOwnerTestId: string
-let attendeeTestId: string
+let attendee: TestUser
+let host: TestUser
 let futureEventTestId: number
 let ongoingEventTestId: number
 
@@ -18,8 +19,8 @@ const setupDB = async () => {
   await addLocationToDB(
     conn,
     {
-      latitude: testEventInput.latitude,
-      longitude: testEventInput.longitude,
+      latitude: testEventInput.coordinates.latitude,
+      longitude: testEventInput.coordinates.longitude,
       name: "Sample Location",
       city: "Sample Neighborhood",
       country: "Sample Country",
@@ -30,104 +31,108 @@ const setupDB = async () => {
   )
 
   const eventLocation = {
-    latitude: testEventInput.latitude,
-    longitude: testEventInput.longitude
+    latitude: testEventInput.coordinates.latitude,
+    longitude: testEventInput.coordinates.longitude
   }
 
   const {
-    attendeesList,
-    host,
+    attendeesList: [, testAttendee],
+    host: testHost,
     eventIds: [futureEventId, ongoingEventId]
   } = await createEventFlow([
     {
       ...eventLocation,
-      startDateTime: dayjs().add(12, "hour").toDate(),
-      endDateTime: dayjs().add(1, "year").toDate()
+      dateRange: dateRange(dayjs().add(12, "hour").toDate(), dayjs().add(1, "year").toDate())
     },
     {
       ...eventLocation,
-      startDateTime: dayjs().subtract(12, "hour").toDate(),
-      endDateTime: dayjs().add(1, "year").toDate()
+      dateRange: dateRange(dayjs().add(12, "hour").toDate(), dayjs().add(1, "year").toDate())
     }
   ], 1)
 
-  attendeeTestToken = attendeesList[1].token
-  eventOwnerTestToken = host.token
-  attendeeTestId = attendeesList[1].userId
-  eventOwnerTestId = host.userId
+  attendee = testAttendee
+  host = testHost
   ongoingEventTestId = ongoingEventId
   futureEventTestId = futureEventId
 }
 
-describe("getEventsByRegion endpoint tests", () => {
+describe("exploreEvents endpoint tests", () => {
   beforeEach(setupDB)
 
   it("should return 200 with the event, user relation, attendee count data", async () => {
-    const respGetEventsByRegion = await callGetEventsByRegion(
-      attendeeTestToken,
-      testEventInput.latitude,
-      testEventInput.longitude,
-      50000
-    )
+    const resp = await testAPI.exploreEvents({
+      auth: attendee.auth,
+      body: {
+        userLocation: testEventInput.coordinates,
+        radius: 50000
+      }
+    })
 
-    expect(respGetEventsByRegion.status).toEqual(200)
-    expect(respGetEventsByRegion.body.events).toHaveLength(2)
+    expect(resp.status).toEqual(200)
+    expect(resp.data.events).toHaveLength(2)
     const eventIds = [
-      respGetEventsByRegion.body.events[0].id,
-      respGetEventsByRegion.body.events[1].id
+      resp.data.events[0].id,
+      resp.data.events[1].id
     ]
     expect(eventIds).toContain(ongoingEventTestId)
     expect(eventIds).toContain(futureEventTestId)
   })
 
   it("should not return events that are not within the radius", async () => {
-    const events = await callGetEventsByRegion(
-      attendeeTestToken,
-      testEventInput.latitude + 10,
-      testEventInput.longitude + 10,
-      1
-    )
-    expect(events.body.events).toHaveLength(0)
+    const events = await testAPI.exploreEvents({
+      auth: attendee.auth,
+      body: {
+        userLocation: {
+          latitude: testEventInput.coordinates.latitude + 10,
+          longitude: testEventInput.coordinates.longitude + 10
+        },
+        radius: 1
+      }
+    })
+    expect(events.data.events).toHaveLength(0)
   })
 
   it("should remove the events where the attendee blocks the host", async () => {
-    await callBlockUser(attendeeTestToken, eventOwnerTestId)
+    await testAPI.blockUser(userToUserRequest(attendee, host))
 
-    const events = await callGetEventsByRegion(
-      attendeeTestToken,
-      testEventInput.latitude,
-      testEventInput.longitude,
-      50000
-    )
-    expect(events.body.events).toHaveLength(0)
+    const events = await testAPI.exploreEvents({
+      auth: attendee.auth,
+      body: {
+        userLocation: testEventInput.coordinates,
+        radius: 50000
+      }
+    })
+    expect(events.data.events).toHaveLength(0)
   })
 
   it("should remove the events where the host blocks the attendee", async () => {
-    await callBlockUser(eventOwnerTestToken, attendeeTestId)
+    await testAPI.blockUser(userToUserRequest(host, attendee))
 
-    const events = await callGetEventsByRegion(
-      attendeeTestToken,
-      testEventInput.latitude,
-      testEventInput.longitude,
-      50000
-    )
-    expect(events.body.events).toHaveLength(0)
+    const events = await testAPI.exploreEvents({
+      auth: attendee.auth,
+      body: {
+        userLocation: testEventInput.coordinates,
+        radius: 50000
+      }
+    })
+    expect(events.data.events).toHaveLength(0)
   })
 
   it("should not return events that have ended", async () => {
-    await callEndEvent(eventOwnerTestToken, futureEventTestId)
-    await callEndEvent(eventOwnerTestToken, ongoingEventTestId)
+    await testAPI.endEvent({ auth: host.auth, params: { eventId: futureEventTestId } })
+    await testAPI.endEvent({ auth: host.auth, params: { eventId: ongoingEventTestId } })
 
-    const events = await callGetEventsByRegion(
-      attendeeTestToken,
-      testEventInput.latitude,
-      testEventInput.longitude,
-      50000
-    )
-    expect(events.body.events).toHaveLength(0)
+    const events = await testAPI.exploreEvents({
+      auth: attendee.auth,
+      body: {
+        userLocation: testEventInput.coordinates,
+        radius: 50000
+      }
+    })
+    expect(events.data.events).toHaveLength(0)
   })
 
-  describe("tests for attendee count and attendee list queries within getEventsByRegion", () => {
+  describe("tests for attendee count and attendee list queries within exploreEvents", () => {
     it("should return the attendee count including the event host", async () => {
       const attendees = await getAttendeeCount(conn, [`${ongoingEventTestId}`])
       expect(attendees.value[0].attendeeCount).toEqual(2)
@@ -136,7 +141,7 @@ describe("getEventsByRegion endpoint tests", () => {
     it("should return the attendee list not including the event host", async () => {
       const attendees = await getAttendees(conn, [`${ongoingEventTestId}`])
       expect(attendees.value).toHaveLength(1)
-      expect(attendees.value[0].userIds).not.toEqual(eventOwnerTestId)
+      expect(attendees.value[0].userIds).not.toEqual(host.id)
     })
   })
 })

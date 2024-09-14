@@ -3,13 +3,23 @@ import { MySQLExecutableDriver } from "TiFBackendUtils/MySQLDriver"
 import { resp } from "TiFShared/api"
 import { CreateEvent } from "TiFShared/api/models/Event"
 import { EventID } from "TiFShared/domain-models/Event"
-import { success } from "TiFShared/lib/Result"
+import { promiseResult, success } from "TiFShared/lib/Result"
 import { TiFAPIRouter } from "../router"
 import { addUserToAttendeeList } from "./joinEventById"
 
 export const createEventSQL = (
   conn: MySQLExecutableDriver,
-  input: CreateEvent,
+  {
+    coordinates: {
+      latitude,
+      longitude
+    },
+    dateRange: {
+      startDateTime,
+      endDateTime
+    },
+    ...rest
+  }: CreateEvent,
   hostId: string
 ) => {
   return conn.executeResult(
@@ -39,7 +49,11 @@ export const createEventSQL = (
   )
   `,
     {
-      ...input,
+      ...rest,
+      latitude,
+      longitude,
+      startDateTime: new Date(startDateTime),
+      endDateTime: new Date(endDateTime),
       hostId
     }
   )
@@ -62,19 +76,20 @@ export const createEvent: TiFAPIRouter["createEvent"] = ({ environment, context:
             "hosting"
           )
         )
-        .passthroughSuccess(async () => {
-          try {
-            const resp = await environment.callGeocodingLambda({
-              longitude: body.coordinates.longitude,
-              latitude: body.coordinates.latitude
-            })
-            console.debug(JSON.stringify(resp, null, 4))
-          } catch (e) {
-            console.error("Could not create placemark for ", body)
-            console.error(e)
-          }
-          return success()
-        })
+        .passthroughSuccess(() =>
+          promiseResult((async () => {
+            try {
+              console.log("hey going to call geocoding lambda")
+              console.log(body)
+              const resp = await environment.callGeocodingLambda(body.coordinates)
+              console.debug(JSON.stringify(resp, null, 4))
+            } catch (e) {
+              console.error("Could not create placemark for ", body)
+              console.error(e)
+            }
+            return success()
+          })())
+        )
         .mapSuccess(({ insertId }) => resp(201, { id: Number(insertId) as EventID }))
     )
     .unwrap()

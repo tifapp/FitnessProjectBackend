@@ -5,6 +5,10 @@ import { resp } from "TiFShared/api/Transport"
 import { TiFAPIRouter } from "../router"
 
 export const sendFriendRequest: TiFAPIRouter["sendFriendRequest"] = async ({ context: { selfId: fromUserId }, params: { userId: toUserId } }) => {
+  if (fromUserId === toUserId) { // make generic? getuser, blockuser, unblockuser, etc
+    return resp(400, { error: "cannot-friend-self" }) as never
+  }
+
   const result = await findTiFUser(conn, { fromUserId, toUserId })
     .withFailure(resp(404, {
       userId: toUserId,

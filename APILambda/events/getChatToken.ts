@@ -2,7 +2,6 @@ import { conn } from "TiFBackendUtils"
 import { DBTifEvent } from "TiFBackendUtils/TifEventUtils"
 import { EventID } from "TiFShared/domain-models/Event"
 import { UserID } from "TiFShared/domain-models/User"
-import { success } from "TiFShared/lib/Result"
 import { z } from "zod"
 import { ChatPermissions, createTokenRequest } from "../ably"
 import { ServerEnvironment } from "../env"
@@ -80,8 +79,8 @@ export const checkChatPermissionsTransaction = (
       .passthroughSuccess(() => isUserInEvent(tx, userId, eventId))
       .passthroughSuccess(event => isUserBlocked(tx, event.hostId, userId).inverted().withFailure("user-is-blocked"))
   )
-    .flatMapSuccess(async (event) => {
-      return success(await getTokenRequest(event, userId))
+    .mapSuccess(async (event) => {
+      return await getTokenRequest(event, userId)
     })
 
 const eventRequestSchema = z.object({
