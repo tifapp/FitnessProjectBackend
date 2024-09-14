@@ -7,9 +7,9 @@ import { TiFAPIRouter } from "../router"
 
 export const getEventsByRegion = (
   conn: MySQLExecutableDriver,
-  eventsRequest: {
+  {userLocation: {latitude: userLatitude, longitude: userLongitude}, ...rest}: {
     userId: string
-    userLocation: LocationCoordinate2D,
+    userLocation: LocationCoordinate2D
     radius: number
   }
 ) =>
@@ -40,7 +40,7 @@ LEFT JOIN userRelations UserRelationOfUserToHost ON UserRelationOfUserToHost.fro
         AND (UserRelationOfHostToUser.status IS NULL OR UserRelationOfHostToUser.status <> 'blocked')
         AND (UserRelationOfUserToHost.status IS NULL OR UserRelationOfUserToHost.status <> 'blocked')
   `,
-    { ...eventsRequest }
+    { userLatitude, userLongitude, ...rest }
   )
 
 export const exploreEvents: TiFAPIRouter["exploreEvents"] = ({ context: { selfId: userId }, body: { userLocation, radius } }) =>
