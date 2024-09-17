@@ -25,9 +25,9 @@ export type DBTifEvent = DBTifEventView & Omit<DBuserRelations, "status" | "upda
 export type TiFEvent = {
     id: number
     title: string
-    description: string
+    description?: string
     attendeeCount: number
-    color: ColorString
+    color?: ColorString
     time: {
       secondsToStart: number
       dateRange: FixedDateRange
