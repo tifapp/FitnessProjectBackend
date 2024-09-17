@@ -4,7 +4,7 @@ import { MySQLExecutableDriver } from "TiFBackendUtils/MySQLDriver"
 import { resp } from "TiFShared/api/Transport"
 import { failure, success } from "TiFShared/lib/Result"
 import { TiFAPIRouter } from "../../router"
-import { generateUniqueUsername } from "../generateUserHandle"
+import { generateUniqueHandle } from "../generateUserHandle"
 
 type CreateUserInput = Pick<DBuser, "id" | "handle" | "name">
 
@@ -62,7 +62,7 @@ const createUserProfileTransaction = (
 export const createCurrentUserProfile: TiFAPIRouter["createCurrentUserProfile"] = async ({ context: { selfId, name }, environment: { setProfileCreatedAttribute } }) =>
   checkValidName(name)
     .flatMapSuccess(() =>
-      generateUniqueUsername(
+      generateUniqueHandle(
         conn,
         name
       )

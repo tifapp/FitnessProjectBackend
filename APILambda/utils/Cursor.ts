@@ -8,11 +8,10 @@ export const encodeAttendeesListCursor = ({ userId = "firstPage", joinedDateTime
   userId: string
   joinedDateTime?: Date
   arrivedDateTime?: Date
-}): string => {
-  return Buffer.from(
+}): string =>
+  Buffer.from(
     `${userId}|${joinedDateTime?.toISOString()}|${arrivedDateTime?.toISOString()}`
   ).toString("base64")
-}
 
 export type AttendeesListCursor = { userId: string; joinedDateTime?: Date; arrivedDateTime?: Date }
 

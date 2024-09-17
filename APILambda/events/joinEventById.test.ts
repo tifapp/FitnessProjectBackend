@@ -1,13 +1,11 @@
 import { conn } from "TiFBackendUtils"
-import { dateRange } from "TiFShared/domain-models/FixedDateRange"
+import { dayjs } from "TiFShared/lib/Dayjs"
 import { randomInt } from "crypto"
-import dayjs from "dayjs"
 import { userToUserRequest } from "../test/shortcuts"
 import { testAPI } from "../test/testApp"
 import { testEventInput, upcomingEventDateRange } from "../test/testEvents"
 import { createEventFlow } from "../test/userFlows/createEventFlow"
 import { createUserFlow } from "../test/userFlows/createUserFlow"
-import { createEventSQL } from "./createEvent"
 
 const eventLocation = { latitude: 50, longitude: 50 }
 
@@ -29,7 +27,7 @@ describe("Join the event by id tests", () => {
 
     expect(resp).toMatchObject({
       status: 201,
-      data: { id: event.data.id, chatToken: expect.anything(), hasArrived: false }
+      data: { id: event.data.id, hasArrived: false }
     })
 
     const attendeesResp = await testAPI.attendeesList({
@@ -90,7 +88,7 @@ describe("Join the event by id tests", () => {
   })
 
   it("should return 201 when the user is able to successfully join the event", async () => {
-    const { eventIds: [eventId] } = await createEventFlow([{dateRange: upcomingEventDateRange}])
+    const { eventIds: [eventId] } = await createEventFlow([{ dateRange: upcomingEventDateRange }])
     const attendee = await createUserFlow()
     const resp = await testAPI.joinEvent({ auth: attendee.auth, params: { eventId }, body: undefined })
     expect(resp).toMatchObject({
@@ -136,10 +134,36 @@ describe("Join the event by id tests", () => {
     const attendee = await createUserFlow()
 
     // normally we can't create events in the past so we'll add this ended event to the table directly
-    const { value: { insertId: eventId } } = await createEventSQL(conn, {
-      ...testEventInput,
-      dateRange: dateRange(dayjs().subtract(2, "month").toDate(), dayjs().subtract(1, "month").toDate())!
-    }, host.id)
+    const { value: { insertId: eventId } } = await conn.executeResult(
+      `
+      INSERT INTO event (
+        hostId,
+        title, 
+        startDateTime, 
+        endDateTime, 
+        latitude, 
+        longitude,
+        endedDateTime
+      ) VALUES (
+        :hostId,
+        :title, 
+        :startDateTime, 
+        :endDateTime, 
+        :latitude, 
+        :longitude,
+        :endedDateTime
+      )
+      `,
+      {
+        hostId: host.id,
+        ...testEventInput,
+        latitude: testEventInput.coordinates.latitude,
+        longitude: testEventInput.coordinates.longitude,
+        startDateTime: dayjs().subtract(24, "hour").toDate(),
+        endDateTime: dayjs().subtract(12, "hour").toDate(),
+        endedDateTime: dayjs().subtract(12, "hour").toDate()
+      }
+    )
 
     const resp = await testAPI.joinEvent({ auth: attendee.auth, params: { eventId: Number(eventId) }, body: undefined })
 
@@ -160,7 +184,7 @@ describe("Join the event by id tests", () => {
     })
   })
 
-  it("should return 403 if joining an event that has ended", async () => {
+  it("should return 403 when the event was cancelled", async () => {
     const {
       eventIds: [eventId],
       host,

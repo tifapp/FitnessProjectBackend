@@ -1,4 +1,5 @@
 import { faker } from "@faker-js/faker"
+import { todayTestDate, tomorrowTestDate } from "TiFBackendUtils/test/dateHelpers"
 import { CreateEvent } from "TiFShared/api/models/Event"
 import { ColorString } from "TiFShared/domain-models/ColorString"
 import { dateRange } from "TiFShared/domain-models/FixedDateRange"
@@ -14,7 +15,7 @@ const createTestEvent = (): CreateEvent =>
   ({
     title: faker.word.noun({ length: { min: 5, max: 50 } }),
     description: faker.animal.rodent(),
-    dateRange: dateRange(dayjs().add(1, "month").toDate(), dayjs().add(2, "month").toDate())!,
+    dateRange: dateRange(todayTestDate(), tomorrowTestDate())!,
     color: ColorString.parse("#72B01D")!,
     shouldHideAfterStartDate: true,
     isChatEnabled: true,

@@ -78,7 +78,7 @@ export interface DBTifEventView {
   'hasArrived': boolean;
   'hostHandle': import("./node_modules/TiFShared/domain-models/User").UserHandle;
   'hostId': string;
-  'hostUsername': string;
+  'hostName': string;
   'id': number;
   'isChatEnabled': boolean;
   'isoCountryCode': string | undefined;

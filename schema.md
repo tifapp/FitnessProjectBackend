@@ -89,7 +89,7 @@
 | hasArrived | boolean | false | 0 |
 | hostHandle | import("./node_modules/TiFShared/domain-models/User").UserHandle | false | None |
 | hostId | string | false | None |
-| hostUsername | string | false | None |
+| hostName | string | false | None |
 | id | number | false | 0 |
 | isChatEnabled | boolean | false | None |
 | isoCountryCode | string | true | None |

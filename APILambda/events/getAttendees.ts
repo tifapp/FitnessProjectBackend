@@ -26,8 +26,10 @@ const getTiFAttendeesSQL = (
   userId: string,
   { userId: nextPageUserId, joinedDateTime: nextPageJoinDateTime, arrivedDateTime: nextPageArrivedDateTime }: AttendeesListCursor,
   limit: number
-) =>
-  conn.queryResult<DBeventAttendance & DBuserArrivals & BidirectionalUserRelations & Pick<DBuser, "id" | "name" | "profileImageURL" | "handle"> & {hasArrived: boolean}>(
+) => {
+  console.log("getTiFAttendeesSQL id is ", eventId, userId, nextPageArrivedDateTime, nextPageJoinDateTime, nextPageUserId, limit)
+
+  return conn.queryResult<DBeventAttendance & DBuserArrivals & BidirectionalUserRelations & Pick<DBuser, "id" | "name" | "profileImageURL" | "handle"> & {hasArrived: boolean}>(
     `SELECT 
     u.id, 
     u.profileImageURL, 
@@ -85,6 +87,7 @@ const getTiFAttendeesSQL = (
       fromThemToYou: attendee.fromThemToYou ?? "not-friends"
     }
   })))
+}
 
 const paginatedAttendeesResponse = (
   attendees: EventAttendee[],
@@ -108,6 +111,8 @@ const paginatedAttendeesResponse = (
       : undefined
   })
 
+  console.log("returned attendees cursor is ", encondedNextPageCursor)
+
   return {
     nextPageCursor: encondedNextPageCursor,
     totalAttendeeCount,
@@ -119,8 +124,10 @@ const getAttendeesCount = (
   conn: MySQLExecutableDriver,
   eventId: number,
   userId: string
-) =>
-  conn.queryFirstResult<{ totalAttendeeCount: number }>(
+) => {
+  console.log("getAttendeesCount id is ", eventId, userId)
+
+  return conn.queryFirstResult<{ totalAttendeeCount: number }>(
     `SELECT 
       COUNT(*) AS totalAttendeeCount
       FROM 
@@ -138,16 +145,22 @@ const getAttendeesCount = (
     { eventId, userId }
   )
     .mapSuccess(({ totalAttendeeCount }) => totalAttendeeCount)
+}
 
 /**
  * Creates routes related to attendees list.
  *
  * @param environment see {@link ServerEnvironment}.
  */
-export const attendeesList: TiFAPIRouter["attendeesList"] = ({ query: { nextPage, limit }, params: { eventId }, context: { selfId } }) => {
+export const attendeesList: TiFAPIRouter["attendeesList"] = ({ query: { nextPageCursor, limit }, params: { eventId }, context: { selfId } }) => {
+  console.log("correct attendees limit is ", JSON.stringify(2))
+  console.log("attendees limit is ", JSON.stringify(limit))
+  console.log("encoded attendees cursor is ", nextPageCursor)
   const cursor = DecodedCursorValidationSchema.parse(decodeAttendeesListCursor(
-    nextPage
+    nextPageCursor
   ))
+
+  console.log("decoded attendees cursor is ", cursor)
 
   return conn.transaction((tx) =>
     getAttendeesCount(tx, eventId, selfId)

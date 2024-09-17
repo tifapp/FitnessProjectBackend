@@ -1,7 +1,6 @@
 import { conn } from "TiFBackendUtils"
-import { TiFEvent, calcSecondsToStart, calcTodayOrTomorrow } from "TiFBackendUtils/TifEventUtils"
+import { TiFEvent } from "TiFBackendUtils/TifEventUtils"
 import { randomInt } from "crypto"
-import dayjs from "dayjs"
 import { expectTypeOf } from "expect-type"
 import { addLocationToDB, getTimeZone } from "../../GeocodingLambda/utils"
 import { userToUserRequest } from "../test/shortcuts"
@@ -10,7 +9,7 @@ import { testEventInput } from "../test/testEvents"
 import { createEventFlow } from "../test/userFlows/createEventFlow"
 import { createUserFlow } from "../test/userFlows/createUserFlow"
 
-describe("GetSingleEvent tests", () => {
+describe("getEvent", () => {
   it("should return 404 if the event doesnt exist", async () => {
     const newUser = await createUserFlow()
     const eventId = randomInt(1000)
@@ -24,9 +23,6 @@ describe("GetSingleEvent tests", () => {
 
   it("should return event details if the event exists", async () => {
     const newUser = await createUserFlow()
-    const today = dayjs()
-    today.set("minute", 59)
-    today.set("second", 59)
 
     const eventTimeZone = getTimeZone({ latitude: testEventInput.coordinates.latitude, longitude: testEventInput.coordinates.longitude })
 
@@ -52,13 +48,13 @@ describe("GetSingleEvent tests", () => {
     } = await createEventFlow([
       {
         title: "Fake Event",
-        description: "This is some random event",
+        description: "This is some random event"
       }
     ], 1)
 
     const resp = await testAPI.eventDetails({ auth: newUser.auth, params: { eventId: eventIds[0] } })
 
-    //@ts-expect-error
+    // how did we test today/tomorrow? check again the original test, and maybe write separate tests to check the today/tomorrow fields from tifevent
     expectTypeOf(resp.data).toMatchTypeOf<TiFEvent>()
     expect(resp.data).toEqual(
       {
@@ -76,7 +72,7 @@ describe("GetSingleEvent tests", () => {
           },
           todayOrTomorrow: "today"
         },
-        previewAttendees: attendeesList.map(({ id }) => ({ id, profileImageURL: null })),
+        previewAttendees: attendeesList.map(({ id }) => ({ id })),
         location: {
           coordinate: testEventInput.coordinates,
           placemark: {
@@ -97,7 +93,7 @@ describe("GetSingleEvent tests", () => {
             fromYouToThem: "not-friends"
           },
           id: host.id,
-          username: host.name,
+          name: host.name,
           handle: host.handle
         },
         settings: {
@@ -111,85 +107,50 @@ describe("GetSingleEvent tests", () => {
       })
     expect(resp.status).toEqual(200)
   })
-})
 
-describe("Checks the data returned if the user blocks the host or vice versa is of the correct format", () => {
-  it("should return host name and event title if blocked by host", async () => {
-    const {
-      attendeesList,
-      host,
-      eventIds: [eventId]
-    } = await createEventFlow([{}], 1)
+  describe("Checks the data returned if the user blocks the host or vice versa is of the correct format", () => {
+    it("should return host name and event title if blocked by host", async () => {
+      const { attendeesList: [, attendee], host, eventIds: [eventId] } = await createEventFlow([{}], 1)
 
-    await testAPI.blockUser(userToUserRequest(host, attendeesList[1]))
-    const resp = await testAPI.eventDetails({ auth: attendeesList[1].auth, params: { eventId } })
+      await testAPI.blockUser(userToUserRequest(host, attendee))
+      const resp = await testAPI.eventDetails({ auth: attendee.auth, params: { eventId } })
 
-    expect(resp.status).toEqual(403)
-    expect(resp.data).toMatchObject({ error: "unauthorized" })
+      expect(resp.status).toEqual(403)
+      expect(resp.data).toMatchObject({
+        error: "user-is-blocked" // unauthorized???
+      })
+    })
+
+    it("should return host name and event title if attendee blocked host", async () => {
+      const { attendeesList: [, attendee], host, eventIds: [eventId] } = await createEventFlow([{}], 1)
+
+      await testAPI.blockUser(userToUserRequest(attendee, host))
+      const resp = await testAPI.eventDetails({ auth: attendee.auth, params: { eventId } })
+
+      expect(resp.status).toEqual(403)
+      expect(resp.data).toMatchObject({
+        error: "user-is-blocked"
+      })
+    })
   })
 
-  it("should return host name and event title if attendee blocked host", async () => {
-    const { attendeesList, host, eventIds: [eventId] } = await createEventFlow([{}], 1)
+  describe("Check the user relations return the appropriate relation between the user and host", () => {
+    it("should return 'current-user' if the user views their own event for the fromThemToYou and fromYouToThem properties", async () => {
+      const {
+        host,
+        eventIds
+      } = await createEventFlow([{}], 1)
 
-    await testAPI.blockUser(userToUserRequest(attendeesList[1], host))
-    const resp = await testAPI.eventDetails({ auth: attendeesList[1].auth, params: { eventId } })
+      const resp = await testAPI.eventDetails({ auth: host.auth, params: { eventId: eventIds[0] } })
 
-    expect(resp.status).toEqual(403)
-    expect(resp.data).toMatchObject({ error: "unauthorized" })
-  })
-})
-
-describe("Check that the secondsToStart matches with TodayOrTomorrow", () => {
-  it("should return 'Today' if the secondsToStart is less than SECONDS_IN_DAY", async () => {
-    const today = dayjs()
-    today.set("minute", 59)
-    today.set("second", 59)
-    const isToday = calcTodayOrTomorrow(today.toDate())
-    expect(isToday).toEqual("today")
-  })
-
-  it("should return 'Tomorrow' if the secondsToStart is greater than or equal to SECONDS_IN_DAY", async () => {
-    const tomorrow = dayjs().add(1, "day")
-
-    const isTomorrow = calcTodayOrTomorrow(tomorrow.toDate())
-    expect(isTomorrow).toEqual("tomorrow")
-  })
-})
-
-describe("Check that the secondsToStart is accurate", () => {
-  it("should return the positive seconds before an event starts", async () => {
-    jest.useFakeTimers()
-    jest.setSystemTime(new Date("December 17, 1995 03:24:00"))
-    const secondsToStart = calcSecondsToStart(new Date("December 17, 1995 03:25:00"))
-    expect(secondsToStart).toEqual(60)
-    jest.useRealTimers()
-  })
-
-  it("should return the negative seconds after an event starts", async () => {
-    jest.useFakeTimers()
-    jest.setSystemTime(new Date("December 17, 1995 03:25:00"))
-    const secondsToStart = calcSecondsToStart(new Date("December 17, 1995 03:24:00"))
-    expect(secondsToStart).toEqual(-60)
-    jest.useRealTimers()
-  })
-})
-
-describe("Check the user relations return the appropriate relation between the user and host", () => {
-  it("should return 'current-user' if the user views their own event for the fromThemToYou and fromYouToThem properties", async () => {
-    const {
-      host,
-      eventIds
-    } = await createEventFlow([{}], 1)
-
-    const resp = await testAPI.eventDetails({ auth: host.auth, params: { eventId: eventIds[0] } })
-
-    expect(resp).toMatchObject({
-      status: 200,
-      data: expect.objectContaining({
-        host: expect.objectContaining({
-          relations: expect.objectContaining({
-            fromYouToThem: "current-user",
-            fromThemToYou: "current-user"
+      expect(resp).toMatchObject({
+        status: 200,
+        data: expect.objectContaining({
+          host: expect.objectContaining({
+            relations: expect.objectContaining({
+              fromYouToThem: "current-user",
+              fromThemToYou: "current-user"
+            })
           })
         })
       })

@@ -203,7 +203,7 @@ export const tableDefintionsByFamily = [
     e.shouldHideAfterStartDate AS shouldHideAfterStartDate,
     e.isChatEnabled AS isChatEnabled,
     e.createdDateTime AS createdDateTime,
-    e.updatedDateTime AS updatedDateTime, host.name AS hostUsername,
+    e.updatedDateTime AS updatedDateTime, host.name AS hostName,
     host.handle AS hostHandle, 
     e.startDateTime AS startDateTime,
     e.endDateTime AS endDateTime,

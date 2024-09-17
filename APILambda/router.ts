@@ -34,7 +34,7 @@ const validateAPIRouterCall = validateAPICall((status, value) => {
   return value
 })
 
-const emptyToUndefined = (obj: any) => Object.keys(obj).length === 0 && obj.constructor === Object ? undefined : obj;
+const emptyToUndefined = (obj: any) => Object.keys(obj).length === 0 && obj.constructor === Object ? undefined : obj
 
 /**
  * Adds the main routes to an app.

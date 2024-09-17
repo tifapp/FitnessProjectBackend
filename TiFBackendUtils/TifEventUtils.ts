@@ -1,12 +1,13 @@
 import { ColorString } from "TiFShared/domain-models/ColorString"
 import { dateRange, FixedDateRange } from "TiFShared/domain-models/FixedDateRange"
 import { Placemark } from "TiFShared/domain-models/Placemark"
-import { UnblockedBidirectionalUserRelations, UserHandle, UserID } from "TiFShared/domain-models/User"
+import { BidirectionalUserRelations, UnblockedBidirectionalUserRelations, UserHandle, UserID } from "TiFShared/domain-models/User"
 import { success } from "TiFShared/lib/Result"
 import dayjs from "dayjs"
 import duration from "dayjs/plugin/duration"
 import { DBevent, DBeventAttendance, DBEventAttendeeCountView, DBEventAttendeesView, DBTifEventView, DBuserRelations } from "./DBTypes"
 import { MySQLExecutableDriver } from "./MySQLDriver/index"
+import { calcSecondsToStart, calcTodayOrTomorrow } from "./dateUtils"
 dayjs.extend(duration)
 
 // Get the total seconds in the duration
@@ -19,7 +20,7 @@ export type TodayOrTomorrow = "today" | "tomorrow"
 export type UserAttendeeStatus = DBeventAttendance["role"] | "not-participating"
 export type Attendee = { id: string, profileImageURL?: string}
 export type DBTifEvent = DBTifEventView & Omit<DBuserRelations, "status" | "updatedDateTime"> &
-{ attendeeCount: number, previewAttendees: Attendee[], userAttendeeStatus: UserAttendeeStatus, joinedDateTime: Date } & UnblockedBidirectionalUserRelations
+{ attendeeCount: number, previewAttendees: Attendee[], userAttendeeStatus: UserAttendeeStatus, joinedDateTime: Date } & BidirectionalUserRelations
 
 export type TiFEvent = {
     id: number
@@ -46,12 +47,9 @@ export type TiFEvent = {
     host: {
       relations: UnblockedBidirectionalUserRelations
       id: UserID
-      username: string
+      name: string
       handle: UserHandle
       profileImageURL?: string
-      name: string
-      joinedDateTime: Date
-      arrivedDateTime: Date
     }
     settings: {
       shouldHideAfterStartDate: boolean
@@ -66,11 +64,6 @@ export type TiFEvent = {
     endedDateTime?: Date
   }
 
-export const calcSecondsToStart = (startDateTime: Date) => {
-  const millisecondsToStart = startDateTime.valueOf() - new Date().valueOf()
-  return millisecondsToStart / 1000
-}
-
 const isChatExpired = (endedDateTime?: Date) => {
   if (endedDateTime == null) {
     return false
@@ -82,19 +75,6 @@ const isChatExpired = (endedDateTime?: Date) => {
   const diffInHours = nextDay.diff(endedDateTime, "hour")
 
   return diffInHours >= 24
-}
-
-export const calcTodayOrTomorrow = (startDateTime: Date) => {
-  const currentDate = dayjs()
-  const eventDate = dayjs(startDateTime)
-
-  if (currentDate.isSame(eventDate, "day")) {
-    return "today"
-  } else if (eventDate.isSame(currentDate.add(1, "day"), "day")) {
-    return "tomorrow"
-  } else {
-    return undefined
-  }
 }
 
 export const tifEventResponseFromDatabaseEvent = (event: DBTifEvent) : TiFEvent => {
@@ -135,12 +115,9 @@ export const tifEventResponseFromDatabaseEvent = (event: DBTifEvent) : TiFEvent 
         fromYouToThem: event.fromYouToThem
       } as UnblockedBidirectionalUserRelations,
       id: event.hostId,
-      username: event.hostUsername,
+      name: event.hostName,
       handle: event.hostHandle,
-      profileImageURL: undefined,
-      name: "TODO: FIX",
-      joinedDateTime: new Date(10000), // TODO: FIX
-      arrivedDateTime: new Date(10000) // TODO: FIX
+      profileImageURL: undefined
     },
     settings: {
       shouldHideAfterStartDate: event.shouldHideAfterStartDate,

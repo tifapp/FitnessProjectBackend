@@ -59,6 +59,7 @@ export const createEventSQL = (
   )
 }
 
+// ALLOW EXTRA MIDDLEWARE
 /**
  * Creates routes related to event operations.
  *

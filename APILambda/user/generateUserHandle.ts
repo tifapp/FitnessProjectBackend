@@ -23,7 +23,7 @@ const generateUniqueUsernameAttempt = (conn: MySQLExecutableDriver, name: string
     .flatMapFailure(() => retries > 0 ? generateUniqueUsernameAttempt(conn, name, retries - 1) : failure("could-not-generate-username" as const))
 }
 
-export const generateUniqueUsername = (
+export const generateUniqueHandle = (
   conn: MySQLExecutableDriver,
   name: string,
   retries = 3

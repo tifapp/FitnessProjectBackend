@@ -45,10 +45,9 @@ export const eventDetails: TiFAPIRouter["eventDetails"] = ({ context: { selfId }
   conn.transaction((tx) =>
     eventDetailsSQL(conn, Number(eventId), selfId)
       .mapFailure((error) => resp(404, { error }))
-      .passthroughSuccess((event) =>
-        event.fromThemToYou === "blocked" ||
-            event.fromYouToThem === "blocked"
-          ? failure(resp(403, { error: "user-is-blocked" }))
+      .passthroughSuccess(({ fromThemToYou, fromYouToThem, id, title, createdDateTime, updatedDateTime }) =>
+        fromThemToYou === "blocked" || fromYouToThem === "blocked"
+          ? failure(resp(403, { error: "user-is-blocked", id, title, createdDateTime, updatedDateTime }))
           : success()
       )
       .flatMapSuccess((event) => setEventAttendeesFields(tx, [event], selfId))

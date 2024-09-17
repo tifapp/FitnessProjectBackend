@@ -4,13 +4,13 @@ import { testAPI } from "../test/testApp"
 import { testEventInput } from "../test/testEvents"
 import { createEventFlow } from "../test/userFlows/createEventFlow"
 import { TestUser, createUserFlow } from "../test/userFlows/createUserFlow"
-import { decodeAttendeesListCursor } from "../utils/Cursor"
+import { AttendeesListCursor, decodeAttendeesListCursor } from "../utils/Cursor"
 import { createEventSQL } from "./createEvent"
 
 const eventLocation = { latitude: 50, longitude: 50 }
 // TODO: should have a universal "lastpagecursor" value
-const lastPageCursorResponse = {
-  id: "lastPage"
+const lastPageCursorResponse: AttendeesListCursor = {
+  userId: "lastPage"
 }
 const limit = 2
 
@@ -22,11 +22,7 @@ const limit = 2
  * @returns {Promise<request.Response>} A Promise that resolves with the response containing the list of attendees.
  */
 
-const createTestAttendeesList = async ({
-  numOfAttendees = 1
-}: {
-  numOfAttendees?: number
-}) => {
+const createTestAttendees = async (numOfAttendees: number = 1) => {
   const {
     host,
     attendeesList,
@@ -45,23 +41,21 @@ const createTestAttendeesList = async ({
  *
  * @param {Array} testAttendees - An array containing information about all attendees.
  * @param {number} index - The index indicating the position of the attendee for which the response is generated.
- * @returns {AttendeesCursorResponse} - An object representing the next page cursor response with id, joinedDateTime, and arrivedDateTime properties.
+ * @returns {AttendeesListCursor} - An object representing the next page cursor response with id, joinedDateTime, and arrivedDateTime properties.
  */
 const getNextPageCursorResp = (
   testAttendees: Array<TestUser>,
   index: number
-): Omit<unknown, "arrivedDateTime"> => {
+): Omit<AttendeesListCursor, "arrivedDateTime"> => {
   return {
-    id: testAttendees[index].id,
+    userId: testAttendees[index].id,
     joinedDateTime: index >= testAttendees.length ? undefined : expect.any(Date)
   }
 }
 
 describe("getAttendeesList endpoint", () => {
   it("should return 400 if limit is less than one", async () => {
-    const { attendeesList: [, attendee], eventId } = await createTestAttendeesList({
-      numOfAttendees: 1
-    })
+    const { attendeesList: [, attendee], eventId } = await createTestAttendees(1)
 
     const resp = await testAPI.attendeesList({ auth: attendee.auth, params: { eventId }, query: { limit: 0 } })
 
@@ -74,9 +68,7 @@ describe("getAttendeesList endpoint", () => {
   })
 
   it("should return 400 if limit is greater than fifty", async () => {
-    const { attendeesList: [, attendee], eventId } = await createTestAttendeesList({
-      numOfAttendees: 1
-    })
+    const { attendeesList: [, attendee], eventId } = await createTestAttendees(1)
 
     const resp = await testAPI.attendeesList({ auth: attendee.auth, params: { eventId }, query: { limit: 51 } })
 
@@ -94,7 +86,7 @@ describe("getAttendeesList endpoint", () => {
     // We must use createEventSQL directly because createEventFlow() makes an event with the host in the attendees list.
     const {
       value: { insertId }
-    } = await createEventSQL( conn, testEventInput, currentUser.id )
+    } = await createEventSQL(conn, testEventInput, currentUser.id)
 
     const resp = await testAPI.attendeesList({
       auth: currentUser.auth,
@@ -102,7 +94,9 @@ describe("getAttendeesList endpoint", () => {
       query: { limit }
     });
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (resp.data as any).nextPageCursor = decodeAttendeesListCursor(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (resp.data as any).nextPageCursor
     )
 
@@ -134,25 +128,24 @@ describe("getAttendeesList endpoint", () => {
         attendees: []
       }
     })
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     expect(decodeAttendeesListCursor((resp.data as any).nextPageCursor)).toMatchObject(lastPageCursorResponse)
   })
 
   it("should return 200 after paginating the first page of attendees list", async () => {
-    const { attendeesList, eventId } =
-      await createTestAttendeesList({
-        numOfAttendees: 3
-      })
+    const { attendeesList, eventId } = await createTestAttendees(3)
 
     const [, attendee1, attendee2] = attendeesList
 
     const resp = await testAPI.attendeesList({
-      auth:
-      attendee1.auth,
+      auth: attendee1.auth,
       params: { eventId },
       query: { limit }
     });
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (resp.data as any).nextPageCursor = decodeAttendeesListCursor(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (resp.data as any).nextPageCursor
     )
 
@@ -191,7 +184,9 @@ describe("getAttendeesList endpoint", () => {
       query: { limit }
     });
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (resp.data as any).nextPageCursor = decodeAttendeesListCursor(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (resp.data as any).nextPageCursor
     )
 
@@ -212,10 +207,7 @@ describe("getAttendeesList endpoint", () => {
   })
 
   it("should return 200 after paginating middle of page", async () => {
-    const { attendeesList, eventId } =
-      await createTestAttendeesList({
-        numOfAttendees: 4
-      })
+    const { attendeesList, eventId } = await createTestAttendees(4)
 
     const [attendee] = attendeesList
 
@@ -225,14 +217,17 @@ describe("getAttendeesList endpoint", () => {
       query: { limit }
     })
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const middlePageCursorResp = (resp.data as any).nextPageCursor
     resp = await testAPI.attendeesList({
       auth: attendee.auth,
       params: { eventId },
-      query: { limit, nextPage: middlePageCursorResp }
+      query: { limit, nextPageCursor: middlePageCursorResp }
     });
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (resp.data as any).nextPageCursor = decodeAttendeesListCursor(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (resp.data as any).nextPageCursor
     )
 
@@ -251,10 +246,7 @@ describe("getAttendeesList endpoint", () => {
   })
 
   it("should return 200 after paginating the last page of attendees list", async () => {
-    const { attendeesList, eventId } =
-      await createTestAttendeesList({
-        numOfAttendees: 2
-      })
+    const { attendeesList, eventId } = await createTestAttendees(2)
 
     const [, attendee] = attendeesList
 
@@ -264,14 +256,17 @@ describe("getAttendeesList endpoint", () => {
       query: { limit }
     })
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const nextPageCursorResp = (resp.data as any).nextPageCursor
     resp = await testAPI.attendeesList({
       auth: attendee.auth,
       params: { eventId },
-      query: { limit, nextPage: nextPageCursorResp }
+      query: { limit, nextPageCursor: nextPageCursorResp }
     });
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (resp.data as any).nextPageCursor = decodeAttendeesListCursor(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (resp.data as any).nextPageCursor
     )
 
@@ -292,9 +287,7 @@ describe("getAttendeesList endpoint", () => {
   })
 
   it("should return 200 if going past last page of attendees list", async () => {
-    const { attendeesList: [, attendee], eventId } = await createTestAttendeesList({
-      numOfAttendees: 1
-    })
+    const { attendeesList: [, attendee], eventId } = await createTestAttendees(1)
 
     let resp = await testAPI.attendeesList({
       auth: attendee.auth,
@@ -308,7 +301,7 @@ describe("getAttendeesList endpoint", () => {
     resp = await testAPI.attendeesList({
       auth: attendee.auth,
       params: { eventId },
-      query: { limit, nextPage: nextPageCursorResp }
+      query: { limit, nextPageCursor: nextPageCursorResp }
     });
 
     (resp.data as any).nextPageCursor = decodeAttendeesListCursor(
@@ -326,7 +319,7 @@ describe("getAttendeesList endpoint", () => {
   })
 
   it("check that attendee list is sorted by role, arrivedDateTime, then joinedDateTime", async () => {
-    const { host, attendeesList, eventId } = await createTestAttendeesList({ numOfAttendees: 3 })
+    const { host, attendeesList, eventId } = await createTestAttendees(3)
 
     const [, attendee] = attendeesList
 
@@ -338,7 +331,7 @@ describe("getAttendeesList endpoint", () => {
       query: { limit }
     })
 
-    const nextPageCursorResp = (resp.data as any).nextPageCursor
+    const nextPageCursorResp = (resp.data as any).nextPageCursor;
     (resp.data as any).nextPageCursor = decodeAttendeesListCursor(
       (resp.data as any).nextPageCursor
     )
@@ -374,7 +367,7 @@ describe("getAttendeesList endpoint", () => {
     resp = await testAPI.attendeesList({
       auth: attendee.auth,
       params: { eventId },
-      query: { limit, nextPage: nextPageCursorResp }
+      query: { limit, nextPageCursor: nextPageCursorResp }
     });
 
     (resp.data as any).nextPageCursor = decodeAttendeesListCursor(
@@ -408,9 +401,7 @@ describe("getAttendeesList endpoint", () => {
 
   it("should return total attendee count and attendees, excluding ones that blocked current user", async () => {
     const currentUser = await createUserFlow()
-    const { attendeesList, eventId } = await createTestAttendeesList({
-      numOfAttendees: 3
-    })
+    const { attendeesList, eventId } = await createTestAttendees(3)
 
     for (let i = 1; i < 3; i++) {
       await testAPI.blockUser(userToUserRequest(attendeesList[i], currentUser))
@@ -454,9 +445,7 @@ describe("getAttendeesList endpoint", () => {
 
   it("should return 403 if host blocked current user", async () => {
     const currentUser = await createUserFlow()
-    const { host, eventId } = await createTestAttendeesList({
-      numOfAttendees: 2
-    })
+    const { host, eventId } = await createTestAttendees(2)
     await testAPI.blockUser(userToUserRequest(host, currentUser))
 
     const resp = await testAPI.attendeesList({
@@ -474,9 +463,7 @@ describe("getAttendeesList endpoint", () => {
 
   it("should hide attendees who block the current user even if the current user blocks them", async () => {
     const currentUser = await createUserFlow()
-    const { attendeesList, eventId } = await createTestAttendeesList({
-      numOfAttendees: 3
-    })
+    const { attendeesList, eventId } = await createTestAttendees(3)
 
     for (let i = 1; i < 3; i++) {
       await testAPI.blockUser(userToUserRequest(attendeesList[i], currentUser))
@@ -524,9 +511,7 @@ describe("getAttendeesList endpoint", () => {
 
   it("include blocked users in total attendees count when user blocks an attendee or the host", async () => {
     const currentUser = await createUserFlow()
-    const { host, attendeesList, eventId } = await createTestAttendeesList({
-      numOfAttendees: 3
-    })
+    const { host, attendeesList, eventId } = await createTestAttendees(3)
     await testAPI.blockUser(userToUserRequest(currentUser, host))
 
     for (let i = 1; i < 3; i++) {
@@ -572,9 +557,7 @@ describe("getAttendeesList endpoint", () => {
 
   it("should return 403 if trying to see attendees list when host and user block each other", async () => {
     const currentUser = await createUserFlow()
-    const { host, eventId } = await createTestAttendeesList({
-      numOfAttendees: 3
-    })
+    const { host, eventId } = await createTestAttendees(3)
     await testAPI.blockUser(userToUserRequest(host, currentUser))
     await testAPI.blockUser(userToUserRequest(currentUser, host))
 

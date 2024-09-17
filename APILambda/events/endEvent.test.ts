@@ -8,7 +8,7 @@ describe("End/cancel event tests", () => {
     const { eventIds, host } = await createEventFlow(
       [
         {
-          coordinates: eventLocation,
+          coordinates: eventLocation
         }
       ],
       0
@@ -27,7 +27,7 @@ describe("End/cancel event tests", () => {
     } = await createEventFlow(
       [
         {
-          coordinates: eventLocation,
+          coordinates: eventLocation
         }
       ],
       1
@@ -36,7 +36,7 @@ describe("End/cancel event tests", () => {
     const resp = await testAPI.endEvent({ auth: attendeesList[1].auth, params: { eventId: eventIds[0] } })
     expect(resp).toMatchObject({
       status: 403,
-      data: { error: "cannot-end-event" }
+      data: { error: "user-not-host" }
     })
   })
 
@@ -47,7 +47,7 @@ describe("End/cancel event tests", () => {
     } = await createEventFlow(
       [
         {
-          coordinates: eventLocation,
+          coordinates: eventLocation
         }
       ],
       1
@@ -57,7 +57,7 @@ describe("End/cancel event tests", () => {
     const resp = await testAPI.endEvent({ auth: host.auth, params: { eventId } })
     expect(resp).toMatchObject({
       status: 403,
-      data: { error: "cannot-end-event" }
+      data: { error: "event-has-ended" }
     })
   })
 })
