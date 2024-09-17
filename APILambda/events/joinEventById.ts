@@ -25,18 +25,21 @@ export const joinEvent: TiFAPIRouter["joinEvent"] = async ({ context: { selfId }
           .withFailure(resp(403, { error: "user-is-blocked" }))
       )
       .mapSuccess(async (event) => {
-        const [status, hasArrived, chatPermissions, trackableRegions] = await Promise.all([
+        const [status, hasArrived = false, chatPermissions, trackableRegions] = await Promise.all([
           addUserToAttendeeList(tx, selfId, eventId, "attending")
             .mapSuccess(
               ({ rowsAffected }) =>
                 rowsAffected > 0 ? (201) : (200)
             ).unwrap(),
-          coordinate && areCoordinatesEqual(coordinate, event)
+          (coordinate && areCoordinatesEqual(coordinate, event))
             ? insertArrival(tx, selfId, coordinate).withSuccess(true).unwrap()
-            : success(true).unwrap(),
+            : success().unwrap(),
           getTokenRequest(event, selfId),
           upcomingEventArrivalRegionsSQL(tx, selfId).unwrap()
         ])
+
+        console.log("join event response is")
+        console.log({ ...chatPermissions, hasArrived, trackableRegions })
 
         if (status === 201) {
           return resp(201, { ...chatPermissions, hasArrived, trackableRegions })

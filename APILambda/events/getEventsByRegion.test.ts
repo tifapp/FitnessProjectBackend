@@ -46,7 +46,7 @@ const setupDB = async () => {
 
 describe("exploreEvents endpoint tests", () => {
   it("should return 200 with the event, user relation, attendee count data", async () => {
-    const {attendee, ongoingEventId, futureEventId} = await setupDB()
+    const { attendee, ongoingEventId, futureEventId } = await setupDB()
 
     const resp = await testAPI.exploreEvents({
       auth: attendee.auth,
@@ -57,9 +57,12 @@ describe("exploreEvents endpoint tests", () => {
     })
 
     expect(resp.status).toEqual(200)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     expect((resp.data as any).events).toHaveLength(2)
     const eventIds = [
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (resp.data as any).events[0].id,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (resp.data as any).events[1].id
     ]
     expect(eventIds).toContain(ongoingEventId)
@@ -67,7 +70,7 @@ describe("exploreEvents endpoint tests", () => {
   })
 
   it("should not return events that are not within the radius", async () => {
-    const {attendee, ongoingEventId, futureEventId} = await setupDB()
+    const { attendee } = await setupDB()
 
     const events = await testAPI.exploreEvents({
       auth: attendee.auth,
@@ -79,11 +82,12 @@ describe("exploreEvents endpoint tests", () => {
         radius: 1
       }
     })
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     expect((events.data as any).events).toHaveLength(0)
   })
 
   it("should remove the events where the attendee blocks the host", async () => {
-    const {attendee, host, ongoingEventId, futureEventId} = await setupDB()
+    const { attendee, host } = await setupDB()
 
     await testAPI.blockUser(userToUserRequest(attendee, host))
 
@@ -94,12 +98,13 @@ describe("exploreEvents endpoint tests", () => {
         radius: 50000
       }
     })
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     expect((events.data as any).events).toHaveLength(0)
   })
 
   it("should remove the events where the host blocks the attendee", async () => {
-    const {attendee, host, ongoingEventId, futureEventId} = await setupDB()
-    
+    const { attendee, host } = await setupDB()
+
     await testAPI.blockUser(userToUserRequest(host, attendee))
 
     const events = await testAPI.exploreEvents({
@@ -109,11 +114,12 @@ describe("exploreEvents endpoint tests", () => {
         radius: 50000
       }
     })
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     expect((events.data as any).events).toHaveLength(0)
   })
 
   it("should not return events that have ended", async () => {
-    const {attendee, host, ongoingEventId, futureEventId} = await setupDB()
+    const { attendee, host, ongoingEventId, futureEventId } = await setupDB()
 
     await testAPI.endEvent({ auth: host.auth, params: { eventId: futureEventId } })
     await testAPI.endEvent({ auth: host.auth, params: { eventId: ongoingEventId } })
@@ -125,19 +131,20 @@ describe("exploreEvents endpoint tests", () => {
         radius: 50000
       }
     })
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     expect((events.data as any).events).toHaveLength(0)
   })
 
   describe("tests for attendee count and attendee list queries within exploreEvents", () => {
     it("should return the attendee count including the event host", async () => {
-      const {attendee, host, ongoingEventId, futureEventId} = await setupDB()
+      const { ongoingEventId } = await setupDB()
 
       const attendees = await getAttendeeCount(conn, [`${ongoingEventId}`])
       expect(attendees.value[0].attendeeCount).toEqual(2)
     })
 
     it("should return the attendee list not including the event host", async () => {
-      const {attendee, host, ongoingEventId, futureEventId} = await setupDB()
+      const { host, ongoingEventId } = await setupDB()
 
       const attendees = await getAttendees(conn, [`${ongoingEventId}`])
       expect(attendees.value).toHaveLength(1)

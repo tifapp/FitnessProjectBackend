@@ -1,4 +1,5 @@
 import { conn } from "TiFBackendUtils"
+import { todayTestDate } from "TiFBackendUtils/test/dateHelpers"
 import { dateRange } from "TiFShared/domain-models/FixedDateRange"
 import { addLocationToDB } from "../../GeocodingLambda/utils"
 import { testAPI } from "../test/testApp"
@@ -82,6 +83,15 @@ describe("CreateEvent tests", () => {
     expect(resp).toMatchObject({
       status: 200,
       data: { id: expect.any(Number), location: { placemark: {}, timezoneIdentifier: "Africa/Cairo" } }
+    })
+  })
+
+  it("should not allow a user to create an event that's shorter than 60 seconds", async () => {
+    const newUser = await createUserFlow()
+    const resp = await testAPI.createEvent({ auth: newUser.auth, body: { ...testEventInput, dateRange: dateRange(todayTestDate(), new Date(+todayTestDate() + 30000))! } })
+    expect(resp).toMatchObject({
+      status: 400,
+      data: { error: "invalid-request" }
     })
   })
 

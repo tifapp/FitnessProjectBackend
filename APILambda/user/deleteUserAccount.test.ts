@@ -15,7 +15,7 @@ describe("DeleteSelf tests", () => {
     const newUser = await createUserFlow()
     const resp = await testAPI.removeAccount({ auth: newUser.auth })
 
-    expect(resp).toMatchObject({
+    expect(resp).toEqual({
       status: 204,
       data: {}
     })

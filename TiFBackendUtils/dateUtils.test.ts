@@ -1,5 +1,5 @@
 import { calcSecondsToStart, calcTodayOrTomorrow } from "./dateUtils"
-import { todayTestDate, tomorrowTestDate } from "./MySQLDriver/test/dateHelpers"
+import { todayTestDate, tomorrowTestDate } from "./test/dateHelpers"
 
 describe("calcSecondsToStart", () => {
   it("should return the positive seconds before an event starts", async () => {

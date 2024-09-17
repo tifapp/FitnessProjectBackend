@@ -15,7 +15,7 @@ describe("Update user profile tests", () => {
         }
       })
 
-      expect(resp).toMatchObject({
+      expect(resp).toEqual({
         status: 204,
         data: {}
       })
@@ -41,7 +41,7 @@ describe("Update user profile tests", () => {
         }
       })
 
-      expect(resp).toMatchObject({
+      expect(resp).toEqual({
         status: 204,
         data: {}
       })
@@ -82,7 +82,7 @@ describe("Update user profile tests", () => {
       const resp = await testAPI.updateCurrentUserProfile({
         auth: newUser.auth,
         body: {
-          handle: UserHandle.optionalParse(oldUser.handle)!
+          handle: oldUser.handle
         }
       })
 

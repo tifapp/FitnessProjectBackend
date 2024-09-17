@@ -44,7 +44,7 @@ describe("UnblockUser tests", () => {
     const blockedUser = await createUserFlow()
     await testAPI.blockUser(userToUserRequest(newUser, blockedUser))
     const resp = await testAPI.unblockUser(userToUserRequest(newUser, blockedUser))
-    expect(resp).toMatchObject({ status: 204, data: {} })
+    expect(resp).toEqual({ status: 204, data: {} })
   })
 
   it("should remove blocked status when unblocking user", async () => {

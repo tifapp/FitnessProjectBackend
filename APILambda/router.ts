@@ -1,5 +1,5 @@
 import express from "express"
-import { APIHandler, APIMiddleware, resp } from "TiFShared/api"
+import { APIHandler, APIMiddleware, APISchema, resp } from "TiFShared/api"
 import { validateAPICall } from "TiFShared/api/APIValidation"
 import { TiFAPIClient, TiFAPISchema } from "TiFShared/api/TiFAPISchema"
 import { middlewareRunner } from "TiFShared/lib/Middleware"
@@ -34,7 +34,7 @@ const validateAPIRouterCall = validateAPICall((status, value) => {
   return value
 })
 
-const emptyToUndefined = (obj: any) => Object.keys(obj).length === 0 && obj.constructor === Object ? undefined : obj
+const emptyToUndefined = <T extends object>(obj: T) => Object.keys(obj).length === 0 && obj.constructor === Object ? undefined : obj
 
 /**
  * Adds the main routes to an app.
@@ -42,10 +42,10 @@ const emptyToUndefined = (obj: any) => Object.keys(obj).length === 0 && obj.cons
  * @param app see {@link Application}
  * @param environment see {@link ServerEnvironment}
  */
-export const TiFRouter = <Fns extends TiFAPIRouter>(apiClient: MatchFnCollection<TiFAPIRouter, Fns>, environment: ServerEnvironment) => {
+export const TiFRouter = <Fns extends TiFAPIRouter>(apiClient: MatchFnCollection<TiFAPIRouter, Fns>, environment: ServerEnvironment, schema: APISchema = TiFAPISchema) => {
   const router = express.Router()
 
-  Object.entries(TiFAPISchema).forEach(
+  Object.entries(schema).forEach(
     ([endpointName, endpointSchema]) => {
       const { httpRequest: { method, endpoint } } = endpointSchema
       const handler: APIHandler<RouterParams> = middlewareRunner(catchAPIErrors, validateAPIRouterCall, apiClient[endpointName as keyof TiFAPIRouter])

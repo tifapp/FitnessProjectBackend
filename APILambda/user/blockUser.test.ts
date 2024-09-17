@@ -11,7 +11,7 @@ describe("Block User tests", () => {
     const unknownUserId = randomUUID()
     const resp = await testAPI.blockUser(userToUserRequest(fromUser, { id: unknownUserId } as TestUser))
 
-    expect(resp).toMatchObject({
+    expect(resp).toEqual({
       status: 404,
       data: { error: "user-not-found", userId: unknownUserId }
     })
@@ -22,7 +22,7 @@ describe("Block User tests", () => {
     const toUser = await createUserFlow()
     const resp = await testAPI.blockUser(userToUserRequest(fromUser, toUser))
 
-    expect(resp).toMatchObject({
+    expect(resp).toEqual({
       status: 204,
       data: {}
     })

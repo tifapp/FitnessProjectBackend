@@ -7,7 +7,7 @@ import { TiFAPIRouter } from "../router"
 
 export const getEventsByRegion = (
   conn: MySQLExecutableDriver,
-  {userLocation: {latitude: userLatitude, longitude: userLongitude}, ...rest}: {
+  { userLocation: { latitude: userLatitude, longitude: userLongitude }, ...rest }: {
     userId: string
     userLocation: LocationCoordinate2D
     radius: number

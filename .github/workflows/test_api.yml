@@ -2,7 +2,7 @@ name: Test API
 
 on:
   pull_request:
-    types: [opened, synchronize]
+    types: [opened, synchronize, edited]
     branches:
       - development
 

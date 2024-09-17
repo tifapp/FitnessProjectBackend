@@ -1,7 +1,9 @@
+import { DEFAULT_USER_SETTINGS } from "TiFShared/domain-models/Settings"
 import { testAPI } from "../../test/testApp"
 import { createUserFlow } from "../../test/userFlows/createUserFlow"
 
 describe("Update Settings tests", () => {
+  // use global middleware
   // it("should 401 when patching settings for a user without a profile", async () => {
   //   const resp = await testAPI.saveUserSettings(global.defaultUser.auth, {
   //     isAnalyticsEnabled: false
@@ -14,6 +16,9 @@ describe("Update Settings tests", () => {
   // })
 
   it("should update the user's settings", async () => {
+    // For Testing
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { eventPresetPlacemark, ...defaults } = { ...DEFAULT_USER_SETTINGS }
     const newUser = await createUserFlow()
     const updateResp = await testAPI.saveUserSettings({
       auth: newUser.auth,
@@ -22,8 +27,11 @@ describe("Update Settings tests", () => {
       }
     })
     expect(updateResp).toMatchObject({
-      status: 204,
-      data: {}
+      status: 200,
+      data: {
+        ...defaults,
+        isAnalyticsEnabled: false
+      }
     })
 
     const settings1Resp = await testAPI.userSettings({ auth: newUser.auth })
@@ -35,22 +43,30 @@ describe("Update Settings tests", () => {
       }
     })
     expect(updateResp2).toMatchObject({
-      status: 204,
-      data: {}
+      status: 200,
+      data: {
+        ...defaults,
+        isAnalyticsEnabled: false,
+        isCrashReportingEnabled: false,
+        version: 1
+      }
     })
 
     const settings2Resp = await testAPI.userSettings({ auth: newUser.auth })
+    expect(settings1Resp.data.version).toBeLessThan(settings2Resp.data.version)
     expect(settings2Resp).toMatchObject({
       status: 200,
       data: expect.objectContaining({
+        ...defaults,
         isAnalyticsEnabled: false,
         isCrashReportingEnabled: false,
-        // TODO: Update with models from tifshared api
-        updatedDateTime: expect.anything()
+        version: 1
       })
     })
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     expect((settings2Resp.data as any).version).toBeGreaterThanOrEqual(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (settings2Resp.data as any).version
     )
 
@@ -61,18 +77,23 @@ describe("Update Settings tests", () => {
       }
     })
     expect(updateResp3).toMatchObject({
-      status: 204,
-      data: {}
+      status: 200,
+      data: {
+        ...defaults,
+        isAnalyticsEnabled: false,
+        isCrashReportingEnabled: true,
+        version: 2
+      }
     })
 
     const settings3Resp = await testAPI.userSettings({ auth: newUser.auth })
     expect(settings3Resp).toMatchObject({
       status: 200,
       data: expect.objectContaining({
+        ...defaults,
         isAnalyticsEnabled: false,
         isCrashReportingEnabled: true,
-        // TODO: Update with models from tifshared api
-        updatedDateTime: expect.anything()
+        version: 2
       })
     })
   })

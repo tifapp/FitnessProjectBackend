@@ -124,28 +124,36 @@ const getAttendeesCount = (
   conn: MySQLExecutableDriver,
   eventId: number,
   userId: string
-) => {
-  console.log("getAttendeesCount id is ", eventId, userId)
-
-  return conn.queryFirstResult<{ totalAttendeeCount: number }>(
+) =>
+  conn.queryFirstResult<{ totalAttendeeCount: number }>(
     `SELECT 
-      COUNT(*) AS totalAttendeeCount
-      FROM 
-          user AS u 
-          INNER JOIN eventAttendance AS ea ON u.id = ea.userId 
-          INNER JOIN event AS e ON ea.eventId = e.id
-          LEFT JOIN userRelations AS fromThemToYou ON fromThemToYou.fromUserId = u.id AND fromThemToYou.toUserId = :userId
-          LEFT JOIN userRelations AS fromYouToThem ON fromYouToThem.fromUserId = :userId AND fromYouToThem.toUserId = u.id
-      WHERE 
-          e.id = :eventId
-          AND (
-              (fromThemToYou.status IS NULL OR (fromThemToYou.status != 'blocked' AND fromThemToYou.toUserId = :userId))
-          );
+        COUNT(u.id) AS totalAttendeeCount
+    FROM 
+        user AS u 
+        INNER JOIN eventAttendance AS ea ON u.id = ea.userId 
+        LEFT JOIN event AS e ON ea.eventId = e.id AND e.id = :eventId
+        LEFT JOIN userRelations AS fromThemToYou ON fromThemToYou.fromUserId = u.id AND fromThemToYou.toUserId = :userId
+        LEFT JOIN userRelations AS fromYouToThem ON fromYouToThem.fromUserId = :userId AND fromYouToThem.toUserId = u.id
+    WHERE 
+        e.id IS NOT NULL  -- Ensures only rows where the event exists are returned
+        AND (fromThemToYou.status IS NULL OR (fromThemToYou.status != 'blocked' AND fromThemToYou.toUserId = :userId))
+    GROUP BY 
+        e.id;
     `,
     { eventId, userId }
   )
-    .mapSuccess(({ totalAttendeeCount }) => totalAttendeeCount)
-}
+
+const checkEventExists = (
+  conn: MySQLExecutableDriver,
+  eventId: number
+) =>
+  conn.queryHasResults(
+    `SELECT *
+    FROM event
+    WHERE id = :eventId
+    `,
+    { eventId }
+  )
 
 /**
  * Creates routes related to attendees list.
@@ -153,19 +161,21 @@ const getAttendeesCount = (
  * @param environment see {@link ServerEnvironment}.
  */
 export const attendeesList: TiFAPIRouter["attendeesList"] = ({ query: { nextPageCursor, limit }, params: { eventId }, context: { selfId } }) => {
-  console.log("correct attendees limit is ", JSON.stringify(2))
-  console.log("attendees limit is ", JSON.stringify(limit))
-  console.log("encoded attendees cursor is ", nextPageCursor)
   const cursor = DecodedCursorValidationSchema.parse(decodeAttendeesListCursor(
     nextPageCursor
   ))
 
+  // add logger
   console.log("decoded attendees cursor is ", cursor)
 
   return conn.transaction((tx) =>
-    getAttendeesCount(tx, eventId, selfId)
-      .withFailure(resp(404, { error: "no-attendees" }))
-      .flatMapSuccess(totalAttendeeCount =>
+    checkEventExists(tx, eventId)
+      .withFailure(resp(404, { error: "event-not-found" }))
+      .flatMapSuccess(() =>
+        getAttendeesCount(tx, eventId, selfId)
+          .withFailure(resp(404, { error: "no-attendees" }))
+      )
+      .flatMapSuccess(({ totalAttendeeCount }) =>
         getTiFAttendeesSQL(
           tx,
           eventId,

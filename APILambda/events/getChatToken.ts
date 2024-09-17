@@ -3,7 +3,6 @@ import { DBTifEvent } from "TiFBackendUtils/TifEventUtils"
 import { EventID } from "TiFShared/domain-models/Event"
 import { UserID } from "TiFShared/domain-models/User"
 import { ChatPermissions, createTokenRequest } from "../ably"
-import { ServerEnvironment } from "../env"
 import { isUserBlocked, isUserInEvent } from "../utils/sharedSQL"
 import { eventDetailsSQL } from "./getEventById"
 

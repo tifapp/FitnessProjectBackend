@@ -2,7 +2,7 @@ name: Test Geocoder Pipeline
 
 on:
   pull_request:
-    types: [opened, synchronize]
+    types: [opened, synchronize, edited]
     branches:
       - development
   

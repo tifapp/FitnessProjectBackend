@@ -32,29 +32,54 @@ const updateUserSettingsSQL = (
 ) =>
   // TODO: Update with models from tifshared api
   conn.executeResult(
-    `
-    INSERT INTO userSettings (
+    `INSERT INTO userSettings (
       userId,
       isAnalyticsEnabled,
       isCrashReportingEnabled,
-      pushNotificationTriggerIds,
       canShareArrivalStatus,
       eventCalendarStartOfWeekDay,
       eventCalendarDefaultLayout,
       eventPresetShouldHideAfterStartDate,
       eventPresetPlacemark,
       eventPresetDurations,
-      version
+      pushNotificationTriggerIds
     ) VALUES (
-      :userId, 
-      COALESCE(:isAnalyticsEnabled, 1), 
-      COALESCE(:isCrashReportingEnabled, 1)
-    )
-    ON DUPLICATE KEY UPDATE 
-      isAnalyticsEnabled = COALESCE(:isAnalyticsEnabled, isAnalyticsEnabled), 
+      :userId,
+      COALESCE(:isAnalyticsEnabled, 1),
+      COALESCE(:isCrashReportingEnabled, 1),
+      COALESCE(:canShareArrivalStatus, 1),
+      COALESCE(:eventCalendarStartOfWeekDay, 'monday'),
+      COALESCE(:eventCalendarDefaultLayout, 'week-layout'),
+      COALESCE(:eventPresetShouldHideAfterStartDate, 0),
+      COALESCE(:eventPresetPlacemark, NULL),
+      COALESCE(:eventPresetDurations, JSON_ARRAY(900, 1800, 2700, 3600, 5400)),
+      COALESCE(:pushNotificationTriggerIds, JSON_ARRAY(
+        'friend-request-received', 
+        'friend-request-accepted', 
+        'user-entered-region', 
+        'event-attendance-headcount', 
+        'event-periodic-arrivals', 
+        'event-starting-soon', 
+        'event-started', 
+        'event-ended',
+        'event-name-changed',
+        'event-description-changed',
+        'event-time-changed',
+        'event-location-changed',
+        'event-cancelled'
+      ))
+    ) ON DUPLICATE KEY UPDATE 
+      isAnalyticsEnabled = COALESCE(:isAnalyticsEnabled, isAnalyticsEnabled),
       isCrashReportingEnabled = COALESCE(:isCrashReportingEnabled, isCrashReportingEnabled),
-      version = version + 1;
-  `,
+      canShareArrivalStatus = COALESCE(:canShareArrivalStatus, canShareArrivalStatus),
+      eventCalendarStartOfWeekDay = COALESCE(:eventCalendarStartOfWeekDay, eventCalendarStartOfWeekDay),
+      eventCalendarDefaultLayout = COALESCE(:eventCalendarDefaultLayout, eventCalendarDefaultLayout),
+      eventPresetShouldHideAfterStartDate = COALESCE(:eventPresetShouldHideAfterStartDate, eventPresetShouldHideAfterStartDate),
+      eventPresetPlacemark = COALESCE(:eventPresetPlacemark, eventPresetPlacemark),
+      eventPresetDurations = COALESCE(:eventPresetDurations, eventPresetDurations),
+      pushNotificationTriggerIds = COALESCE(:pushNotificationTriggerIds, pushNotificationTriggerIds),
+      version = version + 1;    
+    `,
     {
       userId,
       isAnalyticsEnabled,
@@ -73,5 +98,6 @@ const updateUserSettingsSQL = (
 export const saveUserSettings: TiFAPIRouter["saveUserSettings"] = ({ context: { selfId }, body: newSettings }) =>
   updateUserSettingsSQL(conn, selfId, newSettings)
     .flatMapSuccess(() => queryUserSettings(conn, selfId))
+    .observeSuccess(r => console.warn("look at this update ", r))
     .mapSuccess((updatedSettings) => resp(200, updatedSettings))
     .unwrap()

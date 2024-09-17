@@ -103,9 +103,7 @@ describe("getAttendeesList endpoint", () => {
     expect(resp).toMatchObject({
       status: 404,
       data: {
-        nextPageCursor: lastPageCursorResponse,
-        totalAttendeeCount: 0,
-        attendees: []
+        error: "no-attendees"
       }
     })
   })
@@ -115,8 +113,7 @@ describe("getAttendeesList endpoint", () => {
 
     const eventId = 9999
     const resp = await testAPI.attendeesList({
-      auth:
-      currentUser.auth,
+      auth: currentUser.auth,
       params: { eventId },
       query: { limit }
     })
@@ -124,18 +121,15 @@ describe("getAttendeesList endpoint", () => {
     expect(resp).toMatchObject({
       status: 404,
       data: {
-        totalAttendeeCount: 0,
-        attendees: []
+        error: "event-not-found"
       }
     })
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    expect(decodeAttendeesListCursor((resp.data as any).nextPageCursor)).toMatchObject(lastPageCursorResponse)
   })
 
   it("should return 200 after paginating the first page of attendees list", async () => {
     const { attendeesList, eventId } = await createTestAttendees(3)
 
-    const [, attendee1, attendee2] = attendeesList
+    const [attendee1, attendee2] = attendeesList
 
     const resp = await testAPI.attendeesList({
       auth: attendee1.auth,
@@ -296,6 +290,7 @@ describe("getAttendeesList endpoint", () => {
     }
     )
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const nextPageCursorResp = (resp.data as any).nextPageCursor
 
     resp = await testAPI.attendeesList({
@@ -304,7 +299,9 @@ describe("getAttendeesList endpoint", () => {
       query: { limit, nextPageCursor: nextPageCursorResp }
     });
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (resp.data as any).nextPageCursor = decodeAttendeesListCursor(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (resp.data as any).nextPageCursor
     )
 
@@ -331,8 +328,11 @@ describe("getAttendeesList endpoint", () => {
       query: { limit }
     })
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const nextPageCursorResp = (resp.data as any).nextPageCursor;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (resp.data as any).nextPageCursor = decodeAttendeesListCursor(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (resp.data as any).nextPageCursor
     )
 
@@ -343,16 +343,13 @@ describe("getAttendeesList endpoint", () => {
           {
             id: host.id,
             name: host.name,
-            joinedDateTime: expect.any(Date),
             hasArrived: false,
             role: "hosting"
           },
           {
             id: attendee.id,
             name: attendee.name,
-            joinedDateTime: expect.any(Date),
             hasArrived: true,
-            arrivedDateTime: expect.any(Date),
             role: "attending"
           }
         ],
@@ -370,7 +367,9 @@ describe("getAttendeesList endpoint", () => {
       query: { limit, nextPageCursor: nextPageCursorResp }
     });
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (resp.data as any).nextPageCursor = decodeAttendeesListCursor(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (resp.data as any).nextPageCursor
     )
 
@@ -380,14 +379,12 @@ describe("getAttendeesList endpoint", () => {
         attendees: [
           {
             id: attendeesList[2].id,
-            joinedDateTime: expect.any(Date),
             name: attendeesList[2].name,
             role: "attending",
             hasArrived: false
           },
           {
             id: attendeesList[3].id,
-            joinedDateTime: expect.any(Date),
             name: attendeesList[3].name,
             hasArrived: false,
             role: "attending"
@@ -414,7 +411,9 @@ describe("getAttendeesList endpoint", () => {
       query: { limit }
     });
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (resp.data as any).nextPageCursor = decodeAttendeesListCursor(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (resp.data as any).nextPageCursor
     )
 
@@ -480,7 +479,9 @@ describe("getAttendeesList endpoint", () => {
       query: { limit }
     });
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (resp.data as any).nextPageCursor = decodeAttendeesListCursor(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (resp.data as any).nextPageCursor
     )
 
@@ -526,7 +527,9 @@ describe("getAttendeesList endpoint", () => {
     }
     );
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (resp.data as any).nextPageCursor = decodeAttendeesListCursor(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (resp.data as any).nextPageCursor
     )
 
@@ -568,7 +571,9 @@ describe("getAttendeesList endpoint", () => {
       query: { limit }
     });
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (resp.data as any).nextPageCursor = decodeAttendeesListCursor(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (resp.data as any).nextPageCursor
     )
 

@@ -1,6 +1,6 @@
 import { CreateEvent } from "TiFShared/api/models/Event"
 import { EventID } from "TiFShared/domain-models/Event"
-import { testAPI, testAPI } from "../testApp"
+import { testAPI } from "../testApp"
 import { testEventInput } from "../testEvents"
 import { TestUser, createUserFlow } from "./createUserFlow"
 

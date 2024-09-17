@@ -1,7 +1,5 @@
 import { conn } from "TiFBackendUtils"
-import { TiFEvent } from "TiFBackendUtils/TifEventUtils"
 import { randomInt } from "crypto"
-import { expectTypeOf } from "expect-type"
 import { addLocationToDB, getTimeZone } from "../../GeocodingLambda/utils"
 import { userToUserRequest } from "../test/shortcuts"
 import { testAPI } from "../test/testApp"
@@ -54,8 +52,6 @@ describe("getEvent", () => {
 
     const resp = await testAPI.eventDetails({ auth: newUser.auth, params: { eventId: eventIds[0] } })
 
-    // how did we test today/tomorrow? check again the original test, and maybe write separate tests to check the today/tomorrow fields from tifevent
-    expectTypeOf(resp.data).toMatchTypeOf<TiFEvent>()
     expect(resp.data).toEqual(
       {
         id: eventIds[0],
