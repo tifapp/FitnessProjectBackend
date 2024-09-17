@@ -16,10 +16,13 @@ const generateUniqueUsernameAttempt = (conn: MySQLExecutableDriver, name: string
   const potentialUsername = UserHandle.optionalParse(`${name}${generateNumericHash(
     `${name}${Date.now()}`
   )}`)!
-  return userWithHandleDoesNotExist(conn, potentialUsername)
+
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore Retry function
+  // @ts-ignore TODO
+  return userWithHandleDoesNotExist(conn, potentialUsername)
     .withSuccess(potentialUsername)
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore TODO
     .flatMapFailure(() => retries > 0 ? generateUniqueUsernameAttempt(conn, name, retries - 1) : failure("could-not-generate-username" as const))
 }
 

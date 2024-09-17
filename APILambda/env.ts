@@ -3,7 +3,6 @@
 import { EnvSchema } from "TiFBackendUtils/env"
 import { LocationCoordinate2D } from "TiFShared/domain-models/LocationCoordinate2D"
 import { PromiseResult } from "TiFShared/lib/Result"
-import { ValidatedRouteParams } from "./validation"
 
 export type CreateUserProfileEnvironment = {
   setProfileCreatedAttribute: (userId: string) => PromiseResult<unknown, unknown>
@@ -25,5 +24,4 @@ export type ServerEnvironment = CreateUserProfileEnvironment & SetArrivalStatusE
   environment: EnvSchema["ENVIRONMENT"]
   eventStartWindowInHours: number
   callGeocodingLambda: (location: LocationCoordinate2D) => Promise<unknown>
-  routeCollector?: (pathPrefix: string) => (params: ValidatedRouteParams) => void
 }

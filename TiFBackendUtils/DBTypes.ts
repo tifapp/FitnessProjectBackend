@@ -11,9 +11,9 @@ export interface DBbanned {
   'userId': string;
 }
 export interface DBevent {
-  'color': import("./node_modules/TiFShared/domain-models/ColorString").ColorString;
+  'color': import("./node_modules/TiFShared/domain-models/ColorString").ColorString | undefined;
   'createdDateTime': Date;
-  'description': string;
+  'description': string | undefined;
   'endDateTime': Date;
   'endedDateTime': Date | undefined;
   'hostId': string;
@@ -69,10 +69,10 @@ export interface DBpushTokens {
 }
 export interface DBTifEventView {
   'city': string | undefined;
-  'color': import("./node_modules/TiFShared/domain-models/ColorString").ColorString;
+  'color': import("./node_modules/TiFShared/domain-models/ColorString").ColorString | undefined;
   'country': string | undefined;
   'createdDateTime': Date;
-  'description': string;
+  'description': string | undefined;
   'endDateTime': Date;
   'endedDateTime': Date | undefined;
   'hasArrived': boolean;
