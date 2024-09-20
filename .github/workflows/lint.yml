@@ -32,4 +32,8 @@ jobs:
 
       - name: Check ESLint
         run: |
-          npx eslint . --fix
+          npm run lint
+      
+      - name: Validate typescript
+        run: |
+          npm run compile
