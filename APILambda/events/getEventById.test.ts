@@ -63,8 +63,9 @@ describe("getEvent", () => {
         time: {
           secondsToStart: expect.any(Number),
           dateRange: {
-            startDateTime: testEventInput.dateRange.startDateTime.toISOString(),
-            endDateTime: testEventInput.dateRange.endDateTime.toISOString()
+            // reason: milliseconds are not counted in the database
+            startDateTime: testEventInput.dateRange.startDateTime.toISOString().split(".")[0] + ".000Z",
+            endDateTime: testEventInput.dateRange.endDateTime.toISOString().split(".")[0] + ".000Z"
           },
           todayOrTomorrow: "today"
         },
