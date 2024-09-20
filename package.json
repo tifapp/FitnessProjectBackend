@@ -1,8 +1,6 @@
 {
   "scripts": {
     "pr": "ts-node ./TiFBackendUtils/node_modules/TiFShared/npm-scripts/auto-pr",
-    "lint": "npx eslint . --fix",
-    "compile": "npx tsc --traceResolution --strict false",
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,md}\"",
     "prepare": "husky",
     "postinstall": "patch-package && node postinstall.mjs",

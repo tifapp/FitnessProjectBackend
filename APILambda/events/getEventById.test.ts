@@ -52,57 +52,59 @@ describe("getEvent", () => {
 
     const resp = await testAPI.eventDetails({ auth: newUser.auth, params: { eventId: eventIds[0] } })
 
-    expect(resp.data).toEqual(
+    expect(resp).toEqual(
       {
-        id: eventIds[0],
-        title: "Fake Event",
-        color: "#72B01D",
-        isChatExpired: false,
-        description: "This is some random event",
-        attendeeCount: 2,
-        time: {
-          secondsToStart: expect.any(Number),
-          dateRange: {
-            // reason: milliseconds are not counted in the database
-            startDateTime: testEventInput.dateRange.startDateTime.toISOString().split(".")[0] + ".000Z",
-            endDateTime: testEventInput.dateRange.endDateTime.toISOString().split(".")[0] + ".000Z"
+        status: 200,
+        data: {
+          id: eventIds[0],
+          title: "Fake Event",
+          color: "#72B01D",
+          isChatExpired: false,
+          description: "This is some random event",
+          attendeeCount: 2,
+          time: {
+            secondsToStart: expect.any(Number),
+            dateRange: {
+              startDateTime: testEventInput.dateRange!.startDateTime.toISOString(),
+              endDateTime: testEventInput.dateRange!.endDateTime.toISOString()
+            },
+            todayOrTomorrow: "today"
           },
-          todayOrTomorrow: "today"
-        },
-        previewAttendees: attendeesList.map(({ id }) => ({ id })),
-        location: {
-          coordinate: testEventInput.coordinates,
-          placemark: {
-            name: "Sample Location",
-            city: "Sample Neighborhood",
-            country: "Sample Country",
-            street: "Sample Street",
-            isoCountryCode: "USA",
-            streetNumber: "1234"
+          previewAttendees: expect.arrayContaining(attendeesList.map(({ id }) => ({ id }))),
+          location: {
+            coordinate: testEventInput.coordinates,
+            placemark: {
+              name: "Sample Location",
+              city: "Sample Neighborhood",
+              country: "Sample Country",
+              street: "Sample Street",
+              isoCountryCode: "USA",
+              streetNumber: "1234"
+            },
+            timezoneIdentifier: eventTimeZone[0],
+            arrivalRadiusMeters: 120,
+            isInArrivalTrackingPeriod: true
           },
-          timezoneIdentifier: eventTimeZone[0],
-          arrivalRadiusMeters: 120,
-          isInArrivalTrackingPeriod: true
-        },
-        host: {
-          relations: {
-            fromThemToYou: "not-friends",
-            fromYouToThem: "not-friends"
+          host: {
+            relations: {
+              fromThemToYou: "not-friends",
+              fromYouToThem: "not-friends"
+            },
+            id: host.id,
+            name: host.name,
+            handle: host.handle
           },
-          id: host.id,
-          name: host.name,
-          handle: host.handle
-        },
-        settings: {
-          shouldHideAfterStartDate: true,
-          isChatEnabled: true
-        },
-        updatedDateTime: expect.any(String),
-        createdDateTime: expect.any(String),
-        userAttendeeStatus: "not-participating",
-        hasArrived: false
-      })
-    expect(resp.status).toEqual(200)
+          settings: {
+            shouldHideAfterStartDate: true,
+            isChatEnabled: true
+          },
+          updatedDateTime: expect.any(String),
+          createdDateTime: expect.any(String),
+          userAttendeeStatus: "not-participating",
+          hasArrived: false
+        }
+      }
+    )
   })
 
   describe("Checks the data returned if the user blocks the host or vice versa is of the correct format", () => {

@@ -125,18 +125,11 @@ export class MySQLDriver {
     args?: SQLParams
   ): Promise<Value[]> {
     const conn = await this.connectionHandler.useConnection()
-    try {
-      const [rows, fields] = await conn.query(query, paramifyArgs(args))
-      if (Array.isArray(rows) && Array.isArray(fields)) {
-        return castMySQLValues(rows as RowDataPacket[], fields) as Value[]
-      } else {
-        throw new Error("Query did not return an array of rows and fields.")
-      }
-    } catch (e) {
-      // use logger
-      console.error("mysql error")
-      console.error(e)
-      throw e
+    const [rows, fields] = await conn.query(query, paramifyArgs(args))
+    if (Array.isArray(rows) && Array.isArray(fields)) {
+      return castMySQLValues(rows as RowDataPacket[], fields) as Value[]
+    } else {
+      throw new Error("Query did not return an array of rows and fields.")
     }
   }
 

@@ -23,14 +23,12 @@ export const handler: any = exponentialFunctionBackoff<
     longitude: parseFloat(longitude.toFixed(7))
   })
     .flatMapSuccess(() =>
-      promiseResult((async () => {
-        console.log("checking aws geocoder")
-        const t = await SearchClosestAddressToCoordinates({
+      promiseResult(
+        SearchClosestAddressToCoordinates({
           latitude,
           longitude
-        })
-        return success(t)
-      })())
+        }).then((locationInfo) => success(locationInfo))
+      )
     )
     .flatMapSuccess((locationInfo) => {
       console.log("aws placemark is ", JSON.stringify(locationInfo, null, 2))

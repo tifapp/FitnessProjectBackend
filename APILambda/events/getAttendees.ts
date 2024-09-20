@@ -26,11 +26,8 @@ const getTiFAttendeesSQL = (
   userId: string,
   { userId: nextPageUserId, joinedDateTime: nextPageJoinDateTime, arrivedDateTime: nextPageArrivedDateTime }: AttendeesListCursor,
   limit: number
-) => {
-  console.log("getTiFAttendeesSQL id is ", eventId, userId, nextPageArrivedDateTime, nextPageJoinDateTime, nextPageUserId, limit)
-
-  return conn.queryResult<DBeventAttendance & DBuserArrivals & BidirectionalUserRelations & Pick<DBuser, "id" | "name" | "profileImageURL" | "handle"> & {hasArrived: boolean}>(
-    `SELECT 
+) => conn.queryResult<DBeventAttendance & DBuserArrivals & BidirectionalUserRelations & Pick<DBuser, "id" | "name" | "profileImageURL" | "handle"> & {hasArrived: boolean}>(
+  `SELECT 
     u.id, 
     u.profileImageURL, 
     u.name, 
@@ -65,29 +62,28 @@ const getTiFAttendeesSQL = (
     u.id ASC
     LIMIT :limit;
   `,
-    {
-      eventId,
-      userId,
-      nextPageUserId,
-      nextPageJoinDateTime,
-      nextPageArrivedDateTime,
-      limit
-    }
-  ).mapSuccess((attendees) => attendees.map((attendee) => ({
-    id: attendee.id,
-    name: attendee.name,
-    joinedDateTime: attendee.joinedDateTime,
-    profileImageURL: attendee.profileImageURL,
-    handle: attendee.handle,
-    arrivedDateTime: attendee.arrivedDateTime,
-    hasArrived: !!attendee.hasArrived,
-    role: attendee.role,
-    relations: {
-      fromYouToThem: attendee.fromYouToThem ?? "not-friends",
-      fromThemToYou: attendee.fromThemToYou ?? "not-friends"
-    }
-  })))
-}
+  {
+    eventId,
+    userId,
+    nextPageUserId,
+    nextPageJoinDateTime,
+    nextPageArrivedDateTime,
+    limit
+  }
+).mapSuccess((attendees) => attendees.map((attendee) => ({
+  id: attendee.id,
+  name: attendee.name,
+  joinedDateTime: attendee.joinedDateTime,
+  profileImageURL: attendee.profileImageURL,
+  handle: attendee.handle,
+  arrivedDateTime: attendee.arrivedDateTime,
+  hasArrived: !!attendee.hasArrived,
+  role: attendee.role,
+  relations: {
+    fromYouToThem: attendee.fromYouToThem ?? "not-friends",
+    fromThemToYou: attendee.fromThemToYou ?? "not-friends"
+  }
+})))
 
 const paginatedAttendeesResponse = (
   attendees: EventAttendee[],
@@ -110,8 +106,6 @@ const paginatedAttendeesResponse = (
       ? attendees[limit - 1].arrivedDateTime
       : undefined
   })
-
-  console.log("returned attendees cursor is ", encondedNextPageCursor)
 
   return {
     nextPageCursor: encondedNextPageCursor,
@@ -160,13 +154,12 @@ const checkEventExists = (
  *
  * @param environment see {@link ServerEnvironment}.
  */
-export const attendeesList: TiFAPIRouterExtension["attendeesList"] = ({ query: { nextPageCursor, limit }, params: { eventId }, context: { selfId } }) => {
+export const attendeesList: TiFAPIRouterExtension["attendeesList"] = ({ query: { nextPageCursor, limit }, params: { eventId }, context: { selfId }, log }) => {
   const cursor = DecodedCursorValidationSchema.parse(decodeAttendeesListCursor(
     nextPageCursor
   ))
 
-  // add logger
-  console.log("decoded attendees cursor is ", cursor)
+  log.debug("decoded attendees cursor is ", cursor)
 
   return conn.transaction((tx) =>
     checkEventExists(tx, eventId)

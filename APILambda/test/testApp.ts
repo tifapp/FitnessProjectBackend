@@ -2,12 +2,16 @@ import request from "supertest"
 import { TiFAPIClientCreator } from "TiFBackendUtils"
 import { envVars } from "TiFBackendUtils/env"
 import { urlString } from "TiFShared/lib/URL"
+import { catchAPIErrors } from "../errorHandler"
 import { devApp } from "./devIndex"
 import { testEnvVars } from "./testEnv"
 
 const app = envVars.environment === "stagingTest" ? testEnvVars.API_ENDPOINT : devApp
 
-export const testAPI = TiFAPIClientCreator<{auth: string}>(
+type TestAppExtension = {auth: string}
+
+export const testAPI = TiFAPIClientCreator<TestAppExtension>(
+  catchAPIErrors,
   async ({ auth, params, query, body, endpointSchema: { httpRequest: { method, endpoint } } }) => {
     let req = request(app)[method.toLowerCase()](urlString({ endpoint, params })).query(query)
 

@@ -1,34 +1,19 @@
 import express from "express"
 import { TiFAPIClient, TiFAPISchema } from "TiFBackendUtils"
+import { envVars } from "TiFBackendUtils/env"
 import { validateAPICall } from "TiFShared/api/APIValidation"
 import { resp } from "TiFShared/api/Transport"
-import { APIHandler, APIMiddleware, APISchema, GenericEndpointSchema } from "TiFShared/api/TransportTypes"
+import { APIHandler, APISchema, GenericEndpointSchema } from "TiFShared/api/TransportTypes"
 import { middlewareRunner } from "TiFShared/lib/Middleware"
 import { MatchFnCollection } from "TiFShared/lib/Types/MatchType"
+import { logger, Logger } from "TiFShared/logging"
 import { ResponseContext } from "./auth"
 import { ServerEnvironment } from "./env"
+import { catchAPIErrors } from "./errorHandler"
 
-type RouterParams = {context: ResponseContext, environment: ServerEnvironment}
+type RouterParams = {context: ResponseContext, environment: ServerEnvironment, log: Logger}
 
 export type TiFAPIRouterExtension = TiFAPIClient<RouterParams>
-
-const catchAPIErrors: APIMiddleware = async (input, next) => {
-  try {
-    return await next(input)
-  } catch (error) {
-    if (error instanceof Error) {
-      return {
-        status: 500,
-        data: { error: error.message }
-      }
-    } else {
-      return {
-        status: 500,
-        data: { error: `${error}` }
-      }
-    }
-  }
-}
 
 const validateAPIRouterCall = validateAPICall((status, value) => {
   if (status === "invalid-request") {
@@ -38,8 +23,9 @@ const validateAPIRouterCall = validateAPICall((status, value) => {
   }
 
   return value
-})
+}, envVars.ENVIRONMENT === "prod" ? "requestOnly" : "both")
 
+// reason: express parses undefined inputs as empty objects
 const emptyToUndefined = <T extends object>(obj: T) => Object.keys(obj).length === 0 && obj.constructor === Object ? undefined : obj
 
 /**
@@ -59,7 +45,16 @@ export const TiFRouter = <Fns extends TiFAPIRouterExtension>(apiClient: MatchFnC
       router[method.toLowerCase() as Lowercase<typeof method>](
         endpoint,
         async ({ body, query, params }, res) => {
-          const { status, data } = await handler({ body: emptyToUndefined(body), query: emptyToUndefined(query), params: emptyToUndefined(params), endpointName, endpointSchema, environment, context: res.locals as ResponseContext })
+          const { status, data } = await handler({
+            body: emptyToUndefined(body),
+            query: emptyToUndefined(query),
+            params: emptyToUndefined(params),
+            endpointName,
+            endpointSchema,
+            environment,
+            context: res.locals as ResponseContext,
+            log: logger(`tif.backend.${endpointName}`)
+          })
           res.status(status).json(data)
         }
       )

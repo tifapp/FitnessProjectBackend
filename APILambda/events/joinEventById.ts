@@ -38,9 +38,6 @@ export const joinEvent: TiFAPIRouterExtension["joinEvent"] = async ({ context: {
           upcomingEventArrivalRegionsSQL(tx, selfId).unwrap()
         ])
 
-        console.log("join event response is")
-        console.log({ ...chatPermissions, hasArrived, trackableRegions })
-
         if (status === 201) {
           return resp(201, { ...chatPermissions, hasArrived, trackableRegions })
         } else {

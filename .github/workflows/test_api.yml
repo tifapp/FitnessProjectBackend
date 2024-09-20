@@ -2,7 +2,7 @@ name: Test API
 
 on:
   pull_request:
-    types: [opened, synchronize, edited]
+    types: [opened, synchronize]
     branches:
       - development
 
@@ -98,7 +98,7 @@ jobs:
       group: APIstagingTest
       cancel-in-progress: false
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 5
     needs: deploy_for_staging_tests
     
     env:

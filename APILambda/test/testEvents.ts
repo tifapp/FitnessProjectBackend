@@ -24,4 +24,5 @@ const createTestEvent = (): CreateEvent =>
 
 export const testEventInput: CreateEvent = createTestEvent()
 
-export const upcomingEventDateRange = dateRange(dayjs().add(12, "hour").toDate(), dayjs().add(1, "year").toDate())
+// reason: milliseconds are not counted in the live database
+export const upcomingEventDateRange = dateRange(dayjs().add(12, "hour").millisecond(0).toDate(), dayjs().add(1, "year").millisecond(0).toDate())!

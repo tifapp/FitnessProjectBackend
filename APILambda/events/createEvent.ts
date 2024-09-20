@@ -65,7 +65,7 @@ export const createEventSQL = (
  *
  * @param environment see {@link ServerEnvironment}.
  */
-export const createEvent: TiFAPIRouterExtension["createEvent"] = ({ environment, context: { selfId }, body }) =>
+export const createEvent: TiFAPIRouterExtension["createEvent"] = ({ environment, context: { selfId }, body, log }) =>
   conn
     .transaction((tx) =>
       createEventSQL(tx, body, selfId)
@@ -78,18 +78,7 @@ export const createEvent: TiFAPIRouterExtension["createEvent"] = ({ environment,
           )
         )
         .passthroughSuccess(() =>
-          promiseResult((async () => {
-            try {
-              console.log("hey going to call geocoding lambda")
-              console.log(body)
-              const resp = await environment.callGeocodingLambda(body.coordinates)
-              console.debug(JSON.stringify(resp, null, 4))
-            } catch (e) {
-              console.error("Could not create placemark for ", body)
-              console.error(e)
-            }
-            return success()
-          })())
+          promiseResult(environment.callGeocodingLambda(body.coordinates).then(() => success()).catch(e => { log.error(e); return success() }))
         )
         .mapSuccess(({ insertId }) => resp(201, { id: Number(insertId) as EventID }))
     )

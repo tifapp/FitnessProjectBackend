@@ -2,7 +2,7 @@
 // Env variables
 import { EnvSchema } from "TiFBackendUtils/env"
 import { LocationCoordinate2D } from "TiFShared/domain-models/LocationCoordinate2D"
-import { PromiseResult } from "TiFShared/lib/Result"
+import { PromiseResult, Result } from "TiFShared/lib/Result"
 
 export type CreateUserProfileEnvironment = {
   setProfileCreatedAttribute: (userId: string) => PromiseResult<unknown, unknown>
@@ -23,5 +23,5 @@ export type SetArrivalStatusEnvironment = {
 export type ServerEnvironment = CreateUserProfileEnvironment & SetArrivalStatusEnvironment & {
   environment: EnvSchema["ENVIRONMENT"]
   eventStartWindowInHours: number
-  callGeocodingLambda: (location: LocationCoordinate2D) => Promise<unknown>
+  callGeocodingLambda: (location: LocationCoordinate2D) => Promise<Result<void, never>>
 }

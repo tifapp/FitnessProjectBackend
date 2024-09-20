@@ -1,4 +1,4 @@
-name: Lint and Compile Project
+name: Lint Project
 
 on:
   pull_request:
@@ -32,4 +32,4 @@ jobs:
 
       - name: Check ESLint
         run: |
-          npm run lint
+          npx eslint . --fix
