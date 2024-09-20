@@ -70,7 +70,7 @@ const getTiFAttendees = (
     HAVING fromThemToYou IS NULL OR MAX(CASE WHEN ur.toUserId = :userId THEN ur.status END) <> 'blocked' OR ea.role = 'hosting'
     ORDER BY
     CASE WHEN :nextPageUserIdCursor = 'firstPage' THEN CASE WHEN ea.role = 'hosting' THEN 0 ELSE 1 END ELSE 1 END,
-    COALESCE(ua.arrivedDateTime, '9999-12-31 23:59:59.999999') ASC,
+    COALESCE(ua.arrivedDateTime, '9999-12-31 23:59:59.999') ASC,
     ea.joinedDateTime ASC,
     u.id ASC
     LIMIT :limit;
