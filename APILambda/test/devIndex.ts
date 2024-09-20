@@ -1,5 +1,6 @@
 import "TiFBackendUtils"
 import "TiFShared/lib/Zod"
+// Only used in local tests
 
 import { LocationCoordinate2D } from "TiFShared/domain-models/LocationCoordinate2D"
 import { promiseResult, success } from "TiFShared/lib/Result"
@@ -12,7 +13,7 @@ export const devTestEnv: ServerEnvironment = {
   environment: "devTest",
   maxArrivals: 4,
   eventStartWindowInHours: 1,
-  setProfileCreatedAttribute: () => promiseResult(success()),
+  setProfileCreatedAttribute: () => promiseResult(Promise.resolve(success())),
   callGeocodingLambda: async (location: LocationCoordinate2D) =>
     handler(location)
 }

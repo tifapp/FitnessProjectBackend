@@ -1,17 +1,17 @@
+import { TiFAPIClient } from "TiFShared/api"
 import { CreateEvent } from "TiFShared/api/models/Event"
 import { EventID } from "TiFShared/domain-models/Event"
 import { testAPI } from "../testApp"
 import { testEventInput } from "../testEvents"
-import { TestUser, createUserFlow } from "./createUserFlow"
+import { RegisteredTestUser, createUserFlow } from "./createUserFlow"
 
 export const createEventFlow = async (
   eventInputs: Partial<CreateEvent>[] = [{}],
   attendeeCount: number = 0
 ): Promise<{
-  attendeesList: TestUser[]
-  host: TestUser
-   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-   eventResponses: any
+  attendeesList: RegisteredTestUser[]
+  host: RegisteredTestUser
+  eventResponses: Awaited<ReturnType<TiFAPIClient["createEvent"]>>[]
   eventIds: number[]
 }> => {
   const host = await createUserFlow()
@@ -30,7 +30,7 @@ export const createEventFlow = async (
     if (event.status === 201) { return event.data.id } else { console.error(event); throw new Error("invalid test event given") }
   })
 
-  const attendeesList: TestUser[] = []
+  const attendeesList: RegisteredTestUser[] = []
   attendeesList.push(host)
 
   for (let i = 0; i < attendeeCount; i++) {
