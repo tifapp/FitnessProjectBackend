@@ -1,3 +1,11 @@
+import { envVars } from "../../env"
+
+let timePrecision = 0
+
+if (envVars.ENVIRONMENT === "devTest") {
+  timePrecision = 3 // Avoids needing to add an artificial delay when running attendeesList tests locally
+}
+
 export const tableDefintionsByFamily = [
   [
     `
@@ -5,8 +13,8 @@ export const tableDefintionsByFamily = [
     id char(36) NOT NULL,
     name varchar(50) NOT NULL,
     handle varchar(15) NOT NULL,
-    createdDateTime datetime NOT NULL DEFAULT current_timestamp(),
-    updatedDateTime datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+    createdDateTime datetime(${timePrecision}) NOT NULL DEFAULT current_timestamp(${timePrecision}),
+    updatedDateTime datetime(${timePrecision}) NOT NULL DEFAULT current_timestamp(${timePrecision}) ON UPDATE current_timestamp(${timePrecision}),
     bio varchar(500),
     profileImageURL varchar(200),
     PRIMARY KEY (id),
@@ -20,8 +28,8 @@ export const tableDefintionsByFamily = [
     CREATE TABLE IF NOT EXISTS event (
     id bigint NOT NULL AUTO_INCREMENT,
     description varchar(1000) NOT NULL,
-    startDateTime datetime NOT NULL,
-    endDateTime datetime NOT NULL,
+    startDateTime datetime(${timePrecision}) NOT NULL,
+    endDateTime datetime(${timePrecision}) NOT NULL,
     hostId char(36) NOT NULL,
     color varchar(9) NOT NULL,
     title varchar(100) NOT NULL,
@@ -29,9 +37,9 @@ export const tableDefintionsByFamily = [
     isChatEnabled tinyint(1) NOT NULL,
     latitude decimal(10,7) NOT NULL,
     longitude decimal(10,7) NOT NULL,
-    createdDateTime datetime NOT NULL DEFAULT current_timestamp(),
-    updatedDateTime datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-    endedDateTime datetime,
+    createdDateTime datetime(${timePrecision}) NOT NULL DEFAULT current_timestamp(${timePrecision}),
+    updatedDateTime datetime(${timePrecision}) NOT NULL DEFAULT current_timestamp(${timePrecision}) ON UPDATE current_timestamp(${timePrecision}),
+    endedDateTime datetime(${timePrecision}),
     PRIMARY KEY (id),
     UNIQUE KEY unique_event_id (id),
     KEY event_host_must_exist (hostId),
@@ -56,7 +64,7 @@ export const tableDefintionsByFamily = [
     CREATE TABLE IF NOT EXISTS eventAttendance (
     userId char(36) NOT NULL,
     eventId bigint NOT NULL,
-    joinedDateTime datetime NOT NULL DEFAULT current_timestamp(),
+    joinedDateTime datetime(${timePrecision}) NOT NULL DEFAULT current_timestamp(${timePrecision}),
     role enum('hosting', 'attending') NOT NULL,
     PRIMARY KEY (userId, eventId),
     KEY event_must_exist (eventId),
@@ -70,7 +78,7 @@ export const tableDefintionsByFamily = [
     userReporting varchar(50) NOT NULL,
     eventReported bigint NOT NULL,
     reportingReason enum('Spam', 'Harassment', 'Hate Speech', 'Violence', 'Scam or fraud', 'Suicide or self-harm', 'False information', 'Sale of illegal or regulated goods', 'Other') NOT NULL,
-    reportDate datetime NOT NULL DEFAULT current_timestamp(),
+    reportDate datetime(${timePrecision}) NOT NULL DEFAULT current_timestamp(${timePrecision}),
     eventOwnerId varchar(36) NOT NULL,
     PRIMARY KEY (userReporting, eventReported)
     )
@@ -88,7 +96,7 @@ export const tableDefintionsByFamily = [
     postalCode varchar(255),
     region varchar(255),
     isoCountryCode varchar(255),
-    createdDateTime datetime NOT NULL DEFAULT current_timestamp(),
+    createdDateTime datetime(${timePrecision}) NOT NULL DEFAULT current_timestamp(${timePrecision}),
     PRIMARY KEY (latitude, longitude)
     )
     `,
@@ -108,7 +116,7 @@ export const tableDefintionsByFamily = [
     userId char(36) NOT NULL,
     latitude decimal(10,7) NOT NULL,
     longitude decimal(10,7) NOT NULL,
-    arrivedDateTime datetime NOT NULL DEFAULT current_timestamp(),
+    arrivedDateTime datetime(${timePrecision}) NOT NULL DEFAULT current_timestamp(${timePrecision}),
     PRIMARY KEY (userId, latitude, longitude),
     KEY sort_by_recent_arrivals (userId, arrivedDateTime),
     CONSTRAINT arriving_user_must_exist FOREIGN KEY (userId) REFERENCES user (id)
@@ -119,7 +127,7 @@ export const tableDefintionsByFamily = [
     `
     CREATE TABLE IF NOT EXISTS userRelations (
     status enum('friends', 'friend-request-pending', 'blocked') NOT NULL,
-    updatedDateTime datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+    updatedDateTime datetime(${timePrecision}) NOT NULL DEFAULT current_timestamp(${timePrecision}) ON UPDATE current_timestamp(${timePrecision}),
     fromUserId char(36) NOT NULL,
     toUserId char(36) NOT NULL,
     PRIMARY KEY (fromUserId, toUserId),
@@ -141,7 +149,7 @@ export const tableDefintionsByFamily = [
       'Sale of illegal or regulated goods', 
       'Other'
     ) NOT NULL,
-    reportDate datetime NOT NULL DEFAULT current_timestamp(),
+    reportDate datetime(${timePrecision}) NOT NULL DEFAULT current_timestamp(${timePrecision}),
     PRIMARY KEY (userReporting, userReported)
     )
     `,
@@ -157,7 +165,7 @@ export const tableDefintionsByFamily = [
     eventPresetPlacemark JSON, 
     eventPresetDurations JSON,
     version bigint NOT NULL DEFAULT '0',
-    updatedDateTime timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+    updatedDateTime timestamp(${timePrecision}) NULL DEFAULT current_timestamp(${timePrecision}) ON UPDATE current_timestamp(${timePrecision}),
     pushNotificationTriggerIds JSON,
     CHECK (
         JSON_CONTAINS(

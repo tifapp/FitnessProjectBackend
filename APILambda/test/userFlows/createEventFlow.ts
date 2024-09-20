@@ -1,5 +1,3 @@
-import { envVars } from "TiFBackendUtils/env"
-import { sleep } from "TiFShared/lib/DelayData"
 import { CreateEventInput } from "../../events/createEvent"
 import { callCreateEvent, callJoinEvent } from "../apiCallers/eventEndpoints"
 import { testEventInput } from "../testEvents"
@@ -39,8 +37,6 @@ export const createEventFlow = async (
     attendeesList.push(attendee)
 
     for (const eventId of eventIds) {
-      // delay needed for test attendees to be properly sorted by join time
-      if (envVars.ENVIRONMENT !== "stagingTest") { await sleep(1000) }
       await callJoinEvent(attendee.token, eventId)
     }
   }
