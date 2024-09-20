@@ -3,7 +3,7 @@ import { MySQLExecutableDriver } from "TiFBackendUtils/MySQLDriver"
 import { resp } from "TiFShared/api/Transport"
 import { LocationCoordinate2D } from "TiFShared/domain-models/LocationCoordinate2D"
 import { failure, success } from "TiFShared/lib/Result"
-import { TiFAPIRouterExtension } from "../router"
+import { TiFAPIRouterExtension } from "../../router"
 import { upcomingEventArrivalRegionsSQL } from "./getUpcomingEvents"
 
 // type ArrivalStatusEnum = "invalid" | "early" | "on-time" | "late" | "ended" // so far, unused

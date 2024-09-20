@@ -3,8 +3,8 @@ import { DBuser } from "TiFBackendUtils/DBTypes"
 import { MySQLExecutableDriver } from "TiFBackendUtils/MySQLDriver"
 import { resp } from "TiFShared/api/Transport"
 import { failure, success } from "TiFShared/lib/Result"
+import { TiFAPIRouterExtension } from "../../router"
 import { generateUniqueHandle } from "../generateUserHandle"
-import { TiFAPIRouterExtension } from "../router"
 
 type CreateUserInput = Pick<DBuser, "id" | "handle" | "name">
 

@@ -8,9 +8,9 @@ import { failure, success } from "TiFShared/lib/Result"
 import { z } from "zod"
 import { TiFAPIRouterExtension } from "../router"
 import {
-    AttendeesListCursor,
-    decodeAttendeesListCursor,
-    encodeAttendeesListCursor
+  AttendeesListCursor,
+  decodeAttendeesListCursor,
+  encodeAttendeesListCursor
 } from "../utils/Cursor"
 
 const DecodedCursorValidationSchema = z.object({
@@ -180,7 +180,7 @@ export const attendeesList: TiFAPIRouterExtension["attendeesList"] = ({ query: {
           tx,
           eventId,
           selfId,
-          cursor,
+          cursor as AttendeesListCursor, // weird: fails typescript compiling without explicit cast
           limit + 1 // Add 1 to handle checking last page
         )
           .passthroughSuccess((attendees) =>

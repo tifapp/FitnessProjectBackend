@@ -2,7 +2,7 @@ import express from "express"
 import { TiFAPIClient, TiFAPISchema } from "TiFBackendUtils"
 import { validateAPICall } from "TiFShared/api/APIValidation"
 import { resp } from "TiFShared/api/Transport"
-import { APIHandler, APIMiddleware, APISchema } from "TiFShared/api/TransportTypes"
+import { APIHandler, APIMiddleware, APISchema, GenericEndpointSchema } from "TiFShared/api/TransportTypes"
 import { middlewareRunner } from "TiFShared/lib/Middleware"
 import { MatchFnCollection } from "TiFShared/lib/Types/MatchType"
 import { ResponseContext } from "./auth"
@@ -15,11 +15,17 @@ export type TiFAPIRouterExtension = TiFAPIClient<RouterParams>
 const catchAPIErrors: APIMiddleware = async (input, next) => {
   try {
     return await next(input)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } catch (error: any) {
-    return {
-      status: 500,
-      data: { error: error.message }
+  } catch (error) {
+    if (error instanceof Error) {
+      return {
+        status: 500,
+        data: { error: error.message }
+      }
+    } else {
+      return {
+        status: 500,
+        data: { error: `${error}` }
+      }
     }
   }
 }
@@ -47,7 +53,8 @@ export const TiFRouter = <Fns extends TiFAPIRouterExtension>(apiClient: MatchFnC
 
   Object.entries(schema).forEach(
     ([endpointName, endpointSchema]) => {
-      const { httpRequest: { method, endpoint } } = endpointSchema
+      // weird: fails typescript compiler without explicit cast
+      const { httpRequest: { method, endpoint } } = endpointSchema as GenericEndpointSchema
       const handler: APIHandler<RouterParams> = middlewareRunner(catchAPIErrors, validateAPIRouterCall, apiClient[endpointName as keyof TiFAPIRouterExtension])
       router[method.toLowerCase() as Lowercase<typeof method>](
         endpoint,
