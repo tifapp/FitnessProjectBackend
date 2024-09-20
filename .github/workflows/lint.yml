@@ -33,11 +33,3 @@ jobs:
       - name: Check ESLint
         run: |
           npm run lint
-      
-  build:
-    uses: ./.github/workflows/build_api.yml
-    secrets: inherit
-  
-  build_geocoder:
-    uses: ./.github/workflows/build_geocoder.yml
-    secrets: inherit
