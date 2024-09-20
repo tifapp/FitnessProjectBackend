@@ -1,6 +1,6 @@
 import request from "supertest"
+import { TiFAPIClientCreator } from "TiFBackendUtils"
 import { envVars } from "TiFBackendUtils/env"
-import { TiFAPIClientCreator } from "TiFBackendUtils/test/TiFAPIClient"
 import { urlString } from "TiFShared/lib/URL"
 import { devApp } from "./devIndex"
 import { testEnvVars } from "./testEnv"

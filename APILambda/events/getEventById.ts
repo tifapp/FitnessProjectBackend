@@ -3,7 +3,7 @@ import { MySQLExecutableDriver } from "TiFBackendUtils/MySQLDriver"
 import { DBTifEvent, setEventAttendeesFields, tifEventResponseFromDatabaseEvent } from "TiFBackendUtils/TifEventUtils"
 import { resp } from "TiFShared/api/Transport"
 import { failure, success } from "TiFShared/lib/Result"
-import { TiFAPIRouter } from "../router"
+import { TiFAPIRouterExtension } from "../router"
 
 export const eventDetailsSQL = (
   conn: MySQLExecutableDriver,
@@ -41,7 +41,7 @@ export const eventDetailsSQL = (
     )
     .withFailure("event-not-found" as const)
 
-export const eventDetails: TiFAPIRouter["eventDetails"] = ({ context: { selfId }, params: { eventId } }) =>
+export const eventDetails: TiFAPIRouterExtension["eventDetails"] = ({ context: { selfId }, params: { eventId } }) =>
   conn.transaction((tx) =>
     eventDetailsSQL(conn, Number(eventId), selfId)
       .mapFailure((error) => resp(404, { error }))

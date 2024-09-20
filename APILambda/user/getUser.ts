@@ -1,10 +1,10 @@
 import { conn } from "TiFBackendUtils"
 import { findTiFUser } from "TiFBackendUtils/TiFUserUtils"
 import { resp } from "TiFShared/api/Transport"
-import { TiFAPIRouter } from "../router"
+import { TiFAPIRouterExtension } from "../router"
 import { userNotFoundBody } from "../utils/Responses"
 
-export const getUser: TiFAPIRouter["getUser"] = ({ context: { selfId: fromUserId }, params: { userId: toUserId } }) =>
+export const getUser: TiFAPIRouterExtension["getUser"] = ({ context: { selfId: fromUserId }, params: { userId: toUserId } }) =>
   findTiFUser(conn, { fromUserId, toUserId })
     .mapSuccess((user) =>
       user.relations.fromThemToYou === "blocked"

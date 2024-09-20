@@ -1,7 +1,8 @@
 import express from "express"
-import { APIHandler, APIMiddleware, APISchema, resp } from "TiFShared/api"
+import { TiFAPIClient, TiFAPISchema } from "TiFBackendUtils"
 import { validateAPICall } from "TiFShared/api/APIValidation"
-import { TiFAPIClient, TiFAPISchema } from "TiFShared/api/TiFAPISchema"
+import { resp } from "TiFShared/api/Transport"
+import { APIHandler, APIMiddleware, APISchema } from "TiFShared/api/TransportTypes"
 import { middlewareRunner } from "TiFShared/lib/Middleware"
 import { MatchFnCollection } from "TiFShared/lib/Types/MatchType"
 import { ResponseContext } from "./auth"
@@ -9,7 +10,7 @@ import { ServerEnvironment } from "./env"
 
 type RouterParams = {context: ResponseContext, environment: ServerEnvironment}
 
-export type TiFAPIRouter = TiFAPIClient<RouterParams>
+export type TiFAPIRouterExtension = TiFAPIClient<RouterParams>
 
 const catchAPIErrors: APIMiddleware = async (input, next) => {
   try {
@@ -41,13 +42,13 @@ const emptyToUndefined = <T extends object>(obj: T) => Object.keys(obj).length =
  * @param app see {@link Application}
  * @param environment see {@link ServerEnvironment}
  */
-export const TiFRouter = <Fns extends TiFAPIRouter>(apiClient: MatchFnCollection<TiFAPIRouter, Fns>, environment: ServerEnvironment, schema: APISchema = TiFAPISchema) => {
+export const TiFRouter = <Fns extends TiFAPIRouterExtension>(apiClient: MatchFnCollection<TiFAPIRouterExtension, Fns>, environment: ServerEnvironment, schema: APISchema = TiFAPISchema) => {
   const router = express.Router()
 
   Object.entries(schema).forEach(
     ([endpointName, endpointSchema]) => {
       const { httpRequest: { method, endpoint } } = endpointSchema
-      const handler: APIHandler<RouterParams> = middlewareRunner(catchAPIErrors, validateAPIRouterCall, apiClient[endpointName as keyof TiFAPIRouter])
+      const handler: APIHandler<RouterParams> = middlewareRunner(catchAPIErrors, validateAPIRouterCall, apiClient[endpointName as keyof TiFAPIRouterExtension])
       router[method.toLowerCase() as Lowercase<typeof method>](
         endpoint,
         async ({ body, query, params }, res) => {

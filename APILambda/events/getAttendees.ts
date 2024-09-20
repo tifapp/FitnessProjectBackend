@@ -6,11 +6,11 @@ import { EventAttendee, EventAttendeesPage } from "TiFShared/domain-models/Event
 import { BidirectionalUserRelations } from "TiFShared/domain-models/User"
 import { failure, success } from "TiFShared/lib/Result"
 import { z } from "zod"
-import { TiFAPIRouter } from "../router"
+import { TiFAPIRouterExtension } from "../router"
 import {
-  AttendeesListCursor,
-  decodeAttendeesListCursor,
-  encodeAttendeesListCursor
+    AttendeesListCursor,
+    decodeAttendeesListCursor,
+    encodeAttendeesListCursor
 } from "../utils/Cursor"
 
 const DecodedCursorValidationSchema = z.object({
@@ -160,7 +160,7 @@ const checkEventExists = (
  *
  * @param environment see {@link ServerEnvironment}.
  */
-export const attendeesList: TiFAPIRouter["attendeesList"] = ({ query: { nextPageCursor, limit }, params: { eventId }, context: { selfId } }) => {
+export const attendeesList: TiFAPIRouterExtension["attendeesList"] = ({ query: { nextPageCursor, limit }, params: { eventId }, context: { selfId } }) => {
   const cursor = DecodedCursorValidationSchema.parse(decodeAttendeesListCursor(
     nextPageCursor
   ))

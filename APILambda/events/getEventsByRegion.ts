@@ -1,9 +1,9 @@
 import { conn } from "TiFBackendUtils"
 import { MySQLExecutableDriver } from "TiFBackendUtils/MySQLDriver"
 import { DBTifEvent, setEventAttendeesFields, tifEventResponseFromDatabaseEvent } from "TiFBackendUtils/TifEventUtils"
-import { resp } from "TiFShared/api"
+import { resp } from "TiFShared/api/Transport"
 import { LocationCoordinate2D } from "TiFShared/domain-models/LocationCoordinate2D"
-import { TiFAPIRouter } from "../router"
+import { TiFAPIRouterExtension } from "../router"
 
 export const getEventsByRegion = (
   conn: MySQLExecutableDriver,
@@ -43,7 +43,7 @@ LEFT JOIN userRelations UserRelationOfUserToHost ON UserRelationOfUserToHost.fro
     { userLatitude, userLongitude, ...rest }
   )
 
-export const exploreEvents: TiFAPIRouter["exploreEvents"] = ({ context: { selfId: userId }, body: { userLocation, radius } }) =>
+export const exploreEvents: TiFAPIRouterExtension["exploreEvents"] = ({ context: { selfId: userId }, body: { userLocation, radius } }) =>
   conn
     .transaction((tx) =>
       getEventsByRegion(tx, {

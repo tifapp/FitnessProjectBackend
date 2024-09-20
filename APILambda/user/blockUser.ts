@@ -2,10 +2,10 @@ import { conn } from "TiFBackendUtils"
 import { MySQLExecutableDriver } from "TiFBackendUtils/MySQLDriver"
 import { UserRelationsInput, userWithIdExists } from "TiFBackendUtils/TiFUserUtils"
 import { resp } from "TiFShared/api/Transport"
-import { TiFAPIRouter } from "../router"
+import { TiFAPIRouterExtension } from "../router"
 import { userNotFoundBody } from "../utils/Responses"
 
-export const blockUser: TiFAPIRouter["blockUser"] = ({ context: { selfId: fromUserId }, params: { userId: toUserId } }) =>
+export const blockUser: TiFAPIRouterExtension["blockUser"] = ({ context: { selfId: fromUserId }, params: { userId: toUserId } }) =>
   conn
     .transaction((tx) => blockUserSQL(tx, { fromUserId, toUserId }))
     .mapSuccess(() => resp(204))

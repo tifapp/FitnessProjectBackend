@@ -2,9 +2,9 @@ import { conn } from "TiFBackendUtils"
 import { MySQLExecutableDriver } from "TiFBackendUtils/MySQLDriver"
 import { findTiFUser, UserRelationsInput } from "TiFBackendUtils/TiFUserUtils"
 import { resp } from "TiFShared/api/Transport"
-import { TiFAPIRouter } from "../router"
+import { TiFAPIRouterExtension } from "../router"
 
-export const sendFriendRequest: TiFAPIRouter["sendFriendRequest"] = async ({ context: { selfId: fromUserId }, params: { userId: toUserId } }) => {
+export const sendFriendRequest: TiFAPIRouterExtension["sendFriendRequest"] = async ({ context: { selfId: fromUserId }, params: { userId: toUserId } }) => {
   if (fromUserId === toUserId) { // make generic? getuser, blockuser, unblockuser, etc
     return resp(400, { error: "cannot-friend-self" }) as never
   }

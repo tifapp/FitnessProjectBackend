@@ -3,9 +3,9 @@ import { MySQLExecutableDriver } from "TiFBackendUtils/MySQLDriver"
 import { DevicePlatform } from "TiFShared/api/models/User"
 import { resp } from "TiFShared/api/Transport"
 import { failure, success } from "TiFShared/lib/Result"
-import { TiFAPIRouter } from "../router"
+import { TiFAPIRouterExtension } from "../router"
 
-export const registerForPushNotifications: TiFAPIRouter["registerForPushNotifications"] = ({ body, context: { selfId: userId } }) =>
+export const registerForPushNotifications: TiFAPIRouterExtension["registerForPushNotifications"] = ({ body, context: { selfId: userId } }) =>
   tryInsertPushToken(conn, {
     ...body,
     userId

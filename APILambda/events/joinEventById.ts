@@ -3,14 +3,14 @@ import { MySQLExecutableDriver } from "TiFBackendUtils/MySQLDriver"
 import { resp } from "TiFShared/api/Transport"
 import { areCoordinatesEqual } from "TiFShared/domain-models/LocationCoordinate2D"
 import { failure, success } from "TiFShared/lib/Result"
-import { TiFAPIRouter } from "../router"
+import { TiFAPIRouterExtension } from "../router"
 import { isUserBlocked } from "../utils/sharedSQL"
 import { upcomingEventArrivalRegionsSQL } from "./arrivals/getUpcomingEvents"
 import { insertArrival } from "./arrivals/setArrivalStatus"
 import { getTokenRequest } from "./getChatToken"
 import { eventDetailsSQL } from "./getEventById"
 
-export const joinEvent: TiFAPIRouter["joinEvent"] = async ({ context: { selfId }, params: { eventId }, body: { region: { coordinate } = { coordinate: undefined } } = {} }) =>
+export const joinEvent: TiFAPIRouterExtension["joinEvent"] = async ({ context: { selfId }, params: { eventId }, body: { region: { coordinate } = { coordinate: undefined } } = {} }) =>
   conn.transaction((tx) =>
     eventDetailsSQL(tx, eventId, selfId)
       .withFailure(resp(404, { error: "event-not-found" }))

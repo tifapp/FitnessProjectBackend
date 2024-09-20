@@ -3,9 +3,9 @@ import { MySQLExecutableDriver } from "TiFBackendUtils/MySQLDriver"
 import { UserRelationsInput, userWithIdExists } from "TiFBackendUtils/TiFUserUtils"
 import { resp } from "TiFShared/api/Transport"
 import { failure, success } from "TiFShared/lib/Result"
-import { TiFAPIRouter } from "../router"
+import { TiFAPIRouterExtension } from "../router"
 
-export const unblockUser: TiFAPIRouter["unblockUser"] =
+export const unblockUser: TiFAPIRouterExtension["unblockUser"] =
   ({ context: { selfId: fromUserId }, params: { userId: toUserId } }) =>
     unblockUserSQL(conn, { fromUserId, toUserId })
       .flatMapSuccess((result) => {

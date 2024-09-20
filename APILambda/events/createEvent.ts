@@ -1,10 +1,10 @@
 import { conn } from "TiFBackendUtils"
 import { MySQLExecutableDriver } from "TiFBackendUtils/MySQLDriver"
-import { resp } from "TiFShared/api"
+import { resp } from "TiFShared/api/Transport"
 import { CreateEvent } from "TiFShared/api/models/Event"
 import { EventID } from "TiFShared/domain-models/Event"
 import { promiseResult, success } from "TiFShared/lib/Result"
-import { TiFAPIRouter } from "../router"
+import { TiFAPIRouterExtension } from "../router"
 import { addUserToAttendeeList } from "./joinEventById"
 
 export const createEventSQL = (
@@ -65,7 +65,7 @@ export const createEventSQL = (
  *
  * @param environment see {@link ServerEnvironment}.
  */
-export const createEvent: TiFAPIRouter["createEvent"] = ({ environment, context: { selfId }, body }) =>
+export const createEvent: TiFAPIRouterExtension["createEvent"] = ({ environment, context: { selfId }, body }) =>
   conn
     .transaction((tx) =>
       createEventSQL(tx, body, selfId)

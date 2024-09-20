@@ -2,7 +2,7 @@ import { conn } from "TiFBackendUtils"
 import { MySQLExecutableDriver } from "TiFBackendUtils/MySQLDriver"
 import { resp } from "TiFShared/api/Transport"
 import { UserSettings } from "TiFShared/domain-models/Settings"
-import { TiFAPIRouter } from "../../router"
+import { TiFAPIRouterExtension } from "../router"
 import { queryUserSettings } from "./userSettingsQuery"
 
 /**
@@ -95,7 +95,7 @@ const updateUserSettingsSQL = (
     }
   )
 
-export const saveUserSettings: TiFAPIRouter["saveUserSettings"] = ({ context: { selfId }, body: newSettings }) =>
+export const saveUserSettings: TiFAPIRouterExtension["saveUserSettings"] = ({ context: { selfId }, body: newSettings }) =>
   updateUserSettingsSQL(conn, selfId, newSettings)
     .flatMapSuccess(() => queryUserSettings(conn, selfId))
     .observeSuccess(r => console.warn("look at this update ", r))

@@ -1,4 +1,4 @@
-import { TiFAPIClient } from "TiFShared/api"
+import { TiFAPIClient } from "TiFBackendUtils"
 import { CreateEvent } from "TiFShared/api/models/Event"
 import { EventID } from "TiFShared/domain-models/Event"
 import { testAPI } from "../testApp"

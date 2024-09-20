@@ -3,7 +3,7 @@ import { MySQLExecutableDriver } from "TiFBackendUtils/MySQLDriver"
 import { DBupcomingEvent } from "TiFBackendUtils/TifEventUtils"
 import { resp } from "TiFShared/api/Transport"
 import { EventArrivalRegion, EventID } from "TiFShared/domain-models/Event"
-import { TiFAPIRouter } from "../../router"
+import { TiFAPIRouterExtension } from "../router"
 
 const mapEventsToRegions = (events: DBupcomingEvent[]): EventArrivalRegion[] =>
   Array.from(
@@ -61,7 +61,7 @@ export const upcomingEventArrivalRegionsSQL = (conn: MySQLExecutableDriver, user
 )
   .mapSuccess(mapEventsToRegions)
 
-export const upcomingEventArrivalRegions: TiFAPIRouter["upcomingEventArrivalRegions"] = ({ context: { selfId } }) =>
+export const upcomingEventArrivalRegions: TiFAPIRouterExtension["upcomingEventArrivalRegions"] = ({ context: { selfId } }) =>
   upcomingEventArrivalRegionsSQL(
     conn,
     selfId

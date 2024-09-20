@@ -5,9 +5,9 @@ import { userWithHandleDoesNotExist } from "TiFBackendUtils/TiFUserUtils"
 import { UpdateCurrentUserProfileRequest } from "TiFShared/api/models/User"
 import { resp } from "TiFShared/api/Transport"
 import { success } from "TiFShared/lib/Result"
-import { TiFAPIRouter } from "../router"
+import { TiFAPIRouterExtension } from "../router"
 
-export const updateCurrentUserProfile: TiFAPIRouter["updateCurrentUserProfile"] = async ({
+export const updateCurrentUserProfile: TiFAPIRouterExtension["updateCurrentUserProfile"] = async ({
   context: { selfId },
   body
 }) =>

@@ -1,7 +1,7 @@
 import { conn } from "TiFBackendUtils"
 import { resp } from "TiFShared/api/Transport"
 import { failure, success } from "TiFShared/lib/Result"
-import { TiFAPIRouter } from "../router"
+import { TiFAPIRouterExtension } from "../router"
 import { eventDetailsSQL } from "./getEventById"
 
 /**
@@ -9,7 +9,7 @@ import { eventDetailsSQL } from "./getEventById"
  *
  * @param environment see {@link ServerEnvironment}.
  */
-export const endEvent: TiFAPIRouter["endEvent"] = ({ context: { selfId: hostId }, params: { eventId } }) =>
+export const endEvent: TiFAPIRouterExtension["endEvent"] = ({ context: { selfId: hostId }, params: { eventId } }) =>
   conn.transaction((tx) =>
     eventDetailsSQL(tx, eventId, hostId)
       .withFailure(resp(404, { error: "event-not-found" }))

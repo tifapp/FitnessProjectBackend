@@ -3,10 +3,10 @@ import { MySQLExecutableDriver } from "TiFBackendUtils/MySQLDriver"
 import { resp } from "TiFShared/api/Transport"
 import { LocationCoordinate2D } from "TiFShared/domain-models/LocationCoordinate2D"
 import { UserID } from "TiFShared/domain-models/User"
-import { TiFAPIRouter } from "../../router"
+import { TiFAPIRouterExtension } from "../router"
 import { upcomingEventArrivalRegionsSQL } from "./getUpcomingEvents"
 
-export const departFromRegion: TiFAPIRouter["departFromRegion"] = ({ context: { selfId }, body: { coordinate } }) =>
+export const departFromRegion: TiFAPIRouterExtension["departFromRegion"] = ({ context: { selfId }, body: { coordinate } }) =>
   conn.transaction((tx) =>
     deleteArrival(
       tx,

@@ -3,7 +3,7 @@ import { DBevent } from "TiFBackendUtils/DBTypes"
 import { MySQLExecutableDriver } from "TiFBackendUtils/MySQLDriver"
 import { resp } from "TiFShared/api/Transport"
 import { failure, success } from "TiFShared/lib/Result"
-import { TiFAPIRouter } from "../router"
+import { TiFAPIRouterExtension } from "../router"
 
 const getEvent = (conn: MySQLExecutableDriver, eventId: number) =>
   conn.queryFirstResult<DBevent>(
@@ -46,7 +46,7 @@ const removeUserFromAttendeeList = (
  *
  * @param environment see {@link ServerEnvironment}.
  */
-export const leaveEvent: TiFAPIRouter["leaveEvent"] = ({ context: { selfId }, params: { eventId } }) =>
+export const leaveEvent: TiFAPIRouterExtension["leaveEvent"] = ({ context: { selfId }, params: { eventId } }) =>
   conn.transaction((tx) =>
     getEvent(tx, eventId)
       .mapFailure(() => resp(404, { error: "event-not-found" }))

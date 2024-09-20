@@ -3,9 +3,9 @@ import { DBuser } from "TiFBackendUtils/DBTypes"
 import { MySQLExecutableDriver } from "TiFBackendUtils/MySQLDriver"
 import { resp } from "TiFShared/api/Transport"
 import { UserHandle } from "TiFShared/domain-models/User"
-import { TiFAPIRouter } from "../router"
+import { TiFAPIRouterExtension } from "../router"
 
-export const autocompleteUsers: TiFAPIRouter["autocompleteUsers"] = ({ query: { handle, limit } }) =>
+export const autocompleteUsers: TiFAPIRouterExtension["autocompleteUsers"] = ({ query: { handle, limit } }) =>
   autocompleteUsersSQL(
     conn,
     handle,
