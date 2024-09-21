@@ -65,7 +65,12 @@ jobs:
       
       - name: Initialize DB, Update DB Types, Validate openapi specs
         run: |
+          cp TiFBackendUtils/DBTypes.ts OriginalDBTypes.ts
           npm run genapispecs
+          if ! diff TiFBackendUtils/DBTypes.ts OriginalDBTypes.ts; then
+            echo "DBTypes.ts is not up to date. Please re-run 'npm run dbtots' and commit the updated version to this branch."
+            exit 1
+          fi
 
       - name: Run tests
         run: |
