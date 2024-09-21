@@ -7,7 +7,12 @@ on:
       - development
   
 jobs:
+  build:
+    uses: ./.github/workflows/build_geocoder.yml
+    secrets: inherit
+
   test:
+    needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 5
     concurrency:
@@ -64,11 +69,6 @@ jobs:
         run: |
           cd GeocodingLambda
           npm run test:ci
-  
-  build:
-    needs: test
-    uses: ./.github/workflows/build_geocoder.yml
-    secrets: inherit
   
   deploy:
     concurrency: 
