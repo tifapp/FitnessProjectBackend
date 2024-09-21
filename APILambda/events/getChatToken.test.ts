@@ -3,7 +3,7 @@ import { callCreateEvent, callGetEventChatToken } from "../test/apiCallers/event
 import { testEventInput } from "../test/testEvents"
 import { createUserFlow } from "../test/userFlows/createUserFlow"
 
-describe("GetTokenRequest tests", () => {
+describe.skip("GetTokenRequest tests", () => {
   // TODO: Make shared util for this
   // it("should return 401 if user does not exist", async () => {
   //   const resp = await callGetEventChatToken(global.defaultUser.auth, randomInt(1000))

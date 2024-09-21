@@ -1,3 +1,4 @@
+import "TiFShared/lib/Math"
 import "TiFShared/lib/Zod"
 // needed to compile.
 

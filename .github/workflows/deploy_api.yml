@@ -31,7 +31,37 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Extract OpenAPI spec from TiFShared
+        run: |
+          cd TiFBackendUtils
+          npm ci
+          mv node_modules/TiFShared/specs.json ..
+
+        # "For Lambda integrations, you must use the HTTP method of POST for the integration request"
+        # https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html
+      - name: Inject AWS API Gateway Integration into OpenAPI spec
+        run: |
+          jq '(.paths[] | .[] | select(.responses)) |= 
+            {
+              "x-amazon-apigateway-integration": {
+                "httpMethod": "POST",
+                "uri": "'${{ secrets.API_LAMBDA_ID }}:stagingTest/invocations'",
+                "responses": {
+                  "default": {
+                    "statusCode": "200"
+                  }
+                },
+                "passthroughBehavior": "when_no_match",
+                "contentHandling": "CONVERT_TO_TEXT",
+                "type": "aws_proxy"
+              }
+            } + .' specs.json > updated_specs.json
       
+          sed 's|URL_GOES_HERE|${{ secrets.API_ENDPOINT }}|g' updated_specs.json > final_specs.json
+
+          mv final_specs.json specs.json            
+
       - name: Upload api spec to S3 for swagger ui
         run: |
           aws s3 cp specs.json s3://${{ secrets.S3_API_SPECS_BUCKET_NAME }}/specs.json

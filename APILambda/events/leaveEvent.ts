@@ -86,7 +86,7 @@ export const leaveEventRouter = (
   /**
    * Leave an event
    */
-  router.deleteWithValidation(
+  router.postWithValidation(
     "/leave/:eventId",
     { pathParamsSchema: leaveEventSchema },
     (req, res) =>
