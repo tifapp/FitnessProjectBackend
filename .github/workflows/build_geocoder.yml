@@ -53,6 +53,8 @@ jobs:
           npm ci
           npm install ../TiFBackendUtils/dist/TiFBackendUtils-1.0.0.tgz
           find node_modules/TiFShared -name "*.ts" -type f -delete
+        env:
+          TIFSHARED_JS: true
       
       - name: Build the project
         run: |
