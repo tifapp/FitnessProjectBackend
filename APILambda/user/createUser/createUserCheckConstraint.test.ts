@@ -1,6 +1,6 @@
 import { conn } from "TiFBackendUtils/MySQLDriver"
 import { randomUUID } from "crypto"
-import { expectFailsCheckConstraint } from "../../../TiFBackendUtils/MySQLDriver/test/utils"
+import { expectFailsCheckConstraint } from "../../../TiFBackendUtils/MySQLDriver/test/dbHelpers"
 import { insertUser } from "./createUserProfile"
 
 describe("CheckConstraint tests", () => {
