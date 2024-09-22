@@ -1,3 +1,5 @@
+import "TiFShared/lib/Zod"
+
 import { MySQLDriver } from "../../MySQLDriver/MySQLDriver"
 
 describe("MySQLDriver", () => {
