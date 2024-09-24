@@ -10,13 +10,107 @@ Getting Started:
 
 # MySQL setup for Mac 
 
-1. Download the MySQL DMG installer https://dev.mysql.com/downloads/mysql/
-2. Open the DMG file and follow the installation instructions.
-3. Open Terminal and edit your .zshrc (or .bash_profile if you're using Bash): nano ~/.zshrc
-4. Add the following line at the end of the file: export PATH="/usr/local/mysql/bin:$PATH"
-5. Save and close the file
-6. In Terminal, connect to the MySQL server: mysql -u root -p
-7. Enter your password when prompted.
+Part 1: Install Homebrew
+
+- Open Terminal
+- Run ``` 
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)```
+
+Part 2: Install MySQL
+
+- Update Homebrew
+```brew update```
+- Install MySQL
+```brew install mysql```
+
+Part 3: Secure the installation
+
+- Run the security script ```mysql_secure_installation```
+
+  Follow the prompts to ->
+
+  - Set a root password
+  - Remove anonymous users
+  - Disallow root login remotely
+  - Remove test databases
+  - Reload privilege tables
+
+Part 4: Start the MySQL Server
+
+- In terminal, run:
+  ```mysql -u root -p```
+- Enter the root password
+
+
+Install MySQL on Windows ->
+
+Note: These instructions will guide you through the installation using Chocolatey. We recommended using Chocolatey for installing MySQL on Windows as it automatically handles dependency installation.
+
+Part 1: Install Chocolatey
+
+Open an Administrative Command Prompt:
+
+Press Win + R to open the Run dialog.
+Type cmd, then press Ctrl + Shift + Enter to open the command prompt with administrative privileges.
+
+Execute the Chocolatey Installation Command:
+
+Copy and paste the following command into the Command Prompt:
+Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
+Press Enter to run the command and install Chocolatey on your system.
+Part 2: Install MySQL
+
+Open an Administrative Command Prompt (repeat the process from Step 1 if necessary).
+
+Install MySQL Using Chocolatey:
+
+Type the following command:
+choco install mysql
+Press Enter. Chocolatey will manage the download and installation of MySQL along with its dependencies.
+Part 3: Start MySQL Server
+Start the MySQL Service:
+Type the following command in the Command Prompt:
+net start MySQL
+Troubleshooting Common Errors
+
+Access Denied Error:
+
+If you encounter the following error:
+ERROR 1045 (28000): Access denied for user 'ODBC'@'localhost' (using password: NO)
+
+Log in using:
+mysql -u username -p  # if your MySQL user has a password
+or
+mysql -u username     # if your MySQL user does not have a password
+
+MySQL Service Not Starting:
+
+Error Message:
+
+Windows could not start the MySQL service on Local Computer. Error 1067: The process terminated unexpectedly.
+
+
+Check the MySQL Error Log:
+
+Locate the my.ini file in your MySQL server directory (typically under C:\Program Files\MySQL\MySQL Server X.X).
+Find the log-error entry to locate your error log file path.
+Navigate to the directory containing the error log and open the file (often named something like hostname.err) in a text editor.
+
+Verify MySQL Data Directory:
+
+Open your MySQL configuration file (my.ini or my.cnf).
+Ensure the datadir path exists and MySQL has write permissions for this directory.
+
+Re-run Initialization After Clearing Data Directory:
+
+Stop MySQL Server:
+net stop MySQL
+Clear the Data Directory:
+Locate the data directory using the datadir setting in the MySQL configuration file.
+Delete all files and folders within this directory.
+Re-run Initialization:
+mysqld --initialize
+net start MySQL
 
 # MySQL setup for Windows TODO
 
