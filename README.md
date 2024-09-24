@@ -48,16 +48,18 @@ Note: These instructions will guide you through the installation using Chocolate
 
 Part 1: Install Chocolatey
 
-Open an Administrative Command Prompt:
-
-Press Win + R to open the Run dialog.
-Type cmd, then press Ctrl + Shift + Enter to open the command prompt with administrative privileges.
+- Open an Administrative Command Prompt:
+- Press Win + R to open the Run dialog.
+- Type cmd, then press Ctrl + Shift + Enter to open the command prompt with administrative privileges.
 
 Execute the Chocolatey Installation Command:
 
 Copy and paste the following command into the Command Prompt:
-Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
+
+``` Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1')) ```
+
 Press Enter to run the command and install Chocolatey on your system.
+
 Part 2: Install MySQL
 
 Open an Administrative Command Prompt (repeat the process from Step 1 if necessary).
@@ -65,12 +67,14 @@ Open an Administrative Command Prompt (repeat the process from Step 1 if necessa
 Install MySQL Using Chocolatey:
 
 Type the following command:
-choco install mysql
+```choco install mysql```
 Press Enter. Chocolatey will manage the download and installation of MySQL along with its dependencies.
+
 Part 3: Start MySQL Server
-Start the MySQL Service:
+
+- Start the MySQL Service:
 Type the following command in the Command Prompt:
-net start MySQL
+```net start MySQL```
 Troubleshooting Common Errors
 
 Access Denied Error:
@@ -79,9 +83,9 @@ If you encounter the following error:
 ERROR 1045 (28000): Access denied for user 'ODBC'@'localhost' (using password: NO)
 
 Log in using:
-mysql -u username -p  # if your MySQL user has a password
+```mysql -u username -p  # if your MySQL user has a password```
 or
-mysql -u username     # if your MySQL user does not have a password
+```mysql -u username```     # if your MySQL user does not have a password
 
 MySQL Service Not Starting:
 
@@ -104,15 +108,15 @@ Ensure the datadir path exists and MySQL has write permissions for this director
 Re-run Initialization After Clearing Data Directory:
 
 Stop MySQL Server:
-net stop MySQL
+
+``` net stop MySQL ```
 Clear the Data Directory:
 Locate the data directory using the datadir setting in the MySQL configuration file.
 Delete all files and folders within this directory.
-Re-run Initialization:
-mysqld --initialize
-net start MySQL
 
-# MySQL setup for Windows TODO
+Re-run Initialization:
+```mysqld --initialize ```
+``` net start MySQL ```
 
 Case-insensitive table names
 
