@@ -68,7 +68,7 @@ jobs:
         env:
           CI: true
       
-      - name: Initialize DB, Update DB Types, Validate openapi specs
+      - name: Sync DB with Typescript
         run: |
           cp TiFBackendUtils/DBTypes.ts OriginalDBTypes.ts
           npm run dbtots
