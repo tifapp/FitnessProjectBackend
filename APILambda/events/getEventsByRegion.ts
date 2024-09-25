@@ -1,13 +1,13 @@
 import { conn } from "TiFBackendUtils"
 import { MySQLExecutableDriver } from "TiFBackendUtils/MySQLDriver"
 import { DBTifEvent, setEventAttendeesFields, tifEventResponseFromDatabaseEvent } from "TiFBackendUtils/TifEventUtils"
+import { LocationCoordinate2DSchema } from "TiFShared/domain-models/LocationCoordinate2D"
 import { z } from "zod"
 import { ServerEnvironment } from "../env"
 import { ValidatedRouter } from "../validation"
 
 const EventsRequestSchema = z.object({
-  userLatitude: z.number(),
-  userLongitude: z.number(),
+  userLocation: LocationCoordinate2DSchema,
   radius: z.number()
 })
 
@@ -72,8 +72,8 @@ export const getEventsByRegionRouter = (
         .transaction((tx) =>
           getEventsByRegion(tx, {
             userId: res.locals.selfId,
-            userLatitude: req.body.userLatitude,
-            userLongitude: req.body.userLongitude,
+            userLatitude: req.body.userLocation.latitude,
+            userLongitude: req.body.userLocation.longitude,
             radius: req.body.radius
           }).flatMapSuccess((result) => setEventAttendeesFields(tx, result, res.locals.selfId).mapSuccess((events) => events.map((event) => tifEventResponseFromDatabaseEvent(event)))
             .mapSuccess((result) => {

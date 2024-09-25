@@ -1,6 +1,3 @@
-import "TiFShared/lib/Zod"
-// needed to compile.
-
 import { ColorString } from "TiFShared/domain-models/ColorString"
 import { Placemark } from "TiFShared/domain-models/Placemark"
 import { UserHandle } from "TiFShared/domain-models/User"

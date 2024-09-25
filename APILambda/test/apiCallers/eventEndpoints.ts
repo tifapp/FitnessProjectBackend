@@ -31,7 +31,7 @@ export const callLeaveEvent = async (
   eventId: number
 ) => {
   return await request(testApp)
-    .delete(`/event/leave/${eventId}`)
+    .post(`/event/leave/${eventId}`)
     .set("Authorization", bearerToken)
     .send()
 }
@@ -75,7 +75,6 @@ export const callGetUpcomingEvents = async (
     .send()
 }
 
-
 export const callGetAttendees = async (
   bearerToken: string,
   eventId: number,
@@ -98,14 +97,14 @@ export const callGetEvent = async (bearerToken: string, eventId: number) => {
 
 export const callGetEventsByRegion = async (
   bearerToken: string,
-  userLatitude: number,
-  userLongitude: number,
+  latitude: number,
+  longitude: number,
   radius: number
 ) => {
   return await request(testApp)
     .post("/event/region")
     .set("Authorization", bearerToken)
-    .send({ userLatitude, userLongitude, radius })
+    .send({ userLocation: { latitude, longitude }, radius })
 }
 
 export const callGetEventChatToken = async (

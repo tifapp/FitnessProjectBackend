@@ -1,5 +1,3 @@
-import "TiFShared"
-
 import { conn } from "TiFBackendUtils"
 import { resetDB } from "TiFBackendUtils/MySQLDriver/test/utils"
 import { testUserCounter } from "../userFlows/createUserFlow"
