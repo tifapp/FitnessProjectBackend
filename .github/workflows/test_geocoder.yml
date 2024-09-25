@@ -74,7 +74,7 @@ jobs:
     concurrency: 
       group: stagingTest
       cancel-in-progress: false
-    needs: build
+    needs: test
     uses: ./.github/workflows/deploy_geocoder.yml
     secrets: inherit
     with:
