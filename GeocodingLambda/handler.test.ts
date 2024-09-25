@@ -1,7 +1,7 @@
 import { conn } from "TiFBackendUtils"
 import { Placemark } from "TiFShared/domain-models/Placemark"
 import { failure, success } from "TiFShared/lib/Result"
-import { resetDB } from "../TiFBackendUtils/MySQLDriver/test/utils"
+import { resetDB } from "../TiFBackendUtils/MySQLDriver/test/dbHelpers"
 import { handler } from "./index"
 
 const testLocation = { latitude: 36.99813840222285, longitude: -122.05564377465653 }

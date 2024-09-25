@@ -29,7 +29,7 @@ const recreateTables = async () => {
 
       results.forEach((result, index) => {
         if (result.status === "rejected") {
-          console.error(`Error creating table: ${family[index]}`, result.reason);
+          console.error(`Error creating table: ${family[index]}`, result.reason)
         }
       })
     } catch (error) {
