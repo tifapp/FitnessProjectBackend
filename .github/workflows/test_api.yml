@@ -87,7 +87,7 @@ jobs:
     concurrency: 
       group: APIstagingTest
       cancel-in-progress: false
-    needs: build
+    needs: test
     uses: ./.github/workflows/deploy_api.yml
     secrets: inherit
     with:
