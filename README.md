@@ -168,6 +168,7 @@ Git Lens
     }
 }
 ```
+- Prettier is a code formatter that automatically formats your code to ensure it follows consistent style rules.
 
 # Environments
 
