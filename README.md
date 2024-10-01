@@ -75,7 +75,11 @@ Part 3: Start MySQL Server
 - Start the MySQL Service:
 Type the following command in the Command Prompt:
 ```net start MySQL```
-Troubleshooting Common Errors
+Troubleshooting:
+
+If you're having issues, please reach out on slack. If you're dealing with a configuration issue of some kind, please edit this [this "what the fuck" document](https://github.com/tifapp/TiFShared/wiki/WTF-Issues) with details on the issue, and add every step you took to solve the issue to that document. Keeping a past record of issues is important for preventing issues in the future.
+
+Common Errors:
 
 Access Denied Error:
 
@@ -128,14 +132,14 @@ We have migrated from PlanetScale to a local MySQL database at the moment. This 
 - Ask a team member for the .env variables
 
 Setup:
-1. Npm install
-2. Npm run pr - creates a pr and attaches trello card description
+1. ```npm install```
+2. ```npm run pr``` - creates a pr and attaches trello card description
 - Use case: when the ticket id is in the branch name or specified as an argument to the command
-3. Npm run genapispecs - generates the specs.json
-4. Npm run resetDB - deletes the data from the db tables
-5. Npm run dbtots - generates the schema and interface for each table in the db
+3. ```npm run genapispecs``` - generates the specs.json
+4. ```npm run resetDB``` - deletes the data from the db tables
+5. ```npm run dbtots``` - generates the schema and interface for each table in the db
 
-# VSCode Setup
+# VSCode Setup (Optional)
 
 Packages/Extensions to install when working with VSCode ->
 
@@ -167,9 +171,9 @@ Git Lens
 
 # Environments
 
-1. Local
-2. Staging
-3. Prod
+1. Local - development environment where changes are made and tested on a developer's own machine
+2. Staging - pre-production environment that closely mirrors the production setup
+3. Prod - live environment
 
 # Workflow Process
 
@@ -373,3 +377,27 @@ These tests make HTTP requests to the new "products" route and assert that the r
 
 Currently npm run test:staging-unix only works on unix devices.
 For windows, copy the associated command and replace COGNITO_USER and COGNITO_PASSWORD with your desired login info.
+
+### AWS
+Services utilized ->
+- AWS Lambda
+- AWS API Gateway
+
+### CI/CD
+Continuous Integration (CI):
+
+Build Process: Tools like Jenkins can be used to package your Lambda code along with dependencies into a deployment artifact (like a .zip file).
+Unit Tests: During the CI process, unit tests are automatically run to verify that changes don’t break existing functionality.
+
+Continous Deployment (CD):
+
+After successful unit and integration tests, the Lambda code is deployed.
+
+Additional Tools for CI/CD:
+We utilize GitHub Actions to automate the deployment of your Lambda functions directly from your GitHub repositories.
+
+### System Diagram
+[System Diagram - Google Drawings] (https://docs.google.com/drawings/d/1zmWL7nTBsMtI-OAbfV9H0BQAGnlKgQ2S1o2ls-6jS6g)
+
+### Database Integration
+[Database Integration] (https://docs.google.com/drawings/d/1NNd8BWqINceuRJAokFN_STy1oqjJm84EJvGI5QLQhaQ)
