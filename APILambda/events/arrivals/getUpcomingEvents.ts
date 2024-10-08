@@ -1,6 +1,6 @@
 import { conn } from "TiFBackendUtils"
 import { MySQLExecutableDriver } from "TiFBackendUtils/MySQLDriver"
-import { DBupcomingEvent } from "TiFBackendUtils/TifEventUtils"
+import { DBupcomingEvent } from "TiFBackendUtils/TiFEventUtils"
 import { resp } from "TiFShared/api/Transport"
 import { EventArrivalRegion, EventID } from "TiFShared/domain-models/Event"
 import { TiFAPIRouterExtension } from "../../router"

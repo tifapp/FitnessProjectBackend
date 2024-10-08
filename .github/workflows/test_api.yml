@@ -81,7 +81,7 @@ jobs:
         run: |
           cd APILambda
           export NODE_OPTIONS="--max_old_space_size=4096"
-          npm run test:ci -- createUserProfile.test.ts
+          npm run test:ci
   
   deploy_for_staging_tests:
     concurrency: 
@@ -98,7 +98,7 @@ jobs:
       group: APIstagingTest
       cancel-in-progress: false
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 15
     needs: deploy_for_staging_tests
     
     env:

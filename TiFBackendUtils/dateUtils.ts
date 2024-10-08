@@ -17,3 +17,18 @@ export const calcTodayOrTomorrow = (startDateTime: Date) => {
     return undefined
   }
 }
+
+export const isDayAfter = (
+  endedDateTime?: Date
+) => {
+  if (endedDateTime == null) {
+    return false
+  }
+
+  const now = dayjs()
+  const ended = dayjs(endedDateTime)
+
+  const diffInHours = now.diff(ended, "hour")
+
+  return diffInHours >= 24
+}

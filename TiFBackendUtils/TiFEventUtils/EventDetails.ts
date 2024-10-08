@@ -1,6 +1,6 @@
-import { MySQLExecutableDriver } from "TiFBackendUtils/MySQLDriver"
-import { DBTifEvent } from "TiFBackendUtils/TifEventUtils"
 import { failure, success } from "TiFShared/lib/Result"
+import { MySQLExecutableDriver } from "../MySQLDriver"
+import { DBTifEvent } from "./TiFEventResponse"
 
 export const getEventSQL = (
   conn: MySQLExecutableDriver,

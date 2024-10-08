@@ -1,9 +1,9 @@
 import { conn } from "TiFBackendUtils"
 import { MySQLExecutableDriver } from "TiFBackendUtils/MySQLDriver"
+import { getEventSQL } from "TiFBackendUtils/TiFEventUtils"
 import { resp } from "TiFShared/api/Transport"
 import { failure, success } from "TiFShared/lib/Result"
 import { TiFAPIRouterExtension } from "../router"
-import { getEventSQL } from "../utils/eventDetails"
 
 const removeUserFromAttendeeList = (
   conn: MySQLExecutableDriver,

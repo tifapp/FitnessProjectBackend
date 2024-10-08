@@ -1,8 +1,7 @@
 import { conn } from "TiFBackendUtils"
-import { getAttendeeData, tifEventResponseFromDatabaseEvent } from "TiFBackendUtils/TifEventUtils"
+import { getAttendeeData, getEventSQL, tifEventResponseFromDatabaseEvent } from "TiFBackendUtils/TiFEventUtils"
 import { resp } from "TiFShared/api/Transport"
 import { TiFAPIRouterExtension } from "../router"
-import { getEventSQL } from "../utils/eventDetails"
 
 export const eventDetails = (
   ({ context: { selfId }, params: { eventId } }) =>

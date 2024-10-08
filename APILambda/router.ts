@@ -1,8 +1,5 @@
 import express from "express"
-import { TiFAPIClient, TiFAPISchema } from "TiFBackendUtils"
-import { envVars } from "TiFBackendUtils/env"
-import { validateAPICall } from "TiFShared/api/APIValidation"
-import { resp } from "TiFShared/api/Transport"
+import { TiFAPIClient, TiFAPISchema, validateAPIRouterCall } from "TiFBackendUtils"
 import { APIHandler, APISchema, GenericEndpointSchema } from "TiFShared/api/TransportTypes"
 import { middlewareRunner } from "TiFShared/lib/Middleware"
 import { MatchFnCollection } from "TiFShared/lib/Types/MatchType"
@@ -14,16 +11,6 @@ import { catchAPIErrors } from "./errorHandler"
 export type RouterParams = {context: ResponseContext, environment: ServerEnvironment, log: Logger}
 
 export type TiFAPIRouterExtension = TiFAPIClient<RouterParams>
-
-const validateAPIRouterCall = validateAPICall((status, value) => {
-  if (status === "invalid-request") {
-    return resp(400, { error: status })
-  } else if (status === "invalid-response") {
-    return resp(500, { error: status })
-  }
-
-  return value
-}, envVars.ENVIRONMENT === "prod" ? "requestOnly" : "both")
 
 // reason: express parses undefined inputs as empty objects
 const emptyToUndefined = <T extends object>(obj: T) => Object.keys(obj).length === 0 && obj.constructor === Object ? undefined : obj
@@ -40,8 +27,7 @@ export const TiFRouter = <Fns extends TiFAPIRouterExtension>(apiClient: MatchFnC
       const { httpRequest: { method, endpoint } } = endpointSchema as GenericEndpointSchema
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const handler: APIHandler<RouterParams> = middlewareRunner(catchAPIErrors, validateAPIRouterCall, apiClient[endpointName as keyof TiFAPIRouterExtension] as any)
-      router[method.toLowerCase() as Lowercase<typeof method>](
-        endpoint,
+      router[method.toLowerCase() as Lowercase<typeof method>](endpoint,
         async ({ body, query, params }, res) => {
           const { status, data } = await handler({
             body: emptyToUndefined(body),

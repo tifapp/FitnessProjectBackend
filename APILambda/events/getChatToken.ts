@@ -1,9 +1,8 @@
 import { conn } from "TiFBackendUtils"
-import { DBTifEvent } from "TiFBackendUtils/TifEventUtils"
+import { DBTifEvent, getEventSQL } from "TiFBackendUtils/TiFEventUtils"
 import { EventID } from "TiFShared/domain-models/Event"
 import { UserID } from "TiFShared/domain-models/User"
 import { ChatPermissions, createTokenRequest } from "../ably"
-import { getEventSQL } from "../utils/eventDetails"
 import { isUserBlocked, isUserInEvent } from "../utils/sharedSQL"
 
 type Role = "admin" | "attendee" | "viewer"

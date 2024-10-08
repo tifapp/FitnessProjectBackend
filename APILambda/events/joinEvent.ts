@@ -1,10 +1,10 @@
 import { conn } from "TiFBackendUtils"
+import { getEventSQL } from "TiFBackendUtils/TiFEventUtils"
 import { resp } from "TiFShared/api/Transport"
 import { areCoordinatesEqual } from "TiFShared/domain-models/LocationCoordinate2D"
 import { failure, success } from "TiFShared/lib/Result"
 import { TiFAPIRouterExtension } from "../router"
 import { addUserToAttendeeList } from "../utils/eventAttendance"
-import { getEventSQL } from "../utils/eventDetails"
 import { upcomingEventArrivalRegionsSQL } from "./arrivals/getUpcomingEvents"
 import { insertArrival } from "./arrivals/setArrivalStatus"
 

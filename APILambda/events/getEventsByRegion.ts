@@ -1,6 +1,6 @@
 import { conn } from "TiFBackendUtils"
 import { MySQLExecutableDriver } from "TiFBackendUtils/MySQLDriver"
-import { DBTifEvent, getAttendeeData, tifEventResponseFromDatabaseEvent } from "TiFBackendUtils/TifEventUtils"
+import { DBTifEvent, getAttendeeData, tifEventResponseFromDatabaseEvent } from "TiFBackendUtils/TiFEventUtils"
 import { resp } from "TiFShared/api/Transport"
 import { LocationCoordinate2D } from "TiFShared/domain-models/LocationCoordinate2D"
 import { TiFAPIRouterExtension } from "../router"

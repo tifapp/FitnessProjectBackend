@@ -3,7 +3,7 @@ import { testAPI } from "../../test/testApp"
 describe("Create User Profile tests", () => {
   // TODO: Move to separate unit test file for auth middleware
   it("should 401 when no token is passed", async () => {
-    const resp = await testAPI.createCurrentUserProfile({auth: ""})
+    const resp = await testAPI.createCurrentUserProfile({ auth: "" })
 
     expect(resp).toMatchObject({
       status: 401,

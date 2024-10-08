@@ -1,10 +1,10 @@
 import { conn } from "TiFBackendUtils"
 import { DBuser } from "TiFBackendUtils/DBTypes"
+import { generateUniqueHandle } from "TiFBackendUtils/generateUserHandle"
 import { MySQLExecutableDriver } from "TiFBackendUtils/MySQLDriver"
 import { resp } from "TiFShared/api/Transport"
 import { failure, success } from "TiFShared/lib/Result"
 import { TiFAPIRouterExtension } from "../../router"
-import { generateUniqueHandle } from "../generateUserHandle"
 
 const checkValidName = (name: string) => {
   // TODO: add more conditions or use a zod schema

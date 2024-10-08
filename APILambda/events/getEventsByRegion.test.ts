@@ -1,5 +1,5 @@
 import { conn } from "TiFBackendUtils"
-import { getAttendeeCount, getAttendeesPreview } from "TiFBackendUtils/TifEventUtils"
+import { getAttendeeCount, getAttendeesPreview } from "TiFBackendUtils/TiFEventUtils"
 import { dateRange } from "TiFShared/domain-models/FixedDateRange"
 import dayjs from "dayjs"
 import { addLocationToDB } from "../../GeocodingLambda/utils"

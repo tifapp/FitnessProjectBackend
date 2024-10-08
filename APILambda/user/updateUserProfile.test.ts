@@ -1,4 +1,3 @@
-import { UserHandle } from "TiFShared/domain-models/User"
 import { testAPI } from "../test/testApp"
 import { createUserFlow } from "../test/userFlows/createUserFlow"
 
@@ -36,9 +35,8 @@ describe("Update user profile tests", () => {
       const newHandle = "handle"
       const resp = await testAPI.updateCurrentUserProfile({
         auth: newUser.auth,
-        body: {
-          handle: UserHandle.optionalParse(newHandle)!
-        }
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        body: { handle: newHandle as any }
       })
 
       expect(resp).toEqual({
