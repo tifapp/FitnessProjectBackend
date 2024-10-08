@@ -6,8 +6,8 @@
   "scripts": {
     "pr": "cd .. && npm run pr",
     "build": "npx tsc --traceResolution --strict false",
-    "test": "npx ts-node node_modules/jest/bin/jest --detectOpenHandles --runInBand",
-    "test:ci": "npx ts-node node_modules/.bin/jest --ci --detectOpenHandles --forceExit --runInBand"
+    "test": "npx ts-node ../node_modules/jest/bin/jest --detectOpenHandles --runInBand",
+    "test:ci": "npx ts-node ../node_modules/.bin/jest --ci --detectOpenHandles --forceExit --runInBand"
   },
   "keywords": [],
   "author": "TiF",

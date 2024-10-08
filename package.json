@@ -1,11 +1,20 @@
+
 {
+  "private": true,
+  "workspaces": [
+    "TiFBackendUtils",
+    "APILambda",
+    "GeocodingLambda"
+  ],
   "scripts": {
     "pr": "ts-node ./TiFBackendUtils/node_modules/TiFShared/npm-scripts/auto-pr",
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,md}\"",
     "prepare": "husky",
-    "postinstall": "patch-package && node postinstall.mjs",
+    "postinstall": "patch-package",
     "dbtots": "npm run resetDB && npx ts-node scripts/dbToTs --run",
-    "resetDB": "npx ts-node scripts/resetDB --run"
+    "resetDB": "npx ts-node scripts/resetDB --run",
+    "build:main": "npm run build --workspace=APILambda",
+    "build:sub": "npm run build --workspace=GeocodingLambda"
   },
   "devDependencies": {
     "@rmp135/sql-ts": "^1.18.1",

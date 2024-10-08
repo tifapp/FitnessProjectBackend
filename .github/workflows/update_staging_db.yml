@@ -39,9 +39,6 @@ jobs:
       - name: Install dependencies
         run: |
           npm ci
-          cd TiFBackendUtils
-        env:
-          CI: true
 
       - name: Create staging db
         run: |

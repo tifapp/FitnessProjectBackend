@@ -25,7 +25,6 @@ jobs:
 
       - name: Install backend utils dependencies
         run: |
-          cd TiFBackendUtils
           npm ci
       
       - name: Build backend utils js
