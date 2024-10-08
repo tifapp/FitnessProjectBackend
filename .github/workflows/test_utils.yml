@@ -59,7 +59,6 @@ jobs:
 
       - name: Install dependencies
         run: |
-          cd TiFBackendUtils
           npm ci
 
       - name: Run tests

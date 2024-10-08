@@ -65,8 +65,6 @@ jobs:
       - name: Install dependencies
         run: |
           npm ci
-        env:
-          CI: true
       
       - name: Sync DB with Typescript
         run: |
@@ -137,8 +135,6 @@ jobs:
     - name: Install dependencies
       run: |
         npm ci
-      env:
-        CI: true
 
     - name: Run staging tests with authenticated Cognito users
       # TODO: Reduce memory required

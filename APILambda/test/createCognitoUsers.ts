@@ -3,6 +3,7 @@ import { AdminConfirmSignUpRequest, AdminUpdateUserAttributesRequest, CognitoIde
 import { fromEnv } from "@aws-sdk/credential-providers"
 import { faker } from "@faker-js/faker"
 import jwt from "jsonwebtoken"
+import { envVars } from "TiFBackendUtils/env"
 import { TestUser, TestUserInput } from "../global"
 import { testEnvVars } from "./testEnv"
 
@@ -156,5 +157,5 @@ export const createCognitoTestAuthToken = async ( // TODO: Remove after we get c
   // @ts-ignore
   const { payload: { sub, name } } = jwt.decode(idToken, { complete: true })
 
-  return { auth: `Bearer ${idToken}`, id: sub, name, refreshAuth }
+  return { auth: `Bearer ${idToken}`, id: sub as string, name, refreshAuth }
 }
