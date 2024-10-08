@@ -39,7 +39,7 @@ export const leaveEvent = (
           removeUserFromAttendeeList(tx, selfId, eventId)
         )
         .mapSuccess(({ rowsAffected }) =>
-          rowsAffected > 0 ? resp(204) : resp(200)
+          rowsAffected > 0 ? resp(204) : resp(200, { message: "not-attending" })
         )
     )
       .unwrap()

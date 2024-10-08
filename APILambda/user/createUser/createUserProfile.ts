@@ -61,7 +61,7 @@ export const createCurrentUserProfile = (
   async ({ context: { selfId, name: cognitoName }, environment: { setProfileCreatedAttribute } }) =>
     checkValidName(cognitoName)
       .flatMapSuccess(() =>
-        generateUniqueHandle(conn, cognitoName)
+        generateUniqueHandle(cognitoName)
       )
       .flatMapSuccess(handle => createUserProfileTransaction({ id: selfId, handle, name: cognitoName }))
       .passthroughSuccess(() => setProfileCreatedAttribute(selfId))
