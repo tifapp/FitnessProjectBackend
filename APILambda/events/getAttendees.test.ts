@@ -1,9 +1,10 @@
 import { conn } from "TiFBackendUtils"
+import { TestUser } from "../global"
 import { userToUserRequest } from "../test/shortcuts"
 import { testAPI } from "../test/testApp"
 import { testEventInput } from "../test/testEvents"
 import { createEventFlow } from "../test/userFlows/createEventFlow"
-import { TestUser, createUserFlow } from "../test/userFlows/createUserFlow"
+import { createUserFlow } from "../test/userFlows/createUserFlow"
 import { AttendeesListCursor, decodeAttendeesListCursor } from "../utils/Cursor"
 import { createEventSQL } from "./createEvent"
 
@@ -426,14 +427,14 @@ describe("getAttendeesList endpoint", () => {
             name: attendeesList[0].name,
             hasArrived: false,
             role: "hosting",
-            relations: { fromYouToThem: "not-friends", fromThemToYou: "not-friends" }
+            relationStatus: "not-friends"
           },
           {
             id: attendeesList[3].id,
             name: attendeesList[3].name,
             hasArrived: false,
             role: "attending",
-            relations: { fromYouToThem: "not-friends", fromThemToYou: "not-friends" }
+            relationStatus: "not-friends"
           }
         ],
         nextPageCursor: lastPageCursorResponse,
@@ -456,7 +457,7 @@ describe("getAttendeesList endpoint", () => {
 
     expect(resp).toMatchObject({
       status: 403,
-      data: { error: "blocked-by-host" }
+      data: { error: "blocked-you" }
     })
   })
 
@@ -494,14 +495,14 @@ describe("getAttendeesList endpoint", () => {
             name: attendeesList[0].name,
             hasArrived: false,
             role: "hosting",
-            relations: { fromYouToThem: "not-friends", fromThemToYou: "not-friends" }
+            relationStatus: "not-friends"
           },
           {
             id: attendeesList[3].id,
             name: attendeesList[3].name,
             hasArrived: false,
             role: "attending",
-            relations: { fromYouToThem: "not-friends", fromThemToYou: "not-friends" }
+            relationStatus: "not-friends"
           }
         ],
         nextPageCursor: lastPageCursorResponse,
@@ -542,14 +543,14 @@ describe("getAttendeesList endpoint", () => {
             name: attendeesList[0].name,
             hasArrived: false,
             role: "hosting",
-            relations: { fromYouToThem: "blocked", fromThemToYou: "not-friends" }
+            relationStatus: "blocked-them"
           },
           {
             id: attendeesList[1].id,
             name: attendeesList[1].name,
             hasArrived: false,
             role: "attending",
-            relations: { fromYouToThem: "blocked", fromThemToYou: "not-friends" }
+            relationStatus: "blocked-them"
           }
         ],
         nextPageCursor: getNextPageCursorResp(attendeesList, 1),
@@ -579,7 +580,7 @@ describe("getAttendeesList endpoint", () => {
 
     expect(resp).toMatchObject({
       status: 403,
-      data: { error: "blocked-by-host" }
+      data: { error: "blocked-you" }
     })
   })
 })

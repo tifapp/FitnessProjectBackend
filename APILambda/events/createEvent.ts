@@ -1,11 +1,10 @@
 import { conn } from "TiFBackendUtils"
 import { MySQLExecutableDriver } from "TiFBackendUtils/MySQLDriver"
 import { resp } from "TiFShared/api/Transport"
-import { CreateEvent } from "TiFShared/api/models/Event"
-import { EventID } from "TiFShared/domain-models/Event"
+import { CreateEvent, EventID } from "TiFShared/domain-models/Event"
 import { promiseResult, success } from "TiFShared/lib/Result"
 import { TiFAPIRouterExtension } from "../router"
-import { addUserToAttendeeList } from "./joinEventById"
+import { addUserToAttendeeList } from "../utils/eventAttendance"
 
 export const createEventSQL = (
   conn: MySQLExecutableDriver,
@@ -30,7 +29,6 @@ export const createEventSQL = (
     description, 
     startDateTime, 
     endDateTime, 
-    color, 
     shouldHideAfterStartDate, 
     isChatEnabled, 
     latitude, 
@@ -40,8 +38,7 @@ export const createEventSQL = (
     :title, 
     :description, 
     :startDateTime, 
-    :endDateTime, 
-    :color, 
+    :endDateTime,
     :shouldHideAfterStartDate, 
     :isChatEnabled, 
     :latitude, 
@@ -52,8 +49,8 @@ export const createEventSQL = (
       ...rest,
       latitude,
       longitude,
-      startDateTime: new Date(startDateTime),
-      endDateTime: new Date(endDateTime),
+      startDateTime,
+      endDateTime,
       hostId
     }
   )
@@ -65,21 +62,23 @@ export const createEventSQL = (
  *
  * @param environment see {@link ServerEnvironment}.
  */
-export const createEvent: TiFAPIRouterExtension["createEvent"] = ({ environment, context: { selfId }, body, log }) =>
-  conn
-    .transaction((tx) =>
-      createEventSQL(tx, body, selfId)
-        .passthroughSuccess(({ insertId }) =>
-          addUserToAttendeeList(
-            tx,
-            selfId,
-            parseInt(insertId),
-            "hosting"
+export const createEvent = (
+  ({ environment, context: { selfId }, body, log }) =>
+    conn
+      .transaction((tx) =>
+        createEventSQL(tx, body, selfId)
+          .passthroughSuccess(({ insertId }) =>
+            addUserToAttendeeList(
+              tx,
+              selfId,
+              parseInt(insertId),
+              "hosting"
+            )
           )
-        )
-        .passthroughSuccess(() =>
-          promiseResult(environment.callGeocodingLambda(body.coordinates).then(() => success()).catch(e => { log.error(e); return success() }))
-        )
-        .mapSuccess(({ insertId }) => resp(201, { id: Number(insertId) as EventID }))
-    )
-    .unwrap()
+          .passthroughSuccess(() =>
+            promiseResult(environment.callGeocodingLambda(body.coordinates).then(() => success()).catch(e => { log.error(e); return success() }))
+          )
+          .mapSuccess(({ insertId }) => resp(201, { id: Number(insertId) as EventID }))
+      )
+      .unwrap()
+  ) satisfies TiFAPIRouterExtension["createEvent"]

@@ -25,7 +25,7 @@ const updateUserSettingsSQL = (
     eventCalendarStartOfWeekDay,
     eventCalendarDefaultLayout,
     eventPresetShouldHideAfterStartDate,
-    eventPresetPlacemark,
+    eventPresetLocation,
     eventPresetDurations,
     version
   }: Partial<UserSettings>
@@ -40,7 +40,7 @@ const updateUserSettingsSQL = (
       eventCalendarStartOfWeekDay,
       eventCalendarDefaultLayout,
       eventPresetShouldHideAfterStartDate,
-      eventPresetPlacemark,
+      eventPresetLocation,
       eventPresetDurations,
       pushNotificationTriggerIds
     ) VALUES (
@@ -51,7 +51,7 @@ const updateUserSettingsSQL = (
       COALESCE(:eventCalendarStartOfWeekDay, 'monday'),
       COALESCE(:eventCalendarDefaultLayout, 'week-layout'),
       COALESCE(:eventPresetShouldHideAfterStartDate, 0),
-      COALESCE(:eventPresetPlacemark, NULL),
+      COALESCE(:eventPresetLocation, NULL),
       COALESCE(:eventPresetDurations, JSON_ARRAY(900, 1800, 2700, 3600, 5400)),
       COALESCE(:pushNotificationTriggerIds, JSON_ARRAY(
         'friend-request-received', 
@@ -75,7 +75,7 @@ const updateUserSettingsSQL = (
       eventCalendarStartOfWeekDay = COALESCE(:eventCalendarStartOfWeekDay, eventCalendarStartOfWeekDay),
       eventCalendarDefaultLayout = COALESCE(:eventCalendarDefaultLayout, eventCalendarDefaultLayout),
       eventPresetShouldHideAfterStartDate = COALESCE(:eventPresetShouldHideAfterStartDate, eventPresetShouldHideAfterStartDate),
-      eventPresetPlacemark = COALESCE(:eventPresetPlacemark, eventPresetPlacemark),
+      eventPresetLocation = COALESCE(:eventPresetLocation, eventPresetLocation),
       eventPresetDurations = COALESCE(:eventPresetDurations, eventPresetDurations),
       pushNotificationTriggerIds = COALESCE(:pushNotificationTriggerIds, pushNotificationTriggerIds),
       version = version + 1;    
@@ -89,15 +89,16 @@ const updateUserSettingsSQL = (
       eventCalendarStartOfWeekDay,
       eventCalendarDefaultLayout,
       eventPresetShouldHideAfterStartDate,
-      eventPresetPlacemark,
+      eventPresetLocation,
       eventPresetDurations,
       version
     }
   )
 
-export const saveUserSettings: TiFAPIRouterExtension["saveUserSettings"] = ({ context: { selfId }, body: newSettings }) =>
-  updateUserSettingsSQL(conn, selfId, newSettings)
-    .flatMapSuccess(() => queryUserSettings(conn, selfId))
-    .observeSuccess(r => console.warn("look at this update ", r))
-    .mapSuccess((updatedSettings) => resp(200, updatedSettings))
-    .unwrap()
+export const saveUserSettings = (
+  ({ context: { selfId }, body: newSettings }) =>
+    updateUserSettingsSQL(conn, selfId, newSettings)
+      .flatMapSuccess(() => queryUserSettings(conn, selfId))
+      .mapSuccess((updatedSettings) => resp(200, updatedSettings))
+      .unwrap()
+) satisfies TiFAPIRouterExtension["saveUserSettings"]

@@ -7,15 +7,14 @@ import { resp } from "TiFShared/api/Transport"
 import { success } from "TiFShared/lib/Result"
 import { TiFAPIRouterExtension } from "../router"
 
-export const updateCurrentUserProfile: TiFAPIRouterExtension["updateCurrentUserProfile"] = async ({
-  context: { selfId },
-  body
-}) =>
-  conn
-    .transaction((tx) => updateProfileTransaction(tx, selfId, body))
-    .mapFailure((error) => resp(400, { error }) as never)
-    .mapSuccess(() => resp(204))
-    .unwrap()
+export const updateCurrentUserProfile = (
+  ({ context: { selfId }, body }) =>
+    conn
+      .transaction((tx) => updateProfileTransaction(tx, selfId, body))
+      .mapFailure((error) => resp(400, { error }) as never)
+      .mapSuccess(() => resp(204))
+      .unwrap()
+) satisfies TiFAPIRouterExtension["updateCurrentUserProfile"]
 
 const updateProfileTransaction = (
   conn: MySQLExecutableDriver,

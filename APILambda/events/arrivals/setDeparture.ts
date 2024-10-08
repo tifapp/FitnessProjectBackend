@@ -6,17 +6,19 @@ import { UserID } from "TiFShared/domain-models/User"
 import { TiFAPIRouterExtension } from "../../router"
 import { upcomingEventArrivalRegionsSQL } from "./getUpcomingEvents"
 
-export const departFromRegion: TiFAPIRouterExtension["departFromRegion"] = ({ context: { selfId }, body: { coordinate } }) =>
-  conn.transaction((tx) =>
-    deleteArrival(
-      tx,
-      selfId,
-      coordinate
+export const departFromRegion = (
+  ({ context: { selfId }, body: { coordinate } }) =>
+    conn.transaction((tx) =>
+      deleteArrival(
+        tx,
+        selfId,
+        coordinate
+      )
+        .flatMapSuccess(() => upcomingEventArrivalRegionsSQL(conn, selfId))
     )
-      .flatMapSuccess(() => upcomingEventArrivalRegionsSQL(conn, selfId))
-  )
-    .mapSuccess((trackableRegions) => (resp(200, { trackableRegions })))
-    .unwrap()
+      .mapSuccess((trackableRegions) => (resp(200, { trackableRegions })))
+      .unwrap()
+) satisfies TiFAPIRouterExtension["departFromRegion"]
 
 export const deleteArrival = (
   conn: MySQLExecutableDriver,

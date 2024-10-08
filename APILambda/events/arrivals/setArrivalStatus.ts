@@ -77,17 +77,19 @@ export const insertArrival = (
       { userId, latitude: coordinate.latitude, longitude: coordinate.longitude }
     )
 
-export const arriveAtRegion: TiFAPIRouterExtension["arriveAtRegion"] = ({
-  context: { selfId },
-  environment: { maxArrivals },
-  body: { coordinate }
-}) =>
-  conn.transaction(
-    (tx) =>
-      deleteOldArrivals(tx, selfId, coordinate)
-        .passthroughSuccess(() => deleteMaxArrivals(tx, selfId, maxArrivals))
-        .passthroughSuccess(() => insertArrival(tx, selfId, coordinate))
-        .flatMapSuccess(() => upcomingEventArrivalRegionsSQL(conn, selfId))
-  )
-    .mapSuccess((trackableRegions) => (resp(200, { trackableRegions })))
-    .unwrap()
+export const arriveAtRegion = (
+  ({
+    context: { selfId },
+    environment: { maxArrivals },
+    body: { coordinate }
+  }) =>
+    conn.transaction(
+      (tx) =>
+        deleteOldArrivals(tx, selfId, coordinate)
+          .passthroughSuccess(() => deleteMaxArrivals(tx, selfId, maxArrivals))
+          .passthroughSuccess(() => insertArrival(tx, selfId, coordinate))
+          .flatMapSuccess(() => upcomingEventArrivalRegionsSQL(conn, selfId))
+    )
+      .mapSuccess((trackableRegions) => (resp(200, { trackableRegions })))
+      .unwrap()
+) satisfies TiFAPIRouterExtension["arriveAtRegion"]

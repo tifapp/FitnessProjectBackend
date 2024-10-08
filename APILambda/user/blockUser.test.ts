@@ -1,10 +1,20 @@
 import { randomUUID } from "crypto"
+import { TestUser } from "../global"
 import { blockedUserResponse, userToUserRequest } from "../test/shortcuts"
 import { testAPI } from "../test/testApp"
-import { createUserFlow, TestUser } from "../test/userFlows/createUserFlow"
+import { createUserFlow } from "../test/userFlows/createUserFlow"
 
 describe("Block User tests", () => {
   // TODO: TEST THAT USER IS KICKED OUT OF EVENT AFTER BEING BLOCKED
+
+  it("should error when trying to block yourself", async () => {
+    const fromUser = await createUserFlow()
+    const resp = await testAPI.blockUser(userToUserRequest(fromUser, fromUser))
+    expect(resp).toMatchObject({
+      status: 400,
+      data: { error: "current-user" }
+    })
+  })
 
   it("should 404 when trying to block a non-existent user", async () => {
     const fromUser = await createUserFlow()
@@ -36,10 +46,7 @@ describe("Block User tests", () => {
 
     expect(await testAPI.getUser(userToUserRequest(fromUser, toUser))).toMatchObject({
       data: expect.objectContaining({
-        relations: {
-          fromYouToThem: "blocked",
-          fromThemToYou: "not-friends"
-        }
+        relationStatus: "blocked-them"
       })
     })
 

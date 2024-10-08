@@ -1,15 +1,14 @@
-import { BidirectionalUserRelations } from "TiFShared/domain-models/User"
-import { ExtractSuccess } from "TiFShared/lib/Result"
+import { ExtractSuccess, failure, success } from "TiFShared/lib/Result"
 import { DBuser } from "../DBTypes"
 import { MySQLExecutableDriver } from "../MySQLDriver/index"
-import { UserRelationsInput } from "./UserRelationships"
+import { UserRelations, UserRelationshipPair, UserRelationsSchema } from "./UserRelationships"
 
 export const findTiFUser = (
   conn: MySQLExecutableDriver,
-  { fromUserId, toUserId }: UserRelationsInput
+  { fromUserId, toUserId }: UserRelationshipPair
 ) =>
   conn
-    .queryFirstResult<DBuser & BidirectionalUserRelations>(
+    .queryFirstResult<DBuser & UserRelations>(
       `
       SELECT
       theirUser.*,
@@ -23,12 +22,20 @@ export const findTiFUser = (
           END AS fromYouToThem
       FROM
           user theirUser
-          LEFT JOIN userRelations fromThemToYou ON fromThemToYou.fromUserId = theirUser.id AND fromThemToYou.toUserId = :fromUserId
-          LEFT JOIN userRelations fromYouToThem ON fromYouToThem.fromUserId = :fromUserId AND fromYouToThem.toUserId = theirUser.id
+          LEFT JOIN userRelationships fromThemToYou ON fromThemToYou.fromUserId = theirUser.id AND fromThemToYou.toUserId = :fromUserId
+          LEFT JOIN userRelationships fromYouToThem ON fromYouToThem.fromUserId = :fromUserId AND fromYouToThem.toUserId = theirUser.id
       WHERE theirUser.id = :toUserId;
       `,
       { fromUserId, toUserId }
     )
-    .mapSuccess(({ fromThemToYou, fromYouToThem, ...user }) => ({ ...user, relations: { fromThemToYou, fromYouToThem } }))
+    .flatMapSuccess(({ fromThemToYou, fromYouToThem, ...user }) => {
+      const relationStatus = UserRelationsSchema.parse({ fromThemToYou, fromYouToThem })
+
+      if (relationStatus === "blocked-you") {
+        return failure({ ...user, relationStatus })
+      } else {
+        return success({ ...user, relationStatus })
+      }
+    })
 
 export type TiFUser = ExtractSuccess<ReturnType<typeof findTiFUser>>

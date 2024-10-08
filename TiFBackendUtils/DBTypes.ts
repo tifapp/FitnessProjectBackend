@@ -6,18 +6,18 @@
 * Rerun sql-ts to regenerate this file.
 */
 export interface DBbanned {
-  'banEnd': Date | undefined;
-  'banStart': Date | undefined;
+  'banEnd'?: Date | undefined;
+  'banStart'?: Date | undefined;
   'userId': string;
 }
 export interface DBevent {
-  'color': import("./node_modules/TiFShared/domain-models/ColorString").ColorString | undefined;
+  'color'?: import("./node_modules/TiFShared/domain-models/ColorString").ColorString | undefined;
   'createdDateTime': Date;
-  'description': string | undefined;
+  'description'?: string | undefined;
   'endDateTime': Date;
-  'endedDateTime': Date | undefined;
+  'endedDateTime'?: Date | undefined;
   'hostId': string;
-  'id': number;
+  'id': import("./node_modules/TiFShared/domain-models/Event").EventID;
   'isChatEnabled': boolean;
   'latitude': number;
   'longitude': number;
@@ -38,7 +38,7 @@ export interface DBEventAttendeeCountView {
 }
 export interface DBEventAttendeesView {
   'eventId': number;
-  'userIds': string | undefined;
+  'userIds'?: string | undefined;
 }
 export interface DBeventReports {
   'eventOwnerId': string;
@@ -48,60 +48,60 @@ export interface DBeventReports {
   'userReporting': string;
 }
 export interface DBlocation {
-  'city': string | undefined;
-  'country': string | undefined;
+  'city'?: string | undefined;
+  'country'?: string | undefined;
   'createdDateTime': Date;
-  'isoCountryCode': string | undefined;
+  'isoCountryCode'?: string | undefined;
   'latitude': number;
   'longitude': number;
-  'name': string | undefined;
-  'postalCode': string | undefined;
-  'region': string | undefined;
-  'street': string | undefined;
-  'streetNumber': string | undefined;
+  'name'?: string | undefined;
+  'postalCode'?: string | undefined;
+  'region'?: string | undefined;
+  'street'?: string | undefined;
+  'streetNumber'?: string | undefined;
   'timezoneIdentifier': string;
 }
 export interface DBpushTokens {
   'id': number;
   'platformName': 'apple'|'android';
-  'pushToken': any | undefined;
+  'pushToken'?: any | undefined;
   'userId': string;
 }
 export interface DBTifEventView {
-  'city': string | undefined;
-  'color': import("./node_modules/TiFShared/domain-models/ColorString").ColorString | undefined;
-  'country': string | undefined;
+  'city'?: string | undefined;
+  'color'?: import("./node_modules/TiFShared/domain-models/ColorString").ColorString | undefined;
+  'country'?: string | undefined;
   'createdDateTime': Date;
-  'description': string | undefined;
+  'description'?: string | undefined;
   'endDateTime': Date;
-  'endedDateTime': Date | undefined;
+  'endedDateTime'?: Date | undefined;
   'hasArrived': boolean;
   'hostHandle': import("./node_modules/TiFShared/domain-models/User").UserHandle;
   'hostId': string;
   'hostName': string;
   'id': number;
   'isChatEnabled': boolean;
-  'isoCountryCode': string | undefined;
+  'isoCountryCode'?: string | undefined;
   'latitude': number;
   'longitude': number;
-  'placemarkName': string | undefined;
-  'postalCode': string | undefined;
-  'region': string | undefined;
+  'placemarkName'?: string | undefined;
+  'postalCode'?: string | undefined;
+  'region'?: string | undefined;
   'shouldHideAfterStartDate': boolean;
   'startDateTime': Date;
-  'street': string | undefined;
-  'streetNumber': string | undefined;
-  'timezoneIdentifier': string | undefined;
+  'street'?: string | undefined;
+  'streetNumber'?: string | undefined;
+  'timezoneIdentifier'?: string | undefined;
   'title': string;
   'updatedDateTime': Date;
 }
 export interface DBuser {
-  'bio': string | undefined;
+  'bio'?: string | undefined;
   'createdDateTime': Date;
   'handle': import("./node_modules/TiFShared/domain-models/User").UserHandle;
-  'id': string;
+  'id': import("./node_modules/TiFShared/domain-models/User").UserID;
   'name': string;
-  'profileImageURL': string | undefined;
+  'profileImageURL'?: string | undefined;
   'updatedDateTime': Date;
 }
 export interface DBuserArrivals {
@@ -110,7 +110,7 @@ export interface DBuserArrivals {
   'longitude': number;
   'userId': string;
 }
-export interface DBuserRelations {
+export interface DBuserRelationships {
   'fromUserId': string;
   'status': 'friends'|'friend-request-pending'|'blocked';
   'toUserId': string;
@@ -127,12 +127,12 @@ export interface DBuserSettings {
   'eventCalendarDefaultLayout': 'single-day-layout'|'week-layout'|'month-layout';
   'eventCalendarStartOfWeekDay': 'sunday'|'monday'|'tuesday'|'wednesday'|'thursday'|'friday'|'saturday';
   'eventPresetDurations': number[];
-  'eventPresetPlacemark': import("./node_modules/TiFShared/domain-models/Event").EventEditLocation | undefined;
+  'eventPresetLocation'?: import("./node_modules/TiFShared/domain-models/Event").EventEditLocation | undefined;
   'eventPresetShouldHideAfterStartDate': boolean;
   'isAnalyticsEnabled': boolean;
   'isCrashReportingEnabled': boolean;
   'pushNotificationTriggerIds': import("./node_modules/TiFShared/domain-models/Settings").UserSettings["pushNotificationTriggerIds"];
-  'updatedDateTime': Date | undefined;
+  'updatedDateTime'?: Date | undefined;
   'userId': string;
   'version': number;
 }

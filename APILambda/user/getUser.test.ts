@@ -1,4 +1,4 @@
-import { userToUserRequest } from "../test/shortcuts"
+import { blockedUserResponse, userToUserRequest } from "../test/shortcuts"
 import { testAPI } from "../test/testApp"
 import { createUserFlow } from "../test/userFlows/createUserFlow"
 
@@ -24,7 +24,7 @@ describe("GetUser tests", () => {
         id: newUser.id,
         name: newUser.name,
         handle: newUser.handle,
-        relations: { fromThemToYou: "current-user", fromYouToThem: "current-user" }
+        relationStatus: "current-user"
       })
     })
   })
@@ -41,7 +41,7 @@ describe("GetUser tests", () => {
         id: searchedUser.id,
         name: searchedUser.name,
         handle: searchedUser.handle,
-        relations: { fromThemToYou: "not-friends", fromYouToThem: "not-friends" }
+        relationStatus: "not-friends"
       })
     })
   })
@@ -53,12 +53,6 @@ describe("GetUser tests", () => {
     await testAPI.blockUser(userToUserRequest(newUser, blockedUser))
     const resp = await testAPI.getUser(userToUserRequest(blockedUser, newUser))
 
-    expect(resp).toMatchObject({
-      status: 403,
-      data: {
-        userId: newUser.id,
-        error: "blocked"
-      }
-    })
+    expect(resp).toMatchObject(blockedUserResponse(newUser.id))
   })
 })

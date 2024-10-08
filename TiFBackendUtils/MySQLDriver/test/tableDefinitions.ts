@@ -125,7 +125,7 @@ export const tableDefintionsByFamily = [
       COLLATE utf8mb4_0900_ai_ci;
     `,
     `
-    CREATE TABLE IF NOT EXISTS userRelations (
+    CREATE TABLE IF NOT EXISTS userRelationships (
     status enum('friends', 'friend-request-pending', 'blocked') NOT NULL,
     updatedDateTime datetime(${timePrecision}) NOT NULL DEFAULT current_timestamp(${timePrecision}) ON UPDATE current_timestamp(${timePrecision}),
     fromUserId char(36) NOT NULL,
@@ -162,7 +162,7 @@ export const tableDefintionsByFamily = [
     eventCalendarStartOfWeekDay enum('sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday') NOT NULL DEFAULT 'monday',
     eventCalendarDefaultLayout enum('single-day-layout', 'week-layout', 'month-layout') NOT NULL DEFAULT 'week-layout',
     eventPresetShouldHideAfterStartDate tinyint(1) NOT NULL DEFAULT '0',
-    eventPresetPlacemark JSON,
+    eventPresetLocation JSON,
     eventPresetDurations JSON NOT NULL DEFAULT (JSON_ARRAY(900, 1800, 2700, 3600, 5400)),
     version bigint NOT NULL DEFAULT '0',
     updatedDateTime timestamp(${timePrecision}) NULL DEFAULT current_timestamp(${timePrecision}) ON UPDATE current_timestamp(${timePrecision}),

@@ -7,7 +7,7 @@ import { testEventInput } from "../test/testEvents"
 import { createEventFlow } from "../test/userFlows/createEventFlow"
 import { createUserFlow } from "../test/userFlows/createUserFlow"
 
-describe("getEvent", () => {
+describe("getEventDetails", () => {
   it("should return 404 if the event doesnt exist", async () => {
     const newUser = await createUserFlow()
     const eventId = randomInt(1000)
@@ -58,7 +58,6 @@ describe("getEvent", () => {
         data: {
           id: eventIds[0],
           title: "Fake Event",
-          color: "#72B01D",
           isChatExpired: false,
           description: "This is some random event",
           attendeeCount: 2,
@@ -86,10 +85,7 @@ describe("getEvent", () => {
             isInArrivalTrackingPeriod: true
           },
           host: {
-            relations: {
-              fromThemToYou: "not-friends",
-              fromYouToThem: "not-friends"
-            },
+            relationStatus: "not-friends",
             id: host.id,
             name: host.name,
             handle: host.handle
@@ -107,29 +103,17 @@ describe("getEvent", () => {
     )
   })
 
-  describe("Checks the data returned if the user blocks the host or vice versa is of the correct format", () => {
-    it("should return host name and event title if blocked by host", async () => {
-      const { attendeesList: [, attendee], host, eventIds: [eventId] } = await createEventFlow([{}], 1)
+  it("should return limited event details if blocked by host", async () => {
+    const { attendeesList: [, attendee], host, eventIds: [eventId] } = await createEventFlow([{}], 1)
 
-      await testAPI.blockUser(userToUserRequest(host, attendee))
-      const resp = await testAPI.eventDetails({ auth: attendee.auth, params: { eventId } })
+    await testAPI.blockUser(userToUserRequest(host, attendee))
+    const resp = await testAPI.eventDetails({ auth: attendee.auth, params: { eventId } })
 
-      expect(resp.status).toEqual(403)
-      expect(resp.data).toMatchObject({
-        error: "user-is-blocked" // unauthorized???
-      })
-    })
-
-    it("should return host name and event title if attendee blocked host", async () => {
-      const { attendeesList: [, attendee], host, eventIds: [eventId] } = await createEventFlow([{}], 1)
-
-      await testAPI.blockUser(userToUserRequest(attendee, host))
-      const resp = await testAPI.eventDetails({ auth: attendee.auth, params: { eventId } })
-
-      expect(resp.status).toEqual(403)
-      expect(resp.data).toMatchObject({
-        error: "user-is-blocked"
-      })
+    expect(resp).toMatchObject({
+      status: 403,
+      data: {
+        error: "blocked-you"
+      }
     })
   })
 
@@ -146,10 +130,7 @@ describe("getEvent", () => {
         status: 200,
         data: expect.objectContaining({
           host: expect.objectContaining({
-            relations: expect.objectContaining({
-              fromYouToThem: "current-user",
-              fromThemToYou: "current-user"
-            })
+            relationStatus: "current-user"
           })
         })
       })

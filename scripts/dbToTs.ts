@@ -16,11 +16,15 @@ const options = {
     hasArrived: "boolean",
     pushNotificationTriggerIds: "import(\"./node_modules/TiFShared/domain-models/Settings\").UserSettings[\"pushNotificationTriggerIds\"]",
     eventPresetDurations: "number[]",
-    eventPresetPlacemark: "import(\"./node_modules/TiFShared/domain-models/Event\").EventEditLocation"
+    eventPresetLocation: "import(\"./node_modules/TiFShared/domain-models/Event\").EventEditLocation"
   },
   typeMap: {
     boolean: ["tinyint"],
     number: ["bigint"]
+  },
+  typeOverrides: {
+    "user.id": "import(\"./node_modules/TiFShared/domain-models/User\").UserID",
+    "event.id": "import(\"./node_modules/TiFShared/domain-models/Event\").EventID"
   }
 }
 
@@ -33,6 +37,12 @@ if (process.argv.includes("--run")) {
       password: envVars.DATABASE_PASSWORD,
       database: envVars.DATABASE_NAME
     },
+    typeOverrides: Object.fromEntries(
+      Object.entries(options.typeOverrides).map(([key, value]) => [
+        `${envVars.DATABASE_NAME}.${key}`,
+        value
+      ])
+    ),
     typeMap: options.typeMap,
     globalOptionality: "required" as const,
     // eslint-disable-next-line no-template-curly-in-string
@@ -60,7 +70,9 @@ if (process.argv.includes("--run")) {
       let tsString = await sqlts.fromObject({ tables: TiFDBTables, enums: DB.enums }, sqltsConfig)
 
       if (options.optionalValueUndefined) {
-        tsString = tsString.replace(/ null/g, " undefined")
+        tsString = tsString
+          .replace(/ null/g, " undefined")
+          .replace(/(['"][^'"]+['"]):\s*([^;]*\|\s*undefined)/g, "$1?: $2")
       }
 
       const schemaMarkdownTable = TiFDBTables.map(table =>

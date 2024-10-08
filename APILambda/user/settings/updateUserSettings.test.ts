@@ -18,7 +18,7 @@ describe("Update Settings tests", () => {
   it("should update the user's settings", async () => {
     // For Testing
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { eventPresetPlacemark, ...defaults } = { ...DEFAULT_USER_SETTINGS }
+    const { eventPresetLocation, ...defaults } = { ...DEFAULT_USER_SETTINGS }
     const newUser = await createUserFlow()
     const updateResp = await testAPI.saveUserSettings({
       auth: newUser.auth,

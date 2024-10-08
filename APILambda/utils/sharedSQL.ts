@@ -20,7 +20,7 @@ export const isUserBlocked = (
 ) =>
   conn
     .queryHasResults(
-      "SELECT TRUE FROM userRelations WHERE fromUserId = :fromUserId AND toUserId = :toUserId AND (status IS NOT NULL AND status = 'blocked');",
+      "SELECT TRUE FROM userRelationships WHERE fromUserId = :fromUserId AND toUserId = :toUserId AND (status IS NOT NULL AND status = 'blocked');",
       { fromUserId, toUserId }
     )
 

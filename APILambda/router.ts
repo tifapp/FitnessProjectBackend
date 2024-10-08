@@ -11,7 +11,7 @@ import { ResponseContext } from "./auth"
 import { ServerEnvironment } from "./env"
 import { catchAPIErrors } from "./errorHandler"
 
-type RouterParams = {context: ResponseContext, environment: ServerEnvironment, log: Logger}
+export type RouterParams = {context: ResponseContext, environment: ServerEnvironment, log: Logger}
 
 export type TiFAPIRouterExtension = TiFAPIClient<RouterParams>
 
@@ -34,14 +34,12 @@ const emptyToUndefined = <T extends object>(obj: T) => Object.keys(obj).length =
  * @param app see {@link Application}
  * @param environment see {@link ServerEnvironment}
  */
-export const TiFRouter = <Fns extends TiFAPIRouterExtension>(apiClient: MatchFnCollection<TiFAPIRouterExtension, Fns>, environment: ServerEnvironment, schema: APISchema = TiFAPISchema) => {
-  const router = express.Router()
-
-  Object.entries(schema).forEach(
-    ([endpointName, endpointSchema]) => {
-      // weird: fails typescript compiler without explicit cast
+export const TiFRouter = <Fns extends TiFAPIRouterExtension>(apiClient: MatchFnCollection<TiFAPIRouterExtension, Fns>, environment: ServerEnvironment, schema: APISchema = TiFAPISchema) =>
+  Object.entries(schema).reduce(
+    (router, [endpointName, endpointSchema]) => {
       const { httpRequest: { method, endpoint } } = endpointSchema as GenericEndpointSchema
-      const handler: APIHandler<RouterParams> = middlewareRunner(catchAPIErrors, validateAPIRouterCall, apiClient[endpointName as keyof TiFAPIRouterExtension])
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const handler: APIHandler<RouterParams> = middlewareRunner(catchAPIErrors, validateAPIRouterCall, apiClient[endpointName as keyof TiFAPIRouterExtension] as any)
       router[method.toLowerCase() as Lowercase<typeof method>](
         endpoint,
         async ({ body, query, params }, res) => {
@@ -58,8 +56,8 @@ export const TiFRouter = <Fns extends TiFAPIRouterExtension>(apiClient: MatchFnC
           res.status(status).json(data)
         }
       )
-    }
-  )
 
-  return router
-}
+      return router
+    },
+    express.Router()
+  )

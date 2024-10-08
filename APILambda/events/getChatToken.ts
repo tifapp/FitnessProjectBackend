@@ -3,8 +3,8 @@ import { DBTifEvent } from "TiFBackendUtils/TifEventUtils"
 import { EventID } from "TiFShared/domain-models/Event"
 import { UserID } from "TiFShared/domain-models/User"
 import { ChatPermissions, createTokenRequest } from "../ably"
+import { getEventSQL } from "../utils/eventDetails"
 import { isUserBlocked, isUserInEvent } from "../utils/sharedSQL"
-import { eventDetailsSQL } from "./getEventById"
 
 type Role = "admin" | "attendee" | "viewer"
 
@@ -72,7 +72,7 @@ export const checkChatPermissionsTransaction = (
   userId: UserID
 ) =>
   conn.transaction((tx) =>
-    eventDetailsSQL(tx, eventId, userId)
+    getEventSQL(tx, eventId, userId)
       .passthroughSuccess(() => isUserInEvent(tx, userId, eventId))
       .passthroughSuccess(event => isUserBlocked(tx, event.hostId, userId).inverted().withFailure("user-is-blocked"))
   )

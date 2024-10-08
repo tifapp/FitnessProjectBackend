@@ -1,5 +1,5 @@
 import { conn } from "TiFBackendUtils"
-import { getAttendeeCount, getAttendees } from "TiFBackendUtils/TifEventUtils"
+import { getAttendeeCount, getAttendeesPreview } from "TiFBackendUtils/TifEventUtils"
 import { dateRange } from "TiFShared/domain-models/FixedDateRange"
 import dayjs from "dayjs"
 import { addLocationToDB } from "../../GeocodingLambda/utils"
@@ -146,7 +146,7 @@ describe("exploreEvents endpoint tests", () => {
     it("should return the attendee list not including the event host", async () => {
       const { host, ongoingEventId } = await setupDB()
 
-      const attendees = await getAttendees(conn, [`${ongoingEventId}`])
+      const attendees = await getAttendeesPreview(conn, [`${ongoingEventId}`])
       expect(attendees.value).toHaveLength(1)
       expect(attendees.value[0].userIds).not.toEqual(host.id)
     })

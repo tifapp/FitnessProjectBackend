@@ -1,8 +1,8 @@
-import { DBuserSettings } from "TiFBackendUtils/DBTypes"
 import { MySQLExecutableDriver } from "TiFBackendUtils/MySQLDriver"
 import { userWithIdExists } from "TiFBackendUtils/TiFUserUtils"
-import { DEFAULT_USER_SETTINGS } from "TiFShared/domain-models/Settings"
+import { DEFAULT_USER_SETTINGS, UserSettings } from "TiFShared/domain-models/Settings"
 import { success } from "TiFShared/lib/Result"
+
 /**
  * Queries a given user's settings. If the user has never edited their settings,
  * undefined will be returned if no errors occur.
@@ -13,7 +13,7 @@ import { success } from "TiFShared/lib/Result"
  */
 export const queryUserSettings = (conn: MySQLExecutableDriver, userId: string) =>
   userWithIdExists(conn, userId).flatMapSuccess(() =>
-    conn.queryFirstResult<DBuserSettings>(
+    conn.queryFirstResult<UserSettings>(
       `
     SELECT *
     FROM userSettings
@@ -22,4 +22,4 @@ export const queryUserSettings = (conn: MySQLExecutableDriver, userId: string) =
       { userId }
     )
   )
-    .flatMapFailure(() => success(DEFAULT_USER_SETTINGS))
+    .flatMapFailure(() => success(DEFAULT_USER_SETTINGS as UserSettings))

@@ -1,6 +1,6 @@
 import { conn } from "TiFBackendUtils"
 import { MySQLExecutableDriver } from "TiFBackendUtils/MySQLDriver"
-import { DBTifEvent, setEventAttendeesFields, tifEventResponseFromDatabaseEvent } from "TiFBackendUtils/TifEventUtils"
+import { DBTifEvent, getAttendeeData, tifEventResponseFromDatabaseEvent } from "TiFBackendUtils/TifEventUtils"
 import { resp } from "TiFShared/api/Transport"
 import { LocationCoordinate2D } from "TiFShared/domain-models/LocationCoordinate2D"
 import { TiFAPIRouterExtension } from "../router"
@@ -31,8 +31,8 @@ export const getEventsByRegion = (
              END
     END AS fromYouToThem
 FROM TifEventView
-LEFT JOIN userRelations UserRelationOfHostToUser ON TifEventView.hostId = UserRelationOfHostToUser.fromUserId AND UserRelationOfHostToUser.toUserId = :userId
-LEFT JOIN userRelations UserRelationOfUserToHost ON UserRelationOfUserToHost.fromUserId = :userId AND UserRelationOfUserToHost.toUserId = TifEventView.hostId
+LEFT JOIN userRelationships UserRelationOfHostToUser ON TifEventView.hostId = UserRelationOfHostToUser.fromUserId AND UserRelationOfHostToUser.toUserId = :userId
+LEFT JOIN userRelationships UserRelationOfUserToHost ON UserRelationOfUserToHost.fromUserId = :userId AND UserRelationOfUserToHost.toUserId = TifEventView.hostId
     WHERE 
         ST_Distance_Sphere(POINT(:userLongitude, :userLatitude), POINT(TifEventView.longitude, TifEventView.latitude)) < :radius
         AND TifEventView.endDateTime > NOW()
@@ -43,17 +43,18 @@ LEFT JOIN userRelations UserRelationOfUserToHost ON UserRelationOfUserToHost.fro
     { userLatitude, userLongitude, ...rest }
   )
 
-export const exploreEvents: TiFAPIRouterExtension["exploreEvents"] = ({ context: { selfId: userId }, body: { userLocation, radius } }) =>
-  conn
-    .transaction((tx) =>
-      getEventsByRegion(tx, {
-        userId,
-        userLocation,
-        radius
-      }).flatMapSuccess((result) =>
-        setEventAttendeesFields(tx, result, userId)
-          .mapSuccess((events) => events.map((event) => tifEventResponseFromDatabaseEvent(event)))
+export const exploreEvents = (
+  ({ context: { selfId: userId }, body: { userLocation, radius } }) =>
+    conn
+      .transaction((tx) =>
+        getEventsByRegion(tx, {
+          userId,
+          userLocation,
+          radius
+        })
+          .flatMapSuccess((events) => getAttendeeData(tx, events, userId))
+          .mapSuccess((events) => events.map(tifEventResponseFromDatabaseEvent))
           .mapSuccess((events) => resp(200, { events }))
       )
-    )
-    .unwrap()
+      .unwrap()
+  ) satisfies TiFAPIRouterExtension["exploreEvents"]

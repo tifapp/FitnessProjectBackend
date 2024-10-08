@@ -1,9 +1,19 @@
 import { randomUUID } from "crypto"
+import { TestUser } from "../global"
 import { userToUserRequest } from "../test/shortcuts"
 import { testAPI } from "../test/testApp"
-import { createUserFlow, TestUser } from "../test/userFlows/createUserFlow"
+import { createUserFlow } from "../test/userFlows/createUserFlow"
 
 describe("UnblockUser tests", () => {
+  it("should error when trying to unblock yourself", async () => {
+    const fromUser = await createUserFlow()
+    const resp = await testAPI.unblockUser(userToUserRequest(fromUser, fromUser))
+    expect(resp).toMatchObject({
+      status: 400,
+      data: { error: "current-user" }
+    })
+  })
+
   it("should 403 when the unblocked user exists, but has no prior relation to user", async () => {
     const newUser = await createUserFlow()
     const blockedUser = await createUserFlow()
@@ -57,7 +67,7 @@ describe("UnblockUser tests", () => {
     expect(resp).toMatchObject({
       status: 200,
       data: expect.objectContaining({
-        relations: { fromYouToThem: "not-friends", fromThemToYou: "not-friends" }
+        relationStatus: "not-friends"
       })
     })
 

@@ -1,13 +1,15 @@
 import { ColorString } from "TiFShared/domain-models/ColorString"
 import { dateRange, FixedDateRange } from "TiFShared/domain-models/FixedDateRange"
 import { Placemark } from "TiFShared/domain-models/Placemark"
-import { BidirectionalUserRelations, UnblockedBidirectionalUserRelations, UserHandle, UserID } from "TiFShared/domain-models/User"
+import { UnblockedUserRelationsStatus, UserHandle, UserID } from "TiFShared/domain-models/User"
 import { success } from "TiFShared/lib/Result"
 import dayjs from "dayjs"
 import duration from "dayjs/plugin/duration"
-import { DBevent, DBeventAttendance, DBEventAttendeeCountView, DBEventAttendeesView, DBTifEventView, DBuserRelations } from "./DBTypes"
+import { DBevent, DBeventAttendance, DBEventAttendeeCountView, DBEventAttendeesView, DBTifEventView, DBuserRelationships } from "./DBTypes"
 import { MySQLExecutableDriver } from "./MySQLDriver/index"
+import { UserRelations, UserRelationsSchema } from "./TiFUserUtils"
 import { calcSecondsToStart, calcTodayOrTomorrow } from "./dateUtils"
+
 dayjs.extend(duration)
 
 // Get the total seconds in the duration
@@ -19,8 +21,8 @@ export type UserHostRelations = "not-friends" | "friend-request-pending" | "frie
 export type TodayOrTomorrow = "today" | "tomorrow"
 export type UserAttendeeStatus = DBeventAttendance["role"] | "not-participating"
 export type Attendee = { id: string, profileImageURL?: string}
-export type DBTifEvent = DBTifEventView & Omit<DBuserRelations, "status" | "updatedDateTime"> &
-{ attendeeCount: number, previewAttendees: Attendee[], userAttendeeStatus: UserAttendeeStatus, joinedDateTime: Date } & BidirectionalUserRelations
+export type DBTifEvent = DBTifEventView & Omit<DBuserRelationships, "status" | "updatedDateTime"> &
+{ attendeeCount: number, previewAttendees: Attendee[], userAttendeeStatus: UserAttendeeStatus, joinedDateTime: Date } & UserRelations
 
 export type TiFEvent = {
     id: number
@@ -45,7 +47,7 @@ export type TiFEvent = {
       isInArrivalTrackingPeriod: boolean
     }
     host: {
-      relations: UnblockedBidirectionalUserRelations
+      relationStatus: UnblockedUserRelationsStatus
       id: UserID
       name: string
       handle: UserHandle
@@ -110,10 +112,10 @@ export const tifEventResponseFromDatabaseEvent = (event: DBTifEvent) : TiFEvent 
       isInArrivalTrackingPeriod: calcSecondsToStart(event.startDateTime) < SECONDS_IN_DAY
     },
     host: {
-      relations: {
+      relationStatus: UserRelationsSchema.parse({
         fromThemToYou: event.fromThemToYou,
         fromYouToThem: event.fromYouToThem
-      } as UnblockedBidirectionalUserRelations,
+      }) as UnblockedUserRelationsStatus,
       id: event.hostId,
       name: event.hostName,
       handle: event.hostHandle,
@@ -127,8 +129,8 @@ export const tifEventResponseFromDatabaseEvent = (event: DBTifEvent) : TiFEvent 
     joinedDateTime: event.joinedDateTime,
     isChatExpired: isChatExpired(event.endedDateTime),
     hasArrived: event.hasArrived,
-    updatedDateTime: new Date(event.updatedDateTime),
-    createdDateTime: new Date(event.createdDateTime),
+    updatedDateTime: event.updatedDateTime,
+    createdDateTime: event.createdDateTime,
     endedDateTime: event.endedDateTime
   }
 }
@@ -146,7 +148,7 @@ export const getAttendeeCount = (conn: MySQLExecutableDriver, eventIds: string[]
   )
 }
 
-export const getEventAttendanceFields = (conn: MySQLExecutableDriver, userId: string, eventIds: string[]) => {
+export const getAttendeeDetails = (conn: MySQLExecutableDriver, userId: string, eventIds: string[]) => {
   return conn.queryResult<DBeventAttendance>(
     ` SELECT
         ea.joinedDateTime AS joinedDateTime,
@@ -190,7 +192,7 @@ const setAttendeesPreviewForEvent = (
   return events
 }
 
-export const getAttendees = (conn: MySQLExecutableDriver, eventIds: string[]) => {
+export const getAttendeesPreview = (conn: MySQLExecutableDriver, eventIds: string[]) => {
   return conn.queryResult<DBEventAttendeesView>(
     `
     SELECT 
@@ -208,7 +210,7 @@ HAVING
   )
 }
 
-export const setEventAttendeesFields = (
+export const getAttendeeData = (
   conn: MySQLExecutableDriver,
   events: DBTifEvent[],
   userId: string
@@ -219,11 +221,11 @@ export const setEventAttendeesFields = (
     return success([])
   }
 
-  const eventsByRegion = getAttendees(conn, eventIds)
+  const eventsByRegion = getAttendeesPreview(conn, eventIds)
     .flatMapSuccess(
       (attendeesPreviews) =>
         getAttendeeCount(conn, eventIds).flatMapSuccess((eventsWithAttendeeCount) =>
-          getEventAttendanceFields(conn, userId, eventIds).mapSuccess((joinTimestampAndRoleData) =>
+          getAttendeeDetails(conn, userId, eventIds).mapSuccess((joinTimestampAndRoleData) =>
             setAttendeesPreviewForEvent(
               events,
               attendeesPreviews,
@@ -234,7 +236,5 @@ export const setEventAttendeesFields = (
         )
     )
 
-  return eventsByRegion.mapSuccess((events) => {
-    return events
-  })
+  return eventsByRegion
 }

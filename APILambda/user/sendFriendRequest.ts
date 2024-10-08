@@ -1,80 +1,74 @@
 import { conn } from "TiFBackendUtils"
 import { MySQLExecutableDriver } from "TiFBackendUtils/MySQLDriver"
-import { findTiFUser, UserRelationsInput } from "TiFBackendUtils/TiFUserUtils"
+import { findTiFUser, UserRelationshipPair } from "TiFBackendUtils/TiFUserUtils"
 import { resp } from "TiFShared/api/Transport"
+import { chainMiddleware } from "TiFShared/lib/Middleware"
 import { TiFAPIRouterExtension } from "../router"
+import { isCurrentUser } from "../utils/isCurrentUserMiddleware"
 
-export const sendFriendRequest: TiFAPIRouterExtension["sendFriendRequest"] = async ({ context: { selfId: fromUserId }, params: { userId: toUserId } }) => {
-  if (fromUserId === toUserId) { // make generic? getuser, blockuser, unblockuser, etc
-    return resp(400, { error: "cannot-friend-self" }) as never
-  }
+const sendFriendRequestHandler = (
+  ({ context: { selfId: fromUserId }, params: { userId: toUserId } }) =>
+    conn.transaction(tx => findTiFUser(tx, { fromUserId, toUserId })
+      .mapFailure(result =>
+        result === "no-results"
+          ? resp(404, { userId: toUserId, error: "user-not-found" })
+          : resp(403, { error: "blocked-you", userId: toUserId })
+      )
+      .mapSuccess(
+        ({ relationStatus }) => {
+          if (relationStatus === "friends" || relationStatus === "friend-request-sent") {
+            return resp(200, { relationStatus })
+          }
 
-  const result = await findTiFUser(conn, { fromUserId, toUserId })
-    .withFailure(resp(404, {
-      userId: toUserId,
-      error: "user-not-found"
-    }))
-    .mapSuccess(
-      ({ relations: { fromYouToThem, fromThemToYou } }) => {
-        if (fromThemToYou === "blocked") {
-          return resp(403, { error: "blocked", userId: toUserId })
+          return resp(201, { relationStatus: relationStatus === "friend-request-received" ? "friends" : "friend-request-sent" })
         }
+      )
+      .observeSuccess(async ({ status, data: { relationStatus } }) => {
+        if (status === 200) return
 
-        if (
-          fromYouToThem === "friends" ||
-          fromYouToThem === "friend-request-pending"
-        ) {
-          return resp(200, { status: fromYouToThem })
+        if (relationStatus === "friends") {
+          await insertFriendSQL(tx, { fromUserId, toUserId })
+          return updateFriendsSQL(tx, { fromUserId, toUserId })
+        } else if (relationStatus === "friend-request-sent") {
+          return insertPendingFriendRequestSQL(tx, { fromUserId, toUserId })
         }
+      })
+    ).unwrap()
+  ) satisfies TiFAPIRouterExtension["sendFriendRequest"]
 
-        if (fromThemToYou === "friend-request-pending") {
-          return "friends" as const
-        }
+// NB: Middleware type inference issue
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const sendFriendRequest = chainMiddleware(isCurrentUser, sendFriendRequestHandler as any) as unknown as typeof sendFriendRequestHandler
 
-        return "friend-request-pending" as const
-      }
-    )
-    .unwrap()
-
-  if (result === "friend-request-pending") {
-    return addPendingFriendRequestSQL(conn, { fromUserId, toUserId })
-      .withSuccess(resp(201,
-        { status: "friend-request-pending" }
-      ))
-      .unwrap()
-  }
-
-  if (result === "friends") {
-    return makeFriendsSQL(conn, { fromUserId, toUserId })
-      .withSuccess(resp(201,
-        { status: "friends" }
-      ))
-      .unwrap()
-  }
-
-  return result
-}
-
-const makeFriendsSQL = (
+const insertFriendSQL = (
   conn: MySQLExecutableDriver,
-  { fromUserId, toUserId }: UserRelationsInput
+  { fromUserId, toUserId }: UserRelationshipPair
 ) =>
   conn.executeResult(
-    `
-    UPDATE userRelations 
-    SET status = 'friends' 
-    WHERE (fromUserId = :fromUserId AND toUserId = :toUserId) OR (fromUserId = :toUserId AND toUserId = :fromUserId)
-  `,
+    `INSERT INTO userRelationships (fromUserId, toUserId, status)
+    VALUES (:fromUserId, :toUserId, 'friends')
+    ON DUPLICATE KEY UPDATE status = 'friends'`,
     { fromUserId, toUserId }
   )
 
-const addPendingFriendRequestSQL = (
+const updateFriendsSQL = (
   conn: MySQLExecutableDriver,
-  { fromUserId, toUserId }: UserRelationsInput
+  { fromUserId, toUserId }: UserRelationshipPair
 ) =>
   conn.executeResult(
-    `
-    INSERT INTO userRelations (fromUserId, toUserId, status) 
+    `UPDATE userRelationships 
+    SET status = 'friends' 
+    WHERE (fromUserId = :fromUserId AND toUserId = :toUserId) OR (fromUserId = :toUserId AND toUserId = :fromUserId)
+    `,
+    { fromUserId, toUserId }
+  )
+
+const insertPendingFriendRequestSQL = (
+  conn: MySQLExecutableDriver,
+  { fromUserId, toUserId }: UserRelationshipPair
+) =>
+  conn.executeResult(
+    `INSERT INTO userRelationships (fromUserId, toUserId, status) 
     VALUES (:fromUserId, :toUserId, 'friend-request-pending')
     ON DUPLICATE KEY UPDATE
       status = 'friend-request-pending'

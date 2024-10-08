@@ -14,7 +14,7 @@
 | endDateTime | Date | false | None |
 | endedDateTime | Date | true | None |
 | hostId | string | false | None |
-| id | number | false | None |
+| id | import("./node_modules/TiFShared/domain-models/Event").EventID | false | None |
 | isChatEnabled | boolean | false | 1 |
 | latitude | number | false | None |
 | longitude | number | false | None |
@@ -112,7 +112,7 @@
 | bio | string | true | None |
 | createdDateTime | Date | false | CURRENT_TIMESTAMP(3) |
 | handle | import("./node_modules/TiFShared/domain-models/User").UserHandle | false | None |
-| id | string | false | None |
+| id | import("./node_modules/TiFShared/domain-models/User").UserID | false | None |
 | name | string | false | None |
 | profileImageURL | string | true | None |
 | updatedDateTime | Date | false | CURRENT_TIMESTAMP(3) |
@@ -148,7 +148,7 @@
 | eventCalendarDefaultLayout | 'single-day-layout'|'week-layout'|'month-layout' | false | week-layout |
 | eventCalendarStartOfWeekDay | 'sunday'|'monday'|'tuesday'|'wednesday'|'thursday'|'friday'|'saturday' | false | monday |
 | eventPresetDurations | number[] | false | json_array(900,1800,2700,3600,5400) |
-| eventPresetPlacemark | import("./node_modules/TiFShared/domain-models/Event").EventEditLocation | true | None |
+| eventPresetLocation | import("./node_modules/TiFShared/domain-models/Event").EventEditLocation | true | None |
 | eventPresetShouldHideAfterStartDate | boolean | false | 0 |
 | isAnalyticsEnabled | boolean | false | 1 |
 | isCrashReportingEnabled | boolean | false | 1 |

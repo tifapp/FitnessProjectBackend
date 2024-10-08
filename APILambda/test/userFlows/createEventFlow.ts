@@ -1,6 +1,5 @@
 import { TiFAPIClient } from "TiFBackendUtils"
-import { CreateEvent } from "TiFShared/api/models/Event"
-import { EventID } from "TiFShared/domain-models/Event"
+import { CreateEvent, EventID } from "TiFShared/domain-models/Event"
 import { testAPI } from "../testApp"
 import { testEventInput } from "../testEvents"
 import { RegisteredTestUser, createUserFlow } from "./createUserFlow"

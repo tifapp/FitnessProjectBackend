@@ -16,7 +16,7 @@ describe("Get Settings tests", () => {
     const resp = await testAPI.userSettings({ auth: newUser.auth })
     // For Testing
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { eventPresetPlacemark, ...defaults } = { ...DEFAULT_USER_SETTINGS }
+    const { eventPresetLocation, ...defaults } = { ...DEFAULT_USER_SETTINGS }
     expect(resp).toMatchObject({
       status: 200,
       data: defaults

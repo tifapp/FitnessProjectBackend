@@ -1,15 +1,14 @@
-import { userToUserRequest } from "../test/shortcuts"
+import { blockedUserResponse, userToUserRequest } from "../test/shortcuts"
 import { testAPI } from "../test/testApp"
 import { createUserFlow } from "../test/userFlows/createUserFlow"
 
 describe("FriendRequest tests", () => {
-  // TODO: Make middleware for params: userId
   it("should error when trying to send a friend request to yourself", async () => {
     const fromUser = await createUserFlow()
     const resp = await testAPI.sendFriendRequest(userToUserRequest(fromUser, fromUser))
     expect(resp).toMatchObject({
       status: 400,
-      data: { error: "cannot-friend-self" }
+      data: { error: "current-user" }
     })
   })
 
@@ -19,7 +18,7 @@ describe("FriendRequest tests", () => {
     const resp = await testAPI.sendFriendRequest(userToUserRequest(fromUser, toUser))
     expect(resp).toMatchObject({
       status: 201,
-      data: { status: "friend-request-pending" }
+      data: { relationStatus: "friend-request-sent" }
     })
   })
 
@@ -30,7 +29,7 @@ describe("FriendRequest tests", () => {
     const resp = await testAPI.sendFriendRequest(userToUserRequest(fromUser, toUser))
     expect(resp).toMatchObject({
       status: 200,
-      data: { status: "friend-request-pending" }
+      data: { relationStatus: "friend-request-sent" }
     })
   })
 
@@ -42,7 +41,7 @@ describe("FriendRequest tests", () => {
     const resp = await testAPI.sendFriendRequest(userToUserRequest(toUser, fromUser))
     expect(resp).toMatchObject({
       status: 201,
-      data: { status: "friends" }
+      data: { relationStatus: "friends" }
     })
   })
 
@@ -55,7 +54,7 @@ describe("FriendRequest tests", () => {
     const resp = await testAPI.sendFriendRequest(userToUserRequest(fromUser, toUser))
     expect(resp).toMatchObject({
       status: 200,
-      data: { status: "friends" }
+      data: { relationStatus: "friends" }
     })
   })
 
@@ -65,10 +64,7 @@ describe("FriendRequest tests", () => {
     await testAPI.blockUser(userToUserRequest(fromUser, toUser))
 
     const resp = await testAPI.sendFriendRequest(userToUserRequest(toUser, fromUser))
-    expect(resp).toMatchObject({
-      status: 403,
-      data: { error: "blocked", userId: fromUser.id }
-    })
+    expect(resp).toMatchObject(blockedUserResponse(fromUser.id))
   })
 
   it("should unblock the user when trying to send friend request to blocked user", async () => {
@@ -79,7 +75,7 @@ describe("FriendRequest tests", () => {
     const resp = await testAPI.sendFriendRequest(userToUserRequest(fromUser, toUser))
     expect(resp).toMatchObject({
       status: 201,
-      data: { status: "friend-request-pending" }
+      data: { relationStatus: "friend-request-sent" }
     })
   })
 })

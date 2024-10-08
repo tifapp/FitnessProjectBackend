@@ -5,14 +5,16 @@ import { resp } from "TiFShared/api/Transport"
 import { failure, success } from "TiFShared/lib/Result"
 import { TiFAPIRouterExtension } from "../router"
 
-export const registerForPushNotifications: TiFAPIRouterExtension["registerForPushNotifications"] = ({ body, context: { selfId: userId } }) =>
-  tryInsertPushToken(conn, {
-    ...body,
-    userId
-  })
-    .mapSuccess((status) => resp(201, { status }))
-    .mapFailure((error) => resp(400, { error }))
-    .unwrap()
+export const registerForPushNotifications = (
+  ({ body, context: { selfId: userId } }) =>
+    tryInsertPushToken(conn, {
+      ...body,
+      userId
+    })
+      .mapSuccess((status) => resp(201, { status }))
+      .mapFailure((error) => resp(400, { error }))
+      .unwrap()
+) satisfies TiFAPIRouterExtension["registerForPushNotifications"]
 
 const tryInsertPushToken = (
   conn: MySQLExecutableDriver,

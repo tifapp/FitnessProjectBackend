@@ -65,7 +65,7 @@ describe("Join the event by id tests", () => {
 
     expect(resp).toMatchObject({
       status: 201,
-      data: { id: eventId, chatToken: expect.anything(), hasArrived: true }
+      data: { id: eventId, hasArrived: true }
     })
 
     const attendeesResp = await testAPI.attendeesList({
@@ -95,7 +95,6 @@ describe("Join the event by id tests", () => {
       status: 201,
       data: {
         id: eventId,
-        chatToken: expect.anything(),
         trackableRegions: [
           {
             eventIds: [eventId],
@@ -115,7 +114,7 @@ describe("Join the event by id tests", () => {
     const resp = await testAPI.joinEvent({ auth: attendee.auth, params: { eventId }, body: undefined })
     expect(resp).toMatchObject({
       status: 403,
-      data: { error: "user-is-blocked" }
+      data: { error: "blocked-you" }
     })
   })
 
@@ -180,7 +179,7 @@ describe("Join the event by id tests", () => {
     const resp = await testAPI.joinEvent({ auth: attendee.auth, params: { eventId }, body: undefined })
     expect(resp).toMatchObject({
       status: 200,
-      data: { id: eventId, chatToken: expect.anything() }
+      data: { id: eventId }
     })
   })
 
@@ -203,7 +202,7 @@ describe("Join the event by id tests", () => {
 
     expect(resp).toMatchObject({
       status: 403,
-      data: { error: "event-has-ended" }
+      data: { error: "event-was-cancelled" }
     })
   })
 })

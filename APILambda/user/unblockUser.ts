@@ -1,11 +1,13 @@
 import { conn } from "TiFBackendUtils"
 import { MySQLExecutableDriver } from "TiFBackendUtils/MySQLDriver"
-import { UserRelationsInput, userWithIdExists } from "TiFBackendUtils/TiFUserUtils"
+import { UserRelationshipPair, userWithIdExists } from "TiFBackendUtils/TiFUserUtils"
 import { resp } from "TiFShared/api/Transport"
+import { chainMiddleware } from "TiFShared/lib/Middleware"
 import { failure, success } from "TiFShared/lib/Result"
 import { TiFAPIRouterExtension } from "../router"
+import { isCurrentUser } from "../utils/isCurrentUserMiddleware"
 
-export const unblockUser: TiFAPIRouterExtension["unblockUser"] =
+const unblockUserHandler = (
   ({ context: { selfId: fromUserId }, params: { userId: toUserId } }) =>
     unblockUserSQL(conn, { fromUserId, toUserId })
       .flatMapSuccess((result) => {
@@ -28,14 +30,19 @@ export const unblockUser: TiFAPIRouterExtension["unblockUser"] =
           )
       })
       .unwrap()
+    ) satisfies TiFAPIRouterExtension["unblockUser"]
+
+// NB: Middleware type inference issue
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const unblockUser = chainMiddleware(isCurrentUser, unblockUserHandler as any) as unknown as typeof unblockUserHandler
 
 const unblockUserSQL = (
   conn: MySQLExecutableDriver,
-  { fromUserId, toUserId }: UserRelationsInput
+  { fromUserId, toUserId }: UserRelationshipPair
 ) => conn
   .executeResult(
     `
-      DELETE FROM userRelations
+      DELETE FROM userRelationships
       WHERE fromUserId = :fromUserId AND toUserId = :toUserId 
         AND status = 'blocked'
     `,

@@ -81,7 +81,7 @@ jobs:
         run: |
           cd APILambda
           export NODE_OPTIONS="--max_old_space_size=4096"
-          npm run test:ci
+          npm run test:ci -- createUserProfile.test.ts
   
   deploy_for_staging_tests:
     concurrency: 

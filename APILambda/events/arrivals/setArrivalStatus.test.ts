@@ -7,7 +7,7 @@ const eventLocation = { latitude: 50, longitude: 50 }
 describe("SetHasArrived tests", () => {
   it("should return upcoming events from the arrived and departed endpoints", async () => {
     // cant mock planetscale time
-    const { attendeesList: [,attendee], eventIds } = await createEventFlow([{
+    const { attendeesList: [, attendee], eventIds } = await createEventFlow([{
       coordinates: eventLocation,
       dateRange: upcomingEventDateRange
     }], 1)
@@ -44,7 +44,7 @@ describe("SetHasArrived tests", () => {
   })
 
   it("should persist arrival when checking events", async () => {
-    const { attendeesList: [,attendee], eventIds } = await createEventFlow([{ 
+    const { attendeesList: [, attendee], eventIds } = await createEventFlow([{
       coordinates: eventLocation,
       dateRange: upcomingEventDateRange
     }], 1)

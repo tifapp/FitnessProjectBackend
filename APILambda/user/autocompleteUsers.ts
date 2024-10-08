@@ -5,14 +5,12 @@ import { resp } from "TiFShared/api/Transport"
 import { UserHandle } from "TiFShared/domain-models/User"
 import { TiFAPIRouterExtension } from "../router"
 
-export const autocompleteUsers: TiFAPIRouterExtension["autocompleteUsers"] = ({ query: { handle, limit } }) =>
-  autocompleteUsersSQL(
-    conn,
-    handle,
-    limit
-  )
-    .mapSuccess(users => resp(200, { users }))
-    .unwrap()
+export const autocompleteUsers = (
+  ({ query: { handle, limit } }) =>
+    autocompleteUsersSQL(conn, handle, limit)
+      .mapSuccess(users => resp(200, { users }))
+      .unwrap()
+) satisfies TiFAPIRouterExtension["autocompleteUsers"]
 
 const autocompleteUsersSQL = (
   conn: MySQLExecutableDriver,
