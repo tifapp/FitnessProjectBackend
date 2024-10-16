@@ -64,11 +64,7 @@ describe("Update Settings tests", () => {
       })
     })
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    expect((settings2Resp.data as any).version).toBeGreaterThanOrEqual(
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (settings2Resp.data as any).version
-    )
+    expect(settings2Resp.data.version).toBeGreaterThanOrEqual(settings2Resp.data.version)
 
     const updateResp3 = await testAPI.saveUserSettings({
       auth: newUser.auth,

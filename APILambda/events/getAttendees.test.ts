@@ -89,17 +89,11 @@ describe("getAttendeesList endpoint", () => {
       value: { insertId }
     } = await createEventSQL(conn, testEventInput, currentUser.id)
 
-    const resp = await testAPI.attendeesList({
+    const resp = await testAPI.attendeesList<200>({
       auth: currentUser.auth,
       params: { eventId: Number(insertId) },
       query: { limit }
-    });
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (resp.data as any).nextPageCursor = decodeAttendeesListCursor(
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (resp.data as any).nextPageCursor
-    )
+    })
 
     expect(resp).toMatchObject({
       status: 404,
@@ -132,17 +126,13 @@ describe("getAttendeesList endpoint", () => {
 
     const [attendee1, attendee2] = attendeesList
 
-    const resp = await testAPI.attendeesList({
+    const resp = await testAPI.attendeesList<200>({
       auth: attendee1.auth,
       params: { eventId },
       query: { limit }
     });
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (resp.data as any).nextPageCursor = decodeAttendeesListCursor(
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (resp.data as any).nextPageCursor
-    )
+    (resp.data.nextPageCursor as unknown) = decodeAttendeesListCursor(resp.data.nextPageCursor ?? undefined)
 
     expect(resp).toMatchObject({
       status: 200,
@@ -172,18 +162,14 @@ describe("getAttendeesList endpoint", () => {
       eventIds: [eventId]
     } = await createEventFlow()
 
-    const resp = await testAPI.attendeesList({
+    const resp = await testAPI.attendeesList<200>({
       auth:
       currentUser.auth,
       params: { eventId },
       query: { limit }
     });
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (resp.data as any).nextPageCursor = decodeAttendeesListCursor(
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (resp.data as any).nextPageCursor
-    )
+    (resp.data.nextPageCursor as unknown) = decodeAttendeesListCursor(resp.data.nextPageCursor ?? undefined)
 
     expect(resp).toMatchObject({
       status: 200,
@@ -206,25 +192,20 @@ describe("getAttendeesList endpoint", () => {
 
     const [attendee] = attendeesList
 
-    let resp = await testAPI.attendeesList({
+    let resp = await testAPI.attendeesList<200>({
       auth: attendee.auth,
       params: { eventId },
       query: { limit }
     })
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const middlePageCursorResp = (resp.data as any).nextPageCursor
-    resp = await testAPI.attendeesList({
+    const middlePageCursorResp = resp.data.nextPageCursor
+    resp = await testAPI.attendeesList<200>({
       auth: attendee.auth,
       params: { eventId },
-      query: { limit, nextPageCursor: middlePageCursorResp }
+      query: { limit, nextPageCursor: middlePageCursorResp ?? undefined }
     });
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (resp.data as any).nextPageCursor = decodeAttendeesListCursor(
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (resp.data as any).nextPageCursor
-    )
+    (resp.data.nextPageCursor as unknown) = decodeAttendeesListCursor(resp.data.nextPageCursor ?? undefined)
 
     expect(resp).toMatchObject({
       status: 200,
@@ -245,25 +226,20 @@ describe("getAttendeesList endpoint", () => {
 
     const [, attendee] = attendeesList
 
-    let resp = await testAPI.attendeesList({
+    let resp = await testAPI.attendeesList<200>({
       auth: attendee.auth,
       params: { eventId },
       query: { limit }
     })
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const nextPageCursorResp = (resp.data as any).nextPageCursor
-    resp = await testAPI.attendeesList({
+    const nextPageCursorResp = resp.data.nextPageCursor
+    resp = await testAPI.attendeesList<200>({
       auth: attendee.auth,
       params: { eventId },
-      query: { limit, nextPageCursor: nextPageCursorResp }
+      query: { limit, nextPageCursor: nextPageCursorResp ?? undefined }
     });
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (resp.data as any).nextPageCursor = decodeAttendeesListCursor(
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (resp.data as any).nextPageCursor
-    )
+    (resp.data.nextPageCursor as unknown) = decodeAttendeesListCursor(resp.data.nextPageCursor ?? undefined)
 
     expect(resp).toMatchObject({
       status: 200,
@@ -284,27 +260,22 @@ describe("getAttendeesList endpoint", () => {
   it("should return 200 if going past last page of attendees list", async () => {
     const { attendeesList: [, attendee], eventId } = await createTestAttendees(1)
 
-    let resp = await testAPI.attendeesList({
+    let resp = await testAPI.attendeesList<200>({
       auth: attendee.auth,
       params: { eventId },
       query: { limit }
     }
     )
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const nextPageCursorResp = (resp.data as any).nextPageCursor
+    const nextPageCursorResp = resp.data.nextPageCursor
 
-    resp = await testAPI.attendeesList({
+    resp = await testAPI.attendeesList<200>({
       auth: attendee.auth,
       params: { eventId },
-      query: { limit, nextPageCursor: nextPageCursorResp }
+      query: { limit, nextPageCursor: nextPageCursorResp ?? undefined }
     });
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (resp.data as any).nextPageCursor = decodeAttendeesListCursor(
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (resp.data as any).nextPageCursor
-    )
+    (resp.data.nextPageCursor as unknown) = decodeAttendeesListCursor(resp.data.nextPageCursor ?? undefined)
 
     expect(resp).toMatchObject({
       status: 200,
@@ -323,19 +294,14 @@ describe("getAttendeesList endpoint", () => {
 
     await testAPI.arriveAtRegion({ auth: attendee.auth, body: { coordinate: eventLocation, arrivalRadiusMeters: 500 } })
 
-    let resp = await testAPI.attendeesList({
+    let resp = await testAPI.attendeesList<200>({
       auth: attendee.auth,
       params: { eventId },
       query: { limit }
     })
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const nextPageCursorResp = (resp.data as any).nextPageCursor;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (resp.data as any).nextPageCursor = decodeAttendeesListCursor(
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (resp.data as any).nextPageCursor
-    )
+    const nextPageCursorResp = resp.data.nextPageCursor;
+    (resp.data.nextPageCursor as unknown) = decodeAttendeesListCursor(resp.data.nextPageCursor ?? undefined)
 
     expect(resp).toMatchObject({
       status: 200,
@@ -362,17 +328,13 @@ describe("getAttendeesList endpoint", () => {
       }
     })
 
-    resp = await testAPI.attendeesList({
+    resp = await testAPI.attendeesList<200>({
       auth: attendee.auth,
       params: { eventId },
-      query: { limit, nextPageCursor: nextPageCursorResp }
+      query: { limit, nextPageCursor: nextPageCursorResp ?? undefined }
     });
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (resp.data as any).nextPageCursor = decodeAttendeesListCursor(
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (resp.data as any).nextPageCursor
-    )
+    (resp.data.nextPageCursor as unknown) = decodeAttendeesListCursor(resp.data.nextPageCursor ?? undefined)
 
     expect(resp).toMatchObject({
       status: 200,
@@ -405,18 +367,14 @@ describe("getAttendeesList endpoint", () => {
       await testAPI.blockUser(userToUserRequest(attendeesList[i], currentUser))
     }
 
-    const resp = await testAPI.attendeesList({
+    const resp = await testAPI.attendeesList<200>({
       auth:
       currentUser.auth,
       params: { eventId },
       query: { limit }
     });
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (resp.data as any).nextPageCursor = decodeAttendeesListCursor(
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (resp.data as any).nextPageCursor
-    )
+    (resp.data.nextPageCursor as unknown) = decodeAttendeesListCursor(resp.data.nextPageCursor ?? undefined)
 
     expect(resp).toMatchObject({
       status: 200,
@@ -473,18 +431,14 @@ describe("getAttendeesList endpoint", () => {
       await testAPI.blockUser(userToUserRequest(currentUser, attendeesList[i]))
     }
 
-    const resp = await testAPI.attendeesList({
+    const resp = await testAPI.attendeesList<200>({
       auth:
       currentUser.auth,
       params: { eventId },
       query: { limit }
     });
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (resp.data as any).nextPageCursor = decodeAttendeesListCursor(
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (resp.data as any).nextPageCursor
-    )
+    (resp.data.nextPageCursor as unknown) = decodeAttendeesListCursor(resp.data.nextPageCursor ?? undefined)
 
     expect(resp).toMatchObject({
       status: 200,
@@ -520,7 +474,7 @@ describe("getAttendeesList endpoint", () => {
       await testAPI.blockUser(userToUserRequest(currentUser, attendeesList[i]))
     }
 
-    const resp = await testAPI.attendeesList({
+    const resp = await testAPI.attendeesList<200>({
       auth:
       currentUser.auth,
       params: { eventId },
@@ -528,11 +482,7 @@ describe("getAttendeesList endpoint", () => {
     }
     );
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (resp.data as any).nextPageCursor = decodeAttendeesListCursor(
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (resp.data as any).nextPageCursor
-    )
+    (resp.data.nextPageCursor as unknown) = decodeAttendeesListCursor(resp.data.nextPageCursor ?? undefined)
 
     expect(resp).toMatchObject({
       status: 200,
@@ -570,13 +520,7 @@ describe("getAttendeesList endpoint", () => {
       currentUser.auth,
       params: { eventId },
       query: { limit }
-    });
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (resp.data as any).nextPageCursor = decodeAttendeesListCursor(
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (resp.data as any).nextPageCursor
-    )
+    })
 
     expect(resp).toMatchObject({
       status: 403,
