@@ -14,11 +14,11 @@ const setGlobalVariables = async ({ createUser, maxUsers }: {createUser: (user?:
 export default async (): Promise<void> => {
   process.env.TZ = "UTC"
 
-  if (envVars.ENVIRONMENT !== "stagingTest") {
-    await setGlobalVariables({ createUser: createMockAuthToken, maxUsers: 5 })
-  } else {
+  if (envVars.ENVIRONMENT === "stagingTest") {
     await setGlobalVariables({ createUser: createCognitoTestAuthToken, maxUsers: 5 })
     // await setGlobalVariables({ createUser: createCognitoAuthToken, maxUsers: 5 })
     // TODO: Remove createCognitoTestAuthToken after we get company email so we can have unlimited test users
+  } else {
+    await setGlobalVariables({ createUser: createMockAuthToken, maxUsers: 5 })
   }
 }

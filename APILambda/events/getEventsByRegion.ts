@@ -1,26 +1,17 @@
 import { conn } from "TiFBackendUtils"
 import { MySQLExecutableDriver } from "TiFBackendUtils/MySQLDriver"
-import { DBTifEvent, setEventAttendeesFields, tifEventResponseFromDatabaseEvent } from "TiFBackendUtils/TifEventUtils"
-import { LocationCoordinate2DSchema } from "TiFShared/domain-models/LocationCoordinate2D"
-import { z } from "zod"
-import { ServerEnvironment } from "../env"
-import { ValidatedRouter } from "../validation"
-
-const EventsRequestSchema = z.object({
-  userLocation: LocationCoordinate2DSchema,
-  radius: z.number()
-})
-
-type EventsRequestByRegion = {
-  userId: string
-  userLatitude: number
-  userLongitude: number
-  radius: number
-}
+import { DBTifEvent, getAttendeeData, tifEventResponseFromDatabaseEvent } from "TiFBackendUtils/TiFEventUtils"
+import { resp } from "TiFShared/api/Transport"
+import { LocationCoordinate2D } from "TiFShared/domain-models/LocationCoordinate2D"
+import { TiFAPIRouterExtension } from "../router"
 
 export const getEventsByRegion = (
   conn: MySQLExecutableDriver,
-  eventsRequest: EventsRequestByRegion
+  { userLocation: { latitude: userLatitude, longitude: userLongitude }, ...rest }: {
+    userId: string
+    userLocation: LocationCoordinate2D
+    radius: number
+  }
 ) =>
   conn.queryResult<DBTifEvent>(
     `
@@ -40,8 +31,8 @@ export const getEventsByRegion = (
              END
     END AS fromYouToThem
 FROM TifEventView
-LEFT JOIN userRelations UserRelationOfHostToUser ON TifEventView.hostId = UserRelationOfHostToUser.fromUserId AND UserRelationOfHostToUser.toUserId = :userId
-LEFT JOIN userRelations UserRelationOfUserToHost ON UserRelationOfUserToHost.fromUserId = :userId AND UserRelationOfUserToHost.toUserId = TifEventView.hostId
+LEFT JOIN userRelationships UserRelationOfHostToUser ON TifEventView.hostId = UserRelationOfHostToUser.fromUserId AND UserRelationOfHostToUser.toUserId = :userId
+LEFT JOIN userRelationships UserRelationOfUserToHost ON UserRelationOfUserToHost.fromUserId = :userId AND UserRelationOfUserToHost.toUserId = TifEventView.hostId
     WHERE 
         ST_Distance_Sphere(POINT(:userLongitude, :userLatitude), POINT(TifEventView.longitude, TifEventView.latitude)) < :radius
         AND TifEventView.endDateTime > NOW()
@@ -49,37 +40,21 @@ LEFT JOIN userRelations UserRelationOfUserToHost ON UserRelationOfUserToHost.fro
         AND (UserRelationOfHostToUser.status IS NULL OR UserRelationOfHostToUser.status <> 'blocked')
         AND (UserRelationOfUserToHost.status IS NULL OR UserRelationOfUserToHost.status <> 'blocked')
   `,
-    { ...eventsRequest }
+    { userLatitude, userLongitude, ...rest }
   )
 
-/**
- * Creates routes related to event operations.
- *
- * @param environment see {@link ServerEnvironment}.
- */
-export const getEventsByRegionRouter = (
-  environment: ServerEnvironment,
-  router: ValidatedRouter
-) => {
-  /**
-   * Get events by region
-   */
-  router.postWithValidation(
-    "/region",
-    { bodySchema: EventsRequestSchema },
-    (req, res) =>
-      conn
-        .transaction((tx) =>
-          getEventsByRegion(tx, {
-            userId: res.locals.selfId,
-            userLatitude: req.body.userLocation.latitude,
-            userLongitude: req.body.userLocation.longitude,
-            radius: req.body.radius
-          }).flatMapSuccess((result) => setEventAttendeesFields(tx, result, res.locals.selfId).mapSuccess((events) => events.map((event) => tifEventResponseFromDatabaseEvent(event)))
-            .mapSuccess((result) => {
-              return res.status(200).json({ events: result })
-            })
-          )
-        )
-  )
-}
+export const exploreEvents = (
+  ({ context: { selfId: userId }, body: { userLocation, radius } }) =>
+    conn
+      .transaction((tx) =>
+        getEventsByRegion(tx, {
+          userId,
+          userLocation,
+          radius
+        })
+          .flatMapSuccess((events) => getAttendeeData(tx, events, userId))
+          .mapSuccess((events) => events.map(tifEventResponseFromDatabaseEvent))
+          .mapSuccess((events) => resp(200, { events }))
+      )
+      .unwrap()
+  ) satisfies TiFAPIRouterExtension["exploreEvents"]

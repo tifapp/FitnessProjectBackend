@@ -1,5 +1,6 @@
 import dayjs from "dayjs"
-import { callEndEvent, callLeaveEvent } from "../test/apiCallers/eventEndpoints"
+import { dateRange } from "TiFShared/domain-models/FixedDateRange"
+import { testAPI } from "../test/testApp"
 import { createEventFlow } from "../test/userFlows/createEventFlow"
 import { createUserFlow } from "../test/userFlows/createUserFlow"
 
@@ -7,21 +8,16 @@ describe("Leave event tests", () => {
   const eventLocation = { latitude: 50, longitude: 50 }
 
   it("should return 204 if user leaves the event", async () => {
-    const {
-      attendeesList,
-      eventIds: [eventId]
-    } = await createEventFlow(
+    const { attendeesList: [, attendee], eventIds: [eventId] } = await createEventFlow(
       [
         {
-          ...eventLocation,
-          startDateTime: dayjs().add(12, "hour").toDate(),
-          endDateTime: dayjs().add(1, "year").toDate()
+          coordinates: eventLocation
         }
       ],
       1
     )
 
-    const resp = await callLeaveEvent(attendeesList[1].token, eventId)
+    const resp = await testAPI.leaveEvent({ auth: attendee.auth, params: { eventId } })
 
     expect(resp).toMatchObject({
       status: 204
@@ -35,126 +31,70 @@ describe("Leave event tests", () => {
     } = await createEventFlow(
       [
         {
-          ...eventLocation,
-          startDateTime: dayjs().add(12, "hour").toDate(),
-          endDateTime: dayjs().add(1, "year").toDate()
+          coordinates: eventLocation
         }
       ],
       1
     )
 
-    const resp = await callLeaveEvent(host.token, eventId)
-
+    const resp = await testAPI.leaveEvent({ auth: host.auth, params: { eventId } })
     expect(resp).toMatchObject({
       status: 400,
-      body: { error: "co-host-not-found" }
+      data: { error: "co-host-not-found" }
     })
   })
 
-  // use different status message if leaving twice?
-  it("should return 400 if user leaves event twice", async () => {
-    const {
-      attendeesList,
-      eventIds
-    } = await createEventFlow(
-      [
-        {
-          ...eventLocation,
-          startDateTime: dayjs().add(12, "hour").toDate(),
-          endDateTime: dayjs().add(1, "year").toDate()
-        }
-      ],
-      1
-    )
+  it("should return 200 if user leaves event twice", async () => {
+    const { attendeesList, eventIds: [eventId] } = await createEventFlow([{ coordinates: eventLocation }], 1)
 
-    await callLeaveEvent(attendeesList[1].token, eventIds[0])
-    const resp = await callLeaveEvent(attendeesList[1].token, eventIds[0])
+    await testAPI.leaveEvent({ auth: attendeesList[1].auth, params: { eventId } })
+    const resp = await testAPI.leaveEvent({ auth: attendeesList[1].auth, params: { eventId } })
 
     expect(resp).toMatchObject({
-      status: 400,
-      body: { error: "already-left-event" }
+      status: 200
     })
   })
 
   it("should return 404 if user leaves an event that doesn't exist", async () => {
-    const { token: attendeeToken } = await createUserFlow()
+    const attendee = await createUserFlow()
     const nonExistantEventId = 9999
-    const resp = await callLeaveEvent(attendeeToken, nonExistantEventId)
+    const resp = await testAPI.leaveEvent({ auth: attendee.auth, params: { eventId: nonExistantEventId } })
 
     expect(resp).toMatchObject({
       status: 404,
-      body: { error: "event-not-found" }
-    })
-  })
-
-  it("should return 400 if user leaves an event that they haven't joined", async () => {
-    const { token: attendeeToken } = await createUserFlow()
-    const { eventIds } = await createEventFlow(
-      [
-        {
-          ...eventLocation,
-          startDateTime: dayjs().add(12, "hour").toDate(),
-          endDateTime: dayjs().add(1, "year").toDate()
-        }
-      ],
-      1
-    )
-
-    const resp = await callLeaveEvent(attendeeToken, eventIds[0])
-
-    expect(resp).toMatchObject({
-      status: 400,
-      body: { error: "already-left-event" }
+      data: { error: "event-not-found" }
     })
   })
 
   it("should return 403 if user leaves an event that ended before it starts", async () => {
-    const {
-      eventIds,
-      host,
-      attendeesList
-    } = await createEventFlow(
-      [
-        {
-          ...eventLocation,
-          startDateTime: dayjs().add(12, "hour").toDate(),
-          endDateTime: dayjs().add(1, "year").toDate()
-        }
-      ],
-      1
-    )
+    const { eventIds: [eventId], host, attendeesList: [, attendee] } = await createEventFlow([{ coordinates: eventLocation }], 1)
 
-    await callEndEvent(host.token, eventIds[0])
-    const resp = await callLeaveEvent(attendeesList[1].token, eventIds[0])
+    await testAPI.endEvent({ auth: host.auth, params: { eventId } })
+    const resp = await testAPI.leaveEvent({ auth: attendee.auth, params: { eventId } })
 
     expect(resp).toMatchObject({
       status: 403,
-      body: { error: "event-has-been-cancelled" }
+      data: { error: "event-was-cancelled" }
     })
   })
 
-  it("should return 403 if user leaves an event that ended after it starts", async () => {
-    const {
-      eventIds,
-      host,
-      attendeesList
-    } = await createEventFlow(
+  it("should return 403 if user leaves an event that ended", async () => {
+    const { eventIds: [eventId], host, attendeesList: [, attendee] } = await createEventFlow(
       [
         {
           ...eventLocation,
-          startDateTime: dayjs().subtract(1, "year").toDate(),
-          endDateTime: dayjs().add(12, "hour").toDate()
+          dateRange: dateRange(dayjs().subtract(1, "year").toDate(), dayjs().add(12, "hour").toDate())
         }
       ],
       1
     )
 
-    await callEndEvent(host.token, eventIds[0])
-    const resp = await callLeaveEvent(attendeesList[1].token, eventIds[0])
+    await testAPI.endEvent({ auth: host.auth, params: { eventId } })
+    const resp = await testAPI.leaveEvent({ auth: attendee.auth, params: { eventId } })
 
     expect(resp).toMatchObject({
       status: 403,
-      body: { error: "event-has-ended" }
+      data: { error: "event-has-ended" }
     })
   })
 

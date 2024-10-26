@@ -1,6 +1,6 @@
 import { AwaitableResult, failure, promiseResult, success } from "TiFShared/lib/Result"
-import mysql, { FieldPacket, ResultSetHeader, RowDataPacket } from "mysql2/promise"
-import { domainModelColumns } from "../domain-models"
+import type { Connection, FieldPacket, ResultSetHeader, RowDataPacket } from "mysql2/promise"
+import { domainModelColumns } from "../DomainModels"
 import { createDatabaseConnection } from "./dbConnection"
 import { paramifyArgs, SQLParams } from "./paramify"
 
@@ -37,7 +37,7 @@ const castMySQLValues = (rows: RowDataPacket[], fields: FieldPacket[]): RowDataP
 }
 
 class MySQLConnectionHandler {
-  private connection?: mysql.Connection
+  private connection?: Connection
   private isConnectionClosed: boolean = false
 
   async useConnection () {

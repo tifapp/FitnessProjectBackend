@@ -1,8 +1,9 @@
 import { conn } from "TiFBackendUtils"
 import { MySQLExecutableDriver } from "TiFBackendUtils/MySQLDriver"
-import { ServerEnvironment } from "../../env"
-import { ValidatedRouter } from "../../validation"
-import { UserSettings, UserSettingsSchema } from "./models"
+import { resp } from "TiFShared/api/Transport"
+import { UserSettings } from "TiFShared/domain-models/Settings"
+import { TiFAPIRouterExtension } from "../../router"
+import { queryUserSettings } from "./userSettingsQuery"
 
 /**
  * Updates the user's settings with the specified fields in the settings object.
@@ -13,56 +14,91 @@ import { UserSettings, UserSettingsSchema } from "./models"
  * @param userId the id of the user to update settings for
  * @param settings the settings fields to update
  */
-const insertUserSettings = (
+const updateUserSettingsSQL = (
   conn: MySQLExecutableDriver,
   userId: string,
   {
     isAnalyticsEnabled,
-    isCrashReportingEnabled
-    // TODO: Update with models from tifshared api
-  }: UserSettings
+    isCrashReportingEnabled,
+    pushNotificationTriggerIds,
+    canShareArrivalStatus,
+    eventCalendarStartOfWeekDay,
+    eventCalendarDefaultLayout,
+    eventPresetShouldHideAfterStartDate,
+    eventPresetLocation,
+    eventPresetDurations,
+    version
+  }: Partial<UserSettings>
 ) =>
   // TODO: Update with models from tifshared api
   conn.executeResult(
-    `
-    INSERT INTO userSettings (
-      userId, 
-      isAnalyticsEnabled, 
-      isCrashReportingEnabled
+    `INSERT INTO userSettings (
+      userId,
+      isAnalyticsEnabled,
+      isCrashReportingEnabled,
+      canShareArrivalStatus,
+      eventCalendarStartOfWeekDay,
+      eventCalendarDefaultLayout,
+      eventPresetShouldHideAfterStartDate,
+      eventPresetLocation,
+      eventPresetDurations,
+      pushNotificationTriggerIds
     ) VALUES (
-      :userId, 
-      COALESCE(:isAnalyticsEnabled, 1), 
-      COALESCE(:isCrashReportingEnabled, 1)
-    )
-    ON DUPLICATE KEY UPDATE 
-      isAnalyticsEnabled = COALESCE(:isAnalyticsEnabled, isAnalyticsEnabled), 
-      isCrashReportingEnabled = COALESCE(:isCrashReportingEnabled, isCrashReportingEnabled);    
-  `,
+      :userId,
+      COALESCE(:isAnalyticsEnabled, 1),
+      COALESCE(:isCrashReportingEnabled, 1),
+      COALESCE(:canShareArrivalStatus, 1),
+      COALESCE(:eventCalendarStartOfWeekDay, 'monday'),
+      COALESCE(:eventCalendarDefaultLayout, 'week-layout'),
+      COALESCE(:eventPresetShouldHideAfterStartDate, 0),
+      COALESCE(:eventPresetLocation, NULL),
+      COALESCE(:eventPresetDurations, JSON_ARRAY(900, 1800, 2700, 3600, 5400)),
+      COALESCE(:pushNotificationTriggerIds, JSON_ARRAY(
+        'friend-request-received', 
+        'friend-request-accepted', 
+        'user-entered-region', 
+        'event-attendance-headcount', 
+        'event-periodic-arrivals', 
+        'event-starting-soon', 
+        'event-started', 
+        'event-ended',
+        'event-name-changed',
+        'event-description-changed',
+        'event-time-changed',
+        'event-location-changed',
+        'event-cancelled'
+      ))
+    ) ON DUPLICATE KEY UPDATE 
+      isAnalyticsEnabled = COALESCE(:isAnalyticsEnabled, isAnalyticsEnabled),
+      isCrashReportingEnabled = COALESCE(:isCrashReportingEnabled, isCrashReportingEnabled),
+      canShareArrivalStatus = COALESCE(:canShareArrivalStatus, canShareArrivalStatus),
+      eventCalendarStartOfWeekDay = COALESCE(:eventCalendarStartOfWeekDay, eventCalendarStartOfWeekDay),
+      eventCalendarDefaultLayout = COALESCE(:eventCalendarDefaultLayout, eventCalendarDefaultLayout),
+      eventPresetShouldHideAfterStartDate = COALESCE(:eventPresetShouldHideAfterStartDate, eventPresetShouldHideAfterStartDate),
+      eventPresetLocation = COALESCE(:eventPresetLocation, eventPresetLocation),
+      eventPresetDurations = COALESCE(:eventPresetDurations, eventPresetDurations),
+      pushNotificationTriggerIds = COALESCE(:pushNotificationTriggerIds, pushNotificationTriggerIds),
+      version = version + 1;    
+    `,
     {
       userId,
       isAnalyticsEnabled,
-      isCrashReportingEnabled
-      // TODO: Update with models from tifshared api
+      isCrashReportingEnabled,
+      pushNotificationTriggerIds,
+      canShareArrivalStatus,
+      eventCalendarStartOfWeekDay,
+      eventCalendarDefaultLayout,
+      eventPresetShouldHideAfterStartDate,
+      eventPresetLocation,
+      eventPresetDurations,
+      version
     }
   )
 
-/**
- * Creates routes related to user operations.
- *
- * @param environment see {@link ServerEnvironment}.
- */
-export const updateUserSettingsRouter = (
-  environment: ServerEnvironment,
-  router: ValidatedRouter
-) => {
-  /**
-   * updates the current user's settings
-   */
-  router.patchWithValidation(
-    "/self/settings",
-    { bodySchema: UserSettingsSchema.partial() },
-    (req, res) =>
-      insertUserSettings(conn, res.locals.selfId, req.body)
-        .mapSuccess(() => res.status(204).send())
-  )
-}
+export const saveUserSettings = (
+  ({ context: { selfId }, body: newSettings }) =>
+    updateUserSettingsSQL(conn, selfId, newSettings)
+      .flatMapSuccess(() => queryUserSettings(conn, selfId))
+      .mapSuccess((updatedSettings) => resp(200, updatedSettings))
+      .unwrap()
+) satisfies TiFAPIRouterExtension["saveUserSettings"]

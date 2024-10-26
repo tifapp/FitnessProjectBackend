@@ -1,18 +1,13 @@
 import { conn } from "TiFBackendUtils"
 import { DBuser } from "TiFBackendUtils/DBTypes"
+import { generateUniqueHandle } from "TiFBackendUtils/generateUserHandle"
 import { MySQLExecutableDriver } from "TiFBackendUtils/MySQLDriver"
-import { failure, promiseResult, success } from "TiFShared/lib/Result"
-import { CreateUserProfileEnvironment } from "../../env"
-import { ValidatedRouter } from "../../validation"
-import { generateUniqueUsername } from "../generateUserHandle"
-
-type NewUserDetails = {
-  id: string
-  name: string
-  handle: string
-}
+import { resp } from "TiFShared/api/Transport"
+import { failure, success } from "TiFShared/lib/Result"
+import { TiFAPIRouterExtension } from "../../router"
 
 const checkValidName = (name: string) => {
+  // TODO: add more conditions or use a zod schema
   if (name === "") {
     return failure("invalid-claims" as const)
   }
@@ -20,15 +15,15 @@ const checkValidName = (name: string) => {
   return success()
 }
 
-const userWithHandleOrIdExists = (conn: MySQLExecutableDriver, { id, handle }: NewUserDetails) => {
-  return promiseResult(handle ? success() : failure("missing-handle" as const))
+const userWithHandleOrIdExists = (conn: MySQLExecutableDriver, { id, handle }: Pick<DBuser, "id" | "handle">) => {
+  return (handle ? success() : failure("missing-handle" as const))
     .flatMapSuccess(() => conn
       .queryFirstResult<DBuser>("SELECT TRUE FROM user WHERE handle = :handle OR id = :id", {
         handle,
         id
       })
       .inverted()
-      .mapFailure(user => `${user.handle}` === handle ? "duplicate-handle" as const : "user-exists")
+      .mapFailure(user => user.handle === handle ? "duplicate-handle" as const : "user-exists")
     )
 }
 
@@ -36,11 +31,11 @@ const userWithHandleOrIdExists = (conn: MySQLExecutableDriver, { id, handle }: N
  * Creates a new user in the database.
  *
  * @param conn see {@link MySQLExecutableDriver}
- * @param userDetails see {@link NewUserDetails}
+ * @param userDetails see {@link CreateUserDetails}
  */
 export const insertUser = (
   conn: MySQLExecutableDriver,
-  userDetails: NewUserDetails
+  userDetails: Pick<DBuser, "id" | "handle" | "name">
 ) => conn.executeResult(
   "INSERT INTO user (id, name, handle) VALUES (:id, :name, :handle)",
   userDetails
@@ -54,7 +49,7 @@ export const insertUser = (
  * @returns an object containing the id of the newly registered user
  */
 const createUserProfileTransaction = (
-  userDetails: NewUserDetails
+  userDetails: Pick<DBuser, "id" | "handle" | "name">
 ) =>
   conn.transaction((tx) =>
     userWithHandleOrIdExists(tx, userDetails)
@@ -62,20 +57,15 @@ const createUserProfileTransaction = (
       .withSuccess(userDetails)
   )
 
-export const createUserProfileRouter = (
-  { setProfileCreatedAttribute }: CreateUserProfileEnvironment,
-  router: ValidatedRouter
-) =>
-  router.postWithValidation("/", {}, (_, res) =>
-    promiseResult(checkValidName(res.locals.name))
+export const createCurrentUserProfile = (
+  async ({ context: { selfId, name: cognitoName }, environment: { setProfileCreatedAttribute } }) =>
+    checkValidName(cognitoName)
       .flatMapSuccess(() =>
-        generateUniqueUsername(
-          conn,
-          res.locals.name
-        )
+        generateUniqueHandle(cognitoName)
       )
-      .flatMapSuccess(handle => createUserProfileTransaction({ id: res.locals.selfId, name: res.locals.name, handle }))
-      .flatMapSuccess(profile => setProfileCreatedAttribute(res.locals.selfId).withSuccess(profile))
-      .mapFailure(error => res.status(error === "user-exists" ? 400 : 401).json({ error }))
-      .mapSuccess(profile => res.status(201).json(profile))
-  )
+      .flatMapSuccess(handle => createUserProfileTransaction({ id: selfId, handle, name: cognitoName }))
+      .passthroughSuccess(() => setProfileCreatedAttribute(selfId))
+      .mapFailure(error => error === "user-exists" ? resp(400, { error }) as never : resp(401, { error }) as never)
+      .mapSuccess(({ id, handle }) => resp(201, { id, handle }))
+      .unwrap()
+) satisfies TiFAPIRouterExtension["createCurrentUserProfile"]

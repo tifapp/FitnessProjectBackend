@@ -4,8 +4,8 @@
 import { conn } from "TiFBackendUtils"
 import { exponentialFunctionBackoff } from "TiFBackendUtils/AWS"
 import { LocationCoordinate2D } from "TiFShared/domain-models/LocationCoordinate2D"
-import { Result, promiseResult, success } from "TiFShared/lib/Result"
-import { SearchClosestAddressToCoordinates, addLocationToDB, checkExistingPlacemarkInDB, getTimeZone } from "./utils"
+import { promiseResult, Result, success } from "TiFShared/lib/Result"
+import { addLocationToDB, checkExistingPlacemarkInDB, getTimeZone, SearchClosestAddressToCoordinates } from "./utils"
 
 interface LocationSearchRequest extends LocationCoordinate2D {}
 
@@ -22,15 +22,13 @@ export const handler: any = exponentialFunctionBackoff<
     latitude: parseFloat(latitude.toFixed(7)),
     longitude: parseFloat(longitude.toFixed(7))
   })
-    .flatMapSuccess(() => {
-      console.log("checking aws geocoder")
-      return promiseResult(
+    .flatMapSuccess(() =>
+      promiseResult(
         SearchClosestAddressToCoordinates({
           latitude,
           longitude
-        }).then(locationInfo => success(locationInfo))
+        }).then((locationInfo) => success(locationInfo))
       )
-    }
     )
     .flatMapSuccess((locationInfo) => {
       console.log("aws placemark is ", JSON.stringify(locationInfo, null, 2))

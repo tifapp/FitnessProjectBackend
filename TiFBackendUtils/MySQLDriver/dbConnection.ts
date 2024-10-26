@@ -1,7 +1,10 @@
-import mysql from "mysql2/promise"
+import type { ConnectionOptions } from "mysql2/promise"
 import { envVars } from "../env"
 
-export const createDatabaseConnection = async (connectionConfig: Partial<mysql.ConnectionOptions> = {}) => {
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const mysql = require("mysql2/promise")
+
+export const createDatabaseConnection = async (connectionConfig: Partial<ConnectionOptions> = {}) => {
   return mysql.createConnection({
     host: envVars.DATABASE_HOST,
     user: envVars.DATABASE_USERNAME,

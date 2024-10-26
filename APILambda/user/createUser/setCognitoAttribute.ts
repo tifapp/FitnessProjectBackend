@@ -1,6 +1,6 @@
 import { AdminUpdateUserAttributesRequest, CognitoIdentityProvider } from "@aws-sdk/client-cognito-identity-provider"
+import { envVars } from "TiFBackendUtils/env"
 import { failure, promiseResult, success } from "TiFShared/lib/Result"
-import { testEnvVars } from "../../test/testEnv"
 
 const cognito = new CognitoIdentityProvider()
 
@@ -8,7 +8,7 @@ const cognito = new CognitoIdentityProvider()
 export const setProfileCreatedAttribute = (userId: string) => {
   const verifyEmailParams: AdminUpdateUserAttributesRequest =
     {
-      UserPoolId: testEnvVars.COGNITO_USER_POOL_ID,
+      UserPoolId: envVars.COGNITO_USER_POOL_ID,
       Username: userId,
       UserAttributes: [
         {

@@ -1,28 +1,41 @@
-import { ExtractSuccess } from "TiFShared/lib/Result"
+import { ExtractSuccess, failure, success } from "TiFShared/lib/Result"
 import { DBuser } from "../DBTypes"
 import { MySQLExecutableDriver } from "../MySQLDriver/index"
-import { UserRelationship } from "./UserRelationships"
+import { UserRelations, UserRelationshipPair, UserRelationsSchema } from "./UserRelationships"
 
 export const findTiFUser = (
   conn: MySQLExecutableDriver,
-  yourId: string,
-  theirId: string
+  { fromUserId, toUserId }: UserRelationshipPair
 ) =>
   conn
-    .queryFirstResult<DBuser & UserRelationship>(
+    .queryFirstResult<DBuser & UserRelations>(
       `
       SELECT
       theirUser.*,
-          COALESCE(fromThemToYou.status, 'not-friends') AS fromThemToYou,
-          COALESCE(fromYouToThem.status, 'not-friends') AS fromYouToThem
+          CASE
+            WHEN :fromUserId = :toUserId THEN 'current-user'
+            ELSE COALESCE(fromThemToYou.status, 'not-friends')
+          END AS fromThemToYou,
+          CASE
+            WHEN :fromUserId = :toUserId THEN 'current-user'
+            ELSE COALESCE(fromYouToThem.status, 'not-friends')
+          END AS fromYouToThem
       FROM
           user theirUser
-          LEFT JOIN userRelations fromThemToYou ON fromThemToYou.fromUserId = theirUser.id AND fromThemToYou.toUserId = :yourId
-          LEFT JOIN userRelations fromYouToThem ON fromYouToThem.fromUserId = :yourId AND fromYouToThem.toUserId = theirUser.id
-      WHERE theirUser.id = :theirId;
+          LEFT JOIN userRelationships fromThemToYou ON fromThemToYou.fromUserId = theirUser.id AND fromThemToYou.toUserId = :fromUserId
+          LEFT JOIN userRelationships fromYouToThem ON fromYouToThem.fromUserId = :fromUserId AND fromYouToThem.toUserId = theirUser.id
+      WHERE theirUser.id = :toUserId;
       `,
-      { yourId, theirId }
+      { fromUserId, toUserId }
     )
-    .mapSuccess(({ fromThemToYou, fromYouToThem, ...user }) => ({ ...user, relations: { fromThemToYou, fromYouToThem } }))
+    .flatMapSuccess(({ fromThemToYou, fromYouToThem, ...user }) => {
+      const relationStatus = UserRelationsSchema.parse({ fromThemToYou, fromYouToThem })
 
-export type TiFUser = ExtractSuccess<ReturnType<typeof findTiFUser>>;
+      if (relationStatus === "blocked-you") {
+        return failure({ ...user, relationStatus })
+      } else {
+        return success({ ...user, relationStatus })
+      }
+    })
+
+export type TiFUser = ExtractSuccess<ReturnType<typeof findTiFUser>>

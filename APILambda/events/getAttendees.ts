@@ -1,19 +1,18 @@
 import { conn } from "TiFBackendUtils"
 import { DBeventAttendance, DBuser, DBuserArrivals } from "TiFBackendUtils/DBTypes"
 import { MySQLExecutableDriver } from "TiFBackendUtils/MySQLDriver"
-import { UserRelationship } from "TiFBackendUtils/TiFUserUtils"
-import { ExtractSuccess, promiseResult, success } from "TiFShared/lib/Result"
+import { UserRelations, UserRelationsSchema } from "TiFBackendUtils/TiFUserUtils"
+import { resp } from "TiFShared/api/Transport"
+import { EventAttendee, EventAttendeesPage } from "TiFShared/domain-models/Event"
+import { UnblockedUserRelationsStatus } from "TiFShared/domain-models/User"
+import { failure, success } from "TiFShared/lib/Result"
 import { z } from "zod"
-import { ServerEnvironment } from "../env"
+import { TiFAPIRouterExtension } from "../router"
 import {
+  AttendeesListCursor,
   decodeAttendeesListCursor,
   encodeAttendeesListCursor
-} from "../shared/Cursor"
-import { ValidatedRouter } from "../validation"
-
-const AttendeesRequestSchema = z.object({
-  eventId: z.string()
-})
+} from "../utils/Cursor"
 
 const DecodedCursorValidationSchema = z.object({
   userId: z.string(),
@@ -21,26 +20,15 @@ const DecodedCursorValidationSchema = z.object({
   arrivedDateTime: z.date().optional()
 })
 
-const CursorRequestSchema = z.object({
-  nextPage: z.string().optional(),
-  limit: z
-    .string()
-    .transform((arg) => parseInt(arg))
-    .refine((arg) => arg >= 1 && arg <= 50)
-})
-
 // TODO: use index as cursor instead of userid+joindate
-const getTiFAttendees = (
-  limit: number,
+const getTiFAttendeesSQL = (
   conn: MySQLExecutableDriver,
   eventId: number,
   userId: string,
-  nextPageUserIdCursor: string,
-  nextPageJoinDateCursor?: Date,
-  nextPageArrivedDateTimeCursor?: Date
-) =>
-  conn.queryResult<DBeventAttendance & DBuserArrivals & UserRelationship & Pick<DBuser, "id" | "name" | "profileImageURL" | "handle"> & {hasArrived: boolean}>(
-    `SELECT 
+  { userId: nextPageUserId, joinedDateTime: nextPageJoinDateTime, arrivedDateTime: nextPageArrivedDateTime }: AttendeesListCursor,
+  limit: number
+) => conn.queryResult<DBeventAttendance & DBuserArrivals & UserRelations & Pick<DBuser, "id" | "name" | "profileImageURL" | "handle"> & {hasArrived: boolean}>(
+  `SELECT 
     u.id, 
     u.profileImageURL, 
     u.name, 
@@ -55,35 +43,36 @@ const getTiFAttendees = (
     INNER JOIN eventAttendance AS ea ON u.id = ea.userId 
     INNER JOIN event AS e ON ea.eventId = e.id
     LEFT JOIN userArrivals AS ua ON ua.userId = u.id
-    LEFT JOIN userRelations AS ur ON (ur.fromUserId = u.id AND ur.toUserId = :userId)
+    LEFT JOIN userRelationships AS ur ON (ur.fromUserId = u.id AND ur.toUserId = :userId)
                                 OR (ur.fromUserId = :userId AND ur.toUserId = u.id)
     WHERE e.id = :eventId
-    AND (:nextPageUserIdCursor = 'firstPage' 
-      OR (ua.arrivedDateTime > :nextPageArrivedDateTimeCursor OR (ua.arrivedDateTime IS NULL AND :nextPageArrivedDateTimeCursor IS NOT NULL))
-        OR (ua.arrivedDateTime IS NULL AND :nextPageArrivedDateTimeCursor IS NULL AND ea.joinedDateTime > :nextPageJoinDateCursor)
-        OR (ua.arrivedDateTime IS NULL AND :nextPageArrivedDateTimeCursor IS NULL AND ea.joinedDateTime = :nextPageJoinDateCursor AND u.id > :nextPageUserIdCursor)
+    AND (:nextPageUserId = 'firstPage' 
+      OR (ua.arrivedDateTime > :nextPageArrivedDateTime OR (ua.arrivedDateTime IS NULL AND :nextPageArrivedDateTime IS NOT NULL))
+        OR (ua.arrivedDateTime IS NULL AND :nextPageArrivedDateTime IS NULL AND ea.joinedDateTime > :nextPageJoinDateTime)
+        OR (ua.arrivedDateTime IS NULL AND :nextPageArrivedDateTime IS NULL AND ea.joinedDateTime = :nextPageJoinDateTime AND u.id > :nextPageUserId)
       )
-    AND (ea.role <> 'hosting' OR :nextPageUserIdCursor = 'firstPage')
+    AND (ea.role <> 'hosting' OR :nextPageUserId = 'firstPage')
     AND (ua.longitude = e.longitude AND ua.latitude = e.latitude
       OR ua.arrivedDateTime IS NULL)
     GROUP BY u.id, ua.arrivedDateTime
     HAVING fromThemToYou IS NULL OR MAX(CASE WHEN ur.toUserId = :userId THEN ur.status END) <> 'blocked' OR ea.role = 'hosting'
     ORDER BY
-    CASE WHEN :nextPageUserIdCursor = 'firstPage' THEN CASE WHEN ea.role = 'hosting' THEN 0 ELSE 1 END ELSE 1 END,
+    CASE WHEN :nextPageUserId = 'firstPage' THEN CASE WHEN ea.role = 'hosting' THEN 0 ELSE 1 END ELSE 1 END,
     COALESCE(ua.arrivedDateTime, '9999-12-31 23:59:59.999') ASC,
     ea.joinedDateTime ASC,
     u.id ASC
     LIMIT :limit;
   `,
-    {
-      eventId,
-      userId,
-      nextPageUserIdCursor,
-      nextPageJoinDateCursor,
-      nextPageArrivedDateTimeCursor,
-      limit
-    }
-  ).mapSuccess((attendees) => attendees.map((attendee) => ({
+  {
+    eventId,
+    userId,
+    nextPageUserId,
+    nextPageJoinDateTime,
+    nextPageArrivedDateTime,
+    limit
+  }
+).mapSuccess((attendees) =>
+  attendees.map((attendee) => ({
     id: attendee.id,
     name: attendee.name,
     joinedDateTime: attendee.joinedDateTime,
@@ -92,44 +81,33 @@ const getTiFAttendees = (
     arrivedDateTime: attendee.arrivedDateTime,
     hasArrived: !!attendee.hasArrived,
     role: attendee.role,
-    relations: {
+    relationStatus: UserRelationsSchema.parse({
       fromYouToThem: attendee.fromYouToThem ?? "not-friends",
       fromThemToYou: attendee.fromThemToYou ?? "not-friends"
-    }
-  })))
-
-export type TiFEventAttendee = ExtractSuccess<ReturnType<typeof getTiFAttendees>>[number] // TODO: Get type from shared package schema
-
-export type PaginatedAttendeesResponse = {
-  nextPageCursor: string
-  totalAttendeeCount: number
-  attendees: TiFEventAttendee[]
-}
+    }) as UnblockedUserRelationsStatus
+  })
+  ))
 
 const paginatedAttendeesResponse = (
-  attendees: TiFEventAttendee[],
+  attendees: EventAttendee[],
   limit: number,
   totalAttendeeCount: number
-): PaginatedAttendeesResponse => {
+): EventAttendeesPage => {
   const hasMoreAttendees = attendees.length > limit
-
-  const nextPageUserIdCursor = hasMoreAttendees
-    ? attendees[limit - 1].id
-    : "lastPage"
-  const nextPageJoinDateCursor = hasMoreAttendees
-    ? attendees[limit - 1].joinedDateTime
-    : undefined
-  const nextPageArrivedDateTimeCursor = hasMoreAttendees
-    ? attendees[limit - 1].arrivedDateTime
-    : undefined
 
   let paginatedAttendees = []
   paginatedAttendees = attendees.slice(0, limit)
 
   const encondedNextPageCursor = encodeAttendeesListCursor({
-    userId: nextPageUserIdCursor,
-    joinedDateTime: nextPageJoinDateCursor,
-    arrivedDateTime: nextPageArrivedDateTimeCursor
+    userId: hasMoreAttendees
+      ? attendees[limit - 1].id
+      : "lastPage",
+    joinedDateTime: hasMoreAttendees
+      ? attendees[limit - 1].joinedDateTime
+      : undefined,
+    arrivedDateTime: hasMoreAttendees
+      ? attendees[limit - 1].arrivedDateTime
+      : undefined
   })
 
   return {
@@ -146,118 +124,84 @@ const getAttendeesCount = (
 ) =>
   conn.queryFirstResult<{ totalAttendeeCount: number }>(
     `SELECT 
-      COUNT(*) AS totalAttendeeCount
-      FROM 
-          user AS u 
-          INNER JOIN eventAttendance AS ea ON u.id = ea.userId 
-          INNER JOIN event AS e ON ea.eventId = e.id
-          LEFT JOIN userRelations AS fromThemToYou ON fromThemToYou.fromUserId = u.id AND fromThemToYou.toUserId = :userId
-          LEFT JOIN userRelations AS fromYouToThem ON fromYouToThem.fromUserId = :userId AND fromYouToThem.toUserId = u.id
-      WHERE 
-          e.id = :eventId
-          AND (
-              (fromThemToYou.status IS NULL OR (fromThemToYou.status != 'blocked' AND fromThemToYou.toUserId = :userId))
-          );
+        COUNT(u.id) AS totalAttendeeCount
+    FROM 
+        user AS u 
+        INNER JOIN eventAttendance AS ea ON u.id = ea.userId 
+        LEFT JOIN event AS e ON ea.eventId = e.id AND e.id = :eventId
+        LEFT JOIN userRelationships AS fromThemToYou ON fromThemToYou.fromUserId = u.id AND fromThemToYou.toUserId = :userId
+        LEFT JOIN userRelationships AS fromYouToThem ON fromYouToThem.fromUserId = :userId AND fromYouToThem.toUserId = u.id
+    WHERE 
+        e.id IS NOT NULL  -- Ensures only rows where the event exists are returned
+        AND (fromThemToYou.status IS NULL OR (fromThemToYou.status != 'blocked' AND fromThemToYou.toUserId = :userId))
+    GROUP BY 
+        e.id;
     `,
     { eventId, userId }
   )
 
-const getAttendeesByEventId = (
-  limit: number,
+const checkEventExists = (
   conn: MySQLExecutableDriver,
-  eventId: number,
-  userId: string,
-  nextPageUserIdCursor: string,
-  nextPageJoinDateCursor?: Date,
-  nextPageArrivedDateTimeCursor?: Date
-) => {
-  return promiseResult(
-    Promise.all([
-      getTiFAttendees(
-        limit,
-        conn,
-        eventId,
-        userId,
-        nextPageUserIdCursor,
-        nextPageJoinDateCursor,
-        nextPageArrivedDateTimeCursor
-      ),
-      getAttendeesCount(conn, eventId, userId)
-    ]).then((results) => {
-      return success({
-        attendees: results[0].value,
-        totalAttendeeCount: results[1].value
-      })
-    })
+  eventId: number
+) =>
+  conn.queryHasResults(
+    `SELECT *
+    FROM event
+    WHERE id = :eventId
+    `,
+    { eventId }
   )
-}
+
 /**
  * Creates routes related to attendees list.
  *
  * @param environment see {@link ServerEnvironment}.
  */
-export const getAttendeesByEventIdRouter = (
-  environment: ServerEnvironment,
-  router: ValidatedRouter
-) => {
-  router.getWithValidation(
-    "/attendees/:eventId",
-    {
-      pathParamsSchema: AttendeesRequestSchema,
-      querySchema: CursorRequestSchema
-    },
-    (req, res) => {
-      const { userId, joinedDateTime, arrivedDateTime } = decodeAttendeesListCursor(
-        req.query.nextPage
-      )
+export const attendeesList = (
+  ({ query: { nextPageCursor, limit }, params: { eventId }, context: { selfId }, log }) => {
+    const cursor = DecodedCursorValidationSchema.parse(decodeAttendeesListCursor(
+      nextPageCursor
+    ))
 
-      const decodedValues = DecodedCursorValidationSchema.parse({
-        userId,
-        joinedDateTime,
-        arrivedDateTime
-      })
+    log.debug("decoded attendees cursor is ", cursor)
 
-      return conn.transaction((tx) =>
-        getAttendeesByEventId(
-          req.query.limit + 1, // Add 1 to handle checking last page
-          tx,
-          Number(req.params.eventId),
-          res.locals.selfId,
-          decodedValues.userId,
-          decodedValues.joinedDateTime,
-          decodedValues.arrivedDateTime
-        ).mapSuccess((results) => {
-          const attendees = results.attendees
-          const totalAttendeeCount =
-            results.totalAttendeeCount === "no-results"
-              ? 0
-              : results.totalAttendeeCount.totalAttendeeCount
-
-          return totalAttendeeCount === 0
-            ? res
-              .status(404)
-              .send(
+    return conn.transaction((tx) =>
+      checkEventExists(tx, eventId)
+        .withFailure(resp(404, { error: "event-not-found" }))
+        .flatMapSuccess(() =>
+          getAttendeesCount(tx, eventId, selfId)
+            .withFailure(resp(404, { error: "no-attendees" }))
+        )
+        // NB: Creates typescript union so it's accepted by TiFShared API
+        .mapFailure(error => resp(error.status, error.data))
+        .flatMapSuccess(({ totalAttendeeCount }) =>
+          getTiFAttendeesSQL(
+            tx,
+            eventId,
+            selfId,
+            // NB: Fails type compatibility in github CI
+            cursor as AttendeesListCursor,
+            limit + 1 // Add 1 to handle checking last page
+          )
+            .passthroughSuccess((attendees) =>
+              attendees.length > 0 &&
+              attendees[0].role === "hosting" &&
+              // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+              // @ts-ignore Host can block current user
+              attendees[0].relationStatus === "blocked-you"
+                ? failure(resp(403, { error: "blocked-you" }))
+                : success()
+            )
+            .mapSuccess((attendees) =>
+              resp(200,
                 paginatedAttendeesResponse(
                   attendees,
-                  req.query.limit,
+                  limit,
                   totalAttendeeCount
                 )
               )
-            : attendees.length > 0 &&
-              attendees[0].role === "hosting" &&
-              attendees[0].relations.fromThemToYou === "blocked"
-              ? res.status(403).send({ error: "blocked-by-host" })
-              : res
-                .status(200)
-                .send(
-                  paginatedAttendeesResponse(
-                    attendees,
-                    req.query.limit,
-                    totalAttendeeCount
-                  )
-                )
-        })
-      )
-    }
-  )
-}
+            )
+        ))
+      .unwrap()
+  }
+) satisfies TiFAPIRouterExtension["attendeesList"]

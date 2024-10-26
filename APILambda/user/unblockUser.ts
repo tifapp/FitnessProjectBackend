@@ -1,49 +1,50 @@
 import { conn } from "TiFBackendUtils"
 import { MySQLExecutableDriver } from "TiFBackendUtils/MySQLDriver"
-import { userWithIdExists } from "TiFBackendUtils/TiFUserUtils"
+import { UserRelationshipPair, userWithIdExists } from "TiFBackendUtils/TiFUserUtils"
+import { resp } from "TiFShared/api/Transport"
+import { chainMiddleware } from "TiFShared/lib/Middleware"
 import { failure, success } from "TiFShared/lib/Result"
-import { z } from "zod"
-import { ValidatedRouter } from "../validation"
+import { TiFAPIRouterExtension } from "../router"
+import { isCurrentUser } from "../utils/isCurrentUserMiddleware"
 
-const UnblockUserRequestSchema = z.object({
-  userId: z.string().uuid()
-})
+const unblockUserHandler = (
+  ({ context: { selfId: fromUserId }, params: { userId: toUserId } }) =>
+    unblockUserSQL(conn, { fromUserId, toUserId })
+      .flatMapSuccess((result) => {
+        if (result.rowsAffected === 1) return success(resp(204))
 
-/**
- * Creates an endpoint to unblock the user.
- */
-export const createUnblockUserRouter = (router: ValidatedRouter) => {
-  router.deleteWithValidation("/block/:userId",
-    { pathParamsSchema: UnblockUserRequestSchema },
-    async (req, res) => {
-      return unblockUser(conn, res.locals.selfId, req.params.userId)
-        .mapFailure((error) => {
-          return res
-            .status(error === "user-not-found" ? 404 : 403)
-            .json({ error, userId: req.params.userId })
-        })
-        .mapSuccess(() => res.status(204).send())
-    })
-}
+        return userWithIdExists(conn, toUserId)
+          .withFailure(resp(404,
+            {
+              error: "user-not-found",
+              userId: toUserId
+            }
+          ))
+          .flatMapSuccess(() =>
+            failure(resp(403,
+              {
+                error: "user-not-blocked",
+                userId: toUserId
+              }
+            ))
+          )
+      })
+      .unwrap()
+    ) satisfies TiFAPIRouterExtension["unblockUser"]
 
-const unblockUser = (
+// NB: Middleware type inference issue
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const unblockUser = chainMiddleware(isCurrentUser, unblockUserHandler as any) as unknown as typeof unblockUserHandler
+
+const unblockUserSQL = (
   conn: MySQLExecutableDriver,
-  fromUserId: string,
-  toUserId: string
-) => {
-  return conn
-    .executeResult(
-      `
-        DELETE FROM userRelations
-        WHERE fromUserId = :fromUserId AND toUserId = :toUserId 
-          AND status = 'blocked'
-      `,
-      { fromUserId, toUserId }
-    )
-    .flatMapSuccess((result) => {
-      if (result.rowsAffected === 1) return success()
-      return userWithIdExists(conn, toUserId)
-        .withFailure("user-not-found" as const)
-        .flatMapSuccess(() => failure("user-not-blocked" as const))
-    })
-}
+  { fromUserId, toUserId }: UserRelationshipPair
+) => conn
+  .executeResult(
+    `
+      DELETE FROM userRelationships
+      WHERE fromUserId = :fromUserId AND toUserId = :toUserId 
+        AND status = 'blocked'
+    `,
+    { fromUserId, toUserId }
+  )

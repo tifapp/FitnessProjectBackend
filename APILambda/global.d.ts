@@ -1,7 +1,3 @@
-/* eslint-disable no-multiple-empty-lines */
-/* eslint-disable semi */
-/* eslint-disable no-unused-vars */
-
 export type TestUserInput = { name?: string; isVerified?: boolean; profileExists?: boolean; }
 export type TestUser = { auth: string; id: string, refreshAuth: () => Promise<string>, name: string }
 

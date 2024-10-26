@@ -1,80 +1,92 @@
-import { callGetSelf, callUpdateUserHandle, callUpdateUserName } from "../test/apiCallers/userEndpoints"
-import { withEmptyResponseBody } from "../test/assertions"
+import { testAPI } from "../test/testApp"
 import { createUserFlow } from "../test/userFlows/createUserFlow"
 
 describe("Update user profile tests", () => {
   // add auth middleware tests for profile_exists
   describe("Update user handle tests", () => {
     it("should allow users to update their name", async () => {
-      const { token: userToken, userId } = await createUserFlow()
-      const name = "new name"
-      const resp = await callUpdateUserName(
-        userToken,
-        "new name"
-      )
-
-      expect(withEmptyResponseBody(resp)).toMatchObject({
-        status: 204,
-        body: ""
+      const newUser = await createUserFlow()
+      const newName = "new name"
+      const resp = await testAPI.updateCurrentUserProfile({
+        auth: newUser.auth,
+        body: {
+          name: newName
+        }
       })
 
-      expect(await callGetSelf(userToken)).toMatchObject({
+      expect(resp).toEqual({
+        status: 204,
+        data: {}
+      })
+
+      await expect(testAPI.getSelf({
+        auth: newUser.auth
+      })).resolves.toMatchObject({
         status: 200,
-        body: {
-          id: userId,
-          name
+        data: {
+          id: newUser.id,
+          name: newName
         }
       })
     })
 
     it("should allow users to update their handle to a unique handle", async () => {
-      const { token: userToken, userId } = await createUserFlow()
-      const userHandle = "handle"
-      const resp = await callUpdateUserHandle(
-        userToken,
-        userHandle
-      )
-
-      expect(withEmptyResponseBody(resp)).toMatchObject({
-        status: 204,
-        body: ""
+      const newUser = await createUserFlow()
+      const newHandle = "handle"
+      const resp = await testAPI.updateCurrentUserProfile({
+        auth: newUser.auth,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        body: { handle: newHandle as any }
       })
 
-      expect(await callGetSelf(userToken)).toMatchObject({
+      expect(resp).toEqual({
+        status: 204,
+        data: {}
+      })
+
+      await expect(testAPI.getSelf({
+        auth: newUser.auth
+      })).resolves.toMatchObject({
         status: 200,
-        body: {
-          id: userId,
-          handle: userHandle
+        data: {
+          id: newUser.id,
+          handle: newHandle
         }
       })
     })
 
     it("should 400 for an invalid handle", async () => {
-      const { token: userToken } = await createUserFlow()
-      const userHandle = "@#($@(#$R%U*@#("
-      const resp = await callUpdateUserHandle(
-        userToken,
-        userHandle
-      )
+      const newUser = await createUserFlow()
+      const resp = await testAPI.updateCurrentUserProfile({
+        auth: newUser.auth,
+        body: {
+          // need to test if invalid handles throw errors
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          handle: "@#($@(#$R%U*@#("
+        }
+      })
 
       expect(resp).toMatchObject({
         status: 400,
-        body: { error: "invalid-request" }
+        data: { error: "invalid-request" }
       })
     })
 
     it("should 400 when user tries to update user handle but another user has already taken it", async () => {
-      const { token: userToken } = await createUserFlow()
-      const { handle: takenHandle } = await createUserFlow()
+      const newUser = await createUserFlow()
+      const oldUser = await createUserFlow()
 
-      const resp = await callUpdateUserHandle(
-        userToken,
-        takenHandle
-      )
+      const resp = await testAPI.updateCurrentUserProfile({
+        auth: newUser.auth,
+        body: {
+          handle: oldUser.handle
+        }
+      })
 
       expect(resp).toMatchObject({
         status: 400,
-        body: { error: "duplicate-handle" }
+        data: { error: "duplicate-handle" }
       })
     })
   })
