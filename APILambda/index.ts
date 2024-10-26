@@ -4,7 +4,7 @@ import awsServerlessExpress from "@vendia/serverless-express"
 import { invokeAWSLambda } from "TiFBackendUtils/AWS"
 import { envVars } from "TiFBackendUtils/env"
 import { LocationCoordinate2D } from "TiFShared/domain-models/LocationCoordinate2D"
-import { addBenchmarking, addRoutes, createApp } from "./app"
+import { addBenchmarking, addTiFRouter, createApp } from "./app"
 import { addCognitoTokenVerification } from "./auth"
 import { ServerEnvironment } from "./env"
 import { addErrorReporting } from "./errorReporting"
@@ -24,7 +24,7 @@ const app = createApp()
 addEventToRequest(app)
 addBenchmarking(app)
 addCognitoTokenVerification(app) // TODO: only apply to specific routes
-addRoutes(app, env)
+addTiFRouter(app, env)
 addErrorReporting(app)
 
 export const handler = awsServerlessExpress({ app })

@@ -1,5 +1,9 @@
 import { faker } from "@faker-js/faker"
-import { CreateEventInput } from "../events/createEvent"
+import { todayTestDate, tomorrowTestDate } from "TiFBackendUtils/test/dateHelpers"
+import { CreateEvent } from "TiFShared/api/models/Event"
+import { ColorString } from "TiFShared/domain-models/ColorString"
+import { dateRange } from "TiFShared/domain-models/FixedDateRange"
+import { dayjs } from "TiFShared/lib/Dayjs"
 
 // Coords in the US mainland
 const mockLocationCoordinate2D = () => ({
@@ -7,17 +11,18 @@ const mockLocationCoordinate2D = () => ({
   longitude: parseFloat(faker.address.longitude(-66.9, -125))
 })
 
-const createTestEvent = (): CreateEventInput => {
-  return {
+const createTestEvent = (): CreateEvent =>
+  ({
     title: faker.word.noun({ length: { min: 5, max: 50 } }),
     description: faker.animal.rodent(),
-    startDateTime: new Date(new Date().setMonth(new Date().getMonth() + 1)),
-    endDateTime: new Date(new Date().setMonth(new Date().getMonth() + 2)),
-    color: "#72B01D",
+    dateRange: dateRange(todayTestDate(), tomorrowTestDate())!,
+    color: ColorString.parse("#72B01D")!,
     shouldHideAfterStartDate: true,
     isChatEnabled: true,
-    ...mockLocationCoordinate2D()
-  }
-}
+    coordinates: mockLocationCoordinate2D()
+  })
 
-export const testEventInput: CreateEventInput = createTestEvent()
+export const testEventInput: CreateEvent = createTestEvent()
+
+// reason: milliseconds are not counted in the live database
+export const upcomingEventDateRange = dateRange(dayjs().add(12, "hour").millisecond(0).toDate(), dayjs().add(1, "year").millisecond(0).toDate())!

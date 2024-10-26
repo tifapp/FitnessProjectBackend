@@ -1,16 +1,17 @@
 import dayjs from "dayjs"
-import { callCreateEvent, callGetUpcomingEvents, callSetArrival } from "../../test/apiCallers/eventEndpoints"
-import { testEventInput } from "../../test/testEvents"
+import { dateRange } from "TiFShared/domain-models/FixedDateRange"
+import { testAPI } from "../../test/testApp"
+import { testEventInput, upcomingEventDateRange } from "../../test/testEvents"
 import { createEventFlow } from "../../test/userFlows/createEventFlow"
 import { createUserFlow } from "../../test/userFlows/createUserFlow"
 
 describe("getUpcomingEvents tests", () => {
   it("should return 200 with an empty array if the user has no upcoming events", async () => {
-    const { token: attendeeToken } = await createUserFlow()
+    const attendee = await createUserFlow()
 
-    expect(await callGetUpcomingEvents(attendeeToken)).toMatchObject({
+    expect(await testAPI.upcomingEventArrivalRegions({ auth: attendee.auth })).toMatchObject({
       status: 200,
-      body: { upcomingRegions: [] }
+      data: { trackableRegions: [] }
     })
   })
 
@@ -19,46 +20,48 @@ describe("getUpcomingEvents tests", () => {
 
     const { attendeesList, host, eventIds: [arrivedTestEventId, ongoingTestEventId, notArrivedTestEventId] } = await createEventFlow([
       {
-        ...eventLocation,
-        startDateTime: dayjs().add(12, "hour").toDate(),
-        endDateTime: dayjs().add(1, "year").toDate()
+        coordinates: eventLocation,
+        dateRange: upcomingEventDateRange
       },
       {
-        ...eventLocation,
-        startDateTime: dayjs().subtract(12, "hour").toDate(),
-        endDateTime: dayjs().add(1, "year").toDate()
+        coordinates: eventLocation,
+        dateRange: dateRange(dayjs().subtract(12, "hour").toDate(), dayjs().add(1, "year").toDate())
       },
       {
-        latitude: 25,
-        longitude: 25,
-        startDateTime: dayjs().add(12, "hour").toDate(),
-        endDateTime: dayjs().add(1, "year").toDate()
+        coordinates: {
+          latitude: 25,
+          longitude: 25
+        },
+        dateRange: upcomingEventDateRange
       },
       {
-        ...eventLocation,
-        startDateTime: dayjs().add(1, "month").toDate(),
-        endDateTime: dayjs().add(1, "year").toDate()
+        coordinates: eventLocation,
+        dateRange: dateRange(dayjs().add(1, "month").toDate(), dayjs().add(1, "year").toDate())
       }
     ], 1)
 
-    // unrelated event that should not appear in upcoming list
-    await callCreateEvent(host.token,
-      {
+    // this tests an unrelated event that should not appear in upcoming list
+    await testAPI.createEvent({
+      auth: host.auth,
+      body: {
         ...testEventInput,
-        ...eventLocation,
-        startDateTime: dayjs().add(12, "hour").toDate(),
-        endDateTime: dayjs().add(1, "year").toDate()
+        coordinates: eventLocation,
+        dateRange: upcomingEventDateRange!
       }
-    )
-
-    await callSetArrival(attendeesList[1].token, {
-      coordinate: eventLocation
     })
 
-    expect(await callGetUpcomingEvents(attendeesList[1].token)).toMatchObject({
-      status: 200,
+    await testAPI.arriveAtRegion({
+      auth: attendeesList[1].auth,
       body: {
-        upcomingRegions: [{
+        coordinate: eventLocation,
+        arrivalRadiusMeters: 500
+      }
+    })
+
+    expect(await testAPI.upcomingEventArrivalRegions({ auth: attendeesList[1].auth })).toMatchObject({
+      status: 200,
+      data: {
+        trackableRegions: [{
           arrivalRadiusMeters: 500,
           hasArrived: true,
           eventIds: [

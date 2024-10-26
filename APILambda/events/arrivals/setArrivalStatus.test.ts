@@ -1,5 +1,5 @@
-import dayjs from "dayjs"
-import { callGetEvent, callSetArrival, callSetDeparture } from "../../test/apiCallers/eventEndpoints"
+import { testAPI } from "../../test/testApp"
+import { upcomingEventDateRange } from "../../test/testEvents"
 import { createEventFlow } from "../../test/userFlows/createEventFlow"
 
 const eventLocation = { latitude: 50, longitude: 50 }
@@ -7,27 +7,36 @@ const eventLocation = { latitude: 50, longitude: 50 }
 describe("SetHasArrived tests", () => {
   it("should return upcoming events from the arrived and departed endpoints", async () => {
     // cant mock planetscale time
-    const { attendeesList, eventIds } = await createEventFlow([{
-      ...eventLocation,
-      startDateTime: dayjs().add(12, "hour").toDate(),
-      endDateTime: dayjs().add(1, "year").toDate()
+    const { attendeesList: [, attendee], eventIds } = await createEventFlow([{
+      coordinates: eventLocation,
+      dateRange: upcomingEventDateRange
     }], 1)
 
-    expect(await callSetArrival(attendeesList[1].token, {
-      coordinate: eventLocation
-    })).toMatchObject({
+    expect(await testAPI.arriveAtRegion({
+      auth: attendee.auth,
       body: {
-        upcomingRegions: [{
+        coordinate: eventLocation,
+        arrivalRadiusMeters: 500
+      }
+    })).toMatchObject({
+      status: 200,
+      data: {
+        trackableRegions: [{
           eventIds
         }]
       }
     })
 
-    expect(await callSetDeparture(attendeesList[1].token, {
-      coordinate: eventLocation
-    })).toMatchObject({
+    expect(await testAPI.departFromRegion({
+      auth: attendee.auth,
       body: {
-        upcomingRegions: [{
+        coordinate: eventLocation,
+        arrivalRadiusMeters: 500
+      }
+    })).toMatchObject({
+      status: 200,
+      data: {
+        trackableRegions: [{
           eventIds
         }]
       }
@@ -35,24 +44,37 @@ describe("SetHasArrived tests", () => {
   })
 
   it("should persist arrival when checking events", async () => {
-    const { attendeesList, eventIds } = await createEventFlow([{ ...eventLocation }], 1)
+    const { attendeesList: [, attendee], eventIds } = await createEventFlow([{
+      coordinates: eventLocation,
+      dateRange: upcomingEventDateRange
+    }], 1)
 
-    await callSetArrival(attendeesList[1].token, {
-      coordinate: eventLocation
+    await testAPI.arriveAtRegion({
+      auth: attendee.auth,
+      body: {
+        coordinate: eventLocation,
+        arrivalRadiusMeters: 500
+      }
     })
 
-    expect(await callGetEvent(attendeesList[1].token, eventIds[0])).toMatchObject({
-      body: {
+    expect(await testAPI.eventDetails({ auth: attendee.auth, params: { eventId: eventIds[0] } })).toMatchObject({
+      status: 200,
+      data: {
         hasArrived: true
       }
     })
 
-    await callSetDeparture(attendeesList[1].token, {
-      coordinate: eventLocation
+    await testAPI.departFromRegion({
+      auth: attendee.auth,
+      body: {
+        coordinate: eventLocation,
+        arrivalRadiusMeters: 500
+      }
     })
 
-    expect(await callGetEvent(attendeesList[1].token, eventIds[0])).toMatchObject({
-      body: {
+    expect(await testAPI.eventDetails({ auth: attendee.auth, params: { eventId: eventIds[0] } })).toMatchObject({
+      status: 200,
+      data: {
         hasArrived: false
       }
     })

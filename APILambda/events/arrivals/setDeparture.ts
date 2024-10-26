@@ -1,37 +1,28 @@
 import { conn } from "TiFBackendUtils"
 import { MySQLExecutableDriver } from "TiFBackendUtils/MySQLDriver"
-import { LocationCoordinate2D, LocationCoordinate2DSchema } from "TiFShared/domain-models/LocationCoordinate2D"
-import { z } from "zod"
-import { ServerEnvironment } from "../../env"
-import { ValidatedRouter } from "../../validation"
-import { getUpcomingEventsByRegion } from "./getUpcomingEvents"
+import { resp } from "TiFShared/api/Transport"
+import { LocationCoordinate2D } from "TiFShared/domain-models/LocationCoordinate2D"
+import { UserID } from "TiFShared/domain-models/User"
+import { TiFAPIRouterExtension } from "../../router"
+import { upcomingEventArrivalRegionsSQL } from "./getUpcomingEvents"
 
-const SetDepartureSchema = z
-  .object({
-    coordinate: LocationCoordinate2DSchema,
-    arrivalRadiusMeters: z.number().optional() // may use in the future
-  })
-
-export type SetDepartureInput = z.infer<typeof SetDepartureSchema>
-
-const setDepartureTransaction = (
-  environment: ServerEnvironment,
-  userId: string,
-  request: SetDepartureInput
-) =>
-  conn.transaction((tx) =>
-    deleteArrival(
-      tx,
-      userId,
-      request.coordinate
+export const departFromRegion = (
+  ({ context: { selfId }, body: { coordinate } }) =>
+    conn.transaction((tx) =>
+      deleteArrival(
+        tx,
+        selfId,
+        coordinate
+      )
+        .flatMapSuccess(() => upcomingEventArrivalRegionsSQL(conn, selfId))
     )
-      .flatMapSuccess(() => getUpcomingEventsByRegion(tx, userId))
-  )
-    .mapSuccess((eventRegions) => ({ status: 200, upcomingRegions: eventRegions }))
+      .mapSuccess((trackableRegions) => (resp(200, { trackableRegions })))
+      .unwrap()
+) satisfies TiFAPIRouterExtension["departFromRegion"]
 
 export const deleteArrival = (
   conn: MySQLExecutableDriver,
-  userId: string,
+  userId: UserID,
   coordinate: LocationCoordinate2D
 ) =>
   conn
@@ -44,19 +35,3 @@ export const deleteArrival = (
       `,
       { userId, latitude: coordinate.latitude, longitude: coordinate.longitude }
     )
-
-export const setDepartureRouter = (
-  environment: ServerEnvironment,
-  router: ValidatedRouter
-) => {
-  router.postWithValidation(
-    "/departed",
-    { bodySchema: SetDepartureSchema },
-    (req, res) => {
-      return setDepartureTransaction(environment, res.locals.selfId, req.body)
-        .mapSuccess(({ status, upcomingRegions }) => res.status(status).json({ upcomingRegions }))
-    }
-  )
-}
-
-// TODO: Add notifications

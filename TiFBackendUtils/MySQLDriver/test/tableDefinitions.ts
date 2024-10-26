@@ -27,14 +27,14 @@ export const tableDefintionsByFamily = [
     `
     CREATE TABLE IF NOT EXISTS event (
     id bigint NOT NULL AUTO_INCREMENT,
-    description varchar(1000) NOT NULL,
+    description varchar(1000),
     startDateTime datetime(${timePrecision}) NOT NULL,
     endDateTime datetime(${timePrecision}) NOT NULL,
     hostId char(36) NOT NULL,
-    color varchar(9) NOT NULL,
+    color varchar(9),
     title varchar(100) NOT NULL,
-    shouldHideAfterStartDate tinyint(1) NOT NULL,
-    isChatEnabled tinyint(1) NOT NULL,
+    shouldHideAfterStartDate tinyint(1) NOT NULL DEFAULT '0',
+    isChatEnabled tinyint(1) NOT NULL DEFAULT '1',
     latitude decimal(10,7) NOT NULL,
     longitude decimal(10,7) NOT NULL,
     createdDateTime datetime(${timePrecision}) NOT NULL DEFAULT current_timestamp(${timePrecision}),
@@ -125,7 +125,7 @@ export const tableDefintionsByFamily = [
       COLLATE utf8mb4_0900_ai_ci;
     `,
     `
-    CREATE TABLE IF NOT EXISTS userRelations (
+    CREATE TABLE IF NOT EXISTS userRelationships (
     status enum('friends', 'friend-request-pending', 'blocked') NOT NULL,
     updatedDateTime datetime(${timePrecision}) NOT NULL DEFAULT current_timestamp(${timePrecision}) ON UPDATE current_timestamp(${timePrecision}),
     fromUserId char(36) NOT NULL,
@@ -160,29 +160,43 @@ export const tableDefintionsByFamily = [
     isCrashReportingEnabled tinyint(1) NOT NULL DEFAULT '1',
     canShareArrivalStatus tinyint(1) NOT NULL DEFAULT '1',
     eventCalendarStartOfWeekDay enum('sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday') NOT NULL DEFAULT 'monday',
-    eventCalendarDefaultLayout enum('single-day-layout', 'week-layout', 'month-layout') NOT NULL DEFAULT 'month-layout',
-    eventPresetShouldHideAfterStartDate tinyint(1) NOT NULL DEFAULT '1',
-    eventPresetPlacemark JSON, 
-    eventPresetDurations JSON,
+    eventCalendarDefaultLayout enum('single-day-layout', 'week-layout', 'month-layout') NOT NULL DEFAULT 'week-layout',
+    eventPresetShouldHideAfterStartDate tinyint(1) NOT NULL DEFAULT '0',
+    eventPresetLocation JSON,
+    eventPresetDurations JSON NOT NULL DEFAULT (JSON_ARRAY(900, 1800, 2700, 3600, 5400)),
     version bigint NOT NULL DEFAULT '0',
     updatedDateTime timestamp(${timePrecision}) NULL DEFAULT current_timestamp(${timePrecision}) ON UPDATE current_timestamp(${timePrecision}),
-    pushNotificationTriggerIds JSON,
+    pushNotificationTriggerIds JSON NOT NULL DEFAULT (JSON_ARRAY(
+      'friend-request-received', 
+      'friend-request-accepted', 
+      'user-entered-region', 
+      'event-attendance-headcount', 
+      'event-periodic-arrivals', 
+      'event-starting-soon', 
+      'event-started', 
+      'event-ended',
+      'event-name-changed',
+      'event-description-changed',
+      'event-time-changed',
+      'event-location-changed',
+      'event-cancelled'
+    )),
     CHECK (
         JSON_CONTAINS(
           JSON_ARRAY(
-            '"friend-request-received"', 
-            '"friend-request-accepted"', 
-            '"user-entered-region"', 
-            '"event-attendance-headcount"', 
-            '"event-periodic-arrivals"', 
-            '"event-starting-soon"', 
-            '"event-started"', 
-            '"event-ended"',
-            '"event-name-changed"',
-            '"event-description-changed"',
-            '"event-time-changed"',
-            '"event-location-changed"',
-            '"event-cancelled"'
+            'friend-request-received', 
+            'friend-request-accepted', 
+            'user-entered-region', 
+            'event-attendance-headcount', 
+            'event-periodic-arrivals', 
+            'event-starting-soon', 
+            'event-started', 
+            'event-ended',
+            'event-name-changed',
+            'event-description-changed',
+            'event-time-changed',
+            'event-location-changed',
+            'event-cancelled'
           ), 
           JSON_EXTRACT(pushNotificationTriggerIds, '$[*]')
         )
@@ -203,7 +217,7 @@ export const tableDefintionsByFamily = [
     e.shouldHideAfterStartDate AS shouldHideAfterStartDate,
     e.isChatEnabled AS isChatEnabled,
     e.createdDateTime AS createdDateTime,
-    e.updatedDateTime AS updatedDateTime, host.name AS hostUsername,
+    e.updatedDateTime AS updatedDateTime, host.name AS hostName,
     host.handle AS hostHandle, 
     e.startDateTime AS startDateTime,
     e.endDateTime AS endDateTime,

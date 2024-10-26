@@ -1,84 +1,65 @@
 import { randomUUID } from "crypto"
-import {
-  callBlockUser,
-  callGetUser,
-  callPostFriendRequest
-} from "../test/apiCallers/userEndpoints"
-import { withEmptyResponseBody } from "../test/assertions"
+import { TestUser } from "../global"
+import { blockedUserResponse, userToUserRequest } from "../test/shortcuts"
+import { testAPI } from "../test/testApp"
 import { createUserFlow } from "../test/userFlows/createUserFlow"
 
 describe("Block User tests", () => {
-  // TEST THAT USER IS KICKED OUT OF EVENT AFTER BEING BLOCKED
+  // TODO: TEST THAT USER IS KICKED OUT OF EVENT AFTER BEING BLOCKED
+
+  it("should error when trying to block yourself", async () => {
+    const fromUser = await createUserFlow()
+    const resp = await testAPI.blockUser(userToUserRequest(fromUser, fromUser))
+    expect(resp).toMatchObject({
+      status: 400,
+      data: { error: "current-user" }
+    })
+  })
 
   it("should 404 when trying to block a non-existent user", async () => {
-    const userId = randomUUID()
-    const { token: fromUserToken } = await createUserFlow()
-    const resp = await callBlockUser(fromUserToken, userId)
+    const fromUser = await createUserFlow()
+    const unknownUserId = randomUUID()
+    const resp = await testAPI.blockUser(userToUserRequest(fromUser, { id: unknownUserId } as TestUser))
 
-    expect(resp).toMatchObject({
+    expect(resp).toEqual({
       status: 404,
-      body: { error: "user-not-found", userId }
+      data: { error: "user-not-found", userId: unknownUserId }
     })
   })
 
   it("should 204 when successful block", async () => {
-    const { token: fromUserToken } = await createUserFlow()
-    const { userId: toUserId } = await createUserFlow()
-    const resp = await callBlockUser(fromUserToken, toUserId)
+    const fromUser = await createUserFlow()
+    const toUser = await createUserFlow()
+    const resp = await testAPI.blockUser(userToUserRequest(fromUser, toUser))
 
-    expect(withEmptyResponseBody(resp)).toMatchObject({
+    expect(resp).toEqual({
       status: 204,
-      body: ""
+      data: {}
     })
   })
 
-  it("should remove relation status of blocked user to you when blocking", async () => {
-    const { token: fromUserToken, userId: fromUserId } = await createUserFlow()
-    const { token: toUserToken, userId: toUserId } = await createUserFlow()
-    await callPostFriendRequest(toUserToken, fromUserId)
-    await callBlockUser(fromUserToken, toUserId)
+  it("should reset relation status from blocked user to you when you block them", async () => {
+    const fromUser = await createUserFlow()
+    const toUser = await createUserFlow()
+    await testAPI.sendFriendRequest({ auth: toUser.auth, params: { userId: fromUser.id } })
+    await testAPI.blockUser({ auth: fromUser.auth, params: { userId: toUser.id } })
 
-    expect(await callGetUser(fromUserToken, toUserId)).toMatchObject({
-      body: expect.objectContaining({
-        relations: {
-          fromYouToThem: "blocked",
-          fromThemToYou: "not-friends"
-        }
+    expect(await testAPI.getUser(userToUserRequest(fromUser, toUser))).toMatchObject({
+      data: expect.objectContaining({
+        relationStatus: "blocked-them"
       })
     })
 
-    expect(await callGetUser(toUserToken, fromUserId)).toMatchObject({
-      body: expect.objectContaining({
-        relations: {
-          fromYouToThem: "not-friends",
-          fromThemToYou: "blocked"
-        }
-      })
-    })
+    expect(await testAPI.getUser(userToUserRequest(toUser, fromUser))).toMatchObject(blockedUserResponse(fromUser.id))
   })
 
   it("should not remove the relation status of blocked user when you are blocked by them", async () => {
-    const { token: fromUserToken, userId: fromUserId } = await createUserFlow()
-    const { token: toUserToken, userId: toUserId } = await createUserFlow()
-    await callBlockUser(fromUserToken, toUserId)
-    await callBlockUser(toUserToken, fromUserId)
+    const fromUser = await createUserFlow()
+    const toUser = await createUserFlow()
+    await testAPI.blockUser(userToUserRequest(fromUser, toUser))
+    await testAPI.blockUser(userToUserRequest(toUser, fromUser))
 
-    expect(await callGetUser(fromUserToken, toUserId)).toMatchObject({
-      body: expect.objectContaining({
-        relations: {
-          fromYouToThem: "blocked",
-          fromThemToYou: "blocked"
-        }
-      })
-    })
-
-    expect(await callGetUser(toUserToken, fromUserId)).toMatchObject({
-      body: expect.objectContaining({
-        relations: {
-          fromYouToThem: "blocked",
-          fromThemToYou: "blocked"
-        }
-      })
-    })
+    expect(await testAPI.getUser(userToUserRequest(fromUser, toUser))).toMatchObject(blockedUserResponse(toUser.id))
+    expect(await testAPI.getUser(userToUserRequest(toUser, fromUser))).toMatchObject(blockedUserResponse(fromUser.id))
   })
 })

@@ -31,6 +31,8 @@ jobs:
       - name: Build backend utils js
         run: |
           cd TiFBackendUtils
+          # NB: Typescript returns compilation errors with index.js
+          mv node_modules/TiFShared/index.js node_modules/TiFShared/index.ts
           npm run build
       
       - name: Remove backend utils dev dependencies

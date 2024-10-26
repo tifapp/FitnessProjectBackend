@@ -2,80 +2,32 @@ import { conn } from "TiFBackendUtils"
 import { DBuser } from "TiFBackendUtils/DBTypes"
 import { MySQLExecutableDriver } from "TiFBackendUtils/MySQLDriver"
 import { userWithHandleDoesNotExist } from "TiFBackendUtils/TiFUserUtils"
-import { UserHandle } from "TiFShared/domain-models/User"
-import { failure, success } from "TiFShared/lib/Result"
-import type { NullablePartial } from "TiFShared/lib/Types/HelperTypes"
-import { z } from "zod"
-import { ServerEnvironment } from "../env"
-import { ValidatedRouter } from "../validation"
+import { UpdateCurrentUserProfileRequest } from "TiFShared/api/models/User"
+import { resp } from "TiFShared/api/Transport"
+import { success } from "TiFShared/lib/Result"
+import { TiFAPIRouterExtension } from "../router"
 
-const UpdateUserRequestSchema = z.object({
-  name: z.string().optional(),
-  bio: z.string().max(250).optional(),
-  //TODO: Find out why putting "userhandleschema" here throws an error when genapispecs script runs
-  handle: z.string().optional()
-})
-
-type UpdateUserRequest = z.infer<typeof UpdateUserRequestSchema>
-
-type EditableProfileFields = Pick<DBuser, "bio" | "handle" | "name">
-
-//TODO: Replace with userhandleschema
-const parseHandle = (
-  conn: MySQLExecutableDriver,
-  handle?: string
-) => {
-  let parsedHandle: undefined | UserHandle;
-
-  if (handle) {
-    parsedHandle = UserHandle.optionalParse(handle)
-    if (parsedHandle) {
-      return userWithHandleDoesNotExist(conn, parsedHandle).withSuccess(parsedHandle)
-    } else {
-      return failure("invalid-request")
-    }
-  } else {
-    return success()
-  }
-}
-
-/**
- * Creates routes related to user operations.
- *
- * @param environment see {@link ServerEnvironment}.
- * @returns a router for user related operations.
- */
-export const updateUserProfileRouter = (
-  environment: ServerEnvironment,
-  router: ValidatedRouter
-) => {
-  /**
-   * updates the current user's profile
-   */
-  router.patchWithValidation(
-    "/self",
-    { bodySchema: UpdateUserRequestSchema },
-    (req, res) =>
-      conn
-        .transaction((tx) => updateProfileTransaction(tx, res.locals.selfId, req.body))
-        .mapFailure((error) => res.status(400).json({ error }))
-        .mapSuccess(() => res.status(204).send())
-  )
-
-  return router
-}
+export const updateCurrentUserProfile = (
+  ({ context: { selfId }, body }) =>
+    conn
+      .transaction((tx) => updateProfileTransaction(tx, selfId, body))
+      .mapFailure((error) => resp(400, { error }) as never)
+      .mapSuccess(() => resp(204))
+      .unwrap()
+) satisfies TiFAPIRouterExtension["updateCurrentUserProfile"]
 
 const updateProfileTransaction = (
   conn: MySQLExecutableDriver,
   userId: string,
-  { handle, name, bio }: UpdateUserRequest
+  updatedProfile: UpdateCurrentUserProfileRequest
 ) =>
-  parseHandle(conn, handle).flatMapSuccess((parsedHandle) => updateProfile(conn, userId, { handle: parsedHandle, name, bio }))
+  (updatedProfile.handle ? userWithHandleDoesNotExist(conn, updatedProfile.handle) : success())
+    .flatMapSuccess(() => updateProfileSQL(conn, userId, updatedProfile))
 
-const updateProfile = (
+const updateProfileSQL = (
   conn: MySQLExecutableDriver,
   userId: string,
-  { handle = null, name = null, bio = null }: NullablePartial<EditableProfileFields>
+  { handle, name, bio }: Partial<Pick<DBuser, "bio" | "handle" | "name">>
 ) =>
   conn
     .executeResult(

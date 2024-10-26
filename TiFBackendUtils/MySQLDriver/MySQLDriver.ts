@@ -1,6 +1,6 @@
 import { AwaitableResult, failure, promiseResult, success } from "TiFShared/lib/Result"
 import mysql, { FieldPacket, ResultSetHeader, RowDataPacket } from "mysql2/promise"
-import { domainModelColumns } from "../domain-models"
+import { domainModelColumns } from "../DomainModels"
 import { createDatabaseConnection } from "./dbConnection"
 import { paramifyArgs, SQLParams } from "./paramify"
 

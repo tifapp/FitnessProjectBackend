@@ -1,8 +1,9 @@
 import { Application } from "express"
+import { UserID } from "TiFShared/domain-models/User"
 import { z } from "zod"
 
 export type ResponseContext = {
-  selfId: string,
+  selfId: UserID,
   name: string,
   isContactInfoVerified: boolean,
   doesProfileExist: boolean
@@ -50,11 +51,9 @@ export const addCognitoTokenVerification = (
   app: Application // try a "usable" interface for middlewares
 ) => {
   // TODO: - Verify JWT properly
+  // TODO - add more logs
   app.use(async (req, res, next) => {
-    const auth = req.headers?.Authorization ?? req.headers?.authorization
-
-    console.debug("authorization is ")
-    console.debug(req.headers?.Authorization ?? req.headers?.authorization)
+    const auth = req.headers?.authorization
 
     if (!auth || Array.isArray(auth)) {
       // TODO: Change error message to generic message for prod api

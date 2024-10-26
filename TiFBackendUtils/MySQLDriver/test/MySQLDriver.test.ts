@@ -1,6 +1,6 @@
 import "TiFShared/lib/Zod"
 
-import { MySQLDriver } from "../../MySQLDriver/MySQLDriver"
+import { MySQLDriver } from "../MySQLDriver"
 
 describe("MySQLDriver", () => {
   let mySQLDriverTest: MySQLDriver

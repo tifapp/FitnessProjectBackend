@@ -13,18 +13,16 @@ export const isUserInEvent = (
     )
     .withFailure("user-not-attendee" as const)
 
-export const isUserNotBlocked = (
+export const isUserBlocked = (
   conn: MySQLExecutableDriver,
   fromUserId: string,
   toUserId: string
 ) =>
   conn
     .queryHasResults(
-      "SELECT TRUE FROM userRelations WHERE fromUserId = :fromUserId AND toUserId = :toUserId AND (status IS NOT NULL AND status = 'blocked');",
+      "SELECT TRUE FROM userRelationships WHERE fromUserId = :fromUserId AND toUserId = :toUserId AND (status IS NOT NULL AND status = 'blocked');",
       { fromUserId, toUserId }
     )
-    .inverted()
-    .withFailure("user-is-blocked" as const)
 
 export const addUserToEventAttendance = (userId: string, eventId: number) =>
   conn.queryResult(

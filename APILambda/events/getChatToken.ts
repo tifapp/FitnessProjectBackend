@@ -1,11 +1,9 @@
 import { conn } from "TiFBackendUtils"
-import { success } from "TiFShared/lib/Result"
-import { z } from "zod"
+import { DBTifEvent, getEventSQL } from "TiFBackendUtils/TiFEventUtils"
+import { EventID } from "TiFShared/domain-models/Event"
+import { UserID } from "TiFShared/domain-models/User"
 import { ChatPermissions, createTokenRequest } from "../ably"
-import { ServerEnvironment } from "../env"
-import { ValidatedRouter } from "../validation"
-import { getEventById } from "./getEventById"
-import { isUserInEvent, isUserNotBlocked } from "./sharedSQL"
+import { isUserBlocked, isUserInEvent } from "../utils/sharedSQL"
 
 type Role = "admin" | "attendee" | "viewer"
 
@@ -55,50 +53,50 @@ export const determineChatPermissions = (
   }
 }
 
+export const getTokenRequest = async (event: DBTifEvent, userId: UserID) => {
+  const permissions = determineChatPermissions(
+    event.hostId,
+    event.endDateTime,
+    userId,
+    event.id
+  )
+
+  const chatToken = await createTokenRequest(permissions, userId)
+
+  return { id: event.id, chatToken }
+}
+
 export const checkChatPermissionsTransaction = (
-  eventId: number,
-  userId: string
+  eventId: EventID,
+  userId: UserID
 ) =>
   conn.transaction((tx) =>
-    getEventById(tx, eventId, userId)
-      .flatMapSuccess(event => isUserInEvent(tx, userId, eventId).mapSuccess(() => event))
-      .flatMapSuccess(event => isUserNotBlocked(tx, event.hostId, userId).mapSuccess(() => event))
+    getEventSQL(tx, eventId, userId)
+      .passthroughSuccess(() => isUserInEvent(tx, userId, eventId))
+      .passthroughSuccess(event => isUserBlocked(tx, event.hostId, userId).inverted().withFailure("user-is-blocked"))
   )
-    .flatMapSuccess(async (event) => {
-      const permissions = determineChatPermissions(
-        event.hostId,
-        event.endDateTime,
-        userId,
-        eventId
-      )
-
-      const tokenRequest = await createTokenRequest(permissions, userId)
-
-      return success({ id: eventId, tokenRequest })
+    .mapSuccess(async (event) => {
+      return await getTokenRequest(event, userId)
     })
-
-const eventRequestSchema = z.object({
-  eventId: z.string()
-})
 
 /**
  * Creates routes related to event operations.
  *
  * @param environment see {@link ServerEnvironment}.
  */
-export const getChatTokenRouter = (
-  environment: ServerEnvironment,
-  router: ValidatedRouter
-) => {
-  /**
-   * Get token for event's chat room
-   */
-  router.getWithValidation(
-    "/chat/:eventId",
-    { pathParamsSchema: eventRequestSchema },
-    (req, res) =>
-      checkChatPermissionsTransaction(Number(req.params.eventId), res.locals.selfId)
-        .mapFailure(error => res.status(error === "event-not-found" ? 404 : error === "user-not-attendee" || error === "user-is-blocked" ? 403 : 500).json({ error }))
-        .mapSuccess(event => res.status(200).json(event))
-  )
-}
+// export const getChatTokenRouter = (
+//   environment: ServerEnvironment,
+//   router: ValidatedRouter
+// ) => {
+//   /**
+//    * Get token for event's chat room
+//    */
+//   router.getWithValidation(
+//     "/chat/:eventId",
+//     { pathParamsSchema: eventRequestSchema },
+//     (req, res) =>
+//       checkChatPermissionsTransaction(Number(req.params.eventId), res.locals.selfId)
+//         .mapFailure(error => res.status(error === "event-not-found" ? 404 : error === "user-not-attendee" || error === "user-is-blocked" ? 403 : 500).json({ error }))
+//         .mapSuccess(event => res.status(200).json(event))
+//   )
+// }

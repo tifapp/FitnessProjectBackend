@@ -1,45 +1,24 @@
 import { conn } from "TiFBackendUtils"
 import { MySQLExecutableDriver } from "TiFBackendUtils/MySQLDriver"
-import { success } from "TiFShared/lib/Result"
-import { z } from "zod"
-import { ServerEnvironment } from "../env"
-import { ValidatedRouter } from "../validation"
-import { addUserToAttendeeList } from "./joinEventById"
+import { resp } from "TiFShared/api/Transport"
+import { CreateEvent, EventID } from "TiFShared/domain-models/Event"
+import { promiseResult, success } from "TiFShared/lib/Result"
+import { TiFAPIRouterExtension } from "../router"
+import { addUserToAttendeeList } from "../utils/eventAttendance"
 
-const CreateEventSchema = z
-  .object({
-    description: z.string().max(500),
-    startDateTime: z.string().datetime(),
-    endDateTime: z
-      .string()
-      .datetime()
-      .refine(
-        (date) => {
-          return new Date(date) > new Date()
-        },
-        {
-          message: "endDateTime must be in the future"
-          // TODO: add minimum duration check
-        }
-      ),
-    color: z.string(), // TODO: Use ColorString from shared package
-    title: z.string().max(50),
-    shouldHideAfterStartDate: z.boolean(),
-    isChatEnabled: z.boolean(),
-    latitude: z.number().min(-90).max(90),
-    longitude: z.number().min(-180).max(180)
-  })
-  .transform((res) => ({
-    ...res,
-    startDateTime: new Date(res.startDateTime),
-    endDateTime: new Date(res.endDateTime)
-  }))
-
-export type CreateEventInput = z.infer<typeof CreateEventSchema>
-
-export const createEvent = (
+export const createEventSQL = (
   conn: MySQLExecutableDriver,
-  input: CreateEventInput,
+  {
+    coordinates: {
+      latitude,
+      longitude
+    },
+    dateRange: {
+      startDateTime,
+      endDateTime
+    },
+    ...rest
+  }: CreateEvent,
   hostId: string
 ) => {
   return conn.executeResult(
@@ -50,7 +29,6 @@ export const createEvent = (
     description, 
     startDateTime, 
     endDateTime, 
-    color, 
     shouldHideAfterStartDate, 
     isChatEnabled, 
     latitude, 
@@ -60,8 +38,7 @@ export const createEvent = (
     :title, 
     :description, 
     :startDateTime, 
-    :endDateTime, 
-    :color, 
+    :endDateTime,
     :shouldHideAfterStartDate, 
     :isChatEnabled, 
     :latitude, 
@@ -69,60 +46,39 @@ export const createEvent = (
   )
   `,
     {
-      ...input,
+      ...rest,
+      latitude,
+      longitude,
+      startDateTime,
+      endDateTime,
       hostId
     }
   )
 }
 
+// ALLOW EXTRA MIDDLEWARE
 /**
  * Creates routes related to event operations.
  *
  * @param environment see {@link ServerEnvironment}.
  */
-export const createEventRouter = (
-  { callGeocodingLambda }: ServerEnvironment,
-  router: ValidatedRouter
-) => {
-  /**
-   * Create an event
-   */
-  router.postWithValidation(
-    "/",
-    { bodySchema: CreateEventSchema },
-    (req, res) => {
-      return conn
-        .transaction((tx) =>
-          createEvent(tx, req.body, res.locals.selfId)
-            .flatMapSuccess(({ insertId }) =>
-              addUserToAttendeeList(
-                tx,
-                res.locals.selfId,
-                parseInt(insertId),
-                "hosting"
-              ).flatMapSuccess(async () => {
-                try {
-                  const resp = await callGeocodingLambda({
-                    longitude:
-                    req.body.longitude,
-                    latitude:
-                    req.body.latitude
-                  })
-                  // prone to error, log is useful here
-                  console.debug(JSON.stringify(resp, null, 4))
-                } catch (e) {
-                  console.error("Could not create placemark for ", req.body)
-                  console.error(e)
-                } finally {
-                  // eslint-disable-next-line no-unsafe-finally
-                  return success()
-                }
-              }
-              ).mapSuccess(() => ({ insertId }))
+export const createEvent = (
+  ({ environment, context: { selfId }, body, log }) =>
+    conn
+      .transaction((tx) =>
+        createEventSQL(tx, body, selfId)
+          .passthroughSuccess(({ insertId }) =>
+            addUserToAttendeeList(
+              tx,
+              selfId,
+              parseInt(insertId),
+              "hosting"
             )
-        )
-        .mapFailure((error) => res.status(500).json({ error }))
-        .mapSuccess(({ insertId }) => res.status(201).json({ id: insertId }))
-    }
-  )
-}
+          )
+          .passthroughSuccess(() =>
+            promiseResult(environment.callGeocodingLambda(body.coordinates).then(() => success()).catch(e => { log.error(e); return success() }))
+          )
+          .mapSuccess(({ insertId }) => resp(201, { id: Number(insertId) as EventID }))
+      )
+      .unwrap()
+  ) satisfies TiFAPIRouterExtension["createEvent"]
