@@ -1,13 +1,13 @@
+import jwt from "jsonwebtoken"
 import { conn } from "TiFBackendUtils"
 import { DBuser } from "TiFBackendUtils/DBTypes"
+import { envVars } from "TiFBackendUtils/env"
 import { generateUniqueHandle } from "TiFBackendUtils/generateUserHandle"
 import { MySQLExecutableDriver } from "TiFBackendUtils/MySQLDriver"
 import { resp } from "TiFShared/api/Transport"
 import { failure, success } from "TiFShared/lib/Result"
-import { endpoint } from "../../router"
 import { v7 as uuidV7 } from "uuid"
-import jwt from "jsonwebtoken"
-import { envVars } from "TiFBackendUtils/env"
+import { endpoint } from "../../router"
 
 const checkValidName = (name: string) => {
   // TODO: add more conditions or use a zod schema
