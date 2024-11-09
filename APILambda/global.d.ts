@@ -6,7 +6,6 @@ export type TestUserInput = {
 export type TestUser = {
   auth: string
   id: string
-  refreshAuth: () => Promise<string>
   name: string
 }
 
