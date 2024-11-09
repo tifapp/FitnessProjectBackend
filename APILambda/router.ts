@@ -1,4 +1,5 @@
 import express from "express"
+import { IncomingHttpHeaders } from "http"
 import {
   TiFAPIClient,
   TiFAPISchema,
@@ -6,23 +7,40 @@ import {
 } from "TiFBackendUtils"
 import {
   APIHandler,
+  APIMiddleware,
   APISchema,
   GenericEndpointSchema
 } from "TiFShared/api/TransportTypes"
-import { middlewareRunner } from "TiFShared/lib/Middleware"
+import { chainMiddleware, middlewareRunner } from "TiFShared/lib/Middleware"
 import { MatchFnCollection } from "TiFShared/lib/Types/MatchType"
 import { logger, Logger } from "TiFShared/logging"
-import { ResponseContext } from "./auth"
+import { authenticate, ResponseContext } from "./auth"
 import { ServerEnvironment } from "./env"
 import { catchAPIErrors } from "./errorHandler"
 
 export type RouterParams = {
   context: ResponseContext
   environment: ServerEnvironment
+  headers: IncomingHttpHeaders
   log: Logger
 }
 
 export type TiFAPIRouterExtension = TiFAPIClient<RouterParams>
+
+export const endpoint = <Key extends keyof TiFAPIRouterExtension>(
+  handle: TiFAPIRouterExtension[Key],
+  ...middlewares: APIMiddleware<RouterParams>[]
+) => {
+  if (middlewares.length === 0) return handle
+  return chainMiddleware(...middlewares, handle) as TiFAPIRouterExtension[Key]
+}
+
+export const authenticatedEndpoint = <Key extends keyof TiFAPIRouterExtension>(
+  handle: TiFAPIRouterExtension[Key],
+  ...middlewares: APIMiddleware<RouterParams>[]
+) => {
+  return endpoint(handle, ...[authenticate, ...middlewares])
+}
 
 // reason: express parses undefined inputs as empty objects
 const emptyToUndefined = <T extends object>(obj: T) =>
@@ -46,16 +64,17 @@ export const TiFRouter = <Fns extends TiFAPIRouterExtension>(
       const handler: APIHandler<RouterParams> = middlewareRunner(
         catchAPIErrors,
         validateAPIRouterCall,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       apiClient[endpointName as keyof TiFAPIRouterExtension] as any
       )
       router[method.toLowerCase() as Lowercase<typeof method>](
         endpoint,
-        async ({ body, query, params }, res) => {
+        async ({ body, query, params, headers }, res) => {
           const { status, data } = await handler({
             body: emptyToUndefined(body),
             query: emptyToUndefined(query),
             params: emptyToUndefined(params),
+            headers,
             endpointName,
             endpointSchema,
             environment,
@@ -65,6 +84,5 @@ export const TiFRouter = <Fns extends TiFAPIRouterExtension>(
           res.status(status).json(data)
         }
       )
-
       return router
     }, express.Router())

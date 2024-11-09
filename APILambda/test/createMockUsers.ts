@@ -2,7 +2,6 @@
 import { faker } from "@faker-js/faker"
 import { randomUUID } from "crypto"
 import jwt from "jsonwebtoken"
-import { AuthClaims } from "../auth"
 import { TestUser, TestUserInput } from "../global"
 
 export const createMockAuthToken = async (
@@ -13,7 +12,7 @@ export const createMockAuthToken = async (
   const email = faker.internet.email()
   const name = faker.name.fullName()
 
-  const tokenPayload: AuthClaims = {
+  const tokenPayload = {
     sub: id,
     name: user?.name ?? name,
     email,

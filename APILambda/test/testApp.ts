@@ -9,7 +9,7 @@ import { testEnvVars } from "./testEnv"
 const app =
   envVars.environment === "stagingTest" ? testEnvVars.API_ENDPOINT : devApp
 
-type TestAppExtension = { auth?: string }
+type TestAppExtension = { auth: string } | { auth?: undefined; noAuth: true }
 
 const testClient = TiFAPIClientCreator<TestAppExtension>(
   catchAPIErrors,
