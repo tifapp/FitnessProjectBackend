@@ -1,109 +1,33 @@
-import { Application } from "express"
-import { UserID } from "TiFShared/domain-models/User"
+import { APIMiddleware, resp } from "TiFShared/api"
+import { UserID, UserIDSchema } from "TiFShared/domain-models/User"
+import { RouterParams } from "./router"
+import jwt from "jsonwebtoken"
 import { z } from "zod"
+import { envVars } from "TiFBackendUtils/env"
 
 export type ResponseContext = {
   selfId: UserID
   name: string
-  isContactInfoVerified: boolean
-  doesProfileExist: boolean
 }
 
-const AuthClaimsSchema = z
-  .object({
-    sub: z.string(),
-    name: z.string(),
-    "custom:profile_created": z.string().optional()
-  })
-  .and(
-    z
-      .object({
-        email: z.string().email(),
-        email_verified: z.boolean()
-      })
-      .or(
-        z.object({
-          phone_number: z.string(),
-          phone_number_verified: z.boolean()
-        })
-      )
-  )
+const TokenSchema = z
+  .object({ id: UserIDSchema, name: z.string() })
+  .passthrough()
 
-export type AuthClaims = z.infer<typeof AuthClaimsSchema>
-
-const TransformedAuthClaimsSchema = AuthClaimsSchema.transform((res) => ({
-  selfId: res.sub,
-  name: res.name,
-  // @ts-expect-error email may be missing from claims
-  email: res.email ?? undefined,
-  // @ts-expect-error phone number may be missing from claims
-  phoneNumber: res.phone_number ?? undefined, // try json parse
-  // cognito claims encode them as strings
-  // @ts-expect-error email or phone number may be missing from claims
-  isContactInfoVerified:
-    res.email_verified === true || res.phone_number_verified === true,
-  doesProfileExist: res["custom:profile_created"] === "true"
-}))
-
-/**
- * Adds AWS cognito token verification to an app.
- */
-export const addCognitoTokenVerification = (
-  app: Application // try a "usable" interface for middlewares
+export const authenticate: APIMiddleware<RouterParams> = async (
+  input,
+  next
 ) => {
-  // TODO: - Verify JWT properly
-  // TODO - add more logs
-  app.use(async (req, res, next) => {
-    const auth = req.headers?.authorization
-
-    if (!auth || Array.isArray(auth)) {
-      // TODO: Change error message to generic message for prod api
-      return res.status(401).json({ error: "invalid-headers" })
-    }
-    // TODO: perform JWT verification if envType !== dev
-
-    const token = auth.split(" ")[1] // TODO: ensure correct format of auth header ("Bearer {token}")
-
-    try {
-      // eslint-disable-next-line camelcase
-      const { selfId, name, isContactInfoVerified, doesProfileExist } =
-        TransformedAuthClaimsSchema.parse(
-          JSON.parse(Buffer.from(token.split(".")[1], "base64").toString())
-        )
-
-      const locals: ResponseContext = {
-        selfId,
-        name,
-        isContactInfoVerified,
-        doesProfileExist
-      }
-
-      res.locals = locals
-
-      if (!res.locals.isContactInfoVerified) {
-        // TODO: Change error message to generic message for prod api
-        return res.status(401).json({ error: "unverified-user" })
-      }
-
-      // separate attribute checker to a middleware, apply to other endpints
-      // const isCreatingProfile = req.url === "/user" && req.method === "POST"
-
-      // if (res.locals.doesProfileExist) {
-      //   // if (isCreatingProfile && env.environment === "prod") {
-      //   //   // TODO: Change error message to generic message for prod api
-      //   //   return res.status(400).json({ error: "user-already-exists" })
-      //   // }
-      // } else {
-      //   // if (!isCreatingProfile) {
-      //   //   // TODO: Change error message to generic message for prod api
-      //   //   return res.status(401).json({ error: "user-does-not-exist" })
-      //   // }
-      // }
-
-      next()
-    } catch (err) {
-      // TODO: Change error message to generic message for prod api
-      return res.status(401).json({ error: "invalid-claims" })
-    }
+  const authorization = input.headers.authorization
+  if (!authorization) return resp(401, { error: "invalid-headers" })
+  const splits = authorization.split(" ")
+  if (splits.length !== 2) return resp(401, { error: "invalid-headers" })
+  const body = await TokenSchema.safeParseAsync(
+    jwt.verify(splits[1], envVars.JWT_SECRET)
+  )
+  if (!body.success) return resp(401, { error: "invalid-claims" })
+  return await next({
+    ...input,
+    context: { selfId: body.data.id, name: body.data.name }
   })
 }
