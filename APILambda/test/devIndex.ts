@@ -6,7 +6,7 @@ import { LocationCoordinate2D } from "TiFShared/domain-models/LocationCoordinate
 import { promiseResult, success } from "TiFShared/lib/Result"
 import { handler } from "../../GeocodingLambda/index"
 import { addTiFRouter, createApp } from "../app"
-import { addCognitoTokenVerification } from "../auth"
+// import { addCognitoTokenVerification } from "../auth"
 import { ServerEnvironment } from "../env"
 
 export const devTestEnv: ServerEnvironment = {
@@ -19,5 +19,5 @@ export const devTestEnv: ServerEnvironment = {
 }
 
 export const devApp = createApp()
-addCognitoTokenVerification(devApp)
+// addCognitoTokenVerification(devApp)
 addTiFRouter(devApp, devTestEnv)

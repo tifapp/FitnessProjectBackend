@@ -23,7 +23,7 @@ const env: ServerEnvironment = {
 const app = createApp()
 addEventToRequest(app)
 addBenchmarking(app)
-addCognitoTokenVerification(app) // TODO: only apply to specific routes
+// addCognitoTokenVerification(app) // TODO: only apply to specific routes
 addTiFRouter(app, env)
 addErrorReporting(app)
 
