@@ -4,7 +4,7 @@ import "TiFShared/lib/Zod"
 
 import { LocationCoordinate2D } from "TiFShared/domain-models/LocationCoordinate2D"
 import { handler } from "../../GeocodingLambda/index"
-import { addTiFRouter, createApp } from "../app"
+import { addTiFRouter, createApp } from "../appMiddleware"
 import { ServerEnvironment } from "../env"
 
 export const devTestEnv: ServerEnvironment = {

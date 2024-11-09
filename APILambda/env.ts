@@ -15,11 +15,8 @@ export type SetArrivalStatusEnvironment = {
  *
  * Examples of this include AWS S3 buckets, or SNS/Push notification clients.
  */
-export type ServerEnvironment =
-  SetArrivalStatusEnvironment & {
-    environment: EnvSchema["ENVIRONMENT"]
-    eventStartWindowInHours: number
-    callGeocodingLambda: (
-      location: LocationCoordinate2D
-    ) => Promise<unknown>
-  }
+export type ServerEnvironment = SetArrivalStatusEnvironment & {
+  environment: EnvSchema["ENVIRONMENT"]
+  eventStartWindowInHours: number
+  callGeocodingLambda: (location: LocationCoordinate2D) => Promise<void>
+}

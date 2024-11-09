@@ -7,7 +7,7 @@ import { devApp } from "./devIndex"
 import { testEnvVars } from "./testEnv"
 
 const app =
-  envVars.environment === "stagingTest" ? testEnvVars.API_ENDPOINT : devApp
+  envVars.ENVIRONMENT === "stagingTest" ? testEnvVars.API_ENDPOINT : devApp
 
 type TestAppExtension = { auth: string } | { auth?: undefined; unauthenticated: true }
 

@@ -12,13 +12,6 @@
     "resolveJsonModule": true
   },
   "preserveSymlinks": true,
-  "include": [
-    "**/*.ts"
-  ],
-  "exclude": [
-    "**/*.test.ts",
-    "**/*.spec.ts",
-    "node_modules",
-    "test"
-  ]
+  "include": ["**/*.ts"],
+  "exclude": ["**/*.test.ts", "**/*.spec.ts", "node_modules", "test"]
 }

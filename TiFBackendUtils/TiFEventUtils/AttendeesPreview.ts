@@ -1,8 +1,8 @@
 import { success } from "TiFShared/lib/Result"
 import {
-    DBeventAttendance,
-    DBEventAttendeeCountView,
-    DBEventAttendeesView
+  DBeventAttendance,
+  DBEventAttendeeCountView,
+  DBEventAttendeesView
 } from "../DBTypes"
 import { MySQLExecutableDriver } from "../MySQLDriver"
 import { DBTifEvent } from "./TiFEventResponse"
@@ -43,6 +43,27 @@ export const getAttendeeDetails = (
   )
 }
 
+export const getAttendeesPreviewIds = (
+  conn: MySQLExecutableDriver,
+  eventIds: string[]
+) => {
+  return conn.queryResult<DBEventAttendeesView>(
+    `
+    SELECT 
+      EventAttendeesView.userIds
+FROM 
+  EventAttendeesView
+WHERE 
+  EventAttendeesView.eventId IN (:eventIds)
+GROUP BY 
+  EventAttendeesView.eventId
+HAVING 
+    COUNT(DISTINCT EventAttendeesView.userIds) <= 3
+  `,
+    { eventIds }
+  )
+}
+
 const setAttendeesPreviewForEvent = (
   events: DBTifEvent[],
   attendeesPreviews: DBEventAttendeesView[],
@@ -67,27 +88,6 @@ const setAttendeesPreviewForEvent = (
       EventAttendanceFields[i].role ?? "not-participating"
   }
   return events
-}
-
-export const getAttendeesPreviewIds = (
-  conn: MySQLExecutableDriver,
-  eventIds: string[]
-) => {
-  return conn.queryResult<DBEventAttendeesView>(
-    `
-    SELECT 
-      EventAttendeesView.userIds
-FROM 
-  EventAttendeesView
-WHERE 
-  EventAttendeesView.eventId IN (:eventIds)
-GROUP BY 
-  EventAttendeesView.eventId
-HAVING 
-    COUNT(DISTINCT EventAttendeesView.userIds) <= 3
-  `,
-    { eventIds }
-  )
 }
 
 export const getAttendeeData = (

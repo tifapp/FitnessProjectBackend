@@ -3,6 +3,7 @@
 import dotenv from "dotenv"
 import { join } from "path"
 import { z } from "zod"
+import { localPrivateIPV4Address } from "./ipaddress"
 
 dotenv.config({ path: join(__dirname, "../.env") })
 dotenv.config()
@@ -35,7 +36,12 @@ const EnvSchema = z
     JWT_SECRET: z.string(),
     CA_PEM: z.string().optional(),
     COGNITO_USER_POOL_ID: z.string().optional(),
-    ABLY_KEY: z.string().optional()
+    ABLY_KEY: z.string().optional(),
+    DEV_TEST_HOST: z
+      .string()
+      .optional()
+      .default(localPrivateIPV4Address() ?? "127.0.0.1"),
+    DEV_TEST_PORT: z.number().optional().default(5000)
   })
   .passthrough()
 
