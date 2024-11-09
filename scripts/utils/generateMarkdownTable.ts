@@ -13,8 +13,8 @@ export const generateMarkdownTable = (rows: unknown[]): string => {
   let markdownContent = "| " + headers.join(" | ") + " |\n"
   markdownContent += "| " + headers.map(() => "----------").join(" | ") + " |\n"
 
-  rows.forEach(row => {
-    const rowValues = headers.map(header => {
+  rows.forEach((row) => {
+    const rowValues = headers.map((header) => {
       const value = row[header]
       return value !== undefined && value !== null ? value.toString() : "None"
     })

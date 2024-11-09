@@ -7,47 +7,71 @@ const eventLocation = { latitude: 50, longitude: 50 }
 describe("SetHasArrived tests", () => {
   it("should return upcoming events from the arrived and departed endpoints", async () => {
     // cant mock planetscale time
-    const { attendeesList: [, attendee], eventIds } = await createEventFlow([{
-      coordinates: eventLocation,
-      dateRange: upcomingEventDateRange
-    }], 1)
+    const {
+      attendeesList: [, attendee],
+      eventIds
+    } = await createEventFlow(
+      [
+        {
+          coordinates: eventLocation,
+          dateRange: upcomingEventDateRange
+        }
+      ],
+      1
+    )
 
-    expect(await testAPI.arriveAtRegion({
-      auth: attendee.auth,
-      body: {
-        coordinate: eventLocation,
-        arrivalRadiusMeters: 500
-      }
-    })).toMatchObject({
+    expect(
+      await testAPI.arriveAtRegion({
+        auth: attendee.auth,
+        body: {
+          coordinate: eventLocation,
+          arrivalRadiusMeters: 500
+        }
+      })
+    ).toMatchObject({
       status: 200,
       data: {
-        trackableRegions: [{
-          eventIds
-        }]
+        trackableRegions: [
+          {
+            eventIds
+          }
+        ]
       }
     })
 
-    expect(await testAPI.departFromRegion({
-      auth: attendee.auth,
-      body: {
-        coordinate: eventLocation,
-        arrivalRadiusMeters: 500
-      }
-    })).toMatchObject({
+    expect(
+      await testAPI.departFromRegion({
+        auth: attendee.auth,
+        body: {
+          coordinate: eventLocation,
+          arrivalRadiusMeters: 500
+        }
+      })
+    ).toMatchObject({
       status: 200,
       data: {
-        trackableRegions: [{
-          eventIds
-        }]
+        trackableRegions: [
+          {
+            eventIds
+          }
+        ]
       }
     })
   })
 
   it("should persist arrival when checking events", async () => {
-    const { attendeesList: [, attendee], eventIds } = await createEventFlow([{
-      coordinates: eventLocation,
-      dateRange: upcomingEventDateRange
-    }], 1)
+    const {
+      attendeesList: [, attendee],
+      eventIds
+    } = await createEventFlow(
+      [
+        {
+          coordinates: eventLocation,
+          dateRange: upcomingEventDateRange
+        }
+      ],
+      1
+    )
 
     await testAPI.arriveAtRegion({
       auth: attendee.auth,
@@ -57,7 +81,12 @@ describe("SetHasArrived tests", () => {
       }
     })
 
-    expect(await testAPI.eventDetails({ auth: attendee.auth, params: { eventId: eventIds[0] } })).toMatchObject({
+    expect(
+      await testAPI.eventDetails({
+        auth: attendee.auth,
+        params: { eventId: eventIds[0] }
+      })
+    ).toMatchObject({
       status: 200,
       data: {
         hasArrived: true
@@ -72,7 +101,12 @@ describe("SetHasArrived tests", () => {
       }
     })
 
-    expect(await testAPI.eventDetails({ auth: attendee.auth, params: { eventId: eventIds[0] } })).toMatchObject({
+    expect(
+      await testAPI.eventDetails({
+        auth: attendee.auth,
+        params: { eventId: eventIds[0] }
+      })
+    ).toMatchObject({
       status: 200,
       data: {
         hasArrived: false

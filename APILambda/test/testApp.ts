@@ -6,14 +6,25 @@ import { catchAPIErrors } from "../errorHandler"
 import { devApp } from "./devIndex"
 import { testEnvVars } from "./testEnv"
 
-const app = envVars.environment === "stagingTest" ? testEnvVars.API_ENDPOINT : devApp
+const app =
+  envVars.environment === "stagingTest" ? testEnvVars.API_ENDPOINT : devApp
 
-type TestAppExtension = {auth: string}
+type TestAppExtension = { auth: string }
 
 const testClient = TiFAPIClientCreator<TestAppExtension>(
   catchAPIErrors,
-  async ({ auth, params, query, body, endpointSchema: { httpRequest: { method, endpoint } } }) => {
-    let req = request(app)[method.toLowerCase()](urlString({ endpoint, params })).query(query)
+  async ({
+    auth,
+    params,
+    query,
+    body,
+    endpointSchema: {
+      httpRequest: { method, endpoint }
+    }
+  }) => {
+    let req = request(app)
+      [method.toLowerCase()](urlString({ endpoint, params }))
+      .query(query)
 
     req = req.set("authorization", auth)
 
@@ -27,16 +38,16 @@ type StatusCodes<R> = R extends { status: infer S }
   ? S extends number
     ? S
     : never
-  : never;
+  : never
 
-type ResponseForStatus<R, S extends number> = Extract<R, { status: S }>;
+type ResponseForStatus<R, S extends number> = Extract<R, { status: S }>
 
 type TestAPI<T> = {
   [K in keyof T]: T[K] extends (...args: infer Args) => Promise<infer R>
     ? <S extends StatusCodes<R>>(
         ...args: Args
       ) => Promise<ResponseForStatus<R, S>>
-    : T[K];
-};
+    : T[K]
+}
 
 export const testAPI = testClient as unknown as TestAPI<typeof testClient>

@@ -8,7 +8,8 @@ const TestEnvSchema = z
     API_ENDPOINT: z.string().url().optional(),
     COGNITO_CLIENT_APP_ID: z.string().optional(),
     API_LAMBDA_ID: z.string().optional()
-  }).passthrough()
+  })
+  .passthrough()
 
 dotenv.config()
 

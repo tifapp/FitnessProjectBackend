@@ -1,5 +1,8 @@
 import { faker } from "@faker-js/faker"
-import { todayTestDate, tomorrowTestDate } from "TiFBackendUtils/test/dateHelpers"
+import {
+  todayTestDate,
+  tomorrowTestDate
+} from "TiFBackendUtils/test/dateHelpers"
 import { CreateEvent } from "TiFShared/api/models/Event"
 import { ColorString } from "TiFShared/domain-models/ColorString"
 import { dateRange } from "TiFShared/domain-models/FixedDateRange"
@@ -11,18 +14,20 @@ const mockLocationCoordinate2D = () => ({
   longitude: parseFloat(faker.address.longitude(-66.9, -125))
 })
 
-const createTestEvent = (): CreateEvent =>
-  ({
-    title: faker.word.noun({ length: { min: 5, max: 50 } }),
-    description: faker.animal.rodent(),
-    dateRange: dateRange(todayTestDate(), tomorrowTestDate())!,
-    color: ColorString.parse("#72B01D")!,
-    shouldHideAfterStartDate: true,
-    isChatEnabled: true,
-    coordinates: mockLocationCoordinate2D()
-  })
+const createTestEvent = (): CreateEvent => ({
+  title: faker.word.noun({ length: { min: 5, max: 50 } }),
+  description: faker.animal.rodent(),
+  dateRange: dateRange(todayTestDate(), tomorrowTestDate())!,
+  color: ColorString.parse("#72B01D")!,
+  shouldHideAfterStartDate: true,
+  isChatEnabled: true,
+  coordinates: mockLocationCoordinate2D()
+})
 
 export const testEventInput: CreateEvent = createTestEvent()
 
 // reason: milliseconds are not counted in the live database
-export const upcomingEventDateRange = dateRange(dayjs().add(12, "hour").millisecond(0).toDate(), dayjs().add(1, "year").millisecond(0).toDate())!
+export const upcomingEventDateRange = dateRange(
+  dayjs().add(12, "hour").millisecond(0).toDate(),
+  dayjs().add(1, "year").millisecond(0).toDate()
+)!

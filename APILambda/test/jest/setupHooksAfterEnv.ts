@@ -6,8 +6,8 @@ import { testUserCounter } from "../userFlows/createUserFlow"
 global.beforeAll(() => addLogHandler(consoleLogHandler()))
 
 /*
-* Resets database before each test
-*/
+ * Resets database before each test
+ */
 global.beforeEach(async () => {
   testUserCounter.currentUserIndex = 0
   await resetDB()

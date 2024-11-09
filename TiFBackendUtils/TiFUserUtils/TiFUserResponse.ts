@@ -1,7 +1,11 @@
 import { ExtractSuccess, failure, success } from "TiFShared/lib/Result"
 import { DBuser } from "../DBTypes"
 import { MySQLExecutableDriver } from "../MySQLDriver/index"
-import { UserRelations, UserRelationshipPair, UserRelationsSchema } from "./UserRelationships"
+import {
+  UserRelations,
+  UserRelationshipPair,
+  UserRelationsSchema
+} from "./UserRelationships"
 
 export const findTiFUser = (
   conn: MySQLExecutableDriver,
@@ -29,7 +33,10 @@ export const findTiFUser = (
       { fromUserId, toUserId }
     )
     .flatMapSuccess(({ fromThemToYou, fromYouToThem, ...user }) => {
-      const relationStatus = UserRelationsSchema.parse({ fromThemToYou, fromYouToThem })
+      const relationStatus = UserRelationsSchema.parse({
+        fromThemToYou,
+        fromYouToThem
+      })
 
       if (relationStatus === "blocked-you") {
         return failure({ ...user, relationStatus })

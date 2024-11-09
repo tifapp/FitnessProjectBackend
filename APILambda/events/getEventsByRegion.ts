@@ -1,13 +1,20 @@
 import { conn } from "TiFBackendUtils"
 import { MySQLExecutableDriver } from "TiFBackendUtils/MySQLDriver"
-import { DBTifEvent, getAttendeeData, tifEventResponseFromDatabaseEvent } from "TiFBackendUtils/TiFEventUtils"
+import {
+  DBTifEvent,
+  getAttendeeData,
+  tifEventResponseFromDatabaseEvent
+} from "TiFBackendUtils/TiFEventUtils"
 import { resp } from "TiFShared/api/Transport"
 import { LocationCoordinate2D } from "TiFShared/domain-models/LocationCoordinate2D"
 import { TiFAPIRouterExtension } from "../router"
 
 export const getEventsByRegion = (
   conn: MySQLExecutableDriver,
-  { userLocation: { latitude: userLatitude, longitude: userLongitude }, ...rest }: {
+  {
+    userLocation: { latitude: userLatitude, longitude: userLongitude },
+    ...rest
+  }: {
     userId: string
     userLocation: LocationCoordinate2D
     radius: number
@@ -43,18 +50,19 @@ LEFT JOIN userRelationships UserRelationOfUserToHost ON UserRelationOfUserToHost
     { userLatitude, userLongitude, ...rest }
   )
 
-export const exploreEvents = (
-  ({ context: { selfId: userId }, body: { userLocation, radius } }) =>
-    conn
-      .transaction((tx) =>
-        getEventsByRegion(tx, {
-          userId,
-          userLocation,
-          radius
-        })
-          .flatMapSuccess((events) => getAttendeeData(tx, events, userId))
-          .mapSuccess((events) => events.map(tifEventResponseFromDatabaseEvent))
-          .mapSuccess((events) => resp(200, { events }))
-      )
-      .unwrap()
-  ) satisfies TiFAPIRouterExtension["exploreEvents"]
+export const exploreEvents = (({
+  context: { selfId: userId },
+  body: { userLocation, radius }
+}) =>
+  conn
+    .transaction((tx) =>
+      getEventsByRegion(tx, {
+        userId,
+        userLocation,
+        radius
+      })
+        .flatMapSuccess((events) => getAttendeeData(tx, events, userId))
+        .mapSuccess((events) => events.map(tifEventResponseFromDatabaseEvent))
+        .mapSuccess((events) => resp(200, { events }))
+    )
+    .unwrap()) satisfies TiFAPIRouterExtension["exploreEvents"]

@@ -1,9 +1,16 @@
 import { success } from "TiFShared/lib/Result"
-import { DBeventAttendance, DBEventAttendeeCountView, DBEventAttendeesView } from "../DBTypes"
+import {
+  DBeventAttendance,
+  DBEventAttendeeCountView,
+  DBEventAttendeesView
+} from "../DBTypes"
 import { MySQLExecutableDriver } from "../MySQLDriver"
 import { DBTifEvent } from "./TiFEventResponse"
 
-export const getAttendeeCount = (conn: MySQLExecutableDriver, eventIds: string[]) => {
+export const getAttendeeCount = (
+  conn: MySQLExecutableDriver,
+  eventIds: string[]
+) => {
   return conn.queryResult<DBEventAttendeeCountView>(
     ` SELECT
         attendeeCount
@@ -16,7 +23,11 @@ export const getAttendeeCount = (conn: MySQLExecutableDriver, eventIds: string[]
   )
 }
 
-export const getAttendeeDetails = (conn: MySQLExecutableDriver, userId: string, eventIds: string[]) => {
+export const getAttendeeDetails = (
+  conn: MySQLExecutableDriver,
+  userId: string,
+  eventIds: string[]
+) => {
   return conn.queryResult<DBeventAttendance>(
     ` SELECT
         ea.joinedDateTime AS joinedDateTime,
@@ -43,24 +54,25 @@ const setAttendeesPreviewForEvent = (
   })
 
   for (let i = 0; i < events.length; i++) {
-    events[i].previewAttendees = attendeesPreviews[i].userIds?.split(",")
-      .map(id => (
-        {
-          id,
-          profileImageURL: undefined
-        }
-      )) ??
-    []
+    events[i].previewAttendees =
+      attendeesPreviews[i].userIds?.split(",").map((id) => ({
+        id,
+        profileImageURL: undefined
+      })) ?? []
     events[i].attendeeCount = eventsWithAttendeeCount[i].attendeeCount
       ? eventsWithAttendeeCount[i].attendeeCount
       : 0
     events[i].joinedDateTime = EventAttendanceFields[i].joinedDateTime
-    events[i].userAttendeeStatus = EventAttendanceFields[i].role ?? "not-participating"
+    events[i].userAttendeeStatus =
+      EventAttendanceFields[i].role ?? "not-participating"
   }
   return events
 }
 
-export const getAttendeesPreviewIds = (conn: MySQLExecutableDriver, eventIds: string[]) => {
+export const getAttendeesPreviewIds = (
+  conn: MySQLExecutableDriver,
+  eventIds: string[]
+) => {
   return conn.queryResult<DBEventAttendeesView>(
     `
     SELECT 
@@ -89,20 +101,21 @@ export const getAttendeeData = (
     return success([])
   }
 
-  const eventsByRegion = getAttendeesPreviewIds(conn, eventIds)
-    .flatMapSuccess(
-      (attendeesPreviews) =>
-        getAttendeeCount(conn, eventIds).flatMapSuccess((eventsWithAttendeeCount) =>
-          getAttendeeDetails(conn, userId, eventIds).mapSuccess((joinTimestampAndRoleData) =>
-            setAttendeesPreviewForEvent(
-              events,
-              attendeesPreviews,
-              eventsWithAttendeeCount,
-              joinTimestampAndRoleData
-            )
+  const eventsByRegion = getAttendeesPreviewIds(conn, eventIds).flatMapSuccess(
+    (attendeesPreviews) =>
+      getAttendeeCount(conn, eventIds).flatMapSuccess(
+        (eventsWithAttendeeCount) =>
+          getAttendeeDetails(conn, userId, eventIds).mapSuccess(
+            (joinTimestampAndRoleData) =>
+              setAttendeesPreviewForEvent(
+                events,
+                attendeesPreviews,
+                eventsWithAttendeeCount,
+                joinTimestampAndRoleData
+              )
           )
-        )
-    )
+      )
+  )
 
   return eventsByRegion
 }

@@ -95,10 +95,8 @@ const updateUserSettingsSQL = (
     }
   )
 
-export const saveUserSettings = (
-  ({ context: { selfId }, body: newSettings }) =>
-    updateUserSettingsSQL(conn, selfId, newSettings)
-      .flatMapSuccess(() => queryUserSettings(conn, selfId))
-      .mapSuccess((updatedSettings) => resp(200, updatedSettings))
-      .unwrap()
-) satisfies TiFAPIRouterExtension["saveUserSettings"]
+export const saveUserSettings = (({ context: { selfId }, body: newSettings }) =>
+  updateUserSettingsSQL(conn, selfId, newSettings)
+    .flatMapSuccess(() => queryUserSettings(conn, selfId))
+    .mapSuccess((updatedSettings) => resp(200, updatedSettings))
+    .unwrap()) satisfies TiFAPIRouterExtension["saveUserSettings"]

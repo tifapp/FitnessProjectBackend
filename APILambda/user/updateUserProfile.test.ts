@@ -19,9 +19,11 @@ describe("Update user profile tests", () => {
         data: {}
       })
 
-      await expect(testAPI.getSelf({
-        auth: newUser.auth
-      })).resolves.toMatchObject({
+      await expect(
+        testAPI.getSelf({
+          auth: newUser.auth
+        })
+      ).resolves.toMatchObject({
         status: 200,
         data: {
           id: newUser.id,
@@ -44,9 +46,11 @@ describe("Update user profile tests", () => {
         data: {}
       })
 
-      await expect(testAPI.getSelf({
-        auth: newUser.auth
-      })).resolves.toMatchObject({
+      await expect(
+        testAPI.getSelf({
+          auth: newUser.auth
+        })
+      ).resolves.toMatchObject({
         status: 200,
         data: {
           id: newUser.id,

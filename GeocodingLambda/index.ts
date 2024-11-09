@@ -5,7 +5,12 @@ import { conn } from "TiFBackendUtils"
 import { exponentialFunctionBackoff } from "TiFBackendUtils/AWS"
 import { LocationCoordinate2D } from "TiFShared/domain-models/LocationCoordinate2D"
 import { promiseResult, Result, success } from "TiFShared/lib/Result"
-import { addLocationToDB, checkExistingPlacemarkInDB, getTimeZone, SearchClosestAddressToCoordinates } from "./utils"
+import {
+  addLocationToDB,
+  checkExistingPlacemarkInDB,
+  getTimeZone,
+  SearchClosestAddressToCoordinates
+} from "./utils"
 
 interface LocationSearchRequest extends LocationCoordinate2D {}
 
@@ -36,11 +41,13 @@ export const handler: any = exponentialFunctionBackoff<
       // rely on geo-tz timezone instead of AWS timezone to align with front-end data
       const timezoneIdentifier = getTimeZone({ latitude, longitude })[0]
       console.log("timezone is ", timezoneIdentifier)
-      if (!timezoneIdentifier) { // should we throw if no address exists? ex. pacific ocean
-        throw new Error(`Could not find timezone for ${JSON.stringify(locationInfo)}.`)
+      if (!timezoneIdentifier) {
+        // should we throw if no address exists? ex. pacific ocean
+        throw new Error(
+          `Could not find timezone for ${JSON.stringify(locationInfo)}.`
+        )
       }
       return addLocationToDB(conn, locationInfo, timezoneIdentifier)
     })
     .mapSuccess(() => "placemark-successfully-inserted" as const)
-}
-)
+})

@@ -13,13 +13,21 @@ const generateNumericHash = (input: string) => {
 const generateUniqueUsernameAttempt = (
   name: string,
   retries: number,
-  isHandleNotTaken: (_: UserHandle) => ReturnType<typeof userWithHandleDoesNotExist>
+  isHandleNotTaken: (
+    _: UserHandle
+  ) => ReturnType<typeof userWithHandleDoesNotExist>
 ): PromiseResult<UserHandle, "could-not-generate-username"> => {
-  const potentialUsername = UserHandle.optionalParse(`${name}${generateNumericHash(`${name}${Date.now()}`)}`)!
+  const potentialUsername = UserHandle.optionalParse(
+    `${name}${generateNumericHash(`${name}${Date.now()}`)}`
+  )!
 
   return isHandleNotTaken(potentialUsername)
     .withSuccess(potentialUsername)
-    .flatMapFailure(() => retries > 0 ? generateUniqueUsernameAttempt(name, retries - 1, isHandleNotTaken) : failure("could-not-generate-username" as const))
+    .flatMapFailure(() =>
+      retries > 0
+        ? generateUniqueUsernameAttempt(name, retries - 1, isHandleNotTaken)
+        : failure("could-not-generate-username" as const)
+    )
 }
 
 const sanitizeName = (name: string) => {
@@ -31,7 +39,12 @@ const sanitizeName = (name: string) => {
 export const generateUniqueHandle = (
   name: string,
   retries = 3,
-  isHandleNotTaken = (handle: UserHandle) => userWithHandleDoesNotExist(conn, handle)
+  isHandleNotTaken = (handle: UserHandle) =>
+    userWithHandleDoesNotExist(conn, handle)
 ) => {
-  return generateUniqueUsernameAttempt(sanitizeName(name), retries, isHandleNotTaken)
+  return generateUniqueUsernameAttempt(
+    sanitizeName(name),
+    retries,
+    isHandleNotTaken
+  )
 }

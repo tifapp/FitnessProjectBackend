@@ -6,39 +6,52 @@ import { chainMiddleware } from "TiFShared/lib/Middleware"
 import { TiFAPIRouterExtension } from "../router"
 import { isCurrentUser } from "../utils/isCurrentUserMiddleware"
 
-const sendFriendRequestHandler = (
-  ({ context: { selfId: fromUserId }, params: { userId: toUserId } }) =>
-    conn.transaction(tx => findTiFUser(tx, { fromUserId, toUserId })
-      .mapFailure(result =>
-        result === "no-results"
-          ? resp(404, { userId: toUserId, error: "user-not-found" })
-          : resp(403, { error: "blocked-you", userId: toUserId })
-      )
-      .mapSuccess(
-        ({ relationStatus }) => {
-          if (relationStatus === "friends" || relationStatus === "friend-request-sent") {
+const sendFriendRequestHandler = (({
+  context: { selfId: fromUserId },
+  params: { userId: toUserId }
+}) =>
+  conn
+    .transaction((tx) =>
+      findTiFUser(tx, { fromUserId, toUserId })
+        .mapFailure((result) =>
+          result === "no-results"
+            ? resp(404, { userId: toUserId, error: "user-not-found" })
+            : resp(403, { error: "blocked-you", userId: toUserId })
+        )
+        .mapSuccess(({ relationStatus }) => {
+          if (
+            relationStatus === "friends" ||
+            relationStatus === "friend-request-sent"
+          ) {
             return resp(200, { relationStatus })
           }
 
-          return resp(201, { relationStatus: relationStatus === "friend-request-received" ? "friends" : "friend-request-sent" })
-        }
-      )
-      .observeSuccess(async ({ status, data: { relationStatus } }) => {
-        if (status === 200) return
+          return resp(201, {
+            relationStatus:
+              relationStatus === "friend-request-received"
+                ? "friends"
+                : "friend-request-sent"
+          })
+        })
+        .observeSuccess(async ({ status, data: { relationStatus } }) => {
+          if (status === 200) return
 
-        if (relationStatus === "friends") {
-          await insertFriendSQL(tx, { fromUserId, toUserId })
-          return updateFriendsSQL(tx, { fromUserId, toUserId })
-        } else if (relationStatus === "friend-request-sent") {
-          return insertPendingFriendRequestSQL(tx, { fromUserId, toUserId })
-        }
-      })
-    ).unwrap()
-  ) satisfies TiFAPIRouterExtension["sendFriendRequest"]
+          if (relationStatus === "friends") {
+            await insertFriendSQL(tx, { fromUserId, toUserId })
+            return updateFriendsSQL(tx, { fromUserId, toUserId })
+          } else if (relationStatus === "friend-request-sent") {
+            return insertPendingFriendRequestSQL(tx, { fromUserId, toUserId })
+          }
+        })
+    )
+    .unwrap()) satisfies TiFAPIRouterExtension["sendFriendRequest"]
 
 // NB: Middleware type inference issue
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const sendFriendRequest = chainMiddleware(isCurrentUser, sendFriendRequestHandler as any) as unknown as typeof sendFriendRequestHandler
+export const sendFriendRequest = chainMiddleware(
+  isCurrentUser,
+  sendFriendRequestHandler as any
+) as unknown as typeof sendFriendRequestHandler
 
 const insertFriendSQL = (
   conn: MySQLExecutableDriver,

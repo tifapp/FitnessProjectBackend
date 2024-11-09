@@ -6,32 +6,31 @@ import { UserID } from "TiFShared/domain-models/User"
 import { TiFAPIRouterExtension } from "../../router"
 import { upcomingEventArrivalRegionsSQL } from "./getUpcomingEvents"
 
-export const departFromRegion = (
-  ({ context: { selfId }, body: { coordinate } }) =>
-    conn.transaction((tx) =>
-      deleteArrival(
-        tx,
-        selfId,
-        coordinate
+export const departFromRegion = (({
+  context: { selfId },
+  body: { coordinate }
+}) =>
+  conn
+    .transaction((tx) =>
+      deleteArrival(tx, selfId, coordinate).flatMapSuccess(() =>
+        upcomingEventArrivalRegionsSQL(conn, selfId)
       )
-        .flatMapSuccess(() => upcomingEventArrivalRegionsSQL(conn, selfId))
     )
-      .mapSuccess((trackableRegions) => (resp(200, { trackableRegions })))
-      .unwrap()
-) satisfies TiFAPIRouterExtension["departFromRegion"]
+    .mapSuccess((trackableRegions) => resp(200, { trackableRegions }))
+    .unwrap()) satisfies TiFAPIRouterExtension["departFromRegion"]
 
 export const deleteArrival = (
   conn: MySQLExecutableDriver,
   userId: UserID,
   coordinate: LocationCoordinate2D
 ) =>
-  conn
-    .executeResult( // TO DECIDE: if event length limit or limit in how far in advance event can be scheduled, then we can also delete outdated arrivals
-      `
+  conn.executeResult(
+    // TO DECIDE: if event length limit or limit in how far in advance event can be scheduled, then we can also delete outdated arrivals
+    `
         DELETE FROM userArrivals
         WHERE userId = :userId
         AND latitude = :latitude
         AND longitude = :longitude         
       `,
-      { userId, latitude: coordinate.latitude, longitude: coordinate.longitude }
-    )
+    { userId, latitude: coordinate.latitude, longitude: coordinate.longitude }
+  )

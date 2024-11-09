@@ -3,9 +3,9 @@ import { UserID } from "TiFShared/domain-models/User"
 import { z } from "zod"
 
 export type ResponseContext = {
-  selfId: UserID,
-  name: string,
-  isContactInfoVerified: boolean,
+  selfId: UserID
+  name: string
+  isContactInfoVerified: boolean
   doesProfileExist: boolean
 }
 
@@ -40,7 +40,8 @@ const TransformedAuthClaimsSchema = AuthClaimsSchema.transform((res) => ({
   phoneNumber: res.phone_number ?? undefined, // try json parse
   // cognito claims encode them as strings
   // @ts-expect-error email or phone number may be missing from claims
-  isContactInfoVerified: res.email_verified === true || res.phone_number_verified === true,
+  isContactInfoVerified:
+    res.email_verified === true || res.phone_number_verified === true,
   doesProfileExist: res["custom:profile_created"] === "true"
 }))
 
@@ -70,7 +71,12 @@ export const addCognitoTokenVerification = (
           JSON.parse(Buffer.from(token.split(".")[1], "base64").toString())
         )
 
-      const locals: ResponseContext = { selfId, name, isContactInfoVerified, doesProfileExist }
+      const locals: ResponseContext = {
+        selfId,
+        name,
+        isContactInfoVerified,
+        doesProfileExist
+      }
 
       res.locals = locals
 

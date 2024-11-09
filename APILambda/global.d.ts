@@ -1,5 +1,14 @@
-export type TestUserInput = { name?: string; isVerified?: boolean; profileExists?: boolean; }
-export type TestUser = { auth: string; id: string, refreshAuth: () => Promise<string>, name: string }
+export type TestUserInput = {
+  name?: string
+  isVerified?: boolean
+  profileExists?: boolean
+}
+export type TestUser = {
+  auth: string
+  id: string
+  refreshAuth: () => Promise<string>
+  name: string
+}
 
 /* eslint-disable no-var */
 declare global {

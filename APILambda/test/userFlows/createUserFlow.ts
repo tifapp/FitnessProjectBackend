@@ -6,7 +6,7 @@ import { testAPI } from "../testApp"
 
 export const testUserCounter = { currentUserIndex: 0 }
 
-export type RegisteredTestUser = TestUser & {handle: UserHandle}
+export type RegisteredTestUser = TestUser & { handle: UserHandle }
 
 // database is reset for each test so we need to create a new auth for each test
 export const createUserFlow = async (): Promise<RegisteredTestUser> => {
@@ -15,10 +15,12 @@ export const createUserFlow = async (): Promise<RegisteredTestUser> => {
   }
 
   const testUser = global.users[testUserCounter.currentUserIndex]
-  const { data: { handle } } = await testAPI.createCurrentUserProfile({ auth: testUser.auth })
+  const {
+    data: { handle }
+  } = await testAPI.createCurrentUserProfile({ auth: testUser.auth })
   await testUser.refreshAuth()
 
-  testUserCounter.currentUserIndex = (testUserCounter.currentUserIndex + 1)
+  testUserCounter.currentUserIndex = testUserCounter.currentUserIndex + 1
 
   return { ...testUser, handle }
 }

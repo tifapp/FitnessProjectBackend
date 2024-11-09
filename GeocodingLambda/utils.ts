@@ -28,10 +28,7 @@ export const AddressSearchResultToFlattenedLocation = (
   return {
     ...location,
     name: place?.Label,
-    city:
-      place?.Neighborhood ??
-      place?.Municipality ??
-      place?.SubRegion,
+    city: place?.Neighborhood ?? place?.Municipality ?? place?.SubRegion,
     // country: place?.Country, // TODO: Need to derive the full country name
     country: undefined,
     street: place?.Street,
@@ -74,26 +71,45 @@ export const checkExistingPlacemarkInDB = (
     .inverted()
     .withFailure("placemark-already-exists" as const)
 
-export const addLocationToDB = (conn: MySQLExecutableDriver, {
-  latitude,
-  longitude,
-  name,
-  city,
-  country,
-  street,
-  streetNumber,
-  postalCode,
-  region,
-  isoCountryCode
-}: FlattenedLocation, timezoneIdentifier: string) =>
+export const addLocationToDB = (
+  conn: MySQLExecutableDriver,
+  {
+    latitude,
+    longitude,
+    name,
+    city,
+    country,
+    street,
+    streetNumber,
+    postalCode,
+    region,
+    isoCountryCode
+  }: FlattenedLocation,
+  timezoneIdentifier: string
+) =>
   conn.executeResult(
     `
       INSERT INTO location (name, city, country, street, streetNumber, postalCode, latitude, longitude, timezoneIdentifier, isoCountryCode)
       VALUES (:name, :city, :country, :street, :streetNumber, :postalCode, :latitude, :longitude, :timezoneIdentifier, :isoCountryCode)
     `,
-    { timezoneIdentifier, latitude, longitude, name, city, country, street, streetNumber, postalCode, region, isoCountryCode }
+    {
+      timezoneIdentifier,
+      latitude,
+      longitude,
+      name,
+      city,
+      country,
+      street,
+      streetNumber,
+      postalCode,
+      region,
+      isoCountryCode
+    }
   )
 
-export const getTimeZone = (coordinate: {latitude: number, longitude: number}) => {
+export const getTimeZone = (coordinate: {
+  latitude: number
+  longitude: number
+}) => {
   return find(coordinate.latitude, coordinate.longitude)
 }

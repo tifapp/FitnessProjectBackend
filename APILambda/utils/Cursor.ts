@@ -4,7 +4,11 @@
  * @param cursorObject - An object with properties 'userId' (string) and 'joinedDateTime' (Date).
  * @returns The encoded cursor combining userId and joinedDateTime.
  */
-export const encodeAttendeesListCursor = ({ userId = "firstPage", joinedDateTime, arrivedDateTime }: {
+export const encodeAttendeesListCursor = ({
+  userId = "firstPage",
+  joinedDateTime,
+  arrivedDateTime
+}: {
   userId: string
   joinedDateTime?: Date
   arrivedDateTime?: Date
@@ -13,7 +17,11 @@ export const encodeAttendeesListCursor = ({ userId = "firstPage", joinedDateTime
     `${userId}|${joinedDateTime?.toISOString()}|${arrivedDateTime?.toISOString()}`
   ).toString("base64")
 
-export type AttendeesListCursor = { userId: string; joinedDateTime?: Date; arrivedDateTime?: Date }
+export type AttendeesListCursor = {
+  userId: string
+  joinedDateTime?: Date
+  arrivedDateTime?: Date
+}
 
 /**
  * Decodes the cursor for the attendees list using Buffer.
@@ -36,7 +44,10 @@ export const decodeAttendeesListCursor = (
     return { userId: "lastPage" }
   }
   const joinedDateTime = decodedJoinDate ? new Date(decodedJoinDate) : undefined
-  const arrivedDateTime = decodedArrivedDateTime !== "undefined" ? new Date(decodedArrivedDateTime) : undefined
+  const arrivedDateTime =
+    decodedArrivedDateTime !== "undefined"
+      ? new Date(decodedArrivedDateTime)
+      : undefined
 
   return { userId: decodedUserId, joinedDateTime, arrivedDateTime }
 }

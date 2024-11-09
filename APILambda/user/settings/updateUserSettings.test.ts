@@ -64,7 +64,9 @@ describe("Update Settings tests", () => {
       })
     })
 
-    expect(settings2Resp.data.version).toBeGreaterThanOrEqual(settings2Resp.data.version)
+    expect(settings2Resp.data.version).toBeGreaterThanOrEqual(
+      settings2Resp.data.version
+    )
 
     const updateResp3 = await testAPI.saveUserSettings({
       auth: newUser.auth,

@@ -7,7 +7,9 @@ const recreateDatabase = async () => {
 
   try {
     // Need to interpolate the database name when using DDL statements like DROP DATABASE or CREATE DATABASE.
-    await connection.query(`DROP DATABASE IF EXISTS \`${envVars.DATABASE_NAME}\``)
+    await connection.query(
+      `DROP DATABASE IF EXISTS \`${envVars.DATABASE_NAME}\``
+    )
     await connection.query(`CREATE DATABASE \`${envVars.DATABASE_NAME}\``)
 
     console.log(`Reset the database ${envVars.DATABASE_NAME} successfully`)
@@ -19,12 +21,14 @@ const recreateDatabase = async () => {
 }
 
 const recreateTables = async () => {
-  const connection = await createDatabaseConnection({ database: envVars.DATABASE_NAME })
+  const connection = await createDatabaseConnection({
+    database: envVars.DATABASE_NAME
+  })
 
   for (const family of tableDefintionsByFamily) {
     try {
       const results = await Promise.allSettled(
-        family.map(tableDefinition => connection.execute(tableDefinition))
+        family.map((tableDefinition) => connection.execute(tableDefinition))
       )
 
       results.forEach((result, index) => {

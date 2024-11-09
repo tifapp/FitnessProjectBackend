@@ -9,14 +9,8 @@ import { addUserToAttendeeList } from "../utils/eventAttendance"
 export const createEventSQL = (
   conn: MySQLExecutableDriver,
   {
-    coordinates: {
-      latitude,
-      longitude
-    },
-    dateRange: {
-      startDateTime,
-      endDateTime
-    },
+    coordinates: { latitude, longitude },
+    dateRange: { startDateTime, endDateTime },
     ...rest
   }: CreateEvent,
   hostId: string
@@ -62,23 +56,26 @@ export const createEventSQL = (
  *
  * @param environment see {@link ServerEnvironment}.
  */
-export const createEvent = (
-  ({ environment, context: { selfId }, body, log }) =>
-    conn
-      .transaction((tx) =>
-        createEventSQL(tx, body, selfId)
-          .passthroughSuccess(({ insertId }) =>
-            addUserToAttendeeList(
-              tx,
-              selfId,
-              parseInt(insertId),
-              "hosting"
-            )
+export const createEvent = (({ environment, context: { selfId }, body, log }) =>
+  conn
+    .transaction((tx) =>
+      createEventSQL(tx, body, selfId)
+        .passthroughSuccess(({ insertId }) =>
+          addUserToAttendeeList(tx, selfId, parseInt(insertId), "hosting")
+        )
+        .passthroughSuccess(() =>
+          promiseResult(
+            environment
+              .callGeocodingLambda(body.coordinates)
+              .then(() => success())
+              .catch((e) => {
+                log.error(e)
+                return success()
+              })
           )
-          .passthroughSuccess(() =>
-            promiseResult(environment.callGeocodingLambda(body.coordinates).then(() => success()).catch(e => { log.error(e); return success() }))
-          )
-          .mapSuccess(({ insertId }) => resp(201, { id: Number(insertId) as EventID }))
-      )
-      .unwrap()
-  ) satisfies TiFAPIRouterExtension["createEvent"]
+        )
+        .mapSuccess(({ insertId }) =>
+          resp(201, { id: Number(insertId) as EventID })
+        )
+    )
+    .unwrap()) satisfies TiFAPIRouterExtension["createEvent"]

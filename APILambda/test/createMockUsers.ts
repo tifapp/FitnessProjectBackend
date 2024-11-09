@@ -44,5 +44,10 @@ export const createMockAuthToken = async (
     return `Bearer ${newToken}`
   }
 
-  return { auth: `Bearer ${token}`, id, name, refreshAuth: updateClaimsAndRefreshAuth }
+  return {
+    auth: `Bearer ${token}`,
+    id,
+    name,
+    refreshAuth: updateClaimsAndRefreshAuth
+  }
 }

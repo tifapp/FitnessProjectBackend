@@ -4,11 +4,13 @@ import { failure, success } from "TiFShared/lib/Result"
 import { resetDB } from "../TiFBackendUtils/MySQLDriver/test/dbHelpers"
 import { handler } from "./index"
 
-const testLocation = { latitude: 36.99813840222285, longitude: -122.05564377465653 }
+const testLocation = {
+  latitude: 36.99813840222285,
+  longitude: -122.05564377465653
+}
 const storedLocation = { latitude: 36.9981384, longitude: -122.0556438 } // SQL has limited precision
 
-const locationTableSQL =
-`
+const locationTableSQL = `
 CREATE TABLE IF NOT EXISTS location (
 name varchar(255),
 city varchar(255),
@@ -35,7 +37,10 @@ describe("Geocoding lambda tests", () => {
 
     expect(result).toMatchObject(success("placemark-successfully-inserted"))
 
-    const address = await conn.queryFirstResult<Placemark>("SELECT * FROM location WHERE latitude = :latitude AND longitude = :longitude", { latitude: 36.9981384, longitude: -122.0556438 })
+    const address = await conn.queryFirstResult<Placemark>(
+      "SELECT * FROM location WHERE latitude = :latitude AND longitude = :longitude",
+      { latitude: 36.9981384, longitude: -122.0556438 }
+    )
     expect(address.value).toMatchObject({
       city: "Westside",
       isoCountryCode: "USA",
