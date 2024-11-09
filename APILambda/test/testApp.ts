@@ -9,7 +9,7 @@ import { testEnvVars } from "./testEnv"
 const app =
   envVars.environment === "stagingTest" ? testEnvVars.API_ENDPOINT : devApp
 
-type TestAppExtension = { auth: string }
+type TestAppExtension = { auth?: string }
 
 const testClient = TiFAPIClientCreator<TestAppExtension>(
   catchAPIErrors,
@@ -26,7 +26,9 @@ const testClient = TiFAPIClientCreator<TestAppExtension>(
       [method.toLowerCase()](urlString({ endpoint, params }))
       .query(query)
 
-    req = req.set("authorization", auth)
+    if (auth) {
+      req = req.set("authorization", auth)
+    }
 
     const { status, body: data } = await req.send(body)
 
