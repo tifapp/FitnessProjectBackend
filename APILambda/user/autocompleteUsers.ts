@@ -3,7 +3,7 @@ import { DBuser } from "TiFBackendUtils/DBTypes"
 import { MySQLExecutableDriver } from "TiFBackendUtils/MySQLDriver"
 import { resp } from "TiFShared/api/Transport"
 import { UserHandle } from "TiFShared/domain-models/User"
-import { authenticatedEndpoint } from "../router"
+import { authenticatedEndpoint } from "../auth"
 
 export const autocompleteUsers = authenticatedEndpoint<"autocompleteUsers">(
   ({ query: { handle, limit } }) =>

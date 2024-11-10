@@ -2,7 +2,7 @@ import { conn } from "TiFBackendUtils"
 import { getEventSQL } from "TiFBackendUtils/TiFEventUtils"
 import { resp } from "TiFShared/api/Transport"
 import { failure, success } from "TiFShared/lib/Result"
-import { authenticatedEndpoint } from "../router"
+import { authenticatedEndpoint } from "../auth"
 
 /**
  * End or cancel an event given an event id.

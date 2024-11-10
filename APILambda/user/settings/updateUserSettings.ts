@@ -2,7 +2,7 @@ import { conn } from "TiFBackendUtils"
 import { MySQLExecutableDriver } from "TiFBackendUtils/MySQLDriver"
 import { resp } from "TiFShared/api/Transport"
 import { UserSettings } from "TiFShared/domain-models/Settings"
-import { authenticatedEndpoint } from "../../router"
+import { authenticatedEndpoint } from "../../auth"
 import { queryUserSettings } from "./userSettingsQuery"
 
 /**

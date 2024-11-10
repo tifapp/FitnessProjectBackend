@@ -6,7 +6,7 @@ import {
 } from "TiFBackendUtils/TiFUserUtils"
 import { resp } from "TiFShared/api/Transport"
 import { failure, success } from "TiFShared/lib/Result"
-import { authenticatedEndpoint } from "../router"
+import { authenticatedEndpoint } from "../auth"
 import { isCurrentUser } from "../utils/isCurrentUserMiddleware"
 
 export const unblockUser = authenticatedEndpoint<"unblockUser">(

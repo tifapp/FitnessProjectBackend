@@ -2,7 +2,7 @@ import { conn } from "TiFBackendUtils"
 import { MySQLExecutableDriver } from "TiFBackendUtils/MySQLDriver"
 import { findTiFUser, UserRelationshipPair } from "TiFBackendUtils/TiFUserUtils"
 import { resp } from "TiFShared/api/Transport"
-import { authenticatedEndpoint } from "../router"
+import { authenticatedEndpoint } from "../auth"
 import { isCurrentUser } from "../utils/isCurrentUserMiddleware"
 
 export const sendFriendRequest = authenticatedEndpoint<"sendFriendRequest">(

@@ -17,7 +17,7 @@ import {
 import { UnblockedUserRelationsStatus } from "TiFShared/domain-models/User"
 import { failure, success } from "TiFShared/lib/Result"
 import { z } from "zod"
-import { authenticatedEndpoint } from "../router"
+import { authenticatedEndpoint } from "../auth"
 import {
     AttendeesListCursor,
     decodeAttendeesListCursor,

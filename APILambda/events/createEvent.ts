@@ -3,7 +3,7 @@ import { MySQLExecutableDriver } from "TiFBackendUtils/MySQLDriver"
 import { resp } from "TiFShared/api/Transport"
 import { CreateEvent, EventID } from "TiFShared/domain-models/Event"
 import { promiseResult, success } from "TiFShared/lib/Result"
-import { authenticatedEndpoint } from "../router"
+import { authenticatedEndpoint } from "../auth"
 import { addUserToAttendeeList } from "../utils/eventAttendance"
 
 export const createEventSQL = (

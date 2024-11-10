@@ -3,7 +3,7 @@ import { MySQLExecutableDriver } from "TiFBackendUtils/MySQLDriver"
 import { getEventSQL } from "TiFBackendUtils/TiFEventUtils"
 import { resp } from "TiFShared/api/Transport"
 import { failure, success } from "TiFShared/lib/Result"
-import { authenticatedEndpoint } from "../router"
+import { authenticatedEndpoint } from "../auth"
 
 const removeUserFromAttendeeList = (
   conn: MySQLExecutableDriver,

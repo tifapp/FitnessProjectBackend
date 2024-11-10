@@ -1,23 +1,28 @@
 import jwt from "jsonwebtoken"
 import { envVars } from "TiFBackendUtils/env"
 import { APIMiddleware, resp } from "TiFShared/api"
-import { UserID, UserIDSchema } from "TiFShared/domain-models/User"
+import { UserIDSchema } from "TiFShared/domain-models/User"
 import { z } from "zod"
-import { RouterParams } from "./router"
+import { endpoint, RouterParams, TiFAPIRouterExtension } from "./router"
 
-export type ResponseContext = {
-  selfId: UserID
-  name: string
+/**
+ * Creates an endpoint that requires authentication.
+ *
+ * @param handle The function that runs the endpoint code.
+ * @param middlewares Any middlewares that process the request before it reaches the endpoint handler.
+ */
+export const authenticatedEndpoint = <Key extends keyof TiFAPIRouterExtension>(
+  handle: TiFAPIRouterExtension[Key],
+  ...middlewares: APIMiddleware<RouterParams>[]
+) => {
+  return endpoint(handle, ...[authenticate, ...middlewares])
 }
 
 const TokenSchema = z
   .object({ id: UserIDSchema, name: z.string() })
   .passthrough()
 
-export const authenticate: APIMiddleware<RouterParams> = async (
-  input,
-  next
-) => {
+const authenticate: APIMiddleware<RouterParams> = async (input, next) => {
   const authorization = input.headers.authorization
   if (!authorization) return resp(401, { error: "invalid-headers" })
   const splits = authorization.split(" ")

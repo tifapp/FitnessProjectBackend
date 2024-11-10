@@ -5,7 +5,7 @@ import {
   tifEventResponseFromDatabaseEvent
 } from "TiFBackendUtils/TiFEventUtils"
 import { resp } from "TiFShared/api/Transport"
-import { authenticatedEndpoint } from "../router"
+import { authenticatedEndpoint } from "../auth"
 
 export const eventDetails = authenticatedEndpoint<"eventDetails">(
   ({ context: { selfId }, params: { eventId } }) =>
