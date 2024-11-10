@@ -5,7 +5,7 @@ import {
   userWithIdExists
 } from "TiFBackendUtils/TiFUserUtils"
 import { resp } from "TiFShared/api/Transport"
-import { authenticatedEndpoint } from "../router"
+import { authenticatedEndpoint } from "../auth"
 import { isCurrentUser } from "../utils/isCurrentUserMiddleware"
 import { userNotFoundBody } from "../utils/Responses"
 

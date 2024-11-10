@@ -1,7 +1,7 @@
 import { conn } from "TiFBackendUtils"
 import { DBuser } from "TiFBackendUtils/DBTypes"
 import { resp } from "TiFShared/api/Transport"
-import { authenticatedEndpoint } from "../router"
+import { authenticatedEndpoint } from "../auth"
 
 export const getSelf = authenticatedEndpoint<"getSelf">(
   ({ context: { selfId } }) =>

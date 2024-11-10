@@ -5,7 +5,7 @@ import { userWithHandleDoesNotExist } from "TiFBackendUtils/TiFUserUtils"
 import { UpdateCurrentUserProfileRequest } from "TiFShared/api/models/User"
 import { resp } from "TiFShared/api/Transport"
 import { success } from "TiFShared/lib/Result"
-import { authenticatedEndpoint } from "../router"
+import { authenticatedEndpoint } from "../auth"
 
 export const updateCurrentUserProfile =
   authenticatedEndpoint<"updateCurrentUserProfile">(

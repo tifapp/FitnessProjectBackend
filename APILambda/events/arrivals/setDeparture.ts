@@ -3,7 +3,7 @@ import { MySQLExecutableDriver } from "TiFBackendUtils/MySQLDriver"
 import { resp } from "TiFShared/api/Transport"
 import { LocationCoordinate2D } from "TiFShared/domain-models/LocationCoordinate2D"
 import { UserID } from "TiFShared/domain-models/User"
-import { authenticatedEndpoint } from "../../router"
+import { authenticatedEndpoint } from "../../auth"
 import { upcomingEventArrivalRegionsSQL } from "./getUpcomingEvents"
 
 export const departFromRegion = authenticatedEndpoint<"departFromRegion">(
