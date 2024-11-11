@@ -2,13 +2,6 @@
 // Env variables
 import { EnvSchema } from "TiFBackendUtils/env"
 import { LocationCoordinate2D } from "TiFShared/domain-models/LocationCoordinate2D"
-import { PromiseResult, Result } from "TiFShared/lib/Result"
-
-export type CreateUserProfileEnvironment = {
-  setProfileCreatedAttribute: (
-    userId: string
-  ) => PromiseResult<unknown, unknown>
-}
 
 export type SetArrivalStatusEnvironment = {
   maxArrivals: number
@@ -22,11 +15,8 @@ export type SetArrivalStatusEnvironment = {
  *
  * Examples of this include AWS S3 buckets, or SNS/Push notification clients.
  */
-export type ServerEnvironment = CreateUserProfileEnvironment &
-  SetArrivalStatusEnvironment & {
-    environment: EnvSchema["ENVIRONMENT"]
-    eventStartWindowInHours: number
-    callGeocodingLambda: (
-      location: LocationCoordinate2D
-    ) => Promise<Result<void, never>>
-  }
+export type ServerEnvironment = SetArrivalStatusEnvironment & {
+  environment: EnvSchema["ENVIRONMENT"]
+  eventStartWindowInHours: number
+  callGeocodingLambda: (location: LocationCoordinate2D) => Promise<void>
+}
