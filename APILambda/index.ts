@@ -13,8 +13,9 @@ const env: ServerEnvironment = {
   environment: envVars.ENVIRONMENT,
   eventStartWindowInHours: 1,
   maxArrivals: 100,
-  callGeocodingLambda: (location: LocationCoordinate2D) =>
-    invokeAWSLambda(`geocodingPipeline:${envVars.ENVIRONMENT}`, location)
+  callGeocodingLambda: async (location: LocationCoordinate2D) => {
+    await invokeAWSLambda(`geocodingPipeline:${envVars.ENVIRONMENT}`, location)
+  }
 }
 
 const app = createApp()
@@ -23,4 +24,8 @@ addBenchmarking(app)
 addTiFRouter(app, env)
 addErrorReporting(app)
 
-export const handler = awsServerlessExpress({ app })
+if (envVars.ENVIRONMENT === "devTest") {
+  app.listen(envVars.DEV_TEST_PORT, envVars.DEV_TEST_HOST)
+} else {
+  module.exports.handler = awsServerlessExpress({ app })
+}
