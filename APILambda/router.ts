@@ -43,6 +43,9 @@ export const endpoint = <Key extends keyof TiFAPIRouterExtension>(
   ...middlewares: APIMiddleware<RouterParams>[]
 ) => {
   if (middlewares.length === 0) return handle
+  // NB: instanceof checks don't work for UserHandle/ColorString, possibly due to peer dependencies
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore .toJSON() here causes a build issue for some reason
   return chainMiddleware(...middlewares, handle) as TiFAPIRouterExtension[Key]
 }
 

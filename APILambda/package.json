@@ -8,7 +8,7 @@
     "build": "npx tsc --traceResolution --strict false",
     "test": "npx ts-node node_modules/jest/bin/jest --detectOpenHandles --runInBand",
     "test:ci": "npx ts-node node_modules/.bin/jest --ci --detectOpenHandles --forceExit --runInBand",
-    "start": "npx ts-node index.ts --strict false"
+    "start": "npx ts-node --compilerOptions \"{\\\"strict\\\": false}\" index.ts"
   },
   "keywords": [],
   "author": "TiF",

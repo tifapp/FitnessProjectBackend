@@ -98,7 +98,7 @@ export const tifEventResponseFromDatabaseEvent = (
     title: event.title,
     description: event.description,
     attendeeCount: event.attendeeCount,
-    color: event.color,
+    color: (event.color as any),
     time: {
       secondsToStart: calcSecondsToStart(event.startDateTime),
       dateRange: dateRange(event.startDateTime, event.endDateTime)!,

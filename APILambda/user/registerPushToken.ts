@@ -10,6 +10,8 @@ export const registerForPushNotifications =
     ({ body, context: { selfId: userId } }) =>
       tryInsertPushToken(conn, {
         ...body,
+        pushToken: "abcdef123456",
+        platformName: "apple",
         userId
       })
         .mapSuccess((status) => resp(201, { status }))
