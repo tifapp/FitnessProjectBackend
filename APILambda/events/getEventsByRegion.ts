@@ -2,7 +2,7 @@ import { conn } from "TiFBackendUtils"
 import { MySQLExecutableDriver } from "TiFBackendUtils/MySQLDriver"
 import {
   DBTifEvent,
-  getAttendeeData,
+  addAttendanceData,
   tifEventResponseFromDatabaseEvent
 } from "TiFBackendUtils/TiFEventUtils"
 import { resp } from "TiFShared/api/Transport"
@@ -63,7 +63,7 @@ export const exploreEvents = authenticatedEndpoint<"exploreEvents">(
           userLocation,
           radius
         })
-          .flatMapSuccess((events) => getAttendeeData(tx, events, userId))
+          .flatMapSuccess((events) => addAttendanceData(tx, events, userId))
           .mapSuccess((events) => events.map(tifEventResponseFromDatabaseEvent))
           .mapSuccess((events) => resp(200, { events }))
       )

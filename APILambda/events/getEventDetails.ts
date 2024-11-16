@@ -1,6 +1,6 @@
 import { conn } from "TiFBackendUtils"
 import {
-  getAttendeeData,
+  addAttendanceData,
   getEventSQL,
   tifEventResponseFromDatabaseEvent
 } from "TiFBackendUtils/TiFEventUtils"
@@ -17,7 +17,7 @@ export const eventDetails = authenticatedEndpoint<"eventDetails">(
               ? resp(404, result)
               : resp(403, result)
           )
-          .flatMapSuccess((event) => getAttendeeData(tx, [event], selfId))
+          .flatMapSuccess((event) => addAttendanceData(tx, [event], selfId))
           .mapSuccess(([event]) => tifEventResponseFromDatabaseEvent(event))
           .mapSuccess((event) => resp(200, event))
       )
