@@ -70,7 +70,7 @@ export const tableDefintionsByFamily = [
     KEY event_must_exist (eventId),
     KEY idx_joinedDateTime (joinedDateTime),
     CONSTRAINT attendee_must_exist FOREIGN KEY (userId) REFERENCES user (id),
-    CONSTRAINT event_must_exist FOREIGN KEY (eventId) REFERENCES event (id)
+    CONSTRAINT event_must_exist FOREIGN KEY (eventId) REFERENCES event (id) ON DELETE CASCADE
     )
     `,
     `
@@ -139,14 +139,14 @@ export const tableDefintionsByFamily = [
     userReporting bigint NOT NULL,
     userReported bigint NOT NULL,
     reportingReason enum(
-      'Spam', 
-      'Harassment', 
-      'Hate Speech', 
-      'Violence', 
-      'Scam or fraud', 
-      'Suicide or self-harm', 
-      'False information', 
-      'Sale of illegal or regulated goods', 
+      'Spam',
+      'Harassment',
+      'Hate Speech',
+      'Violence',
+      'Scam or fraud',
+      'Suicide or self-harm',
+      'False information',
+      'Sale of illegal or regulated goods',
       'Other'
     ) NOT NULL,
     reportDate datetime(${timePrecision}) NOT NULL DEFAULT current_timestamp(${timePrecision}),
@@ -167,13 +167,13 @@ export const tableDefintionsByFamily = [
     version bigint NOT NULL DEFAULT '0',
     updatedDateTime timestamp(${timePrecision}) NULL DEFAULT current_timestamp(${timePrecision}) ON UPDATE current_timestamp(${timePrecision}),
     pushNotificationTriggerIds JSON NOT NULL DEFAULT (JSON_ARRAY(
-      'friend-request-received', 
-      'friend-request-accepted', 
-      'user-entered-region', 
-      'event-attendance-headcount', 
-      'event-periodic-arrivals', 
-      'event-starting-soon', 
-      'event-started', 
+      'friend-request-received',
+      'friend-request-accepted',
+      'user-entered-region',
+      'event-attendance-headcount',
+      'event-periodic-arrivals',
+      'event-starting-soon',
+      'event-started',
       'event-ended',
       'event-name-changed',
       'event-description-changed',
@@ -184,20 +184,20 @@ export const tableDefintionsByFamily = [
     CHECK (
         JSON_CONTAINS(
           JSON_ARRAY(
-            'friend-request-received', 
-            'friend-request-accepted', 
-            'user-entered-region', 
-            'event-attendance-headcount', 
-            'event-periodic-arrivals', 
-            'event-starting-soon', 
-            'event-started', 
+            'friend-request-received',
+            'friend-request-accepted',
+            'user-entered-region',
+            'event-attendance-headcount',
+            'event-periodic-arrivals',
+            'event-starting-soon',
+            'event-started',
             'event-ended',
             'event-name-changed',
             'event-description-changed',
             'event-time-changed',
             'event-location-changed',
             'event-cancelled'
-          ), 
+          ),
           JSON_EXTRACT(pushNotificationTriggerIds, '$[*]')
         )
     ),
@@ -208,9 +208,9 @@ export const tableDefintionsByFamily = [
   ],
   [
     `
-    CREATE VIEW TifEventView 
-    AS SELECT e.id AS id, 
-    e.color AS color, 
+    CREATE VIEW TifEventView
+    AS SELECT e.id AS id,
+    e.color AS color,
     e.description AS description,
     e.title AS title,
     e.hostId AS hostId,
@@ -218,7 +218,7 @@ export const tableDefintionsByFamily = [
     e.isChatEnabled AS isChatEnabled,
     e.createdDateTime AS createdDateTime,
     e.updatedDateTime AS updatedDateTime, host.name AS hostName,
-    host.handle AS hostHandle, 
+    host.handle AS hostHandle,
     e.startDateTime AS startDateTime,
     e.endDateTime AS endDateTime,
     e.latitude AS latitude,
@@ -234,18 +234,18 @@ export const tableDefintionsByFamily = [
     e.endedDateTime AS endedDateTime FROM (((event AS e LEFT JOIN userArrivals AS ua ON e.latitude = ua.latitude AND e.longitude = ua.longitude) LEFT JOIN location AS L ON e.latitude = L.latitude AND e.longitude = L.longitude) JOIN user AS host ON host.id = e.hostId);
     `,
     `
-    CREATE VIEW EventAttendeeCountView 
-    AS SELECT E.id AS id, 
+    CREATE VIEW EventAttendeeCountView
+    AS SELECT E.id AS id,
     COUNT(A.eventId) AS attendeeCount
-    FROM (eventAttendance AS A JOIN event AS E ON E.id = A.eventId) 
+    FROM (eventAttendance AS A JOIN event AS E ON E.id = A.eventId)
     GROUP BY A.eventId;
     `,
     `
-    CREATE VIEW EventAttendeesView 
+    CREATE VIEW EventAttendeesView
     AS SELECT ea1.eventId AS eventId,
-    GROUP_CONCAT(DISTINCT ea1.userId 
-    ORDER BY ea1.joinedDateTime ASC SEPARATOR ',') AS userIds 
-    FROM eventAttendance AS ea1 
+    GROUP_CONCAT(DISTINCT ea1.userId
+    ORDER BY ea1.joinedDateTime ASC SEPARATOR ',') AS userIds
+    FROM eventAttendance AS ea1
     GROUP BY ea1.eventId;
     `
   ]
