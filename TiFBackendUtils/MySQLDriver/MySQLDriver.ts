@@ -106,7 +106,7 @@ export class MySQLDriver {
    * console.log(results[0].id) // ✅ Typesafe
    * ```
    */
-  private async execute(query: string, args?: SQLParams): Promise<DBExecution> {
+  async execute(query: string, args?: SQLParams): Promise<DBExecution> {
     // Use this.conn to execute the query and return the result rows
     // This will be the only function to directly use the database library's execute method.
     const conn = await this.connectionHandler.useConnection()
@@ -136,10 +136,7 @@ export class MySQLDriver {
    * ```
    */
 
-  private async query<Value>(
-    query: string,
-    args?: SQLParams
-  ): Promise<Value[]> {
+  async query<Value>(query: string, args?: SQLParams): Promise<Value[]> {
     const conn = await this.connectionHandler.useConnection()
     const [rows, fields] = await conn.query(query, paramifyArgs(args))
     if (Array.isArray(rows) && Array.isArray(fields)) {
