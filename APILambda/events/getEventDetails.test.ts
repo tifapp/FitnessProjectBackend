@@ -5,7 +5,7 @@ import { userToUserRequest } from "../test/shortcuts"
 import { testAPI } from "../test/testApp"
 import { testEventInput } from "../test/testEvents"
 import { createEventFlow } from "../test/userFlows/createEventFlow"
-import { createUserFlow } from "../test/userFlows/createUserFlow"
+import { createUserFlow, userDetails } from "../test/userFlows/createUserFlow"
 
 describe("getEventDetails", () => {
   it("should return 404 if the event doesnt exist", async () => {
@@ -52,7 +52,7 @@ describe("getEventDetails", () => {
           description: "This is some random event"
         }
       ],
-      1
+      5
     )
 
     const resp = await testAPI.eventDetails({
@@ -67,7 +67,7 @@ describe("getEventDetails", () => {
         title: "Fake Event",
         isChatExpired: false,
         description: "This is some random event",
-        attendeeCount: 2,
+        attendeeCount: 6,
         time: {
           secondsToStart: expect.any(Number),
           dateRange: {
@@ -77,9 +77,13 @@ describe("getEventDetails", () => {
           },
           todayOrTomorrow: "today"
         },
-        previewAttendees: expect.arrayContaining(
-          attendeesList.map(({ id }) => ({ id }))
-        ),
+        previewAttendees: attendeesList.map((user, index) => ({
+          ...userDetails(user),
+          role: index === 0 ? "hosting" : "attending",
+          relationStatus: "not-friends",
+          joinedDateTime: expect.any(String),
+          hasArrived: false
+        })),
         location: {
           coordinate: testEventInput.coordinates,
           placemark: {
