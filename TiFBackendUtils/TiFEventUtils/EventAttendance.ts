@@ -143,7 +143,7 @@ const addAttendance = (
   return Array.from(map.values())
 }
 
-export const getAttendeeData = (
+export const addAttendanceData = (
   conn: MySQLExecutableDriver,
   events: DBTifEvent[],
   userId: UserID
