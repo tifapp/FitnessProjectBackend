@@ -23,7 +23,7 @@
     "linkify-it": "^5.0.0",
     "TiFBackendUtils": "file:../TiFBackendUtils",
     "uuid": "^11.0.2",
-    "TiFShared": "github:tifapp/TiFShared#b9458d7f5a7a8d6f0a1ebf53677795463fd42b58",
+    "TiFShared": "github:tifapp/TiFShared#b7d9cfa589aecc1f2ef55abf2e26d6635f612744",
     "zod": "^3.22.4"
   },
   "devDependencies": {
