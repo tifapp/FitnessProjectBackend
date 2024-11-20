@@ -76,6 +76,7 @@ export const addTiFRouter = (
         attendeesList,
         exploreEvents,
         autocompleteUsers,
+        // @ts-expect-error Fixed in alpha-auth
         createCurrentUserProfile,
         removeAccount,
         getSelf,
