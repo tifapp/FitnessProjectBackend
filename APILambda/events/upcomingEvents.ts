@@ -1,6 +1,6 @@
 import { conn } from "TiFBackendUtils"
 import { MySQLExecutableDriver } from "TiFBackendUtils/MySQLDriver"
-import { DBTifEvent, getAttendeeData, tifEventResponseFromDatabaseEvent } from "TiFBackendUtils/TiFEventUtils"
+import { addAttendanceData, DBTifEvent, tifEventResponseFromDatabaseEvent } from "TiFBackendUtils/TiFEventUtils"
 import { resp } from "TiFShared/api"
 import { UserID } from "TiFShared/domain-models/User"
 import { TiFAPIRouterExtension } from "../router"
@@ -44,7 +44,7 @@ export const upcomingEvents = (
         getUpcomingEvents(tx,
           userId
         )
-          .flatMapSuccess((events) => getAttendeeData(tx, events, userId))
+          .flatMapSuccess((events) => addAttendanceData(tx, events, userId))
           .mapSuccess((events) => events.map(tifEventResponseFromDatabaseEvent))
           .mapSuccess((events) => resp(200, { events }))
       )
