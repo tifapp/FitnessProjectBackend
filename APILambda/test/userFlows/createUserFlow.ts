@@ -15,12 +15,12 @@ export const createUserFlow = async (): Promise<RegisteredTestUser> => {
   }
 
   const testUser = global.users[testUserCounter.currentUserIndex]
-  const {
-    data: { handle }
-  } = await testAPI.createCurrentUserProfile({ auth: testUser.auth })
-  await testUser.refreshAuth()
+  const resp = await testAPI.createCurrentUserProfile<201>({
+    unauthenticated: true,
+    body: { name: testUser.name }
+  })
 
   testUserCounter.currentUserIndex = testUserCounter.currentUserIndex + 1
 
-  return { ...testUser, handle }
+  return { ...resp.data, auth: `Bearer ${resp.data.token}` }
 }

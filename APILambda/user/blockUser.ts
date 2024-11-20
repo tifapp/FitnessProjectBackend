@@ -5,27 +5,19 @@ import {
   userWithIdExists
 } from "TiFBackendUtils/TiFUserUtils"
 import { resp } from "TiFShared/api/Transport"
-import { chainMiddleware } from "TiFShared/lib/Middleware"
-import { TiFAPIRouterExtension } from "../router"
+import { authenticatedEndpoint } from "../auth"
 import { isCurrentUser } from "../utils/isCurrentUserMiddleware"
 import { userNotFoundBody } from "../utils/Responses"
 
-export const blockUserHandler = (({
-  context: { selfId: fromUserId },
-  params: { userId: toUserId }
-}) =>
-  conn
-    .transaction((tx) => blockUserSQL(tx, { fromUserId, toUserId }))
-    .mapSuccess(() => resp(204))
-    .mapFailure(() => resp(404, userNotFoundBody(toUserId)))
-    .unwrap()) satisfies TiFAPIRouterExtension["blockUser"]
-
-// NB: Middleware type inference issue
-export const blockUser = chainMiddleware(
-  isCurrentUser,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  blockUserHandler as any
-) as unknown as typeof blockUserHandler
+export const blockUser = authenticatedEndpoint<"blockUser">(
+  ({ context: { selfId: fromUserId }, params: { userId: toUserId } }) =>
+    conn
+      .transaction((tx) => blockUserSQL(tx, { fromUserId, toUserId }))
+      .mapSuccess(() => resp(204))
+      .mapFailure(() => resp(404, userNotFoundBody(toUserId)))
+      .unwrap(),
+  isCurrentUser
+)
 
 const blockUserSQL = (
   conn: MySQLExecutableDriver,

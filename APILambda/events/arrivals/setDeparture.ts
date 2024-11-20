@@ -3,21 +3,20 @@ import { MySQLExecutableDriver } from "TiFBackendUtils/MySQLDriver"
 import { resp } from "TiFShared/api/Transport"
 import { LocationCoordinate2D } from "TiFShared/domain-models/LocationCoordinate2D"
 import { UserID } from "TiFShared/domain-models/User"
-import { TiFAPIRouterExtension } from "../../router"
+import { authenticatedEndpoint } from "../../auth"
 import { upcomingEventArrivalRegionsSQL } from "./getUpcomingEvents"
 
-export const departFromRegion = (({
-  context: { selfId },
-  body: { coordinate }
-}) =>
-  conn
-    .transaction((tx) =>
-      deleteArrival(tx, selfId, coordinate).flatMapSuccess(() =>
-        upcomingEventArrivalRegionsSQL(conn, selfId)
+export const departFromRegion = authenticatedEndpoint<"departFromRegion">(
+  ({ context: { selfId }, body: { coordinate } }) =>
+    conn
+      .transaction((tx) =>
+        deleteArrival(tx, selfId, coordinate).flatMapSuccess(() =>
+          upcomingEventArrivalRegionsSQL(conn, selfId)
+        )
       )
-    )
-    .mapSuccess((trackableRegions) => resp(200, { trackableRegions }))
-    .unwrap()) satisfies TiFAPIRouterExtension["departFromRegion"]
+      .mapSuccess((trackableRegions) => resp(200, { trackableRegions }))
+      .unwrap()
+)
 
 export const deleteArrival = (
   conn: MySQLExecutableDriver,
@@ -30,7 +29,7 @@ export const deleteArrival = (
         DELETE FROM userArrivals
         WHERE userId = :userId
         AND latitude = :latitude
-        AND longitude = :longitude         
+        AND longitude = :longitude
       `,
     { userId, latitude: coordinate.latitude, longitude: coordinate.longitude }
   )

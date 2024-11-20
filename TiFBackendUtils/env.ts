@@ -32,6 +32,7 @@ const EnvSchema = z
         message:
           "Database name must only contain alphanumeric characters and underscores."
       }),
+    JWT_SECRET: z.string(),
     CA_PEM: z.string().optional(),
     COGNITO_USER_POOL_ID: z.string().optional(),
     ABLY_KEY: z.string().optional()

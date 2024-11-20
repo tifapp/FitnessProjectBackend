@@ -7,7 +7,7 @@ import {
 } from "TiFBackendUtils/TiFEventUtils"
 import { resp } from "TiFShared/api/Transport"
 import { LocationCoordinate2D } from "TiFShared/domain-models/LocationCoordinate2D"
-import { TiFAPIRouterExtension } from "../router"
+import { authenticatedEndpoint } from "../auth"
 
 export const getEventsByRegion = (
   conn: MySQLExecutableDriver,
@@ -40,7 +40,7 @@ export const getEventsByRegion = (
 FROM TifEventView
 LEFT JOIN userRelationships UserRelationOfHostToUser ON TifEventView.hostId = UserRelationOfHostToUser.fromUserId AND UserRelationOfHostToUser.toUserId = :userId
 LEFT JOIN userRelationships UserRelationOfUserToHost ON UserRelationOfUserToHost.fromUserId = :userId AND UserRelationOfUserToHost.toUserId = TifEventView.hostId
-    WHERE 
+    WHERE
         ST_Distance_Sphere(POINT(:userLongitude, :userLatitude), POINT(TifEventView.longitude, TifEventView.latitude)) < :radius
         AND TifEventView.endDateTime > NOW()
         AND TifEventView.endedDateTime IS NULL
@@ -50,19 +50,18 @@ LEFT JOIN userRelationships UserRelationOfUserToHost ON UserRelationOfUserToHost
     { userLatitude, userLongitude, ...rest }
   )
 
-export const exploreEvents = (({
-  context: { selfId: userId },
-  body: { userLocation, radius }
-}) =>
-  conn
-    .transaction((tx) =>
-      getEventsByRegion(tx, {
-        userId,
-        userLocation,
-        radius
-      })
-        .flatMapSuccess((events) => getAttendeeData(tx, events, userId))
-        .mapSuccess((events) => events.map(tifEventResponseFromDatabaseEvent))
-        .mapSuccess((events) => resp(200, { events }))
-    )
-    .unwrap()) satisfies TiFAPIRouterExtension["exploreEvents"]
+export const exploreEvents = authenticatedEndpoint<"exploreEvents">(
+  ({ context: { selfId: userId }, body: { userLocation, radius } }) =>
+    conn
+      .transaction((tx) =>
+        getEventsByRegion(tx, {
+          userId,
+          userLocation,
+          radius
+        })
+          .flatMapSuccess((events) => getAttendeeData(tx, events, userId))
+          .mapSuccess((events) => events.map(tifEventResponseFromDatabaseEvent))
+          .mapSuccess((events) => resp(200, { events }))
+      )
+      .unwrap()
+)

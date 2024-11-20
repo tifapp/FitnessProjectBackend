@@ -3,7 +3,7 @@ import { MySQLExecutableDriver } from "TiFBackendUtils/MySQLDriver"
 import { resp } from "TiFShared/api/Transport"
 import { LocationCoordinate2D } from "TiFShared/domain-models/LocationCoordinate2D"
 import { failure, success } from "TiFShared/lib/Result"
-import { TiFAPIRouterExtension } from "../../router"
+import { authenticatedEndpoint } from "../../auth"
 import { upcomingEventArrivalRegionsSQL } from "./getUpcomingEvents"
 
 // type ArrivalStatusEnum = "invalid" | "early" | "on-time" | "late" | "ended" // so far, unused
@@ -23,7 +23,7 @@ export const deleteOldArrivals = (
             POINT(latitude, longitude),
             POINT(:latitude, :longitude)
           ) > 1000
-        );          
+        );
       `,
     { userId, latitude: coordinate.latitude, longitude: coordinate.longitude }
   )
@@ -48,10 +48,10 @@ export const deleteMaxArrivals = (
             longitude: number
           }>(
             `
-        SELECT arrivedDateTime FROM userArrivals 
-        WHERE userId = :userId 
-        ORDER BY arrivedDateTime ASC 
-        LIMIT 1 
+        SELECT arrivedDateTime FROM userArrivals
+        WHERE userId = :userId
+        ORDER BY arrivedDateTime ASC
+        LIMIT 1
       `,
             { userId }
           )
@@ -60,10 +60,10 @@ export const deleteMaxArrivals = (
     .flatMapSuccess((arrival) =>
       conn.executeResult(
         `
-        DELETE FROM userArrivals 
-        WHERE userId = :userId 
-        AND latitude = :latitude 
-        AND longitude = :longitude;      
+        DELETE FROM userArrivals
+        WHERE userId = :userId
+        AND latitude = :latitude
+        AND longitude = :longitude;
       `,
         { userId, latitude: arrival.latitude, longitude: arrival.longitude }
       )
@@ -79,22 +79,24 @@ export const insertArrival = (
     `
         INSERT INTO userArrivals (userId, latitude, longitude)
         VALUES (:userId, :latitude, :longitude)
-        ON DUPLICATE KEY UPDATE arrivedDateTime = CURRENT_TIMESTAMP;    
+        ON DUPLICATE KEY UPDATE arrivedDateTime = CURRENT_TIMESTAMP;
       `,
     { userId, latitude: coordinate.latitude, longitude: coordinate.longitude }
   )
 
-export const arriveAtRegion = (({
-  context: { selfId },
-  environment: { maxArrivals },
-  body: { coordinate }
-}) =>
-  conn
-    .transaction((tx) =>
-      deleteOldArrivals(tx, selfId, coordinate)
-        .passthroughSuccess(() => deleteMaxArrivals(tx, selfId, maxArrivals))
-        .passthroughSuccess(() => insertArrival(tx, selfId, coordinate))
-        .flatMapSuccess(() => upcomingEventArrivalRegionsSQL(conn, selfId))
-    )
-    .mapSuccess((trackableRegions) => resp(200, { trackableRegions }))
-    .unwrap()) satisfies TiFAPIRouterExtension["arriveAtRegion"]
+export const arriveAtRegion = authenticatedEndpoint<"arriveAtRegion">(
+  ({
+    context: { selfId },
+    environment: { maxArrivals },
+    body: { coordinate }
+  }) =>
+    conn
+      .transaction((tx) =>
+        deleteOldArrivals(tx, selfId, coordinate)
+          .passthroughSuccess(() => deleteMaxArrivals(tx, selfId, maxArrivals))
+          .passthroughSuccess(() => insertArrival(tx, selfId, coordinate))
+          .flatMapSuccess(() => upcomingEventArrivalRegionsSQL(conn, selfId))
+      )
+      .mapSuccess((trackableRegions) => resp(200, { trackableRegions }))
+      .unwrap()
+)

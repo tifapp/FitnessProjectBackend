@@ -3,19 +3,19 @@ import { MySQLExecutableDriver } from "TiFBackendUtils/MySQLDriver"
 import { DevicePlatform } from "TiFShared/api/models/User"
 import { resp } from "TiFShared/api/Transport"
 import { failure, success } from "TiFShared/lib/Result"
-import { TiFAPIRouterExtension } from "../router"
+import { authenticatedEndpoint } from "../auth"
 
-export const registerForPushNotifications = (({
-  body,
-  context: { selfId: userId }
-}) =>
-  tryInsertPushToken(conn, {
-    ...body,
-    userId
-  })
-    .mapSuccess((status) => resp(201, { status }))
-    .mapFailure((error) => resp(400, { error }))
-    .unwrap()) satisfies TiFAPIRouterExtension["registerForPushNotifications"]
+export const registerForPushNotifications =
+  authenticatedEndpoint<"registerForPushNotifications">(
+    ({ body, context: { selfId: userId } }) =>
+      tryInsertPushToken(conn, {
+        ...body,
+        userId
+      })
+        .mapSuccess((status) => resp(201, { status }))
+        .mapFailure((error) => resp(400, { error }))
+        .unwrap()
+  )
 
 const tryInsertPushToken = (
   conn: MySQLExecutableDriver,
@@ -28,7 +28,7 @@ const tryInsertPushToken = (
   return conn
     .executeResult(
       `
-      INSERT IGNORE INTO pushTokens (userId, pushToken, platformName) 
+      INSERT IGNORE INTO pushTokens (userId, pushToken, platformName)
       VALUES (:userId, :pushToken, :platformName)
       `,
       insertRequest
