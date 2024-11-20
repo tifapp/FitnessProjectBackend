@@ -16,7 +16,7 @@ export const createUserFlow = async (): Promise<RegisteredTestUser> => {
 
   const testUser = global.users[testUserCounter.currentUserIndex]
   const resp = await testAPI.createCurrentUserProfile<201>({
-    noAuth: true,
+    unauthenticated: true,
     body: { name: testUser.name }
   })
 
