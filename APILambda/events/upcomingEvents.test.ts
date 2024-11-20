@@ -27,7 +27,6 @@ describe("upcomingEvents tests", () => {
     const resp = await testAPI.upcomingEvents<200>({
       auth: attendee.auth
     })
-
     expect(resp.status).toEqual(200)
     expect(resp.data.events).toEqual([])
   })
@@ -48,7 +47,7 @@ describe("upcomingEvents tests", () => {
 
     const {
       attendeesList: [, attendee],
-      eventIds: [furtherEventId, upcomingEventId, furthestEventId]
+      eventIds: [middleEventId, earliestEventId, latestEventId]
     } = await createEventFlow([
       {
         dateRange: dateRange(dayjs().add(24, "hour").toDate(), dayjs().add(1, "year").toDate())
@@ -60,13 +59,18 @@ describe("upcomingEvents tests", () => {
         dateRange: dateRange(dayjs().add(36, "hour").toDate(), dayjs().add(1, "year").toDate())
       }
     ], 1)
-
     const resp = await testAPI.upcomingEvents<200>({
       auth: attendee.auth
     })
-
+    const eventIds = [
+      resp.data.events[0].id,
+      resp.data.events[1].id,
+      resp.data.events[2].id
+    ]
     expect(resp.status).toEqual(200)
-    expect(resp.data.events).toEqual([upcomingEventId, furtherEventId, furthestEventId])
+    expect(eventIds[0]).toEqual(middleEventId)
+    expect(eventIds[1]).toEqual(earliestEventId)
+    expect(eventIds[2]).toEqual(latestEventId)
   })
   test("if past event, removed from list", async () => {
     await addLocationToDB(
@@ -89,7 +93,7 @@ describe("upcomingEvents tests", () => {
       eventIds: [pastEventId, upcomingEventId]
     } = await createEventFlow([
       {
-        dateRange: dateRange(dayjs().subtract(24, "hour").toDate(), dayjs().subtract(23, "hour").toDate())
+        dateRange: dateRange(dayjs().subtract(23, "hour").toDate(), dayjs().add(1, "minute").toDate())
       },
       {
         dateRange: dateRange(dayjs().add(12, "hour").toDate(), dayjs().add(1, "year").toDate())
@@ -100,7 +104,12 @@ describe("upcomingEvents tests", () => {
       auth: attendee.auth
     })
 
+    const eventIds = [
+      resp.data.events[0].id,
+      resp.data.events[1].id
+    ]
     expect(resp.status).toEqual(200)
-    expect(resp.data.events).toEqual([upcomingEventId])
+    expect(eventIds[0]).toEqual(pastEventId)
+    expect(eventIds[1]).toEqual(upcomingEventId)
   })
 })
