@@ -23,7 +23,7 @@ const env = envVars.ENVIRONMENT === "devTest"
 export const app = createApp()
 
 const middlewareMap = {
-  devTest: [addBenchmarking, addTiFRouter],
+  devTest: [addTiFRouter],
   live: [addEventToRequest, addBenchmarking, addTiFRouter, addErrorReporting]
 }
 
