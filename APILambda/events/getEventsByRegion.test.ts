@@ -101,7 +101,7 @@ describe("exploreEvents endpoint tests", () => {
         radius: 50000
       }
     })
-    expect(resp.data.events[0].userAttendeeStatus).toEqual("not-participating")
+    expect(resp.data.events[1].userAttendeeStatus).toEqual("not-participating")
   })
 
   it("should indicate that the user is hosting an event", async () => {
@@ -217,7 +217,7 @@ describe("exploreEvents endpoint tests", () => {
         radius: 50000
       }
     })
-    const event = resp.data.events[0]
+    const event = resp.data.events[1]
     expect(
       event.previewAttendees.map((a) => ({
         id: a.id,

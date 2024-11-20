@@ -8,10 +8,9 @@ import { testAPI } from "../test/testApp"
 import { testEventInput } from "../test/testEvents"
 import { createEventFlow } from "../test/userFlows/createEventFlow"
 import { createUserFlow } from "../test/userFlows/createUserFlow"
-import { createEventHelper } from "./createEvent"
+import { createEventTransaction } from "./createEvent"
 
-describe("upcomingEvents tests", () => {
-  // fakeTimers()
+describe("_upcomingEvents tests", () => {
   beforeEach(async () => {
     await addLocationToDB(
       conn,
@@ -33,24 +32,35 @@ describe("upcomingEvents tests", () => {
     const resp = await testAPI.upcomingEvents<200>({
       auth: attendee.auth
     })
-    console.log(resp)
     expect(resp.data.events).toEqual([])
   })
   test("if upcoming events, list of events", async () => {
     const {
       attendeesList: [, attendee],
       eventIds: [middleEventId, earliestEventId, latestEventId]
-    } = await createEventFlow([
-      {
-        dateRange: dateRange(dayjs().add(24, "hour").toDate(), dayjs().add(1, "year").toDate())
-      },
-      {
-        dateRange: dateRange(dayjs().add(12, "hour").toDate(), dayjs().add(1, "year").toDate())
-      },
-      {
-        dateRange: dateRange(dayjs().add(36, "hour").toDate(), dayjs().add(1, "year").toDate())
-      }
-    ], 1)
+    } = await createEventFlow(
+      [
+        {
+          dateRange: dateRange(
+            dayjs().add(24, "hour").toDate(),
+            dayjs().add(1, "year").toDate()
+          )
+        },
+        {
+          dateRange: dateRange(
+            dayjs().add(12, "hour").toDate(),
+            dayjs().add(1, "year").toDate()
+          )
+        },
+        {
+          dateRange: dateRange(
+            dayjs().add(36, "hour").toDate(),
+            dayjs().add(1, "year").toDate()
+          )
+        }
+      ],
+      1
+    )
     const resp = await testAPI.upcomingEvents<200>({
       auth: attendee.auth
     })
@@ -58,11 +68,35 @@ describe("upcomingEvents tests", () => {
     expect(eventIds).toEqual([earliestEventId, middleEventId, latestEventId])
   })
   test("if past event, removed from list", async () => {
-    const sampleUser = await createUserFlow()
-    await createEventHelper(conn, { ...testEventInput, dateRange: dateRange(dayjs().subtract(30, "minute").toDate(), dayjs().subtract(15, "minute").toDate()) }, sampleUser.id, devTestEnv, log)
-    const upcomingEventId = await createEventHelper(conn, { ...testEventInput, dateRange: dateRange(dayjs().add(12, "hour").toDate(), dayjs().add(1, "year").toDate()) }, sampleUser.id, devTestEnv, log).unwrap()
+    const user = await createUserFlow()
+    await createEventTransaction(
+      conn,
+      {
+        ...testEventInput,
+        dateRange: dateRange(
+          dayjs().subtract(30, "minute").toDate(),
+          dayjs().subtract(15, "minute").toDate()
+        )
+      },
+      user.id,
+      devTestEnv,
+      log
+    )
+    const upcomingEventId = await createEventTransaction(
+      conn,
+      {
+        ...testEventInput,
+        dateRange: dateRange(
+          dayjs().add(12, "hour").toDate(),
+          dayjs().add(1, "year").toDate()
+        )
+      },
+      user.id,
+      devTestEnv,
+      log
+    ).unwrap()
     const resp = await testAPI.upcomingEvents<200>({
-      auth: sampleUser.auth
+      auth: user.auth
     })
     const eventIds = resp.data.events.map((e) => e.id)
     expect(eventIds).toEqual([upcomingEventId])

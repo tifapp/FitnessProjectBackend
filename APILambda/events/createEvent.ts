@@ -53,25 +53,32 @@ export const createEventSQL = (
   )
 }
 
-export const createEventHelper = (conn: MySQLExecutableDriver, body: CreateEvent, selfId: UserID, environment: ServerEnvironment, log: Logger) => {
-  return createEventSQL(conn, body, selfId)
-    .passthroughSuccess(({ insertId }) =>
-      addUserToAttendeeList(conn, selfId, parseInt(insertId), "hosting")
+export const createEventTransaction = (
+  conn: MySQLExecutableDriver,
+  body: CreateEvent,
+  selfId: UserID,
+  environment: ServerEnvironment,
+  log: Logger
+) => {
+  return conn
+    .transaction((tx) =>
+      createEventSQL(tx, body, selfId)
+        .passthroughSuccess(({ insertId }) =>
+          addUserToAttendeeList(conn, selfId, parseInt(insertId), "hosting")
+        )
+        .passthroughSuccess(() =>
+          promiseResult(
+            environment
+              .callGeocodingLambda(body.coordinates)
+              .then(() => success())
+              .catch((e) => {
+                log.error(e)
+                return success()
+              })
+          )
+        )
     )
-    .passthroughSuccess(() =>
-      promiseResult(
-        environment
-          .callGeocodingLambda(body.coordinates)
-          .then(() => success())
-          .catch((e) => {
-            log.error(e)
-            return success()
-          })
-      )
-    )
-    .mapSuccess(({ insertId }) =>
-      Number(insertId) as EventID
-    )
+    .mapSuccess(({ insertId }) => Number(insertId) as EventID)
 }
 
 // ALLOW EXTRA MIDDLEWARE
@@ -82,12 +89,7 @@ export const createEventHelper = (conn: MySQLExecutableDriver, body: CreateEvent
  */
 export const createEvent = authenticatedEndpoint<"createEvent">(
   ({ environment, context: { selfId }, body, log }) =>
-    conn
-      .transaction((tx) =>
-        createEventHelper(tx, body, selfId, environment, log)
-          .mapSuccess((id) =>
-            resp(201, { id })
-          )
-      )
+    createEventTransaction(conn, body, selfId, environment, log)
+      .mapSuccess((id) => resp(201, { id }))
       .unwrap()
 )
