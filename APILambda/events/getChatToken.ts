@@ -70,11 +70,16 @@ export const checkChatPermissionsTransaction = (
   eventId: EventID,
   userId: UserID
 ) =>
-  conn.transaction((tx) =>
-    getEventSQL(tx, eventId, userId)
-      .passthroughSuccess(() => isUserInEvent(tx, userId, eventId))
-      .passthroughSuccess(event => isUserBlocked(tx, event.hostId, userId).inverted().withFailure("user-is-blocked"))
-  )
+  conn
+    .transaction((tx) =>
+      getEventSQL(tx, eventId, userId)
+        .passthroughSuccess(() => isUserInEvent(tx, userId, eventId))
+        .passthroughSuccess((event) =>
+          isUserBlocked(tx, event.hostId, userId)
+            .inverted()
+            .withFailure("user-is-blocked")
+        )
+    )
     .mapSuccess(async (event) => {
       return await getTokenRequest(event, userId)
     })

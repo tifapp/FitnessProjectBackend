@@ -26,20 +26,14 @@ export const callJoinEvent = async (
     .send(req)
 }
 
-export const callLeaveEvent = async (
-  bearerToken: string,
-  eventId: number
-) => {
+export const callLeaveEvent = async (bearerToken: string, eventId: number) => {
   return await request(testApp)
     .post(`/event/leave/${eventId}`)
     .set("Authorization", bearerToken)
     .send()
 }
 
-export const callEndEvent = async (
-  bearerToken: string,
-  eventId: number
-) => {
+export const callEndEvent = async (bearerToken: string, eventId: number) => {
   return await request(testApp)
     .post(`/event/end/${eventId}`)
     .set("Authorization", bearerToken)
@@ -66,9 +60,7 @@ export const callSetDeparture = async (
     .send(req)
 }
 
-export const callGetUpcomingEvents = async (
-  bearerToken: string
-) => {
+export const callGetUpcomingEvents = async (bearerToken: string) => {
   return await request(testApp)
     .get("/event/upcoming")
     .set("Authorization", bearerToken)

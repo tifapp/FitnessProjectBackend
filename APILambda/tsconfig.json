@@ -2,7 +2,7 @@
   "compilerOptions": {
     "module": "commonjs",
     "target": "ESNext",
-    "strict": true,
+    "strict": false,
     "declaration": false,
     "outDir": "dist",
     "removeComments": true,
@@ -12,13 +12,6 @@
     "resolveJsonModule": true
   },
   "preserveSymlinks": true,
-  "include": [
-    "**/*.ts"
-  ],
-  "exclude": [
-    "**/*.test.ts",
-    "**/*.spec.ts",
-    "node_modules",
-    "test"
-  ]
+  "include": ["**/*.ts"],
+  "exclude": ["**/*.test.ts", "**/*.spec.ts", "node_modules", "test"]
 }

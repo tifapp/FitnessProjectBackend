@@ -2,7 +2,7 @@ import { conn } from "TiFBackendUtils"
 import { MySQLExecutableDriver } from "TiFBackendUtils/MySQLDriver"
 import { resp } from "TiFShared/api/Transport"
 import { UserSettings } from "TiFShared/domain-models/Settings"
-import { TiFAPIRouterExtension } from "../../router"
+import { authenticatedEndpoint } from "../../auth"
 import { queryUserSettings } from "./userSettingsQuery"
 
 /**
@@ -54,13 +54,13 @@ const updateUserSettingsSQL = (
       COALESCE(:eventPresetLocation, NULL),
       COALESCE(:eventPresetDurations, JSON_ARRAY(900, 1800, 2700, 3600, 5400)),
       COALESCE(:pushNotificationTriggerIds, JSON_ARRAY(
-        'friend-request-received', 
-        'friend-request-accepted', 
-        'user-entered-region', 
-        'event-attendance-headcount', 
-        'event-periodic-arrivals', 
-        'event-starting-soon', 
-        'event-started', 
+        'friend-request-received',
+        'friend-request-accepted',
+        'user-entered-region',
+        'event-attendance-headcount',
+        'event-periodic-arrivals',
+        'event-starting-soon',
+        'event-started',
         'event-ended',
         'event-name-changed',
         'event-description-changed',
@@ -68,7 +68,7 @@ const updateUserSettingsSQL = (
         'event-location-changed',
         'event-cancelled'
       ))
-    ) ON DUPLICATE KEY UPDATE 
+    ) ON DUPLICATE KEY UPDATE
       isAnalyticsEnabled = COALESCE(:isAnalyticsEnabled, isAnalyticsEnabled),
       isCrashReportingEnabled = COALESCE(:isCrashReportingEnabled, isCrashReportingEnabled),
       canShareArrivalStatus = COALESCE(:canShareArrivalStatus, canShareArrivalStatus),
@@ -78,7 +78,7 @@ const updateUserSettingsSQL = (
       eventPresetLocation = COALESCE(:eventPresetLocation, eventPresetLocation),
       eventPresetDurations = COALESCE(:eventPresetDurations, eventPresetDurations),
       pushNotificationTriggerIds = COALESCE(:pushNotificationTriggerIds, pushNotificationTriggerIds),
-      version = version + 1;    
+      version = version + 1;
     `,
     {
       userId,
@@ -95,10 +95,10 @@ const updateUserSettingsSQL = (
     }
   )
 
-export const saveUserSettings = (
+export const saveUserSettings = authenticatedEndpoint<"saveUserSettings">(
   ({ context: { selfId }, body: newSettings }) =>
     updateUserSettingsSQL(conn, selfId, newSettings)
       .flatMapSuccess(() => queryUserSettings(conn, selfId))
       .mapSuccess((updatedSettings) => resp(200, updatedSettings))
       .unwrap()
-) satisfies TiFAPIRouterExtension["saveUserSettings"]
+)

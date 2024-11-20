@@ -1,10 +1,10 @@
 import { conn } from "TiFBackendUtils"
 import { findTiFUser } from "TiFBackendUtils/TiFUserUtils"
 import { resp } from "TiFShared/api/Transport"
-import { TiFAPIRouterExtension } from "../router"
+import { authenticatedEndpoint } from "../auth"
 import { userNotFoundBody } from "../utils/Responses"
 
-export const getUser = (
+export const getUser = authenticatedEndpoint<"getUser">(
   ({ context: { selfId: fromUserId }, params: { userId: toUserId } }) =>
     findTiFUser(conn, { fromUserId, toUserId })
       .mapFailure((result) =>
@@ -14,4 +14,4 @@ export const getUser = (
       )
       .mapSuccess((user) => resp(200, user))
       .unwrap()
-) satisfies TiFAPIRouterExtension["getUser"]
+)

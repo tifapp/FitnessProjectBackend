@@ -31,7 +31,10 @@ describe("MySQLDriver", () => {
     it("should execute a query and return the result", async () => {
       await mySQLDriverTest.executeResult("DELETE FROM mockTable")
       const query = "INSERT INTO mockTable (name, id) VALUES (:name, :id)"
-      const result = await mySQLDriverTest.executeResult(query, { name: "Surya", id: 0 })
+      const result = await mySQLDriverTest.executeResult(query, {
+        name: "Surya",
+        id: 0
+      })
       expect(result.value).toEqual({
         rowsAffected: 1,
         insertId: "0"
@@ -41,7 +44,10 @@ describe("MySQLDriver", () => {
     it("should execute a query with undefined values", async () => {
       await mySQLDriverTest.executeResult("DELETE FROM mockTable")
       const query = "INSERT INTO mockTable (name, id) VALUES (:name, :id)"
-      const result = await mySQLDriverTest.executeResult(query, { name: undefined, id: 0 })
+      const result = await mySQLDriverTest.executeResult(query, {
+        name: undefined,
+        id: 0
+      })
       expect(result.value).toEqual({
         rowsAffected: 1,
         insertId: "0"
@@ -85,39 +91,51 @@ describe("MySQLDriver", () => {
     it("should execute a query and return the result rows", async () => {
       await mySQLDriverTest.executeResult("DELETE FROM mockTable")
       let query = "INSERT INTO mockTable (name, id) VALUES (:name, :id)"
-      await mySQLDriverTest.transaction((tx) => tx.executeResult(query, { name: "Bob", id: 0 }))
+      await mySQLDriverTest.transaction((tx) =>
+        tx.executeResult(query, { name: "Bob", id: 0 })
+      )
       query = "SELECT * FROM mockTable"
       const result = await mySQLDriverTest.queryResult(query)
-      expect(result.value).toEqual(
-        [
-          {
-            id: 0,
-            name: "Bob"
-          }
-        ]
-      )
+      expect(result.value).toEqual([
+        {
+          id: 0,
+          name: "Bob"
+        }
+      ])
     })
 
     it("should convert null rows from results to undefined", async () => {
       await mySQLDriverTest.executeResult("DELETE FROM mockTable")
-      await mySQLDriverTest.executeResult("INSERT INTO mockTable (name, id) VALUES (null, 0)")
-      const result = await mySQLDriverTest.queryResult("SELECT * FROM mockTable")
-      expect(result.value).toEqual(
-        [
-          {
-            id: 0,
-            name: undefined
-          }
-        ]
+      await mySQLDriverTest.executeResult(
+        "INSERT INTO mockTable (name, id) VALUES (null, 0)"
       )
+      const result = await mySQLDriverTest.queryResult(
+        "SELECT * FROM mockTable"
+      )
+      expect(result.value).toEqual([
+        {
+          id: 0,
+          name: undefined
+        }
+      ])
     })
 
     it("should execute a query and cast mysql values", async () => {
       await mySQLDriverTest.executeResult("DELETE FROM mockTable")
       const mockDate = new Date(100000)
-      const query = "INSERT INTO mockTable (id, isActive, createdAt, updatedAt, price, data) VALUES (:id, :isActive, :createdAt, :updatedAt, :price, :data)"
-      await mySQLDriverTest.executeResult(query, { id: 1, isActive: true, createdAt: mockDate, updatedAt: mockDate, price: 99.99, data: "{\"key\": \"value\"}" })
-      const result = await mySQLDriverTest.queryResult("SELECT * FROM mockTable")
+      const query =
+        "INSERT INTO mockTable (id, isActive, createdAt, updatedAt, price, data) VALUES (:id, :isActive, :createdAt, :updatedAt, :price, :data)"
+      await mySQLDriverTest.executeResult(query, {
+        id: 1,
+        isActive: true,
+        createdAt: mockDate,
+        updatedAt: mockDate,
+        price: 99.99,
+        data: '{"key": "value"}'
+      })
+      const result = await mySQLDriverTest.queryResult(
+        "SELECT * FROM mockTable"
+      )
       expect(result.value).toEqual([
         {
           createdAt: mockDate,
@@ -135,7 +153,9 @@ describe("MySQLDriver", () => {
     it("should throw an error if query is used with a write statement", async () => {
       await mySQLDriverTest.executeResult("DELETE FROM mockTable")
       const query = "INSERT INTO mockTable (name, id) VALUES ('Bob', 0)"
-      await expect(mySQLDriverTest.queryResult(query)).rejects.toThrowError("Query did not return an array of rows and fields.")
+      await expect(mySQLDriverTest.queryResult(query)).rejects.toThrowError(
+        "Query did not return an array of rows and fields."
+      )
     })
   })
 
@@ -146,12 +166,10 @@ describe("MySQLDriver", () => {
       await mySQLDriverTest.transaction((tx) => tx.executeResult(query))
       query = "SELECT * FROM mockTable"
       const result = await mySQLDriverTest.queryFirstResult(query)
-      expect(result.value).toEqual(
-        {
-          id: 0,
-          name: "Bob"
-        }
-      )
+      expect(result.value).toEqual({
+        id: 0,
+        name: "Bob"
+      })
     })
 
     it("should throw an error if query returns no rows", async () => {
@@ -185,7 +203,9 @@ describe("MySQLDriver", () => {
       await mySQLDriverTest.executeResult("DELETE FROM mockTable")
       await mySQLDriverTest.closeConnection()
       const query = "INSERT INTO mockTable (name, id) VALUES ('Chungus',1)"
-      await expect(mySQLDriverTest.executeResult(query)).rejects.toThrow("Current connection instance was ended.")
+      await expect(mySQLDriverTest.executeResult(query)).rejects.toThrow(
+        "Current connection instance was ended."
+      )
     })
   })
 })

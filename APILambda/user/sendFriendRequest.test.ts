@@ -5,7 +5,9 @@ import { createUserFlow } from "../test/userFlows/createUserFlow"
 describe("FriendRequest tests", () => {
   it("should error when trying to send a friend request to yourself", async () => {
     const fromUser = await createUserFlow()
-    const resp = await testAPI.sendFriendRequest(userToUserRequest(fromUser, fromUser))
+    const resp = await testAPI.sendFriendRequest(
+      userToUserRequest(fromUser, fromUser)
+    )
     expect(resp).toMatchObject({
       status: 400,
       data: { error: "current-user" }
@@ -15,7 +17,9 @@ describe("FriendRequest tests", () => {
   it("should have a pending status when no prior relation between users", async () => {
     const fromUser = await createUserFlow()
     const toUser = await createUserFlow()
-    const resp = await testAPI.sendFriendRequest(userToUserRequest(fromUser, toUser))
+    const resp = await testAPI.sendFriendRequest(
+      userToUserRequest(fromUser, toUser)
+    )
     expect(resp).toMatchObject({
       status: 201,
       data: { relationStatus: "friend-request-sent" }
@@ -26,7 +30,9 @@ describe("FriendRequest tests", () => {
     const fromUser = await createUserFlow()
     const toUser = await createUserFlow()
     await testAPI.sendFriendRequest(userToUserRequest(fromUser, toUser))
-    const resp = await testAPI.sendFriendRequest(userToUserRequest(fromUser, toUser))
+    const resp = await testAPI.sendFriendRequest(
+      userToUserRequest(fromUser, toUser)
+    )
     expect(resp).toMatchObject({
       status: 200,
       data: { relationStatus: "friend-request-sent" }
@@ -38,7 +44,9 @@ describe("FriendRequest tests", () => {
     const toUser = await createUserFlow()
     await testAPI.sendFriendRequest(userToUserRequest(fromUser, toUser))
 
-    const resp = await testAPI.sendFriendRequest(userToUserRequest(toUser, fromUser))
+    const resp = await testAPI.sendFriendRequest(
+      userToUserRequest(toUser, fromUser)
+    )
     expect(resp).toMatchObject({
       status: 201,
       data: { relationStatus: "friends" }
@@ -51,7 +59,9 @@ describe("FriendRequest tests", () => {
     await testAPI.sendFriendRequest(userToUserRequest(fromUser, toUser))
     await testAPI.sendFriendRequest(userToUserRequest(toUser, fromUser))
 
-    const resp = await testAPI.sendFriendRequest(userToUserRequest(fromUser, toUser))
+    const resp = await testAPI.sendFriendRequest(
+      userToUserRequest(fromUser, toUser)
+    )
     expect(resp).toMatchObject({
       status: 200,
       data: { relationStatus: "friends" }
@@ -63,7 +73,9 @@ describe("FriendRequest tests", () => {
     const toUser = await createUserFlow()
     await testAPI.blockUser(userToUserRequest(fromUser, toUser))
 
-    const resp = await testAPI.sendFriendRequest(userToUserRequest(toUser, fromUser))
+    const resp = await testAPI.sendFriendRequest(
+      userToUserRequest(toUser, fromUser)
+    )
     expect(resp).toMatchObject(blockedUserResponse(fromUser.id))
   })
 
@@ -72,7 +84,9 @@ describe("FriendRequest tests", () => {
     const toUser = await createUserFlow()
     await testAPI.blockUser(userToUserRequest(fromUser, toUser))
 
-    const resp = await testAPI.sendFriendRequest(userToUserRequest(fromUser, toUser))
+    const resp = await testAPI.sendFriendRequest(
+      userToUserRequest(fromUser, toUser)
+    )
     expect(resp).toMatchObject({
       status: 201,
       data: { relationStatus: "friend-request-sent" }

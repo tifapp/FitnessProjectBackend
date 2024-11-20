@@ -5,10 +5,7 @@ import https from "https"
 
 const outputChannel = "C01B7FFKDCP"
 
-const sendMessageToSlack = (
-  message: string,
-  channelId = outputChannel
-) => {
+const sendMessageToSlack = (message: string, channelId = outputChannel) => {
   const postData = JSON.stringify({
     channel: channelId,
     text: message
@@ -47,6 +44,8 @@ export const addErrorReporting = (app: Application) => {
   // @ts-ignore
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   app.use(async (err, req, res, next) => {
-    await sendMessageToSlack(`${JSON.stringify(res, null, 4)} \n ${JSON.stringify(err.stack, null, 4)}`)
+    await sendMessageToSlack(
+      `${JSON.stringify(res, null, 4)} \n ${JSON.stringify(err.stack, null, 4)}`
+    )
   })
 }

@@ -1,5 +1,14 @@
-import { AwaitableResult, failure, promiseResult, success } from "TiFShared/lib/Result"
-import mysql, { FieldPacket, ResultSetHeader, RowDataPacket } from "mysql2/promise"
+import {
+  AwaitableResult,
+  failure,
+  promiseResult,
+  success
+} from "TiFShared/lib/Result"
+import mysql, {
+  FieldPacket,
+  ResultSetHeader,
+  RowDataPacket
+} from "mysql2/promise"
 import { domainModelColumns } from "../DomainModels"
 import { createDatabaseConnection } from "./dbConnection"
 import { paramifyArgs, SQLParams } from "./paramify"
@@ -9,18 +18,23 @@ export type DBExecution = {
   rowsAffected: number
 }
 
-const hasInsertionHeader = (result: ResultSetHeader): result is ResultSetHeader => {
+const hasInsertionHeader = (
+  result: ResultSetHeader
+): result is ResultSetHeader => {
   return "insertId" in result && "affectedRows" in result
 }
 
 const typecasts: Record<number, (value: string | null) => unknown> = {
-  3: (value) => value == null ? value : parseInt(value) > 0, // INT or LONG -> BOOLEAN
-  1: (value) => value == null ? value : parseInt(value) > 0, // TINYINT -> BOOLEAN
-  246: (value) => value == null ? value : parseFloat(value) // NEWDECIMAL (DECIMAL/NUMERIC) -> NUMBER
+  3: (value) => (value == null ? value : parseInt(value) > 0), // INT or LONG -> BOOLEAN
+  1: (value) => (value == null ? value : parseInt(value) > 0), // TINYINT -> BOOLEAN
+  246: (value) => (value == null ? value : parseFloat(value)) // NEWDECIMAL (DECIMAL/NUMERIC) -> NUMBER
 }
 
-const castMySQLValues = (rows: RowDataPacket[], fields: FieldPacket[]): RowDataPacket[] => {
-  return rows.map(row => {
+const castMySQLValues = (
+  rows: RowDataPacket[],
+  fields: FieldPacket[]
+): RowDataPacket[] => {
+  return rows.map((row) => {
     fields.forEach(({ name: key, type }) => {
       if (type !== undefined && typecasts[type]) {
         row[key] = typecasts[type](row[key])
@@ -29,7 +43,9 @@ const castMySQLValues = (rows: RowDataPacket[], fields: FieldPacket[]): RowDataP
         delete row[key]
       }
       if (Object.keys(domainModelColumns).includes(key)) {
-        row[key] = domainModelColumns[key as keyof typeof domainModelColumns](row[key])
+        row[key] = domainModelColumns[key as keyof typeof domainModelColumns](
+          row[key]
+        )
       }
     })
     return row
@@ -40,7 +56,7 @@ class MySQLConnectionHandler {
   private connection?: mysql.Connection
   private isConnectionClosed: boolean = false
 
-  async useConnection () {
+  async useConnection() {
     if (this.isConnectionClosed) {
       throw new Error("Current connection instance was ended.")
     }
@@ -59,7 +75,7 @@ class MySQLConnectionHandler {
     return this.connection!
   }
 
-  async closeConnection () {
+  async closeConnection() {
     if (!this.isConnectionClosed) {
       const conn = await this.useConnection()
       conn.end()
@@ -71,7 +87,7 @@ class MySQLConnectionHandler {
 export class MySQLDriver {
   private connectionHandler = new MySQLConnectionHandler()
 
-  async closeConnection () {
+  async closeConnection() {
     await this.connectionHandler.closeConnection()
   }
 
@@ -90,14 +106,14 @@ export class MySQLDriver {
    * console.log(results[0].id) // ✅ Typesafe
    * ```
    */
-  private async execute (
-    query: string,
-    args?: SQLParams
-  ): Promise<DBExecution> {
+  async execute(query: string, args?: SQLParams): Promise<DBExecution> {
     // Use this.conn to execute the query and return the result rows
     // This will be the only function to directly use the database library's execute method.
     const conn = await this.connectionHandler.useConnection()
-    const [result] = await conn.execute<ResultSetHeader>(query, paramifyArgs(args))
+    const [result] = await conn.execute<ResultSetHeader>(
+      query,
+      paramifyArgs(args)
+    )
     if (hasInsertionHeader(result)) {
       return {
         insertId: result.insertId.toString(),
@@ -120,10 +136,7 @@ export class MySQLDriver {
    * ```
    */
 
-  private async query<Value> (
-    query: string,
-    args?: SQLParams
-  ): Promise<Value[]> {
+  async query<Value>(query: string, args?: SQLParams): Promise<Value[]> {
     const conn = await this.connectionHandler.useConnection()
     const [rows, fields] = await conn.query(query, paramifyArgs(args))
     if (Array.isArray(rows) && Array.isArray(fields)) {
@@ -136,18 +149,16 @@ export class MySQLDriver {
   /**
    * Runs the given SQL query and returns a success result containing the insertId of the query.
    */
-  executeResult (query: string, args?: SQLParams) {
+  executeResult(query: string, args?: SQLParams) {
     return promiseResult(
-      this.execute(query, args).then((executeResult) =>
-        success(executeResult)
-      )
+      this.execute(query, args).then((executeResult) => success(executeResult))
     )
   }
 
   /**
    * Runs the given SQL query and returns a success result containing the result of the query.
    */
-  queryResult<Value> (query: string, args?: SQLParams) {
+  queryResult<Value>(query: string, args?: SQLParams) {
     return promiseResult(
       this.query<Value>(query, args).then((result) => success(result))
     )
@@ -156,21 +167,25 @@ export class MySQLDriver {
   /**
    * Performs an idempotent transaction and returns the result of the transaction wrapped in a {@link PromiseResult}.
    */
-  transaction<SuccessValue, ErrorValue> (
-    query: (tx: Omit<MySQLDriver, "query" | "execute">) => AwaitableResult<SuccessValue, ErrorValue>
+  transaction<SuccessValue, ErrorValue>(
+    query: (
+      tx: Omit<MySQLDriver, "query" | "execute">
+    ) => AwaitableResult<SuccessValue, ErrorValue>
   ) {
-    return promiseResult((async () => {
-      const conn = await this.connectionHandler.useConnection()
-      try {
-        await conn.beginTransaction()
-        const result = await query(this)
-        await conn.commit()
-        return result
-      } catch (error) {
-        await conn.rollback()
-        throw error
-      }
-    })())
+    return promiseResult(
+      (async () => {
+        const conn = await this.connectionHandler.useConnection()
+        try {
+          await conn.beginTransaction()
+          const result = await query(this)
+          await conn.commit()
+          return result
+        } catch (error) {
+          await conn.rollback()
+          throw error
+        }
+      })()
+    )
   }
 
   // ==================
@@ -188,7 +203,7 @@ export class MySQLDriver {
    * console.log(result?.id) // ✅ Typesafe
    * ```
    */
-  queryFirstResult<Value> (query: string, args?: SQLParams) {
+  queryFirstResult<Value>(query: string, args?: SQLParams) {
     return promiseResult(
       this.query<Value>(query, args).then((results) =>
         results[0] ? success(results[0]) : failure("no-results" as const)
@@ -202,7 +217,7 @@ export class MySQLDriver {
    * You should not query specific data with this method, instead use a `"SELECT TRUE"`
    * if you need to perform a select.
    */
-  queryHasResults (query: string, args?: SQLParams) {
+  queryHasResults(query: string, args?: SQLParams) {
     return promiseResult(
       this.query(query, args).then((results) => {
         const hasResults = results.length > 0

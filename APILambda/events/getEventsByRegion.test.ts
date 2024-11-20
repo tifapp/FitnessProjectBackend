@@ -1,5 +1,4 @@
 import { conn } from "TiFBackendUtils"
-import { getAttendeeCount, getAttendeesPreviewIds } from "TiFBackendUtils/TiFEventUtils"
 import { dateRange } from "TiFShared/domain-models/FixedDateRange"
 import dayjs from "dayjs"
 import { addLocationToDB } from "../../GeocodingLambda/utils"
@@ -7,8 +6,10 @@ import { userToUserRequest } from "../test/shortcuts"
 import { testAPI } from "../test/testApp"
 import { testEventInput } from "../test/testEvents"
 import { createEventFlow } from "../test/userFlows/createEventFlow"
+import { createUserFlow, userDetails } from "../test/userFlows/createUserFlow"
+import { sleep } from "TiFShared/lib/DelayData"
 
-const setupDB = async () => {
+const createEvents = async () => {
   await addLocationToDB(
     conn,
     {
@@ -27,26 +28,35 @@ const setupDB = async () => {
     attendeesList: [, attendee],
     host,
     eventIds: [futureEventId, ongoingEventId]
-  } = await createEventFlow([
-    {
-      dateRange: dateRange(dayjs().add(12, "hour").toDate(), dayjs().add(1, "year").toDate())
-    },
-    {
-      dateRange: dateRange(dayjs().subtract(12, "hour").toDate(), dayjs().add(1, "year").toDate())
-    }
-  ], 1)
+  } = await createEventFlow(
+    [
+      {
+        dateRange: dateRange(
+          dayjs().add(12, "hour").toDate(),
+          dayjs().add(1, "year").toDate()
+        )
+      },
+      {
+        dateRange: dateRange(
+          dayjs().subtract(12, "hour").toDate(),
+          dayjs().add(1, "year").toDate()
+        )
+      }
+    ],
+    1
+  )
 
-  return ({
+  return {
     attendee,
     host,
     ongoingEventId,
     futureEventId
-  })
+  }
 }
 
 describe("exploreEvents endpoint tests", () => {
-  it("should return 200 with the event, user relation, attendee count data", async () => {
-    const { attendee, ongoingEventId, futureEventId } = await setupDB()
+  it("should return 200 with the event, user relation, attendee count data in order of start time", async () => {
+    const { attendee, ongoingEventId, futureEventId } = await createEvents()
 
     const resp = await testAPI.exploreEvents<200>({
       auth: attendee.auth,
@@ -58,16 +68,60 @@ describe("exploreEvents endpoint tests", () => {
 
     expect(resp.status).toEqual(200)
     expect(resp.data.events).toHaveLength(2)
-    const eventIds = [
-      resp.data.events[0].id,
-      resp.data.events[1].id
-    ]
+    const eventIds = [resp.data.events[0].id, resp.data.events[1].id]
     expect(eventIds).toContain(ongoingEventId)
     expect(eventIds).toContain(futureEventId)
   })
 
+  it("should indicate that the user is attending an event", async () => {
+    const { attendee } = await createEvents()
+
+    const resp = await testAPI.exploreEvents<200>({
+      auth: attendee.auth,
+      body: {
+        userLocation: testEventInput.coordinates,
+        radius: 50000
+      }
+    })
+    expect(resp.data.events[1].userAttendeeStatus).toEqual("attending")
+  })
+
+  it("should indicate that the user is not attending an event", async () => {
+    const { attendee, futureEventId } = await createEvents()
+
+    await testAPI.leaveEvent({
+      auth: attendee.auth,
+      params: { eventId: futureEventId }
+    })
+
+    const resp = await testAPI.exploreEvents<200>({
+      auth: attendee.auth,
+      body: {
+        userLocation: testEventInput.coordinates,
+        radius: 50000
+      }
+    })
+    expect(resp.data.events[0].userAttendeeStatus).toEqual("not-participating")
+  })
+
+  it("should indicate that the user is hosting an event", async () => {
+    const { host } = await createEvents()
+
+    const resp = await testAPI.exploreEvents<200>({
+      auth: host.auth,
+      body: {
+        userLocation: testEventInput.coordinates,
+        radius: 50000
+      }
+    })
+    expect(resp.data.events.map((e) => e.userAttendeeStatus)).toEqual([
+      "hosting",
+      "hosting"
+    ])
+  })
+
   it("should not return events that are not within the radius", async () => {
-    const { attendee } = await setupDB()
+    const { attendee } = await createEvents()
 
     const events = await testAPI.exploreEvents<200>({
       auth: attendee.auth,
@@ -79,11 +133,12 @@ describe("exploreEvents endpoint tests", () => {
         radius: 1
       }
     })
+    console.log(events)
     expect(events.data.events).toHaveLength(0)
   })
 
   it("should remove the events where the attendee blocks the host", async () => {
-    const { attendee, host } = await setupDB()
+    const { attendee, host } = await createEvents()
 
     await testAPI.blockUser(userToUserRequest(attendee, host))
 
@@ -98,7 +153,7 @@ describe("exploreEvents endpoint tests", () => {
   })
 
   it("should remove the events where the host blocks the attendee", async () => {
-    const { attendee, host } = await setupDB()
+    const { attendee, host } = await createEvents()
 
     await testAPI.blockUser(userToUserRequest(host, attendee))
 
@@ -113,10 +168,13 @@ describe("exploreEvents endpoint tests", () => {
   })
 
   it("should not return events that have ended", async () => {
-    const { attendee, host, ongoingEventId, futureEventId } = await setupDB()
+    const { attendee, host, futureEventId, ongoingEventId } =
+      await createEvents()
 
-    await testAPI.endEvent({ auth: host.auth, params: { eventId: futureEventId } })
-    await testAPI.endEvent({ auth: host.auth, params: { eventId: ongoingEventId } })
+    await testAPI.endEvent({
+      auth: host.auth,
+      params: { eventId: futureEventId }
+    })
 
     const events = await testAPI.exploreEvents<200>({
       auth: attendee.auth,
@@ -125,23 +183,55 @@ describe("exploreEvents endpoint tests", () => {
         radius: 50000
       }
     })
-    expect(events.data.events).toHaveLength(0)
+    expect(events.data.events.map((e) => e.id)).toEqual([ongoingEventId])
   })
 
-  describe("tests for attendee count and attendee list queries within exploreEvents", () => {
-    it("should return the attendee count including the event host", async () => {
-      const { ongoingEventId } = await setupDB()
+  it("should return all attendees for each event", async () => {
+    const { attendee, futureEventId, host } = await createEvents()
 
-      const attendees = await getAttendeeCount(conn, [`${ongoingEventId}`])
-      expect(attendees.value[0].attendeeCount).toEqual(2)
+    const users = await Promise.all([
+      createUserFlow(),
+      createUserFlow(),
+      createUserFlow()
+    ])
+
+    await Promise.all(
+      users.map(async (u, index) => {
+        await sleep(index * 10)
+        return testAPI.joinEvent({
+          auth: u.auth,
+          params: { eventId: futureEventId }
+        })
+      })
+    )
+
+    await testAPI.sendFriendRequest({
+      auth: attendee.auth,
+      params: { userId: users[1].id }
     })
 
-    it("should return the attendee list not including the event host", async () => {
-      const { host, ongoingEventId } = await setupDB()
-
-      const attendees = await getAttendeesPreviewIds(conn, [`${ongoingEventId}`])
-      expect(attendees.value).toHaveLength(1)
-      expect(attendees.value[0].userIds).not.toEqual(host.id)
+    const resp = await testAPI.exploreEvents<200>({
+      auth: attendee.auth,
+      body: {
+        userLocation: testEventInput.coordinates,
+        radius: 50000
+      }
     })
+    const event = resp.data.events[0]
+    expect(
+      event.previewAttendees.map((a) => ({
+        id: a.id,
+        handle: a.handle,
+        name: a.name,
+        relationStatus: a.relationStatus
+      }))
+    ).toEqual([
+      { ...userDetails(host), relationStatus: "not-friends" },
+      { ...userDetails(attendee), relationStatus: "not-friends" },
+      { ...userDetails(users[0]), relationStatus: "not-friends" },
+      { ...userDetails(users[1]), relationStatus: "friend-request-sent" },
+      { ...userDetails(users[2]), relationStatus: "not-friends" }
+    ])
+    expect(event.attendeeCount).toEqual(5)
   })
 })
