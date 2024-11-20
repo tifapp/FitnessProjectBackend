@@ -19,7 +19,10 @@ describe("CreateEvent tests", () => {
       data: { id: expect.any(Number) }
     })
 
-    const { value: attendee } = await conn.queryFirstResult<{userId: string, eventId: string}>(
+    const { value: attendee } = await conn.queryFirstResult<{
+      userId: string
+      eventId: string
+    }>(
       `
       SELECT *
       FROM eventAttendance
@@ -34,9 +37,7 @@ describe("CreateEvent tests", () => {
   it("should save the address matching the given coordinates", async () => {
     const newUser = await createUserFlow()
 
-    const {
-      eventIds
-    } = await createEventFlow([
+    const { eventIds } = await createEventFlow([
       {
         title: "test event",
         coordinates: {
@@ -45,7 +46,10 @@ describe("CreateEvent tests", () => {
         }
       }
     ])
-    const resp = await testAPI.eventDetails({ auth: newUser.auth, params: { eventId: eventIds[0] } })
+    const resp = await testAPI.eventDetails({
+      auth: newUser.auth,
+      params: { eventId: eventIds[0] }
+    })
     expect(resp).toMatchObject({
       status: 200,
       data: {
@@ -68,9 +72,7 @@ describe("CreateEvent tests", () => {
   it("should not fail if a valid address for the given coordinates can't be found", async () => {
     const newUser = await createUserFlow()
 
-    const {
-      eventIds
-    } = await createEventFlow([
+    const { eventIds } = await createEventFlow([
       {
         title: "test event",
         coordinates: {
@@ -79,16 +81,31 @@ describe("CreateEvent tests", () => {
         }
       }
     ])
-    const resp = await testAPI.eventDetails({ auth: newUser.auth, params: { eventId: eventIds[0] } })
+    const resp = await testAPI.eventDetails({
+      auth: newUser.auth,
+      params: { eventId: eventIds[0] }
+    })
     expect(resp).toMatchObject({
       status: 200,
-      data: { id: expect.any(Number), location: { placemark: {}, timezoneIdentifier: "Africa/Cairo" } }
+      data: {
+        id: expect.any(Number),
+        location: { placemark: {}, timezoneIdentifier: "Africa/Cairo" }
+      }
     })
   })
 
   it("should not allow a user to create an event that's shorter than 60 seconds", async () => {
     const newUser = await createUserFlow()
-    const resp = await testAPI.createEvent({ auth: newUser.auth, body: { ...testEventInput, dateRange: dateRange(todayTestDate(), new Date(+todayTestDate() + 30000))! } })
+    const resp = await testAPI.createEvent({
+      auth: newUser.auth,
+      body: {
+        ...testEventInput,
+        dateRange: dateRange(
+          todayTestDate(),
+          new Date(+todayTestDate() + 30000)
+        )!
+      }
+    })
     expect(resp).toMatchObject({
       status: 400,
       data: { error: "invalid-request" }
@@ -97,7 +114,13 @@ describe("CreateEvent tests", () => {
 
   it("should not allow a user to create an event that ends in the past", async () => {
     const newUser = await createUserFlow()
-    const resp = await testAPI.createEvent({ auth: newUser.auth, body: { ...testEventInput, dateRange: dateRange(new Date("2000-01-01"), new Date("2000-01-02"))! } })
+    const resp = await testAPI.createEvent({
+      auth: newUser.auth,
+      body: {
+        ...testEventInput,
+        dateRange: dateRange(new Date("2000-01-01"), new Date("2000-01-02"))!
+      }
+    })
     expect(resp).toMatchObject({
       status: 400,
       data: { error: "invalid-request" }
@@ -106,18 +129,20 @@ describe("CreateEvent tests", () => {
 
   it("create event still is successful if the placemark already exists", async () => {
     const newUser = await createUserFlow()
-    addLocationToDB(conn, {
-      latitude: 43.839319,
-      longitude: 87.526148,
-      name: "Sample Location",
-      city: "Sample Neighborhood",
-      country: "Sample Country",
-      street: "Sample Street",
-      streetNumber: "1234"
-    }, "Sample/Timezone")
-    const {
-      eventIds
-    } = await createEventFlow([
+    addLocationToDB(
+      conn,
+      {
+        latitude: 43.839319,
+        longitude: 87.526148,
+        name: "Sample Location",
+        city: "Sample Neighborhood",
+        country: "Sample Country",
+        street: "Sample Street",
+        streetNumber: "1234"
+      },
+      "Sample/Timezone"
+    )
+    const { eventIds } = await createEventFlow([
       {
         title: "test event",
         coordinates: {
@@ -127,7 +152,10 @@ describe("CreateEvent tests", () => {
       }
     ])
 
-    const resp = await testAPI.eventDetails({ auth: newUser.auth, params: { eventId: eventIds[0] } })
+    const resp = await testAPI.eventDetails({
+      auth: newUser.auth,
+      params: { eventId: eventIds[0] }
+    })
 
     expect(resp).toMatchObject({
       status: 200,
@@ -137,18 +165,20 @@ describe("CreateEvent tests", () => {
 
   it("create event still is successful if the location is on a border of two timezones", async () => {
     const newUser = await createUserFlow()
-    addLocationToDB(conn, {
-      latitude: 43.839319,
-      longitude: 87.526148,
-      name: "Sample Location",
-      city: "Sample Neighborhood",
-      country: "Sample Country",
-      street: "Sample Street",
-      streetNumber: "1234"
-    }, "Asia/Shanghai")
-    const {
-      eventIds
-    } = await createEventFlow([
+    addLocationToDB(
+      conn,
+      {
+        latitude: 43.839319,
+        longitude: 87.526148,
+        name: "Sample Location",
+        city: "Sample Neighborhood",
+        country: "Sample Country",
+        street: "Sample Street",
+        streetNumber: "1234"
+      },
+      "Asia/Shanghai"
+    )
+    const { eventIds } = await createEventFlow([
       {
         title: "test event",
         // Coordinates for the timezone border of ['Asia/Shanghai', 'Asia/Urumqi']
@@ -159,7 +189,10 @@ describe("CreateEvent tests", () => {
       }
     ])
 
-    const resp = await testAPI.eventDetails({ auth: newUser.auth, params: { eventId: eventIds[0] } })
+    const resp = await testAPI.eventDetails({
+      auth: newUser.auth,
+      params: { eventId: eventIds[0] }
+    })
 
     expect(resp).toMatchObject({
       status: 200,

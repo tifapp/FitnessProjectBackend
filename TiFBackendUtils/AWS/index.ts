@@ -1,3 +1,2 @@
-export * from "./env";
-export * from "./lambdaUtils";
-
+export * from "./env"
+export * from "./lambdaUtils"

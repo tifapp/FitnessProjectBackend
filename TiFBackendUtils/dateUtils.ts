@@ -18,9 +18,7 @@ export const calcTodayOrTomorrow = (startDateTime: Date) => {
   }
 }
 
-export const isDayAfter = (
-  endedDateTime?: Date
-) => {
+export const isDayAfter = (endedDateTime?: Date) => {
   if (endedDateTime == null) {
     return false
   }

@@ -21,12 +21,20 @@ export const createEventFlow = async (
 
   const eventResponses = await Promise.all(
     eventInputs.map((details) =>
-      testAPI.createEvent({ auth: host.auth, body: { ...testEventInput, ...details } })
+      testAPI.createEvent({
+        auth: host.auth,
+        body: { ...testEventInput, ...details }
+      })
     )
   )
 
   const eventIds = eventResponses.map((event) => {
-    if (event.status === 201) { return event.data.id } else { console.error(event); throw new Error("invalid test event given") }
+    if (event.status === 201) {
+      return event.data.id
+    } else {
+      console.error(event)
+      throw new Error("invalid test event given")
+    }
   })
 
   const attendeesList: RegisteredTestUser[] = []
@@ -37,7 +45,11 @@ export const createEventFlow = async (
     attendeesList.push(attendee)
 
     for (const eventId of eventIds) {
-      await testAPI.joinEvent({ auth: attendee.auth, params: { eventId: eventId as EventID }, body: undefined })
+      await testAPI.joinEvent({
+        auth: attendee.auth,
+        params: { eventId: eventId as EventID },
+        body: undefined
+      })
     }
   }
 

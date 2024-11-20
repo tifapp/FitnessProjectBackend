@@ -1,17 +1,27 @@
 import { conn } from "TiFBackendUtils"
-import { DBeventAttendance, DBuser, DBuserArrivals } from "TiFBackendUtils/DBTypes"
+import {
+    DBeventAttendance,
+    DBuser,
+    DBuserArrivals
+} from "TiFBackendUtils/DBTypes"
 import { MySQLExecutableDriver } from "TiFBackendUtils/MySQLDriver"
-import { UserRelations, UserRelationsSchema } from "TiFBackendUtils/TiFUserUtils"
+import {
+    UserRelations,
+    UserRelationsSchema
+} from "TiFBackendUtils/TiFUserUtils"
 import { resp } from "TiFShared/api/Transport"
-import { EventAttendee, EventAttendeesPage } from "TiFShared/domain-models/Event"
+import {
+    EventAttendee,
+    EventAttendeesPage
+} from "TiFShared/domain-models/Event"
 import { UnblockedUserRelationsStatus } from "TiFShared/domain-models/User"
 import { failure, success } from "TiFShared/lib/Result"
 import { z } from "zod"
 import { TiFAPIRouterExtension } from "../router"
 import {
-  AttendeesListCursor,
-  decodeAttendeesListCursor,
-  encodeAttendeesListCursor
+    AttendeesListCursor,
+    decodeAttendeesListCursor,
+    encodeAttendeesListCursor
 } from "../utils/Cursor"
 
 const DecodedCursorValidationSchema = z.object({
@@ -25,10 +35,23 @@ const getTiFAttendeesSQL = (
   conn: MySQLExecutableDriver,
   eventId: number,
   userId: string,
-  { userId: nextPageUserId, joinedDateTime: nextPageJoinDateTime, arrivedDateTime: nextPageArrivedDateTime }: AttendeesListCursor,
+  {
+    userId: nextPageUserId,
+    joinedDateTime: nextPageJoinDateTime,
+    arrivedDateTime: nextPageArrivedDateTime
+  }: AttendeesListCursor,
   limit: number
-) => conn.queryResult<DBeventAttendance & DBuserArrivals & UserRelations & Pick<DBuser, "id" | "name" | "profileImageURL" | "handle"> & {hasArrived: boolean}>(
-  `SELECT 
+) =>
+  conn
+    .queryResult<
+      DBeventAttendance &
+        DBuserArrivals &
+        UserRelations &
+        Pick<DBuser, "id" | "name" | "profileImageURL" | "handle"> & {
+          hasArrived: boolean
+        }
+    >(
+      `SELECT 
     u.id, 
     u.profileImageURL, 
     u.name, 
@@ -63,30 +86,31 @@ const getTiFAttendeesSQL = (
     u.id ASC
     LIMIT :limit;
   `,
-  {
-    eventId,
-    userId,
-    nextPageUserId,
-    nextPageJoinDateTime,
-    nextPageArrivedDateTime,
-    limit
-  }
-).mapSuccess((attendees) =>
-  attendees.map((attendee) => ({
-    id: attendee.id,
-    name: attendee.name,
-    joinedDateTime: attendee.joinedDateTime,
-    profileImageURL: attendee.profileImageURL,
-    handle: attendee.handle,
-    arrivedDateTime: attendee.arrivedDateTime,
-    hasArrived: !!attendee.hasArrived,
-    role: attendee.role,
-    relationStatus: UserRelationsSchema.parse({
-      fromYouToThem: attendee.fromYouToThem ?? "not-friends",
-      fromThemToYou: attendee.fromThemToYou ?? "not-friends"
-    }) as UnblockedUserRelationsStatus
-  })
-  ))
+      {
+        eventId,
+        userId,
+        nextPageUserId,
+        nextPageJoinDateTime,
+        nextPageArrivedDateTime,
+        limit
+      }
+    )
+    .mapSuccess((attendees) =>
+      attendees.map((attendee) => ({
+        id: attendee.id,
+        name: attendee.name,
+        joinedDateTime: attendee.joinedDateTime,
+        profileImageURL: attendee.profileImageURL,
+        handle: attendee.handle,
+        arrivedDateTime: attendee.arrivedDateTime,
+        hasArrived: !!attendee.hasArrived,
+        role: attendee.role,
+        relationStatus: UserRelationsSchema.parse({
+          fromYouToThem: attendee.fromYouToThem ?? "not-friends",
+          fromThemToYou: attendee.fromThemToYou ?? "not-friends"
+        }) as UnblockedUserRelationsStatus
+      }))
+    )
 
 const paginatedAttendeesResponse = (
   attendees: EventAttendee[],
@@ -99,9 +123,7 @@ const paginatedAttendeesResponse = (
   paginatedAttendees = attendees.slice(0, limit)
 
   const encondedNextPageCursor = encodeAttendeesListCursor({
-    userId: hasMoreAttendees
-      ? attendees[limit - 1].id
-      : "lastPage",
+    userId: hasMoreAttendees ? attendees[limit - 1].id : "lastPage",
     joinedDateTime: hasMoreAttendees
       ? attendees[limit - 1].joinedDateTime
       : undefined,
@@ -140,10 +162,7 @@ const getAttendeesCount = (
     { eventId, userId }
   )
 
-const checkEventExists = (
-  conn: MySQLExecutableDriver,
-  eventId: number
-) =>
+const checkEventExists = (conn: MySQLExecutableDriver, eventId: number) =>
   conn.queryHasResults(
     `SELECT *
     FROM event
@@ -157,23 +176,29 @@ const checkEventExists = (
  *
  * @param environment see {@link ServerEnvironment}.
  */
-export const attendeesList = (
-  ({ query: { nextPageCursor, limit }, params: { eventId }, context: { selfId }, log }) => {
-    const cursor = DecodedCursorValidationSchema.parse(decodeAttendeesListCursor(
-      nextPageCursor
-    ))
+export const attendeesList = (({
+  query: { nextPageCursor, limit },
+  params: { eventId },
+  context: { selfId },
+  log
+}) => {
+  const cursor = DecodedCursorValidationSchema.parse(
+    decodeAttendeesListCursor(nextPageCursor)
+  )
 
-    log.debug("decoded attendees cursor is ", cursor)
+  log.debug("decoded attendees cursor is ", cursor)
 
-    return conn.transaction((tx) =>
+  return conn
+    .transaction((tx) =>
       checkEventExists(tx, eventId)
         .withFailure(resp(404, { error: "event-not-found" }))
         .flatMapSuccess(() =>
-          getAttendeesCount(tx, eventId, selfId)
-            .withFailure(resp(404, { error: "no-attendees" }))
+          getAttendeesCount(tx, eventId, selfId).withFailure(
+            resp(404, { error: "no-attendees" })
+          )
         )
         // NB: Creates typescript union so it's accepted by TiFShared API
-        .mapFailure(error => resp(error.status, error.data))
+        .mapFailure((error) => resp(error.status, error.data))
         .flatMapSuccess(({ totalAttendeeCount }) =>
           getTiFAttendeesSQL(
             tx,
@@ -193,15 +218,12 @@ export const attendeesList = (
                 : success()
             )
             .mapSuccess((attendees) =>
-              resp(200,
-                paginatedAttendeesResponse(
-                  attendees,
-                  limit,
-                  totalAttendeeCount
-                )
+              resp(
+                200,
+                paginatedAttendeesResponse(attendees, limit, totalAttendeeCount)
               )
             )
-        ))
-      .unwrap()
-  }
-) satisfies TiFAPIRouterExtension["attendeesList"]
+        )
+    )
+    .unwrap()
+}) satisfies TiFAPIRouterExtension["attendeesList"]

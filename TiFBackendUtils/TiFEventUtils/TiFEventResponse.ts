@@ -1,11 +1,27 @@
 import dayjs from "dayjs"
 import duration from "dayjs/plugin/duration"
 import { ColorString } from "TiFShared/domain-models/ColorString"
-import { dateRange, FixedDateRange } from "TiFShared/domain-models/FixedDateRange"
+import {
+    dateRange,
+    FixedDateRange
+} from "TiFShared/domain-models/FixedDateRange"
 import { Placemark } from "TiFShared/domain-models/Placemark"
-import { UnblockedUserRelationsStatus, UserHandle, UserID } from "TiFShared/domain-models/User"
-import { calcSecondsToStart, calcTodayOrTomorrow, isDayAfter } from "../dateUtils"
-import { DBevent, DBeventAttendance, DBTifEventView, DBuserRelationships } from "../DBTypes"
+import {
+    UnblockedUserRelationsStatus,
+    UserHandle,
+    UserID
+} from "TiFShared/domain-models/User"
+import {
+    calcSecondsToStart,
+    calcTodayOrTomorrow,
+    isDayAfter
+} from "../dateUtils"
+import {
+    DBevent,
+    DBeventAttendance,
+    DBTifEventView,
+    DBuserRelationships
+} from "../DBTypes"
 import { UserRelations, UserRelationsSchema } from "../TiFUserUtils"
 
 dayjs.extend(duration)
@@ -14,13 +30,23 @@ dayjs.extend(duration)
 export const SECONDS_IN_DAY = dayjs.duration(1, "day").asSeconds()
 export const ARRIVAL_RADIUS_IN_METERS = 120
 
-export type DBupcomingEvent = DBevent & {hasArrived: boolean}
-export type UserHostRelations = "not-friends" | "friend-request-pending" | "friends" | "blocked" | "current-user"
+export type DBupcomingEvent = DBevent & { hasArrived: boolean }
+export type UserHostRelations =
+  | "not-friends"
+  | "friend-request-pending"
+  | "friends"
+  | "blocked"
+  | "current-user"
 export type TodayOrTomorrow = "today" | "tomorrow"
 export type UserAttendeeStatus = DBeventAttendance["role"] | "not-participating"
-export type Attendee = { id: string, profileImageURL?: string}
-export type DBTifEvent = DBTifEventView & Omit<DBuserRelationships, "status" | "updatedDateTime"> &
-{ attendeeCount: number, previewAttendees: Attendee[], userAttendeeStatus: UserAttendeeStatus, joinedDateTime: Date } & UserRelations
+export type Attendee = { id: string; profileImageURL?: string }
+export type DBTifEvent = DBTifEventView &
+  Omit<DBuserRelationships, "status" | "updatedDateTime"> & {
+    attendeeCount: number
+    previewAttendees: Attendee[]
+    userAttendeeStatus: UserAttendeeStatus
+    joinedDateTime: Date
+  } & UserRelations
 
 export type TiFEvent = {
   id: number
@@ -36,11 +62,11 @@ export type TiFEvent = {
   previewAttendees: Attendee[]
   location: {
     coordinate: {
-      latitude: number,
+      latitude: number
       longitude: number
-    },
-    timezoneIdentifier: string,
-    placemark?: Omit<Placemark, "latitude" | "longitude">,
+    }
+    timezoneIdentifier: string
+    placemark?: Omit<Placemark, "latitude" | "longitude">
     arrivalRadiusMeters: number
     isInArrivalTrackingPeriod: boolean
   }
@@ -64,7 +90,9 @@ export type TiFEvent = {
   endedDateTime?: Date
 }
 
-export const tifEventResponseFromDatabaseEvent = (event: DBTifEvent) : TiFEvent => {
+export const tifEventResponseFromDatabaseEvent = (
+  event: DBTifEvent
+): TiFEvent => {
   return {
     id: event.id,
     title: event.title,
@@ -94,7 +122,8 @@ export const tifEventResponseFromDatabaseEvent = (event: DBTifEvent) : TiFEvent 
       },
       timezoneIdentifier: event.timezoneIdentifier ?? "",
       arrivalRadiusMeters: ARRIVAL_RADIUS_IN_METERS,
-      isInArrivalTrackingPeriod: calcSecondsToStart(event.startDateTime) < SECONDS_IN_DAY
+      isInArrivalTrackingPeriod:
+        calcSecondsToStart(event.startDateTime) < SECONDS_IN_DAY
     },
     host: {
       relationStatus: UserRelationsSchema.parse({

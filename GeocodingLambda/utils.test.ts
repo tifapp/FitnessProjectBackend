@@ -51,9 +51,9 @@ describe("AddressSearchResultToFlattenedLocation", () => {
       Municipality: "Sample City"
     } as Place
 
-    expect(AddressSearchResultToFlattenedLocation(coordinate, place).city).toEqual(
-      "Sample City"
-    )
+    expect(
+      AddressSearchResultToFlattenedLocation(coordinate, place).city
+    ).toEqual("Sample City")
   })
 
   test("Should use SubRegion when Neighborhood and Municipality are missing", () => {
@@ -62,9 +62,9 @@ describe("AddressSearchResultToFlattenedLocation", () => {
       SubRegion: "Sample SubRegion"
     } as Place
 
-    expect(AddressSearchResultToFlattenedLocation(coordinate, place).city).toEqual(
-      "Sample SubRegion"
-    )
+    expect(
+      AddressSearchResultToFlattenedLocation(coordinate, place).city
+    ).toEqual("Sample SubRegion")
   })
 
   test("Should use Region when Country is missing", () => {
@@ -73,8 +73,8 @@ describe("AddressSearchResultToFlattenedLocation", () => {
       Region: "Sample Region"
     } as Place
 
-    expect(AddressSearchResultToFlattenedLocation(coordinate, place).country).toEqual(
-      undefined
-    )
+    expect(
+      AddressSearchResultToFlattenedLocation(coordinate, place).country
+    ).toEqual(undefined)
   })
 })

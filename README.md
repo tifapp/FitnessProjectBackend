@@ -1,4 +1,4 @@
-## [View Database Schema](schema.md) ##
+## [View Database Schema](schema.md)
 
 Todo: Add aws section
 Todo: Add section for testing locally
@@ -46,14 +46,10 @@ import { MySQLExecutableDriver, conn, failure, success } from "TiFBackendUtils"
 import { ServerEnvironment } from "../env"
 import { ValidatedRouter } from "../validation"
 
-const getNewProduct = (
-  conn: MySQLExecutableDriver,
-  productId: string,
-) => {
-  return conn.queryResults(
-    `SELECT * FROM products WHERE id = :productId`,
-    { productId }
-  )
+const getNewProduct = (conn: MySQLExecutableDriver, productId: string) => {
+  return conn.queryResults(`SELECT * FROM products WHERE id = :productId`, {
+    productId
+  })
 }
 ```
 
@@ -88,7 +84,7 @@ const getNewProductTransaction = (conn: MySQLExecutableDriver, id: string) =>
       .flatMapFailure((error) => {
         return failure(error)
       })
-  );
+  )
 ```
 
 This transaction uses the getNewProduct SQL statement to retrieve data from the database, and handles any potential errors to maintain the stability of the backend API.
@@ -98,7 +94,6 @@ This transaction uses the getNewProduct SQL statement to retrieve data from the 
 Routes determine the way your API responds to the client at specific URI endpoints. Routes are composed of transactions and will consume the "success" or "error" results from transactions and convert them into proper HTTP status codes for the client.
 
 Each route is defined in a specific file within its corresponding data type folder. This allows for better code organization and maintainability.
-
 
 To add a new route, follow these steps:
 
@@ -151,7 +146,7 @@ The directory structure for your tests would be:
 ```plaintext
 APILambda
 └── <your_data_type_folder> (e.g., users, products, etc.)
-    ├── <your_data_type>.ts 
+    ├── <your_data_type>.ts
     ├── <your_data_type>.test.ts (This is where you write your tests)
     └── SQL.ts
 

@@ -7,7 +7,9 @@ import { createUserFlow } from "../test/userFlows/createUserFlow"
 describe("UnblockUser tests", () => {
   it("should error when trying to unblock yourself", async () => {
     const fromUser = await createUserFlow()
-    const resp = await testAPI.unblockUser(userToUserRequest(fromUser, fromUser))
+    const resp = await testAPI.unblockUser(
+      userToUserRequest(fromUser, fromUser)
+    )
     expect(resp).toMatchObject({
       status: 400,
       data: { error: "current-user" }
@@ -17,7 +19,9 @@ describe("UnblockUser tests", () => {
   it("should 403 when the unblocked user exists, but has no prior relation to user", async () => {
     const newUser = await createUserFlow()
     const blockedUser = await createUserFlow()
-    const resp = await testAPI.unblockUser(userToUserRequest(newUser, blockedUser))
+    const resp = await testAPI.unblockUser(
+      userToUserRequest(newUser, blockedUser)
+    )
 
     expect(resp).toMatchObject({
       status: 403,
@@ -29,7 +33,9 @@ describe("UnblockUser tests", () => {
     const newUser = await createUserFlow()
     const blockedUser = await createUserFlow()
     await testAPI.sendFriendRequest(userToUserRequest(newUser, blockedUser))
-    const resp = await testAPI.unblockUser(userToUserRequest(newUser, blockedUser))
+    const resp = await testAPI.unblockUser(
+      userToUserRequest(newUser, blockedUser)
+    )
 
     expect(resp).toMatchObject({
       status: 403,
@@ -41,7 +47,9 @@ describe("UnblockUser tests", () => {
   it("should 404 when the unblocked does not exist", async () => {
     const newUser = await createUserFlow()
     const unregistedUserId = randomUUID()
-    const resp = await testAPI.unblockUser(userToUserRequest(newUser, { id: unregistedUserId } as TestUser))
+    const resp = await testAPI.unblockUser(
+      userToUserRequest(newUser, { id: unregistedUserId } as TestUser)
+    )
 
     expect(resp).toMatchObject({
       status: 404,
@@ -53,7 +61,9 @@ describe("UnblockUser tests", () => {
     const newUser = await createUserFlow()
     const blockedUser = await createUserFlow()
     await testAPI.blockUser(userToUserRequest(newUser, blockedUser))
-    const resp = await testAPI.unblockUser(userToUserRequest(newUser, blockedUser))
+    const resp = await testAPI.unblockUser(
+      userToUserRequest(newUser, blockedUser)
+    )
     expect(resp).toEqual({ status: 204, data: {} })
   })
 
@@ -71,7 +81,9 @@ describe("UnblockUser tests", () => {
       })
     })
 
-    const resp2 = await testAPI.unblockUser(userToUserRequest(newUser, blockedUser))
+    const resp2 = await testAPI.unblockUser(
+      userToUserRequest(newUser, blockedUser)
+    )
     expect(resp2).toMatchObject({
       status: 403,
       data: { error: "user-not-blocked", userId: blockedUser.id }

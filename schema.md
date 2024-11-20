@@ -1,11 +1,11 @@
-### Banned
+### banned
 | Property | Type | Optional | DefaultValue |
 | ---------- | ---------- | ---------- | ---------- |
 | banEnd | Date | true | None |
 | banStart | Date | true | None |
 | userId | string | false | None |
 
-### Event
+### event
 | Property | Type | Optional | DefaultValue |
 | ---------- | ---------- | ---------- | ---------- |
 | color | import("./node_modules/TiFShared/domain-models/ColorString").ColorString | true | None |
@@ -23,7 +23,7 @@
 | title | string | false | None |
 | updatedDateTime | Date | false | CURRENT_TIMESTAMP(3) |
 
-### Event Attendance
+### eventattendance
 | Property | Type | Optional | DefaultValue |
 | ---------- | ---------- | ---------- | ---------- |
 | eventId | number | false | None |
@@ -31,19 +31,19 @@
 | role | 'hosting'|'attending' | false | None |
 | userId | string | false | None |
 
-### Event Attendee Count View
+### eventattendeecountview
 | Property | Type | Optional | DefaultValue |
 | ---------- | ---------- | ---------- | ---------- |
 | attendeeCount | number | false | 0 |
 | id | number | false | 0 |
 
-### Event Attendees View
+### eventattendeesview
 | Property | Type | Optional | DefaultValue |
 | ---------- | ---------- | ---------- | ---------- |
 | eventId | number | false | None |
 | userIds | string | true | None |
 
-### Event Reports
+### eventreports
 | Property | Type | Optional | DefaultValue |
 | ---------- | ---------- | ---------- | ---------- |
 | eventOwnerId | string | false | None |
@@ -52,7 +52,7 @@
 | reportingReason | 'Spam'|'Harassment'|'Hate Speech'|'Violence'|'Scam or fraud'|'Suicide or self-harm'|'False information'|'Sale of illegal or regulated goods'|'Other' | false | None |
 | userReporting | string | false | None |
 
-### Location
+### location
 | Property | Type | Optional | DefaultValue |
 | ---------- | ---------- | ---------- | ---------- |
 | city | string | true | None |
@@ -68,7 +68,7 @@
 | streetNumber | string | true | None |
 | timezoneIdentifier | string | false | None |
 
-### Push Tokens
+### pushtokens
 | Property | Type | Optional | DefaultValue |
 | ---------- | ---------- | ---------- | ---------- |
 | id | number | false | None |
@@ -76,7 +76,7 @@
 | pushToken | any | true | None |
 | userId | string | false | None |
 
-### TiF Event View
+### tifeventview
 | Property | Type | Optional | DefaultValue |
 | ---------- | ---------- | ---------- | ---------- |
 | city | string | true | None |
@@ -106,7 +106,7 @@
 | title | string | false | None |
 | updatedDateTime | Date | false | CURRENT_TIMESTAMP(3) |
 
-### User
+### user
 | Property | Type | Optional | DefaultValue |
 | ---------- | ---------- | ---------- | ---------- |
 | bio | string | true | None |
@@ -117,7 +117,7 @@
 | profileImageURL | string | true | None |
 | updatedDateTime | Date | false | CURRENT_TIMESTAMP(3) |
 
-### User Arrivals
+### userarrivals
 | Property | Type | Optional | DefaultValue |
 | ---------- | ---------- | ---------- | ---------- |
 | arrivedDateTime | Date | false | CURRENT_TIMESTAMP(3) |
@@ -125,7 +125,7 @@
 | longitude | number | false | None |
 | userId | string | false | None |
 
-### User Relations
+### userrelationships
 | Property | Type | Optional | DefaultValue |
 | ---------- | ---------- | ---------- | ---------- |
 | fromUserId | string | false | None |
@@ -133,7 +133,7 @@
 | toUserId | string | false | None |
 | updatedDateTime | Date | false | CURRENT_TIMESTAMP(3) |
 
-### User Reports
+### userreports
 | Property | Type | Optional | DefaultValue |
 | ---------- | ---------- | ---------- | ---------- |
 | reportDate | Date | false | CURRENT_TIMESTAMP(3) |
@@ -141,7 +141,7 @@
 | userReported | number | false | None |
 | userReporting | number | false | None |
 
-### User Settings
+### usersettings
 | Property | Type | Optional | DefaultValue |
 | ---------- | ---------- | ---------- | ---------- |
 | canShareArrivalStatus | boolean | false | 1 |

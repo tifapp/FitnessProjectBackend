@@ -13,7 +13,10 @@ describe("Join the event by id tests", () => {
   it("should not save arrival when the user passes an outdated location", async () => {
     const host = await createUserFlow()
     const attendee = await createUserFlow()
-    const event = await testAPI.createEvent({ auth: host.auth, body: testEventInput })
+    const event = await testAPI.createEvent({
+      auth: host.auth,
+      body: testEventInput
+    })
     const resp = await testAPI.joinEvent({
       auth: attendee.auth,
       params: { eventId: event.data.id },
@@ -50,7 +53,9 @@ describe("Join the event by id tests", () => {
   })
 
   it("should save arrival when the user joins with a location", async () => {
-    const { eventIds: [eventId] } = await createEventFlow([{}])
+    const {
+      eventIds: [eventId]
+    } = await createEventFlow([{}])
     const attendee = await createUserFlow()
     const resp = await testAPI.joinEvent({
       auth: attendee.auth,
@@ -88,9 +93,15 @@ describe("Join the event by id tests", () => {
   })
 
   it("should return 201 when the user is able to successfully join the event", async () => {
-    const { eventIds: [eventId] } = await createEventFlow([{ dateRange: upcomingEventDateRange }])
+    const {
+      eventIds: [eventId]
+    } = await createEventFlow([{ dateRange: upcomingEventDateRange }])
     const attendee = await createUserFlow()
-    const resp = await testAPI.joinEvent({ auth: attendee.auth, params: { eventId }, body: undefined })
+    const resp = await testAPI.joinEvent({
+      auth: attendee.auth,
+      params: { eventId },
+      body: undefined
+    })
     expect(resp).toMatchObject({
       status: 201,
       data: {
@@ -108,10 +119,17 @@ describe("Join the event by id tests", () => {
   })
 
   it("should return 403 when the user is blocked by the event host", async () => {
-    const { host, eventIds: [eventId] } = await createEventFlow([{}])
+    const {
+      host,
+      eventIds: [eventId]
+    } = await createEventFlow([{}])
     const attendee = await createUserFlow()
     await testAPI.blockUser(userToUserRequest(host, attendee))
-    const resp = await testAPI.joinEvent({ auth: attendee.auth, params: { eventId }, body: undefined })
+    const resp = await testAPI.joinEvent({
+      auth: attendee.auth,
+      params: { eventId },
+      body: undefined
+    })
     expect(resp).toMatchObject({
       status: 403,
       data: { error: "blocked-you" }
@@ -121,7 +139,11 @@ describe("Join the event by id tests", () => {
   it("should return 404 if the event doesn't exist", async () => {
     const attendee = await createUserFlow()
     const eventId = randomInt(1000)
-    const resp = await testAPI.joinEvent({ auth: attendee.auth, params: { eventId }, body: undefined })
+    const resp = await testAPI.joinEvent({
+      auth: attendee.auth,
+      params: { eventId },
+      body: undefined
+    })
     expect(resp).toMatchObject({
       status: 404,
       data: { error: "event-not-found" } // will need to add some middleware similar to auth middleware to assert event exists
@@ -133,7 +155,9 @@ describe("Join the event by id tests", () => {
     const attendee = await createUserFlow()
 
     // normally we can't create events in the past so we'll add this ended event to the table directly
-    const { value: { insertId: eventId } } = await conn.executeResult(
+    const {
+      value: { insertId: eventId }
+    } = await conn.executeResult(
       `
       INSERT INTO event (
         hostId,
@@ -164,7 +188,11 @@ describe("Join the event by id tests", () => {
       }
     )
 
-    const resp = await testAPI.joinEvent({ auth: attendee.auth, params: { eventId: Number(eventId) }, body: undefined })
+    const resp = await testAPI.joinEvent({
+      auth: attendee.auth,
+      params: { eventId: Number(eventId) },
+      body: undefined
+    })
 
     expect(resp).toMatchObject({
       status: 403,
@@ -173,10 +201,20 @@ describe("Join the event by id tests", () => {
   })
 
   it("should return 200 when the user tries to join an event twice", async () => {
-    const { eventIds: [eventId] } = await createEventFlow([{}])
+    const {
+      eventIds: [eventId]
+    } = await createEventFlow([{}])
     const attendee = await createUserFlow()
-    await testAPI.joinEvent({ auth: attendee.auth, params: { eventId }, body: undefined })
-    const resp = await testAPI.joinEvent({ auth: attendee.auth, params: { eventId }, body: undefined })
+    await testAPI.joinEvent({
+      auth: attendee.auth,
+      params: { eventId },
+      body: undefined
+    })
+    const resp = await testAPI.joinEvent({
+      auth: attendee.auth,
+      params: { eventId },
+      body: undefined
+    })
     expect(resp).toMatchObject({
       status: 200,
       data: { id: eventId }
@@ -198,7 +236,11 @@ describe("Join the event by id tests", () => {
     )
 
     await testAPI.endEvent({ auth: host.auth, params: { eventId } })
-    const resp = await testAPI.joinEvent({ auth: attendee.auth, params: { eventId }, body: undefined })
+    const resp = await testAPI.joinEvent({
+      auth: attendee.auth,
+      params: { eventId },
+      body: undefined
+    })
 
     expect(resp).toMatchObject({
       status: 403,

@@ -57,30 +57,39 @@ export const addBenchmarking = (app: Application) => {
   })
 }
 
-export const addTiFRouter = (app: Application, environment: ServerEnvironment) =>
-  app.use("/",
-    TiFRouter({
-      createEvent,
-      eventDetails,
-      joinEvent,
-      leaveEvent,
-      endEvent,
-      arriveAtRegion,
-      departFromRegion,
-      upcomingEventArrivalRegions,
-      attendeesList,
-      exploreEvents,
-      autocompleteUsers,
-      createCurrentUserProfile,
-      removeAccount,
-      getSelf,
-      getUser,
-      userSettings,
-      saveUserSettings,
-      updateCurrentUserProfile,
-      sendFriendRequest,
-      blockUser,
-      unblockUser,
-      registerForPushNotifications
-    }, environment)
+export const addTiFRouter = (
+  app: Application,
+  environment: ServerEnvironment
+) =>
+  app.use(
+    "/",
+    TiFRouter(
+      {
+        createEvent,
+        eventDetails,
+        joinEvent,
+        leaveEvent,
+        endEvent,
+        arriveAtRegion,
+        departFromRegion,
+        upcomingEventArrivalRegions,
+        attendeesList,
+        exploreEvents,
+        autocompleteUsers,
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore Fixed in alpha-auth
+        createCurrentUserProfile,
+        removeAccount,
+        getSelf,
+        getUser,
+        userSettings,
+        saveUserSettings,
+        updateCurrentUserProfile,
+        sendFriendRequest,
+        blockUser,
+        unblockUser,
+        registerForPushNotifications
+      },
+      environment
+    )
   )

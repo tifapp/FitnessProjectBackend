@@ -15,16 +15,26 @@ const checkValidName = (name: string) => {
   return success()
 }
 
-const userWithHandleOrIdExists = (conn: MySQLExecutableDriver, { id, handle }: Pick<DBuser, "id" | "handle">) => {
-  return (handle ? success() : failure("missing-handle" as const))
-    .flatMapSuccess(() => conn
-      .queryFirstResult<DBuser>("SELECT TRUE FROM user WHERE handle = :handle OR id = :id", {
-        handle,
-        id
-      })
+const userWithHandleOrIdExists = (
+  conn: MySQLExecutableDriver,
+  { id, handle }: Pick<DBuser, "id" | "handle">
+) => {
+  return (
+    handle ? success() : failure("missing-handle" as const)
+  ).flatMapSuccess(() =>
+    conn
+      .queryFirstResult<DBuser>(
+        "SELECT TRUE FROM user WHERE handle = :handle OR id = :id",
+        {
+          handle,
+          id
+        }
+      )
       .inverted()
-      .mapFailure(user => user.handle === handle ? "duplicate-handle" as const : "user-exists")
-    )
+      .mapFailure((user) =>
+        user.handle === handle ? ("duplicate-handle" as const) : "user-exists"
+      )
+  )
 }
 
 /**
@@ -36,10 +46,11 @@ const userWithHandleOrIdExists = (conn: MySQLExecutableDriver, { id, handle }: P
 export const insertUser = (
   conn: MySQLExecutableDriver,
   userDetails: Pick<DBuser, "id" | "handle" | "name">
-) => conn.executeResult(
-  "INSERT INTO user (id, name, handle) VALUES (:id, :name, :handle)",
-  userDetails
-)
+) =>
+  conn.executeResult(
+    "INSERT INTO user (id, name, handle) VALUES (:id, :name, :handle)",
+    userDetails
+  )
 
 /**
  * Attempts to register a new user in the database.
@@ -57,15 +68,20 @@ const createUserProfileTransaction = (
       .withSuccess(userDetails)
   )
 
-export const createCurrentUserProfile = (
-  async ({ context: { selfId, name: cognitoName }, environment: { setProfileCreatedAttribute } }) =>
-    checkValidName(cognitoName)
-      .flatMapSuccess(() =>
-        generateUniqueHandle(cognitoName)
-      )
-      .flatMapSuccess(handle => createUserProfileTransaction({ id: selfId, handle, name: cognitoName }))
-      .passthroughSuccess(() => setProfileCreatedAttribute(selfId))
-      .mapFailure(error => error === "user-exists" ? resp(400, { error }) as never : resp(401, { error }) as never)
-      .mapSuccess(({ id, handle }) => resp(201, { id, handle }))
-      .unwrap()
-) satisfies TiFAPIRouterExtension["createCurrentUserProfile"]
+export const createCurrentUserProfile = (async ({
+  context: { selfId, name: cognitoName },
+  environment: { setProfileCreatedAttribute }
+}) =>
+  checkValidName(cognitoName)
+    .flatMapSuccess(() => generateUniqueHandle(cognitoName))
+    .flatMapSuccess((handle) =>
+      createUserProfileTransaction({ id: selfId, handle, name: cognitoName })
+    )
+    .passthroughSuccess(() => setProfileCreatedAttribute(selfId))
+    .mapFailure((error) =>
+      error === "user-exists"
+        ? (resp(400, { error }) as never)
+        : (resp(401, { error }) as never)
+    )
+    .mapSuccess(({ id, handle }) => resp(201, { id, handle }))
+    .unwrap()) satisfies TiFAPIRouterExtension["createCurrentUserProfile"]
