@@ -1,14 +1,17 @@
 import dayjs from "dayjs"
-import test from "node:test"
 import { conn } from "TiFBackendUtils"
 import { dateRange } from "TiFShared/domain-models/FixedDateRange"
+import { logger } from "TiFShared/logging"
 import { addLocationToDB } from "../../GeocodingLambda/utils"
+import { devTestEnv } from "../test/devIndex"
 import { testAPI } from "../test/testApp"
 import { testEventInput } from "../test/testEvents"
 import { createEventFlow } from "../test/userFlows/createEventFlow"
 import { createUserFlow } from "../test/userFlows/createUserFlow"
+import { createEventHelper } from "./createEvent"
 
 describe("upcomingEvents tests", () => {
+  // fakeTimers()
   beforeEach(async () => {
     await addLocationToDB(
       conn,
@@ -24,6 +27,7 @@ describe("upcomingEvents tests", () => {
       "Sample/Timezone"
     )
   })
+  const log = logger("upcoming.events.tests")
   test("if no upcoming events, empty", async () => {
     const attendee = await createUserFlow()
     const resp = await testAPI.upcomingEvents<200>({
@@ -53,28 +57,14 @@ describe("upcomingEvents tests", () => {
     const eventIds = resp.data.events.map((e) => e.id)
     expect(eventIds).toEqual([earliestEventId, middleEventId, latestEventId])
   })
-//   test("if past event, removed from list", async () => {
-//     jest.useFakeTimers()
-//     const currentTime = new Date()
-//     jest.setSystemTime(new Date(0))
-//     const {
-//       attendeesList: [, attendee],
-//       // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
-//       eventIds: [pastEventId, upcomingEventId]
-//     } = await createEventFlow([
-//       {
-//         dateRange: dateRange(dayjs().subtract(23, "hour").toDate(), dayjs().subtract(1, "minute").toDate())
-//       },
-//       {
-//         dateRange: dateRange(dayjs().add(12, "hour").toDate(), dayjs().add(1, "year").toDate())
-//       }
-//     ], 1)
-//     jest.setSystemTime(currentTime)
-//     const resp = await testAPI.upcomingEvents<200>({
-//       auth: attendee.auth
-//     })
-//     const eventIds = resp.data.events.map((e) => e.id)
-//     expect(eventIds).toEqual([upcomingEventId])
-//     jest.useRealTimers()
-//   })
+  test("if past event, removed from list", async () => {
+    const sampleUser = await createUserFlow()
+    await createEventHelper(conn, { ...testEventInput, dateRange: dateRange(dayjs().subtract(30, "minute").toDate(), dayjs().subtract(15, "minute").toDate()) }, sampleUser.id, devTestEnv, log)
+    const upcomingEventId = await createEventHelper(conn, { ...testEventInput, dateRange: dateRange(dayjs().add(12, "hour").toDate(), dayjs().add(1, "year").toDate()) }, sampleUser.id, devTestEnv, log).unwrap()
+    const resp = await testAPI.upcomingEvents<200>({
+      auth: sampleUser.auth
+    })
+    const eventIds = resp.data.events.map((e) => e.id)
+    expect(eventIds).toEqual([upcomingEventId])
+  })
 })

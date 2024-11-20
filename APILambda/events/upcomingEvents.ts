@@ -29,10 +29,11 @@ export const getUpcomingEvents = (
     LEFT JOIN userRelationships UserRelationOfHostToUser ON TifEventView.hostId = UserRelationOfHostToUser.fromUserId AND UserRelationOfHostToUser.toUserId = :userId
     LEFT JOIN userRelationships UserRelationOfUserToHost ON UserRelationOfUserToHost.fromUserId = :userId AND UserRelationOfUserToHost.toUserId = TifEventView.hostId
     WHERE   
-        TifEventView.endDateTime > NOW()
+        TifEventView.endDateTime > CURRENT_TIMESTAMP(3)
         AND TifEventView.endedDateTime IS NULL
         AND (UserRelationOfHostToUser.status IS NULL OR UserRelationOfHostToUser.status <> 'blocked')
         AND (UserRelationOfUserToHost.status IS NULL OR UserRelationOfUserToHost.status <> 'blocked')
+    ORDER BY TifEventView.startDateTime
     `,
   { userId }
 )
@@ -45,7 +46,7 @@ export const upcomingEvents = (
           userId
         )
           .flatMapSuccess((events) => addAttendanceData(tx, events, userId))
-          .mapSuccess((events) => events.map(tifEventResponseFromDatabaseEvent))
+          .mapSuccess((events) => events.filter((item) => item.endDateTime.getTime() > Date.now()).map(tifEventResponseFromDatabaseEvent))
           .mapSuccess((events) => resp(200, { events }))
       )
       .unwrap()
