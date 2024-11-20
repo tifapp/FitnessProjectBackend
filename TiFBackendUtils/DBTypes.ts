@@ -26,21 +26,21 @@ export interface DBevent {
   'title': string;
   'updatedDateTime': Date;
 }
-export interface DBeventattendance {
+export interface DBeventAttendance {
   'eventId': number;
   'joinedDateTime': Date;
   'role': 'hosting'|'attending';
   'userId': string;
 }
-export interface DBeventattendeecountview {
+export interface DBEventAttendeeCountView {
   'attendeeCount': number;
   'id': number;
 }
-export interface DBeventattendeesview {
+export interface DBEventAttendeesView {
   'eventId': number;
   'userIds'?: string | undefined;
 }
-export interface DBeventreports {
+export interface DBeventReports {
   'eventOwnerId': string;
   'eventReported': number;
   'reportDate': Date;
@@ -61,13 +61,13 @@ export interface DBlocation {
   'streetNumber'?: string | undefined;
   'timezoneIdentifier': string;
 }
-export interface DBpushtokens {
+export interface DBpushTokens {
   'id': number;
   'platformName': 'apple'|'android';
   'pushToken'?: any | undefined;
   'userId': string;
 }
-export interface DBtifeventview {
+export interface DBTifEventView {
   'city'?: string | undefined;
   'color'?: import("./node_modules/TiFShared/domain-models/ColorString").ColorString | undefined;
   'country'?: string | undefined;
@@ -104,25 +104,25 @@ export interface DBuser {
   'profileImageURL'?: string | undefined;
   'updatedDateTime': Date;
 }
-export interface DBuserarrivals {
+export interface DBuserArrivals {
   'arrivedDateTime': Date;
   'latitude': number;
   'longitude': number;
   'userId': string;
 }
-export interface DBuserrelationships {
+export interface DBuserRelationships {
   'fromUserId': string;
   'status': 'friends'|'friend-request-pending'|'blocked';
   'toUserId': string;
   'updatedDateTime': Date;
 }
-export interface DBuserreports {
+export interface DBuserReports {
   'reportDate': Date;
   'reportingReason': 'Spam'|'Harassment'|'Hate Speech'|'Violence'|'Scam or fraud'|'Suicide or self-harm'|'False information'|'Sale of illegal or regulated goods'|'Other';
   'userReported': number;
   'userReporting': number;
 }
-export interface DBusersettings {
+export interface DBuserSettings {
   'canShareArrivalStatus': boolean;
   'eventCalendarDefaultLayout': 'single-day-layout'|'week-layout'|'month-layout';
   'eventCalendarStartOfWeekDay': 'sunday'|'monday'|'tuesday'|'wednesday'|'thursday'|'friday'|'saturday';

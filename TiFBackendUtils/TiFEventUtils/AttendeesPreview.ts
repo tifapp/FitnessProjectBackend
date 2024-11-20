@@ -1,8 +1,8 @@
 import { success } from "TiFShared/lib/Result"
 import {
-  DBeventAttendance,
-  DBEventAttendeeCountView,
-  DBEventAttendeesView
+    DBeventAttendance,
+    DBEventAttendeeCountView,
+    DBEventAttendeesView
 } from "../DBTypes"
 import { MySQLExecutableDriver } from "../MySQLDriver"
 import { DBTifEvent } from "./TiFEventResponse"
