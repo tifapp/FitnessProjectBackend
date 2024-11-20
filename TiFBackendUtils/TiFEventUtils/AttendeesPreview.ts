@@ -1,15 +1,15 @@
 import { success } from "TiFShared/lib/Result"
 import {
-    DBeventAttendance,
-    DBEventAttendeeCountView,
-    DBEventAttendeesView
+  DBeventAttendance,
+  DBEventAttendeeCountView,
+  DBEventAttendeesView
 } from "../DBTypes"
 import { MySQLExecutableDriver } from "../MySQLDriver"
 import { DBTifEvent } from "./TiFEventResponse"
 
 export const getAttendeeCount = (
   conn: MySQLExecutableDriver,
-  eventIds: string[]
+  eventIds: string
 ) => {
   return conn.queryResult<DBEventAttendeeCountView>(
     ` SELECT
@@ -26,7 +26,7 @@ export const getAttendeeCount = (
 export const getAttendeeDetails = (
   conn: MySQLExecutableDriver,
   userId: string,
-  eventIds: string[]
+  eventIds: string
 ) => {
   return conn.queryResult<DBeventAttendance>(
     ` SELECT
@@ -71,7 +71,7 @@ const setAttendeesPreviewForEvent = (
 
 export const getAttendeesPreviewIds = (
   conn: MySQLExecutableDriver,
-  eventIds: string[]
+  eventIds: string
 ) => {
   return conn.queryResult<DBEventAttendeesView>(
     `
@@ -95,7 +95,7 @@ export const getAttendeeData = (
   events: DBTifEvent[],
   userId: string
 ) => {
-  const eventIds = events.map((event) => event.id.toString())
+  const eventIds = `${events.map((event) => event.id.toString())}`
 
   if (!eventIds.length) {
     return success([])
