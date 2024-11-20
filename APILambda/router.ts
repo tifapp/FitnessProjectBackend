@@ -39,32 +39,32 @@ export const TiFRouter = <Fns extends TiFAPIRouterExtension>(
   environment: ServerEnvironment,
   schema: APISchema = TiFAPISchema
 ) =>
-  Object.entries(schema).reduce((router, [endpointName, endpointSchema]) => {
-    const {
-      httpRequest: { method, endpoint }
-    } = endpointSchema as GenericEndpointSchema
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const handler: APIHandler<RouterParams> = middlewareRunner(
-      catchAPIErrors,
-      validateAPIRouterCall,
+    Object.entries(schema).reduce((router, [endpointName, endpointSchema]) => {
+      const {
+        httpRequest: { method, endpoint }
+      } = endpointSchema as GenericEndpointSchema
+      const handler: APIHandler<RouterParams> = middlewareRunner(
+        catchAPIErrors,
+        validateAPIRouterCall,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
       apiClient[endpointName as keyof TiFAPIRouterExtension] as any
-    )
-    router[method.toLowerCase() as Lowercase<typeof method>](
-      endpoint,
-      async ({ body, query, params }, res) => {
-        const { status, data } = await handler({
-          body: emptyToUndefined(body),
-          query: emptyToUndefined(query),
-          params: emptyToUndefined(params),
-          endpointName,
-          endpointSchema,
-          environment,
-          context: res.locals as ResponseContext,
-          log: logger(`tif.backend.${endpointName}`)
-        })
-        res.status(status).json(data)
-      }
-    )
+      )
+      router[method.toLowerCase() as Lowercase<typeof method>](
+        endpoint,
+        async ({ body, query, params }, res) => {
+          const { status, data } = await handler({
+            body: emptyToUndefined(body),
+            query: emptyToUndefined(query),
+            params: emptyToUndefined(params),
+            endpointName,
+            endpointSchema,
+            environment,
+            context: res.locals as ResponseContext,
+            log: logger(`tif.backend.${endpointName}`)
+          })
+          res.status(status).json(data)
+        }
+      )
 
-    return router
-  }, express.Router())
+      return router
+    }, express.Router())

@@ -46,10 +46,10 @@ const sendFriendRequestHandler = (({
     )
     .unwrap()) satisfies TiFAPIRouterExtension["sendFriendRequest"]
 
-// NB: Middleware type inference issue
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const sendFriendRequest = chainMiddleware(
   isCurrentUser,
+  // NB: Middleware type inference issue
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   sendFriendRequestHandler as any
 ) as unknown as typeof sendFriendRequestHandler
 

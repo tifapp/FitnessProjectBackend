@@ -36,10 +36,10 @@ const unblockUserHandler = (({
     })
     .unwrap()) satisfies TiFAPIRouterExtension["unblockUser"]
 
-// NB: Middleware type inference issue
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const unblockUser = chainMiddleware(
   isCurrentUser,
+  // NB: Middleware type inference issue
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   unblockUserHandler as any
 ) as unknown as typeof unblockUserHandler
 

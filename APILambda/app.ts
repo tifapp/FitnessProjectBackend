@@ -76,7 +76,8 @@ export const addTiFRouter = (
         attendeesList,
         exploreEvents,
         autocompleteUsers,
-        // @ts-expect-error Fixed in alpha-auth
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore Fixed in alpha-auth
         createCurrentUserProfile,
         removeAccount,
         getSelf,

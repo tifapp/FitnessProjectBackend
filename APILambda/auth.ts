@@ -34,13 +34,16 @@ export type AuthClaims = z.infer<typeof AuthClaimsSchema>
 const TransformedAuthClaimsSchema = AuthClaimsSchema.transform((res) => ({
   selfId: res.sub,
   name: res.name,
-  // @ts-expect-error email may be missing from claims
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore email may be missing from claims
   email: res.email ?? undefined,
-  // @ts-expect-error phone number may be missing from claims
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore phone number may be missing from claims
   phoneNumber: res.phone_number ?? undefined, // try json parse
   // cognito claims encode them as strings
-  // @ts-expect-error email or phone number may be missing from claims
   isContactInfoVerified:
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore email or phone number may be missing from claims
     res.email_verified === true || res.phone_number_verified === true,
   doesProfileExist: res["custom:profile_created"] === "true"
 }))
