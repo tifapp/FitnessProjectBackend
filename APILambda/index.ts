@@ -8,13 +8,11 @@ import { addBenchmarking, addTiFRouter, createApp } from "./app"
 import { ServerEnvironment } from "./env"
 import { addErrorReporting } from "./errorReporting"
 import { addEventToRequest } from "./serverlessMiddleware"
-import { setProfileCreatedAttribute } from "./user/createUser/setCognitoAttribute"
 
 const env: ServerEnvironment = {
   environment: envVars.ENVIRONMENT,
   eventStartWindowInHours: 1,
   maxArrivals: 100,
-  setProfileCreatedAttribute,
   callGeocodingLambda: (location: LocationCoordinate2D) =>
     invokeAWSLambda(`geocodingPipeline:${envVars.ENVIRONMENT}`, location)
 }
