@@ -22,6 +22,8 @@
     "jsonwebtoken": "^9.0.2",
     "linkify-it": "^5.0.0",
     "TiFBackendUtils": "file:../TiFBackendUtils",
+    "TiFShared": "github:tifapp/TiFShared#main",
+    "uuid": "^11.0.2",
     "zod": "^3.22.4"
   },
   "devDependencies": {
