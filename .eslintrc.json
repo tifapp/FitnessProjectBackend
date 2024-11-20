@@ -40,6 +40,10 @@
             "name": "express",
             "importNames": ["Router"],
             "message": "Use 'ValidatedRouter' instead."
+          },
+          {
+            "name": "node:test",
+            "message": "DELETE THIS NOW. Please use Jest for tests."
           }
         ]
       }
