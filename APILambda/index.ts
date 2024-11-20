@@ -5,38 +5,36 @@ import awsServerlessExpress from "@vendia/serverless-express"
 import { invokeAWSLambda } from "TiFBackendUtils/AWS"
 import { envVars } from "TiFBackendUtils/env"
 import { LocationCoordinate2D } from "TiFShared/domain-models/LocationCoordinate2D"
+import { addLogHandler, consoleLogHandler } from "TiFShared/logging"
 import { addBenchmarking, addTiFRouter, createApp } from "./app"
 import { ServerEnvironment } from "./env"
-import { addLogHandler, consoleLogHandler } from "TiFShared/logging"
 import { addErrorReporting } from "./errorReporting"
 import { addEventToRequest } from "./serverlessMiddleware"
-import { handler } from "../GeocodingLambda"
 
-const env: ServerEnvironment = {
-  environment: envVars.ENVIRONMENT,
-  eventStartWindowInHours: 1,
-  maxArrivals: 100,
-  callGeocodingLambda: async (location: LocationCoordinate2D) => {
-    if (envVars.ENVIRONMENT === "devTest") {
-      await handler(location)
-    } else {
+const env = envVars.ENVIRONMENT === "devTest"
+  ? require("./test/devIndex")
+  : {
+    environment: envVars.ENVIRONMENT,
+    eventStartWindowInHours: 1,
+    maxArrivals: 100,
+    callGeocodingLambda: async (location: LocationCoordinate2D) => {
       await invokeAWSLambda(
         `geocodingPipeline:${envVars.ENVIRONMENT}`,
         location
       )
     }
-  }
-}
+  } as ServerEnvironment
 
 addLogHandler(consoleLogHandler())
 
-const app = createApp()
-if (envVars.ENVIRONMENT !== "devTest") {
-  addEventToRequest(app)
+export const app = createApp()
+
+const middlewareMap = {
+  devTest: [addBenchmarking, addTiFRouter],
+  live: [addEventToRequest, addBenchmarking, addTiFRouter, addErrorReporting]
 }
-addBenchmarking(app)
-addTiFRouter(app, env)
-addErrorReporting(app)
+
+middlewareMap[envVars.ENVIRONMENT === "devTest" ? "devTest" : "live"].forEach(handler => handler(app, env))
 
 if (envVars.ENVIRONMENT === "devTest") {
   console.log(

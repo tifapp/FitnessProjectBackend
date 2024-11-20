@@ -3,11 +3,11 @@ import { TiFAPIClientCreator } from "TiFBackendUtils"
 import { envVars } from "TiFBackendUtils/env"
 import { urlString } from "TiFShared/lib/URL"
 import { catchAPIErrors } from "../errorHandler"
-import { devApp } from "./devIndex"
+import { app as index } from "../index"
 import { testEnvVars } from "./testEnv"
 
 const app =
-  envVars.environment === "stagingTest" ? testEnvVars.API_ENDPOINT : devApp
+  envVars.environment === "stagingTest" ? testEnvVars.API_ENDPOINT : index
 
 type TestAppExtension = { auth: string } | { auth?: undefined; unauthenticated: true }
 
