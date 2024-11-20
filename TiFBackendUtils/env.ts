@@ -41,7 +41,7 @@ const EnvSchema = z
       .string()
       .optional()
       .default(localPrivateIPV4Address() ?? "127.0.0.1"),
-    DEV_TEST_PORT: z.number().optional().default(8080)
+    DEV_TEST_PORT: z.number().optional().default(5000)
   })
   .passthrough()
 

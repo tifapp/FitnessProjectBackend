@@ -4,11 +4,12 @@ import "TiFShared/lib/Zod"
 
 import { LocationCoordinate2D } from "TiFShared/domain-models/LocationCoordinate2D"
 import { handler } from "../../GeocodingLambda/index"
+import { ServerEnvironment } from "../env"
 
-export default {
+module.exports = {
   environment: "devTest",
   maxArrivals: 4,
   eventStartWindowInHours: 1,
   callGeocodingLambda: async (location: LocationCoordinate2D) =>
     handler(location)
-}
+} as ServerEnvironment

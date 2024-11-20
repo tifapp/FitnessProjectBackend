@@ -2,6 +2,7 @@ import { conn } from "TiFBackendUtils"
 import { resetDB } from "TiFBackendUtils/MySQLDriver/test/dbHelpers"
 import { addLogHandler, consoleLogHandler } from "TiFShared/logging"
 import { testUserCounter } from "../userFlows/createUserFlow"
+import { closeServer } from "../.."
 
 global.beforeAll(() => addLogHandler(consoleLogHandler()))
 
@@ -14,5 +15,7 @@ global.beforeEach(async () => {
 })
 
 global.beforeAll(resetDB)
+
+global.afterEach(closeServer)
 
 global.afterAll(() => conn.closeConnection())

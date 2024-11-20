@@ -2,8 +2,8 @@ import request from "supertest"
 import { TiFAPIClientCreator } from "TiFBackendUtils"
 import { envVars } from "TiFBackendUtils/env"
 import { urlString } from "TiFShared/lib/URL"
+import { app as index } from "../app"
 import { catchAPIErrors } from "../errorHandler"
-import { app as index } from "../index"
 import { testEnvVars } from "./testEnv"
 
 const app =
