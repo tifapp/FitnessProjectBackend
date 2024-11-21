@@ -24,7 +24,7 @@ export const app = createApp()
 
 const middlewareMap = {
   devTest: [addTiFRouter],
-  live: [addEventToRequest, addBenchmarking, addTiFRouter, addErrorReporting]
+  live: [addEventToRequest, addBenchmarking, addTiFRouter]
 }
 
 middlewareMap[envVars.ENVIRONMENT === "devTest" ? "devTest" : "live"].forEach(handler => handler(app, env))
