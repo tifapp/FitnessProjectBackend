@@ -6,7 +6,7 @@ import { failure, success } from "TiFShared/lib/Result"
 import { authenticatedEndpoint } from "../../auth"
 import { upcomingEventArrivalRegionsSQL } from "./getUpcomingEvents"
 import { UserID } from "TiFShared/domain-models/User"
-import { EventArrivalRegion, EventRegion } from "TiFShared/domain-models/Event"
+import { EventRegion } from "TiFShared/domain-models/Event"
 
 const deleteOldArrivals = (
   conn: MySQLExecutableDriver,

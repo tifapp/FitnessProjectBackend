@@ -1,27 +1,27 @@
 import { conn } from "TiFBackendUtils"
 import {
-  DBeventAttendance,
-  DBuser,
-  DBuserArrivals
+    DBeventAttendance,
+    DBuser,
+    DBuserArrivals
 } from "TiFBackendUtils/DBTypes"
 import { MySQLExecutableDriver } from "TiFBackendUtils/MySQLDriver"
 import {
-  UserRelations,
-  UserRelationsSchema
+    UserRelations,
+    UserRelationsSchema
 } from "TiFBackendUtils/TiFUserUtils"
 import { resp } from "TiFShared/api/Transport"
 import {
-  EventAttendee,
-  EventAttendeesPage
+    EventAttendee,
+    EventAttendeesPage
 } from "TiFShared/domain-models/Event"
 import { UnblockedUserRelationsStatus } from "TiFShared/domain-models/User"
 import { failure, success } from "TiFShared/lib/Result"
 import { z } from "zod"
 import { authenticatedEndpoint } from "../auth"
 import {
-  AttendeesListCursor,
-  decodeAttendeesListCursor,
-  encodeAttendeesListCursor
+    AttendeesListCursor,
+    decodeAttendeesListCursor,
+    encodeAttendeesListCursor
 } from "../utils/Cursor"
 
 const DecodedCursorValidationSchema = z.object({

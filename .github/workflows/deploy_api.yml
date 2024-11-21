@@ -90,6 +90,7 @@ jobs:
               AWS_ACCOUNT_ID=${{ secrets.AWS_ACCOUNT_ID }},\
               ABLY_KEY=${{ secrets.ABLY_KEY }},\
               SLACK_APP_ID=${{ secrets.SLACK_APP_ID }},\
+              JWT_SECRET=${{ secrets.JWT_SECRET }},\
               COGNITO_USER_POOL_ID=${{ secrets.COGNITO_USER_POOL_ID }}\
             }"
 
