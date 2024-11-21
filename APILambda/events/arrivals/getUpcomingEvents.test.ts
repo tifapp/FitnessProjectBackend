@@ -65,11 +65,12 @@ describe("getUpcomingEvents tests", () => {
       }
     })
 
-    await testAPI.arriveAtRegion({
+    await testAPI.updateArrivalStatus({
       auth: attendeesList[1].auth,
       body: {
         coordinate: eventLocation,
-        arrivalRadiusMeters: 500
+        arrivalRadiusMeters: 500,
+        status: "arrived"
       }
     })
 

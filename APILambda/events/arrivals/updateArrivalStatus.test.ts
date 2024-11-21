@@ -21,11 +21,12 @@ describe("SetHasArrived tests", () => {
     )
 
     expect(
-      await testAPI.arriveAtRegion({
+      await testAPI.updateArrivalStatus({
         auth: attendee.auth,
         body: {
           coordinate: eventLocation,
-          arrivalRadiusMeters: 500
+          arrivalRadiusMeters: 500,
+          status: "arrived"
         }
       })
     ).toMatchObject({
@@ -40,11 +41,12 @@ describe("SetHasArrived tests", () => {
     })
 
     expect(
-      await testAPI.departFromRegion({
+      await testAPI.updateArrivalStatus({
         auth: attendee.auth,
         body: {
           coordinate: eventLocation,
-          arrivalRadiusMeters: 500
+          arrivalRadiusMeters: 500,
+          status: "departed"
         }
       })
     ).toMatchObject({
@@ -73,11 +75,12 @@ describe("SetHasArrived tests", () => {
       1
     )
 
-    await testAPI.arriveAtRegion({
+    await testAPI.updateArrivalStatus({
       auth: attendee.auth,
       body: {
         coordinate: eventLocation,
-        arrivalRadiusMeters: 500
+        arrivalRadiusMeters: 500,
+        status: "arrived"
       }
     })
 
@@ -93,11 +96,12 @@ describe("SetHasArrived tests", () => {
       }
     })
 
-    await testAPI.departFromRegion({
+    await testAPI.updateArrivalStatus({
       auth: attendee.auth,
       body: {
         coordinate: eventLocation,
-        arrivalRadiusMeters: 500
+        arrivalRadiusMeters: 500,
+        status: "departed"
       }
     })
 

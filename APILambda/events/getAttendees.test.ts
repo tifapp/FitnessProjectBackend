@@ -221,7 +221,6 @@ describe("getAttendeesList endpoint", () => {
       params: { eventId },
       query: { limit, nextPageCursor: middlePageCursorResp ?? undefined }
     })
-
     ;(resp.data.nextPageCursor as unknown) = decodeAttendeesListCursor(
       resp.data.nextPageCursor ?? undefined
     )
@@ -257,7 +256,6 @@ describe("getAttendeesList endpoint", () => {
       params: { eventId },
       query: { limit, nextPageCursor: nextPageCursorResp ?? undefined }
     })
-
     ;(resp.data.nextPageCursor as unknown) = decodeAttendeesListCursor(
       resp.data.nextPageCursor ?? undefined
     )
@@ -297,7 +295,6 @@ describe("getAttendeesList endpoint", () => {
       params: { eventId },
       query: { limit, nextPageCursor: nextPageCursorResp ?? undefined }
     })
-
     ;(resp.data.nextPageCursor as unknown) = decodeAttendeesListCursor(
       resp.data.nextPageCursor ?? undefined
     )
@@ -317,9 +314,13 @@ describe("getAttendeesList endpoint", () => {
 
     const [, attendee] = attendeesList
 
-    await testAPI.arriveAtRegion({
+    await testAPI.updateArrivalStatus({
       auth: attendee.auth,
-      body: { coordinate: eventLocation, arrivalRadiusMeters: 500 }
+      body: {
+        coordinate: eventLocation,
+        arrivalRadiusMeters: 500,
+        status: "arrived"
+      }
     })
 
     let resp = await testAPI.attendeesList<200>({
@@ -360,7 +361,6 @@ describe("getAttendeesList endpoint", () => {
       params: { eventId },
       query: { limit, nextPageCursor: nextPageCursorResp ?? undefined }
     })
-
     ;(resp.data.nextPageCursor as unknown) = decodeAttendeesListCursor(
       resp.data.nextPageCursor ?? undefined
     )
