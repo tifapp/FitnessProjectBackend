@@ -6,6 +6,7 @@ import { ServerEnvironment } from "./env"
 import { addEventToRequest } from "./serverlessMiddleware"
 
 const env = envVars.ENVIRONMENT === "devTest"
+  // test imports must be dynamic because they aren't built into the deployed server
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   ? require("./test/devIndex")
   : {
@@ -23,6 +24,7 @@ const env = envVars.ENVIRONMENT === "devTest"
 export const app = createApp()
 
 const middlewareMap = {
+  // test imports must be dynamic because they aren't built into the deployed server
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   devTest: [addTiFRouter, require("./test/localhostListener").localhostListener],
   live: [addEventToRequest, addBenchmarking, addTiFRouter]
