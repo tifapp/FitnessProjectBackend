@@ -3,10 +3,10 @@ import { envVars } from "TiFBackendUtils/env"
 import { LocationCoordinate2D } from "TiFShared/domain-models/LocationCoordinate2D"
 import { addBenchmarking, addTiFRouter, createApp } from "./appMiddleware"
 import { ServerEnvironment } from "./env"
-import { addErrorReporting } from "./errorReporting"
 import { addEventToRequest } from "./serverlessMiddleware"
 
 const env = envVars.ENVIRONMENT === "devTest"
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   ? require("./test/devIndex")
   : {
     environment: envVars.ENVIRONMENT,
