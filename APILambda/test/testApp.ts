@@ -1,7 +1,7 @@
-import request from "supertest"
 import { TiFAPIClientCreator } from "TiFBackendUtils"
 import { envVars } from "TiFBackendUtils/env"
 import { urlString } from "TiFShared/lib/URL"
+import request from "supertest"
 import { catchAPIErrors } from "../errorHandler"
 import { devApp } from "./devIndex"
 import { testEnvVars } from "./testEnv"
@@ -13,10 +13,11 @@ type TestAppExtension = {auth: string}
 const testClient = TiFAPIClientCreator<TestAppExtension>(
   catchAPIErrors,
   async ({ auth, params, query, body, endpointSchema: { httpRequest: { method, endpoint } } }) => {
+    console.log("Data sent ", body)
     let req = request(app)[method.toLowerCase()](urlString({ endpoint, params })).query(query)
 
     req = req.set("authorization", auth)
-
+    
     const { status, body: data } = await req.send(body)
 
     return { status, data }

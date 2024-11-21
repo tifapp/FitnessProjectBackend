@@ -4,6 +4,7 @@ import { upcomingEventArrivalRegions } from "./events/arrivals/getUpcomingEvents
 import { arriveAtRegion } from "./events/arrivals/setArrivalStatus"
 import { departFromRegion } from "./events/arrivals/setDeparture"
 import { createEvent } from "./events/createEvent"
+import { editEvent } from "./events/editEvent"
 import { endEvent } from "./events/endEvent"
 import { attendeesList } from "./events/getAttendees"
 import { eventDetails } from "./events/getEventDetails"
@@ -65,6 +66,7 @@ export const addTiFRouter = (app: Application, environment: ServerEnvironment) =
       joinEvent,
       leaveEvent,
       endEvent,
+      editEvent,
       arriveAtRegion,
       departFromRegion,
       upcomingEventArrivalRegions,

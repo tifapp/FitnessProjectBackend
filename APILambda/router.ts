@@ -1,9 +1,9 @@
-import express from "express"
 import { TiFAPIClient, TiFAPISchema, validateAPIRouterCall } from "TiFBackendUtils"
 import { APIHandler, APISchema, GenericEndpointSchema } from "TiFShared/api/TransportTypes"
 import { middlewareRunner } from "TiFShared/lib/Middleware"
 import { MatchFnCollection } from "TiFShared/lib/Types/MatchType"
-import { logger, Logger } from "TiFShared/logging"
+import { Logger, logger } from "TiFShared/logging"
+import express from "express"
 import { ResponseContext } from "./auth"
 import { ServerEnvironment } from "./env"
 import { catchAPIErrors } from "./errorHandler"
@@ -29,6 +29,7 @@ export const TiFRouter = <Fns extends TiFAPIRouterExtension>(apiClient: MatchFnC
       const handler: APIHandler<RouterParams> = middlewareRunner(catchAPIErrors, validateAPIRouterCall, apiClient[endpointName as keyof TiFAPIRouterExtension] as any)
       router[method.toLowerCase() as Lowercase<typeof method>](endpoint,
         async ({ body, query, params }, res) => {
+          console.log("Body: ", body)
           const { status, data } = await handler({
             body: emptyToUndefined(body),
             query: emptyToUndefined(query),
