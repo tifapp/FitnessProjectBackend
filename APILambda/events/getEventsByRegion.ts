@@ -38,7 +38,12 @@ export const exploreEvents = authenticatedEndpoint<"exploreEvents">(
           radius
         })
           .flatMapSuccess((events) => addAttendanceData(tx, events, userId))
-          .mapSuccess((events) => events.map(tifEventResponseFromDatabaseEvent))
+          .mapSuccess((events) => {
+            // TODO: Why doesn't filtering endDateTime work in SQL?
+            return events
+              .filter((e) => e.endDateTime.getTime() > Date.now())
+              .map(tifEventResponseFromDatabaseEvent)
+          })
           .mapSuccess((events) => resp(200, { events }))
       )
       .unwrap()

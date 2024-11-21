@@ -8,6 +8,9 @@ import { testEventInput } from "../test/testEvents"
 import { createEventFlow } from "../test/userFlows/createEventFlow"
 import { createUserFlow, userDetails } from "../test/userFlows/createUserFlow"
 import { sleep } from "TiFShared/lib/DelayData"
+import { createEventTransaction } from "./createEvent"
+import { devTestEnv } from "../test/devIndex"
+import { logger } from "TiFShared/logging"
 
 const createEvents = async () => {
   await addLocationToDB(
@@ -53,6 +56,8 @@ const createEvents = async () => {
     futureEventId
   }
 }
+
+const log = logger("explore.events.tests")
 
 describe("exploreEvents endpoint tests", () => {
   it("should return 200 with the event, user relation, attendee count data in order of start time", async () => {
@@ -184,6 +189,31 @@ describe("exploreEvents endpoint tests", () => {
       }
     })
     expect(events.data.events.map((e) => e.id)).toEqual([ongoingEventId])
+  })
+
+  it("should not return past events that have ended naturally", async () => {
+    const user = await createUserFlow()
+    await createEventTransaction(
+      conn,
+      {
+        ...testEventInput,
+        dateRange: dateRange(
+          dayjs().subtract(30, "minute").toDate(),
+          dayjs().subtract(15, "minute").toDate()
+        )
+      },
+      user.id,
+      devTestEnv,
+      log
+    )
+    const events = await testAPI.exploreEvents<200>({
+      auth: user.auth,
+      body: {
+        userLocation: testEventInput.coordinates,
+        radius: 50000
+      }
+    })
+    expect(events.data.events.map((e) => e.id)).toEqual([])
   })
 
   it("should return all attendees for each event", async () => {
