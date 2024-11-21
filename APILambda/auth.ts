@@ -1,9 +1,9 @@
+import jwt from "jsonwebtoken"
+import { envVars } from "TiFBackendUtils/env"
 import { APIMiddleware, resp } from "TiFShared/api"
 import { UserIDSchema } from "TiFShared/domain-models/User"
-import { endpoint, RouterParams, TiFAPIRouterExtension } from "./router"
-import jwt from "jsonwebtoken"
 import { z } from "zod"
-import { envVars } from "TiFBackendUtils/env"
+import { endpoint, RouterParams, TiFAPIRouterExtension } from "./router"
 
 /**
  * Creates an endpoint that requires authentication.

@@ -2,14 +2,16 @@ import request from "supertest"
 import { TiFAPIClientCreator } from "TiFBackendUtils"
 import { envVars } from "TiFBackendUtils/env"
 import { urlString } from "TiFShared/lib/URL"
+import { app as index } from "../app"
 import { catchAPIErrors } from "../errorHandler"
-import { devApp } from "./devIndex"
 import { testEnvVars } from "./testEnv"
 
 const app =
-  envVars.environment === "stagingTest" ? testEnvVars.API_ENDPOINT : devApp
+  envVars.environment === "stagingTest" ? testEnvVars.API_ENDPOINT : index
 
-type TestAppExtension = { auth: string } | { auth?: undefined; noAuth: true }
+type TestAppExtension =
+  | { auth: string }
+  | { auth?: undefined; unauthenticated: true }
 
 const testClient = TiFAPIClientCreator<TestAppExtension>(
   catchAPIErrors,

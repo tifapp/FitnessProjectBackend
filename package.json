@@ -3,7 +3,8 @@
     "pr": "ts-node ./TiFBackendUtils/node_modules/TiFShared/npm-scripts/auto-pr",
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,md}\"",
     "prepare": "husky",
-    "postinstall": "patch-package && node postinstall.mjs",
+    "postinstall": "patch-package && node postinstall.mjs && node compareTiFSharedVersion.mjs",
+    "test": "node compareTiFSharedVersion.mjs && node test.mjs",
     "dbtots": "npm run resetDB && npx ts-node scripts/dbToTs --run",
     "resetDB": "npx ts-node scripts/resetDB --run"
   },
