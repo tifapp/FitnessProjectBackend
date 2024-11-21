@@ -23,7 +23,8 @@ const env = envVars.ENVIRONMENT === "devTest"
 export const app = createApp()
 
 const middlewareMap = {
-  devTest: [addTiFRouter],
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  devTest: [addTiFRouter, require("./test/localhostListener").localhostListener],
   live: [addEventToRequest, addBenchmarking, addTiFRouter]
 }
 
