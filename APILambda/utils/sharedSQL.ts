@@ -18,11 +18,10 @@ export const isUserBlocked = (
   fromUserId: string,
   toUserId: string
 ) =>
-  conn
-    .queryHasResults(
-      "SELECT TRUE FROM userRelationships WHERE fromUserId = :fromUserId AND toUserId = :toUserId AND (status IS NOT NULL AND status = 'blocked');",
-      { fromUserId, toUserId }
-    )
+  conn.queryHasResults(
+    "SELECT TRUE FROM userRelationships WHERE fromUserId = :fromUserId AND toUserId = :toUserId AND (status IS NOT NULL AND status = 'blocked');",
+    { fromUserId, toUserId }
+  )
 
 export const addUserToEventAttendance = (userId: string, eventId: number) =>
   conn.queryResult(

@@ -1,11 +1,18 @@
+import { DatabaseValueConvertible } from "TiFShared/lib/Database"
 
-export type SQLParams = undefined | Record<string, unknown> | (number | string)[]
+type DatabaseValue = undefined | Date | boolean | number | string | DatabaseValueConvertible
 
-const paramify = (value: unknown) =>
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore .toJSON() here causes a build issue for some reason
-  // NB: instanceof checks don't work for UserHandle/ColorString, possibly due to peer dependencies
-  value == null ? null : value.constructor.name === "UserHandle" || value.constructor.name === "ColorString" ? value.toJSON() : value
+export type SQLParams =
+  | undefined
+  | Record<string, DatabaseValue>
+  | (number | string)[]
+
+const paramify = (value: DatabaseValue) =>
+  value == null
+    ? null
+    : typeof value === "object" && "toDatabaseValue" in value
+      ? value.toDatabaseValue()
+      : value
 
 export const paramifyArgs = (args: SQLParams) =>
   args == null

@@ -1,11 +1,11 @@
 import { conn } from "TiFBackendUtils"
 import { resp } from "TiFShared/api/Transport"
-import { TiFAPIRouterExtension } from "../../router"
+import { authenticatedEndpoint } from "../../auth"
 import { queryUserSettings } from "./userSettingsQuery"
 
-export const userSettings = (
+export const userSettings = authenticatedEndpoint<"userSettings">(
   ({ context: { selfId } }) =>
     queryUserSettings(conn, selfId)
-      .mapSuccess(settings => resp(200, settings))
+      .mapSuccess((settings) => resp(200, settings))
       .unwrap()
-) satisfies TiFAPIRouterExtension["userSettings"]
+)

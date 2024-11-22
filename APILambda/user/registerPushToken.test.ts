@@ -69,7 +69,10 @@ describe("registerForPushNotifications tests", () => {
     })
     const resp = await testAPI.registerForPushNotifications({
       auth: newUser.auth,
-      body: { pushToken: pushTokenBody.pushToken, platformName: "apple" as const }
+      body: {
+        pushToken: pushTokenBody.pushToken,
+        platformName: "apple" as const
+      }
     })
     expect(resp).toMatchObject(TEST_SUCCESS_RESPONSE)
   })
@@ -89,8 +92,11 @@ describe("registerForPushNotifications tests", () => {
     expect(resp).toMatchObject(TEST_SUCCESS_RESPONSE)
   })
 
-  const generatePushToken = (body?: {pushToken?: string, platformName?: DevicePlatform}) => ({
+  const generatePushToken = (body?: {
+    pushToken?: string
+    platformName?: DevicePlatform
+  }) => ({
     pushToken: body?.pushToken ?? randomUUID(),
-    platformName: body?.platformName ?? "android" as const
+    platformName: body?.platformName ?? ("android" as const)
   })
 })

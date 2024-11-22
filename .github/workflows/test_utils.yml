@@ -40,6 +40,7 @@ jobs:
       ABLY_KEY: ${{ secrets.ABLY_KEY }}
       COGNITO_USER_POOL_ID: ${{ secrets.COGNITO_USER_POOL_ID }}
       AWS_LAMBDA_FUNCTION_NAME: lambdaSQLRoute
+      JWT_SECRET: ${{ secrets.JWT_SECRET }}
 
     steps:
       - name: Checkout code

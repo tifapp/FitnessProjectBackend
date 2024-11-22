@@ -10,21 +10,25 @@ const options = {
   typesOutput: "../TiFBackendUtils/DBTypes.ts",
   optionalValueUndefined: true,
   assignColumnType: {
-    hostHandle: "import(\"./node_modules/TiFShared/domain-models/User\").UserHandle",
-    handle: "import(\"./node_modules/TiFShared/domain-models/User\").UserHandle",
-    color: "import(\"./node_modules/TiFShared/domain-models/ColorString\").ColorString",
+    hostHandle:
+      'import("./node_modules/TiFShared/domain-models/User").UserHandle',
+    handle: 'import("./node_modules/TiFShared/domain-models/User").UserHandle',
+    color:
+      'import("./node_modules/TiFShared/domain-models/ColorString").ColorString',
     hasArrived: "boolean",
-    pushNotificationTriggerIds: "import(\"./node_modules/TiFShared/domain-models/Settings\").UserSettings[\"pushNotificationTriggerIds\"]",
+    pushNotificationTriggerIds:
+      'import("./node_modules/TiFShared/domain-models/Settings").UserSettings["pushNotificationTriggerIds"]',
     eventPresetDurations: "number[]",
-    eventPresetLocation: "import(\"./node_modules/TiFShared/domain-models/Event\").EventEditLocation"
+    eventPresetLocation:
+      'import("./node_modules/TiFShared/domain-models/Event").EventEditLocation'
   },
   typeMap: {
     boolean: ["tinyint"],
     number: ["bigint"]
   },
   typeOverrides: {
-    "user.id": "import(\"./node_modules/TiFShared/domain-models/User\").UserID",
-    "event.id": "import(\"./node_modules/TiFShared/domain-models/Event\").EventID"
+    "user.id": 'import("./node_modules/TiFShared/domain-models/User").UserID',
+    "event.id": 'import("./node_modules/TiFShared/domain-models/Event").EventID'
   }
 }
 
@@ -47,19 +51,21 @@ if (process.argv.includes("--run")) {
     globalOptionality: "required" as const,
     // eslint-disable-next-line no-template-curly-in-string
     interfaceNameFormat: "DB${table}"
-  };
+  }
 
-  (async () => {
+  ;(async () => {
     try {
       const DB = await sqlts.toObject(sqltsConfig)
 
       const tableNames = await getTableNames()
 
-      const TiFDBTables = DB.tables.filter(table => tableNames.includes(`${table.interfaceName}`))
+      const TiFDBTables = DB.tables.filter((table) =>
+        tableNames.includes(`${table.interfaceName}`)
+      )
 
       if (options.assignColumnType) {
-        TiFDBTables.forEach(table => {
-          table.columns.forEach(column => {
+        TiFDBTables.forEach((table) => {
+          table.columns.forEach((column) => {
             if (options.assignColumnType[column.name]) {
               column.propertyType = options.assignColumnType[column.name]
             }
@@ -67,7 +73,10 @@ if (process.argv.includes("--run")) {
         })
       }
 
-      let tsString = await sqlts.fromObject({ tables: TiFDBTables, enums: DB.enums }, sqltsConfig)
+      let tsString = await sqlts.fromObject(
+        { tables: TiFDBTables, enums: DB.enums },
+        sqltsConfig
+      )
 
       if (options.optionalValueUndefined) {
         tsString = tsString
@@ -75,15 +84,25 @@ if (process.argv.includes("--run")) {
           .replace(/(['"][^'"]+['"]):\s*([^;]*\|\s*undefined)/g, "$1?: $2")
       }
 
-      const schemaMarkdownTable = TiFDBTables.map(table =>
-        `### ${table.name}\n${generateMarkdownTable(table.columns.map(
-          ({ propertyName: Property, propertyType: Type, nullable: Optional, defaultValue: DefaultValue }) =>
-            ({ Property, Type, Optional, DefaultValue })
-        ))}`
+      const schemaMarkdownTable = TiFDBTables.map(
+        (table) =>
+          `### ${table.name}\n${generateMarkdownTable(
+            table.columns.map(
+              ({
+                propertyName: Property,
+                propertyType: Type,
+                nullable: Optional,
+                defaultValue: DefaultValue
+              }) => ({ Property, Type, Optional, DefaultValue })
+            )
+          )}`
       ).join("\n")
 
       await Promise.all([
-        fs.writeFile(path.join(__dirname, options.schemaOutput), schemaMarkdownTable),
+        fs.writeFile(
+          path.join(__dirname, options.schemaOutput),
+          schemaMarkdownTable
+        ),
         fs.writeFile(path.join(__dirname, options.typesOutput), tsString)
       ])
 

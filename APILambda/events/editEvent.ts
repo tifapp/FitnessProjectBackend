@@ -1,27 +1,29 @@
 import { conn } from "TiFBackendUtils"
 import { MySQLExecutableDriver } from "TiFBackendUtils/MySQLDriver"
-import { getEventSQL } from "TiFBackendUtils/TiFEventUtils"
+import { addAttendanceData, DBTifEvent, getEventSQL, tifEventResponseFromDatabaseEvent } from "TiFBackendUtils/TiFEventUtils"
 import { resp } from "TiFShared/api/Transport"
-import { EventEdit } from "TiFShared/domain-models/Event"
+import { EventEdit, EventEditLocation, EventID } from "TiFShared/domain-models/Event"
 import { LocationCoordinate2D } from "TiFShared/domain-models/LocationCoordinate2D"
-import { failure, success } from "TiFShared/lib/Result"
-import dayjs from "dayjs"
-import { TiFAPIRouterExtension } from "../router"
+import { UserID } from "TiFShared/domain-models/User"
+import { AwaitableResult, failure, success } from "TiFShared/lib/Result"
+import { NamedLocation } from "TiFShared/lib/Types/NamedLocation"
+import { authenticatedEndpoint } from "../auth"
 
-export const editEventSQL = (
+type DBEventEdit = DBTifEvent & Omit<EventEdit, "location"> & LocationCoordinate2D
+
+const editEventSQL = (
   conn: MySQLExecutableDriver,
   {
     title,
     startDateTime,
-    duration,
+    endDateTime,
     shouldHideAfterStartDate,
     latitude,
     longitude,
     description
-  }: Omit<EventEdit, "location"> & LocationCoordinate2D,
-  eventId: number
+  }: DBEventEdit,
+  eventId: EventID
 ) => {
-  const endDateTime = dayjs(startDateTime).add(duration, 'second')
   return conn.executeResult(
     `
     UPDATE event
@@ -49,23 +51,57 @@ export const editEventSQL = (
   )
 }
 
-// ALLOW EXTRA MIDDLEWARE
-/**
- * Creates routes related to event operations.
- *
- * @param environment see {@link ServerEnvironment}.
- */
-export const editEvent = (
-  ({ context: { selfId }, body, params }) =>
-    conn
-      .transaction((tx) =>
-        getEventSQL(conn, Number(params.eventId), selfId)
-              .mapFailure(result => result.error === "event-not-found" ? resp(404, result) : resp(403, result))
-              .flatMapSuccess((event) => 
-                selfId === event.hostId ? success() : failure(resp(403, { error: "user-not-host" })))
-                .passthroughSuccess(() =>
-                  editEventSQL(tx, {...body, body.value.location.latitude, body.value.location.longitude }, params.eventId)
-                )
-            )
+export const dbEditedEventTimes = (
+  body: Partial<Pick<EventEdit, "startDateTime" | "duration">>,
+  event: Pick<DBTifEvent, "startDateTime" | "endDateTime">
+) => {
+  const startDateTime = body.startDateTime ?? event.startDateTime
+  const duration = body.duration ?? event.endDateTime.ext.diff(event.startDateTime).seconds
+  const endDateTime = startDateTime.ext.addSeconds(duration)
+
+  return { startDateTime, endDateTime }
+}
+
+export const editEventTransaction = async (
+  conn: MySQLExecutableDriver,
+  body: EventEdit,
+  selfId: UserID,
+  eventId: EventID,
+  geocode: (
+    locationEdit: EventEditLocation
+  ) => AwaitableResult<NamedLocation, never>
+) => {
+  return (body.location ? (await geocode(body.location)) : success())
+    .flatMapSuccess((location) => {
+      return conn.transaction((tx) => {
+        return getEventSQL(conn, eventId, selfId)
+          .flatMapSuccess((event) =>
+            selfId === event.hostId ? success(event) : failure({ error: "user-not-host" } as const)
+          )
+          .passthroughSuccess((event) =>
+            event.endedDateTime
+              ? failure({ error: "event-has-ended" } as const)
+              : success()
+          )
+          .flatMapSuccess((event) => {
+            const { startDateTime, endDateTime } = dbEditedEventTimes(body, event)
+            const updatedEvent: DBEventEdit = { ...event, ...location?.coordinate, ...body, startDateTime, endDateTime }
+
+            return editEventSQL(tx, updatedEvent, eventId)
+              .flatMapSuccess(() => addAttendanceData(tx, [updatedEvent], selfId))
+              .mapSuccess(([event]) => tifEventResponseFromDatabaseEvent(event))
+          })
+      })
+    })
+}
+
+export const editEvent = authenticatedEndpoint<"editEvent">(
+  async ({ context: { selfId }, body, params, environment }) => {
+    const result = await editEventTransaction(conn, body, selfId, Number(params.eventId), environment.callGeocodingLambda)
+
+    return result
+      .mapSuccess((event) => resp(200, event))
+      .mapFailure(result => result.error === "event-not-found" ? resp(404, result) : resp(403, result))
       .unwrap()
-  ) satisfies TiFAPIRouterExtension["editEvent"]
+  }
+)

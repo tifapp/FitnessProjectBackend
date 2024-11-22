@@ -28,7 +28,17 @@ const createTestAttendees = async (numOfAttendees: number = 1) => {
     host,
     attendeesList,
     eventIds: [eventId]
-  } = await createEventFlow([{ coordinates: eventLocation }], numOfAttendees)
+  } = await createEventFlow(
+    [
+      {
+        location: {
+          type: "coordinate",
+          value: eventLocation
+        }
+      }
+    ],
+    numOfAttendees
+  )
 
   return {
     attendeesList,
@@ -56,9 +66,16 @@ const getNextPageCursorResp = (
 
 describe("getAttendeesList endpoint", () => {
   it("should return 400 if limit is less than one", async () => {
-    const { attendeesList: [, attendee], eventId } = await createTestAttendees(1)
+    const {
+      attendeesList: [, attendee],
+      eventId
+    } = await createTestAttendees(1)
 
-    const resp = await testAPI.attendeesList({ auth: attendee.auth, params: { eventId }, query: { limit: 0 } })
+    const resp = await testAPI.attendeesList({
+      auth: attendee.auth,
+      params: { eventId },
+      query: { limit: 0 }
+    })
 
     expect(resp).toMatchObject({
       status: 400,
@@ -69,9 +86,16 @@ describe("getAttendeesList endpoint", () => {
   })
 
   it("should return 400 if limit is greater than fifty", async () => {
-    const { attendeesList: [, attendee], eventId } = await createTestAttendees(1)
+    const {
+      attendeesList: [, attendee],
+      eventId
+    } = await createTestAttendees(1)
 
-    const resp = await testAPI.attendeesList({ auth: attendee.auth, params: { eventId }, query: { limit: 51 } })
+    const resp = await testAPI.attendeesList({
+      auth: attendee.auth,
+      params: { eventId },
+      query: { limit: 51 }
+    })
 
     expect(resp).toMatchObject({
       status: 400,
@@ -85,13 +109,19 @@ describe("getAttendeesList endpoint", () => {
     const currentUser = await createUserFlow()
 
     // We must use createEventSQL directly because createEventFlow() makes an event with the host in the attendees list.
-    const {
-      value: { insertId }
-    } = await createEventSQL(conn, testEventInput, currentUser.id)
+    const { value: event } = await createEventSQL(
+      conn,
+      {
+        ...testEventInput,
+        latitude: testEventInput.location.value.latitude,
+        longitude: testEventInput.location.value.longitude
+      },
+      currentUser.id
+    )
 
     const resp = await testAPI.attendeesList<200>({
       auth: currentUser.auth,
-      params: { eventId: Number(insertId) },
+      params: { eventId: event.id },
       query: { limit }
     })
 
@@ -130,9 +160,11 @@ describe("getAttendeesList endpoint", () => {
       auth: attendee1.auth,
       params: { eventId },
       query: { limit }
-    });
+    })
 
-    (resp.data.nextPageCursor as unknown) = decodeAttendeesListCursor(resp.data.nextPageCursor ?? undefined)
+    ;(resp.data.nextPageCursor as unknown) = decodeAttendeesListCursor(
+      resp.data.nextPageCursor ?? undefined
+    )
 
     expect(resp).toMatchObject({
       status: 200,
@@ -163,13 +195,14 @@ describe("getAttendeesList endpoint", () => {
     } = await createEventFlow()
 
     const resp = await testAPI.attendeesList<200>({
-      auth:
-      currentUser.auth,
+      auth: currentUser.auth,
       params: { eventId },
       query: { limit }
-    });
+    })
 
-    (resp.data.nextPageCursor as unknown) = decodeAttendeesListCursor(resp.data.nextPageCursor ?? undefined)
+    ;(resp.data.nextPageCursor as unknown) = decodeAttendeesListCursor(
+      resp.data.nextPageCursor ?? undefined
+    )
 
     expect(resp).toMatchObject({
       status: 200,
@@ -203,9 +236,10 @@ describe("getAttendeesList endpoint", () => {
       auth: attendee.auth,
       params: { eventId },
       query: { limit, nextPageCursor: middlePageCursorResp ?? undefined }
-    });
-
-    (resp.data.nextPageCursor as unknown) = decodeAttendeesListCursor(resp.data.nextPageCursor ?? undefined)
+    })
+    ;(resp.data.nextPageCursor as unknown) = decodeAttendeesListCursor(
+      resp.data.nextPageCursor ?? undefined
+    )
 
     expect(resp).toMatchObject({
       status: 200,
@@ -237,9 +271,10 @@ describe("getAttendeesList endpoint", () => {
       auth: attendee.auth,
       params: { eventId },
       query: { limit, nextPageCursor: nextPageCursorResp ?? undefined }
-    });
-
-    (resp.data.nextPageCursor as unknown) = decodeAttendeesListCursor(resp.data.nextPageCursor ?? undefined)
+    })
+    ;(resp.data.nextPageCursor as unknown) = decodeAttendeesListCursor(
+      resp.data.nextPageCursor ?? undefined
+    )
 
     expect(resp).toMatchObject({
       status: 200,
@@ -258,14 +293,16 @@ describe("getAttendeesList endpoint", () => {
   })
 
   it("should return 200 if going past last page of attendees list", async () => {
-    const { attendeesList: [, attendee], eventId } = await createTestAttendees(1)
+    const {
+      attendeesList: [, attendee],
+      eventId
+    } = await createTestAttendees(1)
 
     let resp = await testAPI.attendeesList<200>({
       auth: attendee.auth,
       params: { eventId },
       query: { limit }
-    }
-    )
+    })
 
     const nextPageCursorResp = resp.data.nextPageCursor
 
@@ -273,9 +310,10 @@ describe("getAttendeesList endpoint", () => {
       auth: attendee.auth,
       params: { eventId },
       query: { limit, nextPageCursor: nextPageCursorResp ?? undefined }
-    });
-
-    (resp.data.nextPageCursor as unknown) = decodeAttendeesListCursor(resp.data.nextPageCursor ?? undefined)
+    })
+    ;(resp.data.nextPageCursor as unknown) = decodeAttendeesListCursor(
+      resp.data.nextPageCursor ?? undefined
+    )
 
     expect(resp).toMatchObject({
       status: 200,
@@ -292,7 +330,14 @@ describe("getAttendeesList endpoint", () => {
 
     const [, attendee] = attendeesList
 
-    await testAPI.arriveAtRegion({ auth: attendee.auth, body: { coordinate: eventLocation, arrivalRadiusMeters: 500 } })
+    await testAPI.updateArrivalStatus({
+      auth: attendee.auth,
+      body: {
+        coordinate: eventLocation,
+        arrivalRadiusMeters: 500,
+        status: "arrived"
+      }
+    })
 
     let resp = await testAPI.attendeesList<200>({
       auth: attendee.auth,
@@ -300,8 +345,10 @@ describe("getAttendeesList endpoint", () => {
       query: { limit }
     })
 
-    const nextPageCursorResp = resp.data.nextPageCursor;
-    (resp.data.nextPageCursor as unknown) = decodeAttendeesListCursor(resp.data.nextPageCursor ?? undefined)
+    const nextPageCursorResp = resp.data.nextPageCursor
+    ;(resp.data.nextPageCursor as unknown) = decodeAttendeesListCursor(
+      resp.data.nextPageCursor ?? undefined
+    )
 
     expect(resp).toMatchObject({
       status: 200,
@@ -320,10 +367,7 @@ describe("getAttendeesList endpoint", () => {
             role: "attending"
           }
         ],
-        nextPageCursor: getNextPageCursorResp(
-          [host, attendee],
-          1
-        ),
+        nextPageCursor: getNextPageCursorResp([host, attendee], 1),
         totalAttendeeCount: 4
       }
     })
@@ -332,9 +376,10 @@ describe("getAttendeesList endpoint", () => {
       auth: attendee.auth,
       params: { eventId },
       query: { limit, nextPageCursor: nextPageCursorResp ?? undefined }
-    });
-
-    (resp.data.nextPageCursor as unknown) = decodeAttendeesListCursor(resp.data.nextPageCursor ?? undefined)
+    })
+    ;(resp.data.nextPageCursor as unknown) = decodeAttendeesListCursor(
+      resp.data.nextPageCursor ?? undefined
+    )
 
     expect(resp).toMatchObject({
       status: 200,
@@ -368,13 +413,14 @@ describe("getAttendeesList endpoint", () => {
     }
 
     const resp = await testAPI.attendeesList<200>({
-      auth:
-      currentUser.auth,
+      auth: currentUser.auth,
       params: { eventId },
       query: { limit }
-    });
+    })
 
-    (resp.data.nextPageCursor as unknown) = decodeAttendeesListCursor(resp.data.nextPageCursor ?? undefined)
+    ;(resp.data.nextPageCursor as unknown) = decodeAttendeesListCursor(
+      resp.data.nextPageCursor ?? undefined
+    )
 
     expect(resp).toMatchObject({
       status: 200,
@@ -407,8 +453,7 @@ describe("getAttendeesList endpoint", () => {
     await testAPI.blockUser(userToUserRequest(host, currentUser))
 
     const resp = await testAPI.attendeesList({
-      auth:
-      currentUser.auth,
+      auth: currentUser.auth,
       params: { eventId },
       query: { limit }
     })
@@ -432,13 +477,14 @@ describe("getAttendeesList endpoint", () => {
     }
 
     const resp = await testAPI.attendeesList<200>({
-      auth:
-      currentUser.auth,
+      auth: currentUser.auth,
       params: { eventId },
       query: { limit }
-    });
+    })
 
-    (resp.data.nextPageCursor as unknown) = decodeAttendeesListCursor(resp.data.nextPageCursor ?? undefined)
+    ;(resp.data.nextPageCursor as unknown) = decodeAttendeesListCursor(
+      resp.data.nextPageCursor ?? undefined
+    )
 
     expect(resp).toMatchObject({
       status: 200,
@@ -475,14 +521,14 @@ describe("getAttendeesList endpoint", () => {
     }
 
     const resp = await testAPI.attendeesList<200>({
-      auth:
-      currentUser.auth,
+      auth: currentUser.auth,
       params: { eventId },
       query: { limit }
-    }
-    );
+    })
 
-    (resp.data.nextPageCursor as unknown) = decodeAttendeesListCursor(resp.data.nextPageCursor ?? undefined)
+    ;(resp.data.nextPageCursor as unknown) = decodeAttendeesListCursor(
+      resp.data.nextPageCursor ?? undefined
+    )
 
     expect(resp).toMatchObject({
       status: 200,
@@ -516,8 +562,7 @@ describe("getAttendeesList endpoint", () => {
     await testAPI.blockUser(userToUserRequest(currentUser, host))
 
     const resp = await testAPI.attendeesList({
-      auth:
-      currentUser.auth,
+      auth: currentUser.auth,
       params: { eventId },
       query: { limit }
     })

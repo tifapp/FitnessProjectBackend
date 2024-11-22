@@ -6,8 +6,9 @@
   "scripts": {
     "pr": "cd .. && npm run pr",
     "build": "npx tsc --traceResolution --strict false",
-    "test": "npx ts-node node_modules/jest/bin/jest --detectOpenHandles --runInBand",
-    "test:ci": "npx ts-node node_modules/.bin/jest --ci --detectOpenHandles --forceExit --runInBand"
+    "test": "cd .. && node compareTiFSharedVersion.mjs && cd APILambda && npx ts-node node_modules/jest/bin/jest --detectOpenHandles --runInBand",
+    "test:ci": "npx ts-node node_modules/.bin/jest --ci --detectOpenHandles --forceExit --runInBand",
+    "start": "npx tsx index.ts"
   },
   "keywords": [],
   "author": "TiF",
@@ -19,9 +20,11 @@
     "dayjs": "^1.11.10",
     "dotenv": "^16.0.3",
     "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.2",
     "linkify-it": "^5.0.0",
     "TiFBackendUtils": "file:../TiFBackendUtils",
-    "TiFShared": "github:tifapp/TiFShared#index-js",
+    "uuid": "^11.0.2",
+    "TiFShared": "github:tifapp/TiFShared#b7d9cfa589aecc1f2ef55abf2e26d6635f612744",
     "zod": "^3.22.4"
   },
   "devDependencies": {
@@ -43,7 +46,6 @@
     "jest": "^29.7.0",
     "jest-watch-suspend": "^1.1.2",
     "jest-watch-typeahead": "^2.2.2",
-    "jsonwebtoken": "^9.0.2",
     "nodemon": "^2.0.22",
     "supertest": "^5.0.0",
     "ts-node": "^10.9.1",

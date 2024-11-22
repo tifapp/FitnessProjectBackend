@@ -16,12 +16,16 @@ export default {
   globalSetup: "./test/jest/globalSetup.ts",
   // globalTeardown: "./test/jest/jestTeardown.ts",
   testTimeout: 15000,
-  setupFilesAfterEnv: ["./test/jest/setupHooksAfterEnv.ts", "./test/jest/setupHooksAfterEnvOnFailure.ts"],
+  setupFilesAfterEnv: [
+    "./test/jest/setupHooksAfterEnv.ts",
+    "./test/jest/setupHooksAfterEnvOnFailure.ts"
+  ],
   watchPlugins: [
     "jest-watch-typeahead/filename",
     "jest-watch-typeahead/testname",
     [
-      "jest-watch-suspend", {
+      "jest-watch-suspend",
+      {
         "suspend-on-start": true
       }
     ]

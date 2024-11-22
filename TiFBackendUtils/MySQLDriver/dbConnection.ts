@@ -1,7 +1,9 @@
 import mysql from "mysql2/promise"
 import { envVars } from "../env"
 
-export const createDatabaseConnection = async (connectionConfig: Partial<mysql.ConnectionOptions> = {}) => {
+export const createDatabaseConnection = async (
+  connectionConfig: Partial<mysql.ConnectionOptions> = {}
+) => {
   return mysql.createConnection({
     host: envVars.DATABASE_HOST,
     user: envVars.DATABASE_USERNAME,
