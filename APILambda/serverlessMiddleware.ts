@@ -26,4 +26,5 @@ export const addEventToRequest = (app: Express) => {
   })
   app.use(express.json())
   app.use(express.urlencoded({ extended: true }))
+  return app
 }

@@ -8,7 +8,7 @@
     "build": "npx tsc --traceResolution --strict false",
     "test": "cd .. && node compareTiFSharedVersion.mjs && cd APILambda && npx ts-node node_modules/jest/bin/jest --detectOpenHandles --runInBand",
     "test:ci": "npx ts-node node_modules/.bin/jest --ci --detectOpenHandles --forceExit --runInBand",
-    "start": "npx tsx index.ts"
+    "start": "npx tsx test/devIndex.ts"
   },
   "keywords": [],
   "author": "TiF",
