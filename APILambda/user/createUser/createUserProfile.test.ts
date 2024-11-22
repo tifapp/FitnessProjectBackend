@@ -4,7 +4,7 @@ import { jwtBody } from "TiFShared/lib/JWT"
 describe("Create User Profile tests", () => {
   it("should 400 when creating a user with an empty name", async () => {
     const resp = await testAPI.createCurrentUserProfile({
-      noAuth: true,
+      unauthenticated: true,
       body: { name: "" }
     })
     expect(resp).toMatchObject({
@@ -15,7 +15,7 @@ describe("Create User Profile tests", () => {
 
   it("should 201 when creating a user with a name", async () => {
     const resp = await testAPI.createCurrentUserProfile<201>({
-      noAuth: true,
+      unauthenticated: true,
       body: { name: "Bitchell Dickle" }
     })
     expect(resp).toMatchObject({

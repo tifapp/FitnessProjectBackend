@@ -2,7 +2,6 @@
   "name": "TiFBackendUtils",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
   "dependencies": {
     "mysql2": "^3.9.7",
     "node-fetch": "^3.3.2"
@@ -13,7 +12,7 @@
     "dayjs": "^1.11.10",
     "dotenv": "^16.3.1",
     "linkify-it": "^5.0.0",
-    "TiFShared": "github:tifapp/TiFShared#index-js",
+    "TiFShared": "github:tifapp/TiFShared#b7d9cfa589aecc1f2ef55abf2e26d6635f612744",
     "zod": "^3.22.4"
   },
   "scripts": {
