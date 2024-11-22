@@ -1,6 +1,6 @@
 import "TiFShared/lib/Zod"
 
-import { MySQLDriver } from "../MySQLDriver"
+import { MySQLDriver } from "../../MySQLDriver"
 
 describe("MySQLDriver", () => {
   let mySQLDriverTest: MySQLDriver
@@ -131,7 +131,7 @@ describe("MySQLDriver", () => {
         createdAt: mockDate,
         updatedAt: mockDate,
         price: 99.99,
-        data: '{"key": "value"}'
+        data: "{\"key\": \"value\"}"
       })
       const result = await mySQLDriverTest.queryResult(
         "SELECT * FROM mockTable"

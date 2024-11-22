@@ -1,7 +1,9 @@
-import { CloudWatchLogs } from "@aws-sdk/client-cloudwatch-logs"
-import { fromEnv } from "@aws-sdk/credential-providers"
 import { AWSEnvVars } from "TiFBackendUtils/AWS"
 import { envVars } from "TiFBackendUtils/env"
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { CloudWatchLogs } = require("@aws-sdk/client-cloudwatch-logs")
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { fromEnv } = require("@aws-sdk/credential-providers")
 
 const cloudwatchlogs = new CloudWatchLogs({
   credentials: fromEnv()

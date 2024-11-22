@@ -1,5 +1,5 @@
 import { conn } from "TiFBackendUtils"
-import { resetDB } from "TiFBackendUtils/MySQLDriver/test/dbHelpers"
+import { resetDB } from "TiFBackendUtils/test/MySQLDriver/dbHelpers"
 import { addLogHandler, consoleLogHandler } from "TiFShared/logging"
 import { testUserCounter } from "../userFlows/createUserFlow"
 
