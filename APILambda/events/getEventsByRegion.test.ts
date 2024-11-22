@@ -4,7 +4,7 @@ import {
   getAttendeesPreviewIds
 } from "TiFBackendUtils/TiFEventUtils"
 import { dateRange } from "TiFShared/domain-models/FixedDateRange"
-import dayjs from "dayjs"
+import { dayjs } from "TiFShared/lib/Dayjs"
 import { addLocationToDB } from "../../GeocodingLambda/utils"
 import { userToUserRequest } from "../test/shortcuts"
 import { testAPI } from "../test/testApp"

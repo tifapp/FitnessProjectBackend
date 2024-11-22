@@ -1,4 +1,4 @@
-import dayjs from "dayjs"
+import { dayjs } from "TiFShared/lib/Dayjs"
 
 // reason: milliseconds are not counted in the live database
 

@@ -1,4 +1,4 @@
-import dayjs from "dayjs"
+import { dayjs } from "TiFShared/lib/Dayjs"
 
 export const calcSecondsToStart = (startDateTime: Date) => {
   const millisecondsToStart = startDateTime.valueOf() - new Date().valueOf()

@@ -1,5 +1,5 @@
-import dayjs from "dayjs"
 import { dateRange } from "TiFShared/domain-models/FixedDateRange"
+import { dayjs } from "TiFShared/lib/Dayjs"
 import { testAPI } from "../../test/testApp"
 import { testEventInput, upcomingEventDateRange } from "../../test/testEvents"
 import { createEventFlow } from "../../test/userFlows/createEventFlow"
