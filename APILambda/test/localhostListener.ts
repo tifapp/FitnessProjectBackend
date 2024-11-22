@@ -12,7 +12,5 @@ export const localhostListener = (app: Express) => {
 }
 
 export const closeLocalhostServer = () => {
-  if (server) {
-    server.close()
-  }
+  server?.close()
 }
