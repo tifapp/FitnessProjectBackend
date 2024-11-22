@@ -6,7 +6,7 @@ import { failure, success } from "TiFShared/lib/Result"
 import { authenticatedEndpoint } from "../auth"
 import { addUserToAttendeeList } from "../utils/eventAttendance"
 import { upcomingEventArrivalRegionsSQL } from "./arrivals/getUpcomingEvents"
-import { insertArrival } from "./arrivals/setArrivalStatus"
+import { insertArrival } from "./arrivals/updateArrivalStatus"
 
 export const joinEvent = authenticatedEndpoint<"joinEvent">(
   async ({

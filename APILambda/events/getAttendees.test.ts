@@ -108,7 +108,15 @@ describe("getAttendeesList endpoint", () => {
     // We must use createEventSQL directly because createEventFlow() makes an event with the host in the attendees list.
     const {
       value: { insertId }
-    } = await createEventSQL(conn, testEventInput, currentUser.id)
+    } = await createEventSQL(
+      conn,
+      {
+        ...testEventInput,
+        latitude: testEventInput.location.value.latitude,
+        longitude: testEventInput.location.value.longitude
+      },
+      currentUser.id
+    )
 
     const resp = await testAPI.attendeesList<200>({
       auth: currentUser.auth,
@@ -228,7 +236,6 @@ describe("getAttendeesList endpoint", () => {
       params: { eventId },
       query: { limit, nextPageCursor: middlePageCursorResp ?? undefined }
     })
-
     ;(resp.data.nextPageCursor as unknown) = decodeAttendeesListCursor(
       resp.data.nextPageCursor ?? undefined
     )
@@ -264,7 +271,6 @@ describe("getAttendeesList endpoint", () => {
       params: { eventId },
       query: { limit, nextPageCursor: nextPageCursorResp ?? undefined }
     })
-
     ;(resp.data.nextPageCursor as unknown) = decodeAttendeesListCursor(
       resp.data.nextPageCursor ?? undefined
     )
@@ -304,7 +310,6 @@ describe("getAttendeesList endpoint", () => {
       params: { eventId },
       query: { limit, nextPageCursor: nextPageCursorResp ?? undefined }
     })
-
     ;(resp.data.nextPageCursor as unknown) = decodeAttendeesListCursor(
       resp.data.nextPageCursor ?? undefined
     )
@@ -326,7 +331,11 @@ describe("getAttendeesList endpoint", () => {
 
     await testAPI.updateArrivalStatus({
       auth: attendee.auth,
-      body: { status: "arrived", coordinate: eventLocation, arrivalRadiusMeters: 500 }
+      body: {
+        coordinate: eventLocation,
+        arrivalRadiusMeters: 500,
+        status: "arrived"
+      }
     })
 
     let resp = await testAPI.attendeesList<200>({
@@ -367,7 +376,6 @@ describe("getAttendeesList endpoint", () => {
       params: { eventId },
       query: { limit, nextPageCursor: nextPageCursorResp ?? undefined }
     })
-
     ;(resp.data.nextPageCursor as unknown) = decodeAttendeesListCursor(
       resp.data.nextPageCursor ?? undefined
     )

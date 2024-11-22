@@ -1,6 +1,7 @@
 import express, { Application } from "express"
 import { ServerEnvironment } from "./env"
 import { upcomingEventArrivalRegions } from "./events/arrivals/getUpcomingEvents"
+import { updateArrivalStatus } from "./events/arrivals/updateArrivalStatus"
 import { createEvent } from "./events/createEvent"
 import { endEvent } from "./events/endEvent"
 import { attendeesList } from "./events/getAttendees"
@@ -21,8 +22,6 @@ import { userSettings } from "./user/settings/getUserSettings"
 import { saveUserSettings } from "./user/settings/updateUserSettings"
 import { unblockUser } from "./user/unblockUser"
 import { updateCurrentUserProfile } from "./user/updateUserProfile"
-import { arriveAtRegion } from "./events/arrivals/setArrivalStatus"
-import { departFromRegion } from "./events/arrivals/setDeparture"
 
 /**
  * Creates an application instance.
@@ -70,8 +69,7 @@ export const addTiFRouter = (
         joinEvent,
         leaveEvent,
         endEvent,
-        arriveAtRegion,
-        departFromRegion,
+        updateArrivalStatus,
         upcomingEventArrivalRegions,
         attendeesList,
         exploreEvents,

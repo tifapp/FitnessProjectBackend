@@ -168,9 +168,7 @@ export class MySQLDriver {
    * Performs an idempotent transaction and returns the result of the transaction wrapped in a {@link PromiseResult}.
    */
   transaction<SuccessValue, ErrorValue> (
-    query: (
-      tx: MySQLDriver
-    ) => AwaitableResult<SuccessValue, ErrorValue>
+    query: (tx: MySQLDriver) => AwaitableResult<SuccessValue, ErrorValue>
   ) {
     return promiseResult(
       (async () => {
