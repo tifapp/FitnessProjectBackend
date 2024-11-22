@@ -11,16 +11,15 @@ export const getAttendeeCount = (
   conn: MySQLExecutableDriver,
   eventIds: string[]
 ) => {
-  const placeholders = eventIds.map(() => "?").join(",")
   return conn.queryResult<DBEventAttendeeCountView>(
     ` SELECT
         attendeeCount
       FROM
         EventAttendeeCountView
       WHERE
-        id IN (${placeholders})
+        id IN (:eventIds)
       GROUP BY id`,
-    eventIds
+    { eventIds }
   )
 }
 
@@ -29,18 +28,18 @@ export const getAttendeeDetails = (
   userId: string,
   eventIds: string[]
 ) => {
-  const placeholders = eventIds.map(() => "?").join(",")
   return conn.queryResult<DBeventAttendance>(
     ` SELECT
         ea.joinedDateTime AS joinedDateTime,
         ea.role AS role
       FROM
           event e
-      LEFT JOIN eventAttendance ea ON ea.userId = ? AND ea.eventId = e.id
+      LEFT JOIN eventAttendance ea ON ea.userId = :userId AND ea.eventId = e.id
       WHERE 
-        e.id IN (${placeholders})
-      GROUP BY id`,
-    [userId, ...eventIds]
+        e.id IN (:eventIds)
+      GROUP BY id
+      `,
+    { eventIds, userId }
   )
 }
 
@@ -48,20 +47,20 @@ export const getAttendeesPreviewIds = (
   conn: MySQLExecutableDriver,
   eventIds: string[]
 ) => {
-  const placeholders = eventIds.map(() => "?").join(",")
   return conn.queryResult<DBEventAttendeesView>(
     `
     SELECT 
       EventAttendeesView.userIds
-    FROM 
-      EventAttendeesView
-    WHERE 
-      EventAttendeesView.eventId IN (${placeholders})
-    GROUP BY 
-      EventAttendeesView.eventId
-    HAVING 
-      COUNT(DISTINCT EventAttendeesView.userIds) <= 3`,
-    eventIds
+FROM 
+  EventAttendeesView
+WHERE 
+  EventAttendeesView.eventId IN (:eventIds)
+GROUP BY 
+  EventAttendeesView.eventId
+HAVING 
+    COUNT(DISTINCT EventAttendeesView.userIds) <= 3
+  `,
+    { eventIds }
   )
 }
 
