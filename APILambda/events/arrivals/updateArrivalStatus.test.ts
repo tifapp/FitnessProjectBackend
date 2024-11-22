@@ -29,8 +29,7 @@ describe("SetHasArrived tests", () => {
         body: {
           status: "arrived",
           coordinate: eventLocation,
-          arrivalRadiusMeters: 500,
-          status: "arrived"
+          arrivalRadiusMeters: 500
         }
       })
     ).toMatchObject({
@@ -46,16 +45,11 @@ describe("SetHasArrived tests", () => {
 
     expect(
       await testAPI.updateArrivalStatus({
-<<<<<<< HEAD:APILambda/events/arrivals/setArrivalStatus.test.ts
-
-=======
->>>>>>> origin/merge-arrive-depart:APILambda/events/arrivals/updateArrivalStatus.test.ts
         auth: attendee.auth,
         body: {
           status: "departed",
           coordinate: eventLocation,
-          arrivalRadiusMeters: 500,
-          status: "departed"
+          arrivalRadiusMeters: 500
         }
       })
     ).toMatchObject({
@@ -92,8 +86,7 @@ describe("SetHasArrived tests", () => {
       body: {
         status: "arrived",
         coordinate: eventLocation,
-        arrivalRadiusMeters: 500,
-        status: "arrived"
+        arrivalRadiusMeters: 500
       }
     })
 
@@ -114,8 +107,7 @@ describe("SetHasArrived tests", () => {
       body: {
         status: "departed",
         coordinate: eventLocation,
-        arrivalRadiusMeters: 500,
-        status: "departed"
+        arrivalRadiusMeters: 500
       }
     })
 

@@ -9,6 +9,7 @@ import { eventDetails } from "./events/getEventDetails"
 import { exploreEvents } from "./events/getEventsByRegion"
 import { joinEvent } from "./events/joinEvent"
 import { leaveEvent } from "./events/leaveEvent"
+import { upcomingEvents } from "./events/upcomingEvents"
 import { TiFRouter } from "./router"
 import { autocompleteUsers } from "./user/autocompleteUsers"
 import { blockUser } from "./user/blockUser"
@@ -69,6 +70,7 @@ export const addTiFRouter = (
         joinEvent,
         leaveEvent,
         endEvent,
+        upcomingEvents,
         updateArrivalStatus,
         upcomingEventArrivalRegions,
         attendeesList,

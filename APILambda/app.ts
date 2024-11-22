@@ -1,6 +1,6 @@
 import { invokeAWSLambda } from "TiFBackendUtils/AWS"
 import { envVars } from "TiFBackendUtils/env"
-import { LocationCoordinate2D } from "TiFShared/domain-models/LocationCoordinate2D"
+import { EventEditLocation } from "TiFShared/domain-models/Event"
 import { addBenchmarking, addTiFRouter, createApp } from "./appMiddleware"
 import { ServerEnvironment } from "./env"
 import { addEventToRequest } from "./serverlessMiddleware"
@@ -13,12 +13,12 @@ const env = envVars.ENVIRONMENT === "devTest"
     environment: envVars.ENVIRONMENT,
     eventStartWindowInHours: 1,
     maxArrivals: 100,
-    callGeocodingLambda: async (location: LocationCoordinate2D) => {
+    callGeocodingLambda: async (locationEdit: EventEditLocation) =>
+      // @ts-ignore
       await invokeAWSLambda(
         `geocodingPipeline:${envVars.ENVIRONMENT}`,
-        location
+        locationEdit
       )
-    }
   } as ServerEnvironment
 
 export const app = createApp()

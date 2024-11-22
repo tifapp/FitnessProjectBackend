@@ -1,8 +1,8 @@
 import dayjs from "dayjs"
 import { conn } from "TiFBackendUtils"
 import { dateRange } from "TiFShared/domain-models/FixedDateRange"
+import { handler as geocode } from "../../GeocodingLambda/index"
 import { addLocationToDB } from "../../GeocodingLambda/utils"
-import { devTestEnv } from "../test/devIndex"
 import { testAPI } from "../test/testApp"
 import { testEventInput } from "../test/testEvents"
 import { createEventFlow } from "../test/userFlows/createEventFlow"
@@ -74,23 +74,23 @@ describe("_upcomingEvents tests", () => {
         dateRange: dateRange(
           dayjs().subtract(30, "minute").toDate(),
           dayjs().subtract(15, "minute").toDate()
-        )
+        )!
       },
       user.id,
-      devTestEnv.callGeocodingLambda
+      geocode
     )
-    const upcomingEventId = await createEventTransaction(
+    const upcomingEventId = (await createEventTransaction(
       conn,
       {
         ...testEventInput,
         dateRange: dateRange(
           dayjs().add(12, "hour").toDate(),
           dayjs().add(1, "year").toDate()
-        )
+        )!
       },
       user.id,
-      devTestEnv.callGeocodingLambda
-    ).unwrap()
+      geocode
+    )).unwrap()
     const resp = await testAPI.upcomingEvents<200>({
       auth: user.auth
     })
