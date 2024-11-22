@@ -1,7 +1,6 @@
 import { conn } from "TiFBackendUtils"
 import { dateRange } from "TiFShared/domain-models/FixedDateRange"
 import { sleep } from "TiFShared/lib/DelayData"
-import dayjs from "dayjs"
 import { addLocationToDB } from "../../GeocodingLambda/utils"
 import * as devTestEnv from "../test/devIndex"
 import { userToUserRequest } from "../test/shortcuts"
@@ -10,6 +9,7 @@ import { testEventInput } from "../test/testEvents"
 import { createEventFlow } from "../test/userFlows/createEventFlow"
 import { createUserFlow, userDetails } from "../test/userFlows/createUserFlow"
 import { createEventTransaction } from "./createEvent"
+import { dayjs } from "TiFShared/lib/Dayjs"
 
 const createEvents = async () => {
   await addLocationToDB(
@@ -39,10 +39,7 @@ const createEvents = async () => {
         )
       },
       {
-        dateRange: dateRange(
-          dayjs().subtract(12, "hour").toDate(),
-          dayjs().add(1, "year").toDate()
-        )
+        dateRange: dateRange(dayjs().toDate(), dayjs().add(1, "year").toDate())
       }
     ],
     1
@@ -194,10 +191,8 @@ describe("exploreEvents endpoint tests", () => {
       conn,
       {
         ...testEventInput,
-        dateRange: dateRange(
-          dayjs().subtract(30, "minute").toDate(),
-          dayjs().subtract(15, "minute").toDate()
-        )!
+        startDateTime: dayjs().subtract(30, "minute").toDate(),
+        duration: dayjs.duration(15, "minutes").asSeconds()
       },
       user.id,
       // @ts-ignore

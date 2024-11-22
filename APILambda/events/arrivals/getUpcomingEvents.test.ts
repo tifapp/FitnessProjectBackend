@@ -1,7 +1,11 @@
 import dayjs from "dayjs"
 import { dateRange } from "TiFShared/domain-models/FixedDateRange"
 import { testAPI } from "../../test/testApp"
-import { testEventCoordinate, testEventInput, upcomingEventDateRange } from "../../test/testEvents"
+import {
+  testEventCoordinate,
+  testEventInput,
+  upcomingEventDateRange
+} from "../../test/testEvents"
 import { createEventFlow } from "../../test/userFlows/createEventFlow"
 import { createUserFlow } from "../../test/userFlows/createUserFlow"
 
@@ -37,7 +41,7 @@ describe("getUpcomingEvents tests", () => {
             value: testEventCoordinate
           },
           dateRange: dateRange(
-            dayjs().subtract(12, "hour").toDate(),
+            dayjs().toDate(),
             dayjs().add(1, "year").toDate()
           )
         },
@@ -74,7 +78,8 @@ describe("getUpcomingEvents tests", () => {
           type: "coordinate",
           value: testEventCoordinate
         },
-        dateRange: upcomingEventDateRange!
+        startDateTime: upcomingEventDateRange.startDateTime,
+        duration: upcomingEventDateRange.diff.seconds
       }
     })
 

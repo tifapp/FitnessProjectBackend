@@ -1,4 +1,3 @@
-import dayjs from "dayjs"
 import { conn } from "TiFBackendUtils"
 import { dateRange } from "TiFShared/domain-models/FixedDateRange"
 import { handler as geocode } from "../../GeocodingLambda/index"
@@ -8,6 +7,7 @@ import { testEventInput } from "../test/testEvents"
 import { createEventFlow } from "../test/userFlows/createEventFlow"
 import { createUserFlow } from "../test/userFlows/createUserFlow"
 import { createEventTransaction } from "./createEvent"
+import { dayjs } from "TiFShared/lib/Dayjs"
 
 describe("_upcomingEvents tests", () => {
   beforeEach(async () => {
@@ -71,26 +71,24 @@ describe("_upcomingEvents tests", () => {
       conn,
       {
         ...testEventInput,
-        dateRange: dateRange(
-          dayjs().subtract(30, "minute").toDate(),
-          dayjs().subtract(15, "minute").toDate()
-        )!
+        startDateTime: dayjs().subtract(30, "minute").toDate(),
+        duration: dayjs.duration(15, "minutes").asSeconds()
       },
       user.id,
       geocode
     )
-    const upcomingEventId = (await createEventTransaction(
-      conn,
-      {
-        ...testEventInput,
-        dateRange: dateRange(
-          dayjs().add(12, "hour").toDate(),
-          dayjs().add(1, "year").toDate()
-        )!
-      },
-      user.id,
-      geocode
-    )).unwrap()
+    const { id: upcomingEventId } = (
+      await createEventTransaction(
+        conn,
+        {
+          ...testEventInput,
+          startDateTime: dayjs().add(30, "minute").toDate(),
+          duration: dayjs.duration(15, "minutes").asSeconds()
+        },
+        user.id,
+        geocode
+      )
+    ).unwrap()
     const resp = await testAPI.upcomingEvents<200>({
       auth: user.auth
     })

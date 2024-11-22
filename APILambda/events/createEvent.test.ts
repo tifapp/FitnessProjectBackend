@@ -1,37 +1,55 @@
 import { conn } from "TiFBackendUtils"
-import { todayTestDate } from "TiFBackendUtils/test/dateHelpers"
-import { dateRange } from "TiFShared/domain-models/FixedDateRange"
 import { addLocationToDB } from "../../GeocodingLambda/utils"
 import { testAPI } from "../test/testApp"
 import { testEventInput } from "../test/testEvents"
 import { createEventFlow } from "../test/userFlows/createEventFlow"
 import { createUserFlow } from "../test/userFlows/createUserFlow"
+import { dayjs } from "TiFShared/lib/Dayjs"
 
 describe("CreateEvent tests", () => {
   it("should allow a user to create an event and add them to the attendee list", async () => {
+    const startDateTime = new Date().ext.addSeconds(10)
     const {
       host,
       eventResponses: [event]
-    } = await createEventFlow([{}])
+    } = await createEventFlow([
+      {
+        startDateTime,
+        duration: 3600
+      }
+    ])
 
+    expect(event.data.endedDateTime).toEqual(undefined)
     expect(event).toMatchObject({
       status: 201,
-      data: { id: expect.any(Number) }
+      data: {
+        id: expect.any(Number),
+        title: testEventInput.title,
+        description: testEventInput.description,
+        host: { id: host.id, name: host.name },
+        userAttendeeStatus: "hosting",
+        joinedDateTime: expect.any(String),
+        hasArrived: false,
+        attendeeCount: 1,
+        previewAttendees: [
+          expect.objectContaining({
+            id: host.id,
+            name: host.name,
+            role: "hosting"
+          })
+        ],
+        time: {
+          todayOrTomorrow: "today",
+          dateRange: {
+            startDateTime: startDateTime.toISOString(),
+            endDateTime: dayjs(startDateTime)
+              .add(1, "hour")
+              .toDate()
+              .toISOString()
+          }
+        }
+      }
     })
-
-    const { value: attendee } = await conn.queryFirstResult<{
-      userId: string
-      eventId: string
-    }>(
-      `
-      SELECT *
-      FROM eventAttendance
-      WHERE userId = :userId
-        AND eventId = :eventId;      
-      `,
-      { eventId: event.data.id, userId: host.id }
-    )
-    expect(attendee).toMatchObject({ eventId: event.data.id, userId: host.id })
   })
 
   it("should save the address matching the given coordinates", async () => {
@@ -106,10 +124,7 @@ describe("CreateEvent tests", () => {
       auth: newUser.auth,
       body: {
         ...testEventInput,
-        dateRange: dateRange(
-          todayTestDate(),
-          new Date(+todayTestDate() + 30000)
-        )!
+        duration: 59
       }
     })
     expect(resp).toMatchObject({
@@ -124,7 +139,7 @@ describe("CreateEvent tests", () => {
       auth: newUser.auth,
       body: {
         ...testEventInput,
-        dateRange: dateRange(new Date("2000-01-01"), new Date("2000-01-02"))!
+        startDateTime: new Date("2000-01-01")
       }
     })
     expect(resp).toMatchObject({

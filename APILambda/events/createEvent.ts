@@ -1,24 +1,33 @@
 import { conn } from "TiFBackendUtils"
 import { MySQLExecutableDriver } from "TiFBackendUtils/MySQLDriver"
 import { resp } from "TiFShared/api"
-import { CreateEvent, EventEditLocation, EventID } from "TiFShared/domain-models/Event"
+import {
+  CreateEvent,
+  EventEdit,
+  EventEditLocation,
+  EventID
+} from "TiFShared/domain-models/Event"
 import { LocationCoordinate2D } from "TiFShared/domain-models/LocationCoordinate2D"
 import { UserID } from "TiFShared/domain-models/User"
-import { AwaitableResult } from "TiFShared/lib/Result"
+import { AwaitableResult, PromiseResult } from "TiFShared/lib/Result"
 import { NamedLocation } from "TiFShared/lib/Types/NamedLocation"
 import { authenticatedEndpoint } from "../auth"
 import { addUserToAttendeeList } from "../utils/eventAttendance"
+import {
+  addAttendanceData,
+  DBTifEvent,
+  getEventSQL,
+  tifEventResponseFromDatabaseEvent
+} from "TiFBackendUtils/TiFEventUtils"
 
 export const createEventSQL = (
   conn: MySQLExecutableDriver,
-  {
-    dateRange: { startDateTime, endDateTime },
-    ...rest
-  }: Omit<CreateEvent, "location"> & LocationCoordinate2D,
-  hostId: string
+  eventEdit: Omit<EventEdit, "location"> & LocationCoordinate2D,
+  hostId: UserID
 ) => {
-  return conn.executeResult(
-    `
+  return conn
+    .executeResult(
+      `
   INSERT INTO event (
     hostId,
     title,
@@ -36,38 +45,46 @@ export const createEventSQL = (
     :startDateTime,
     :endDateTime,
     :shouldHideAfterStartDate,
-    :isChatEnabled,
+    FALSE,
     :latitude,
     :longitude
   )
   `,
-    {
-      ...rest,
-      startDateTime,
-      endDateTime,
-      hostId
-    }
-  )
+      {
+        hostId,
+        title: eventEdit.title,
+        description: eventEdit.description,
+        shouldHideAfterStartDate: eventEdit.shouldHideAfterStartDate,
+        startDateTime: eventEdit.startDateTime,
+        endDateTime: eventEdit.startDateTime.ext.addSeconds(eventEdit.duration),
+        latitude: eventEdit.latitude,
+        longitude: eventEdit.longitude
+      }
+    )
+    .flatMapSuccess(({ insertId }) => {
+      return getEventSQL(conn, parseInt(insertId), hostId)
+    })
+    .mapFailure((e) => e as never) // NB: Insert should always return the inserted value.
 }
 
 export const createEventTransaction = async (
   conn: MySQLExecutableDriver,
-  body: CreateEvent,
+  body: EventEdit,
   selfId: UserID,
-  geocode: (locationEdit: EventEditLocation) => AwaitableResult<NamedLocation, never>
+  geocode: (
+    locationEdit: EventEditLocation
+  ) => AwaitableResult<NamedLocation, never>
 ) => {
-  const result = await geocode(body.location)
-
-  return result.flatMapSuccess(({ coordinate }) =>
-    conn
-      .transaction((tx) =>
-        createEventSQL(tx, { ...body, ...coordinate }, selfId)
-          .passthroughSuccess(({ insertId }) =>
-            addUserToAttendeeList(conn, selfId, parseInt(insertId), "hosting")
-          )
-      )
-      .mapSuccess(({ insertId }) => Number(insertId) as EventID)
-  )
+  return (await geocode(body.location)).flatMapSuccess(({ coordinate }) => {
+    return conn.transaction((tx) => {
+      return createEventSQL(tx, { ...body, ...coordinate }, selfId)
+        .passthroughSuccess((event) => {
+          return addUserToAttendeeList(conn, selfId, event.id, "hosting")
+        })
+        .flatMapSuccess((event) => addAttendanceData(tx, [event], selfId))
+        .mapSuccess(([event]) => tifEventResponseFromDatabaseEvent(event))
+    })
+  })
 }
 
 // ALLOW EXTRA MIDDLEWARE
@@ -84,8 +101,6 @@ export const createEvent = authenticatedEndpoint<"createEvent">(
       selfId,
       (locationEdit) => environment.callGeocodingLambda(locationEdit)
     )
-
-    return result.mapSuccess((id) => resp(201, { id }))
-      .unwrap()
+    return result.mapSuccess((event) => resp(201, event)).unwrap()
   }
 )

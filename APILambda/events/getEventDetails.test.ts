@@ -30,7 +30,7 @@ describe("getEventDetails", () => {
       longitude: testEventInput.location.value.longitude
     })
 
-    addLocationToDB(
+    await addLocationToDB(
       conn,
       {
         latitude: testEventInput.location.value.latitude,
@@ -71,9 +71,10 @@ describe("getEventDetails", () => {
         time: {
           secondsToStart: expect.any(Number),
           dateRange: {
-            startDateTime:
-              testEventInput.dateRange!.startDateTime.toISOString(),
-            endDateTime: testEventInput.dateRange!.endDateTime.toISOString()
+            startDateTime: testEventInput.startDateTime.toISOString(),
+            endDateTime: testEventInput.startDateTime.ext
+              .addSeconds(testEventInput.duration)
+              .toISOString()
           },
           todayOrTomorrow: "today"
         },
@@ -106,7 +107,7 @@ describe("getEventDetails", () => {
         },
         settings: {
           shouldHideAfterStartDate: true,
-          isChatEnabled: true
+          isChatEnabled: false
         },
         updatedDateTime: expect.any(String),
         createdDateTime: expect.any(String),

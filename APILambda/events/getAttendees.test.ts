@@ -29,13 +29,16 @@ const createTestAttendees = async (numOfAttendees: number = 1) => {
     attendeesList,
     eventIds: [eventId]
   } = await createEventFlow(
-    [{
-      location: {
-        type: "coordinate",
-        value: eventLocation
+    [
+      {
+        location: {
+          type: "coordinate",
+          value: eventLocation
+        }
       }
-    }],
-    numOfAttendees)
+    ],
+    numOfAttendees
+  )
 
   return {
     attendeesList,
@@ -106,9 +109,7 @@ describe("getAttendeesList endpoint", () => {
     const currentUser = await createUserFlow()
 
     // We must use createEventSQL directly because createEventFlow() makes an event with the host in the attendees list.
-    const {
-      value: { insertId }
-    } = await createEventSQL(
+    const { value: event } = await createEventSQL(
       conn,
       {
         ...testEventInput,
@@ -120,7 +121,7 @@ describe("getAttendeesList endpoint", () => {
 
     const resp = await testAPI.attendeesList<200>({
       auth: currentUser.auth,
-      params: { eventId: Number(insertId) },
+      params: { eventId: event.id },
       query: { limit }
     })
 
