@@ -40,6 +40,10 @@
             "name": "express",
             "importNames": ["Router"],
             "message": "Use 'ValidatedRouter' instead."
+          },
+          {
+            "name": "node:test",
+            "message": "This import brings grave danger to the world, and the entire tiF universe. Running tests with this import will set off the Pharo Ritual, and the creator god Zucklar will be unleashed upon the world. You will be sent to tiF hell if you continue with this. I recommend using jest for tests, it will save us all.\n\n- Pragma"
           }
         ]
       }
