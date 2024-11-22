@@ -1,10 +1,9 @@
 import { conn } from "TiFBackendUtils"
 import { resetDB } from "TiFBackendUtils/MySQLDriver/test/dbHelpers"
-import { addLogHandler, consoleLogHandler } from "TiFShared/logging"
+import { addLocationToDB } from "../../../GeocodingLambda/utils"
 import { closeLocalhostServer } from "../localhostListener"
+import { testEventCoordinate } from "../testEvents"
 import { testUserCounter } from "../userFlows/createUserFlow"
-
-global.beforeAll(() => addLogHandler(consoleLogHandler()))
 
 /*
  * Resets database before each test
@@ -12,9 +11,20 @@ global.beforeAll(() => addLogHandler(consoleLogHandler()))
 global.beforeEach(async () => {
   testUserCounter.currentUserIndex = 0
   await resetDB()
-})
 
-global.beforeAll(resetDB)
+  await addLocationToDB(
+    conn,
+    {
+      ...testEventCoordinate,
+      name: "Sample Location",
+      city: "Sample Neighborhood",
+      country: "Sample Country",
+      street: "Sample Street",
+      streetNumber: "1234"
+    },
+    "Asia/Shanghai"
+  )
+})
 
 global.afterEach(closeLocalhostServer)
 

@@ -14,7 +14,10 @@ describe("Leave event tests", () => {
     } = await createEventFlow(
       [
         {
-          coordinates: eventLocation
+          location: {
+            type: "coordinate",
+            value: eventLocation
+          }
         }
       ],
       1
@@ -37,7 +40,10 @@ describe("Leave event tests", () => {
     } = await createEventFlow(
       [
         {
-          coordinates: eventLocation
+          location: {
+            type: "coordinate",
+            value: eventLocation
+          }
         }
       ],
       1
@@ -57,7 +63,13 @@ describe("Leave event tests", () => {
     const {
       attendeesList,
       eventIds: [eventId]
-    } = await createEventFlow([{ coordinates: eventLocation }], 1)
+    } = await createEventFlow(
+      [{
+        location: {
+          type: "coordinate",
+          value: eventLocation
+        }
+      }], 1)
 
     await testAPI.leaveEvent({
       auth: attendeesList[1].auth,
@@ -92,7 +104,13 @@ describe("Leave event tests", () => {
       eventIds: [eventId],
       host,
       attendeesList: [, attendee]
-    } = await createEventFlow([{ coordinates: eventLocation }], 1)
+    } = await createEventFlow(
+      [{
+        location: {
+          type: "coordinate",
+          value: eventLocation
+        }
+      }], 1)
 
     await testAPI.endEvent({ auth: host.auth, params: { eventId } })
     const resp = await testAPI.leaveEvent({

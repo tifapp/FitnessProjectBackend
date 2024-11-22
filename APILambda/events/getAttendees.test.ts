@@ -28,7 +28,14 @@ const createTestAttendees = async (numOfAttendees: number = 1) => {
     host,
     attendeesList,
     eventIds: [eventId]
-  } = await createEventFlow([{ coordinates: eventLocation }], numOfAttendees)
+  } = await createEventFlow(
+    [{
+      location: {
+        type: "coordinate",
+        value: eventLocation
+      }
+    }],
+    numOfAttendees)
 
   return {
     attendeesList,
@@ -317,9 +324,9 @@ describe("getAttendeesList endpoint", () => {
 
     const [, attendee] = attendeesList
 
-    await testAPI.arriveAtRegion({
+    await testAPI.updateArrivalStatus({
       auth: attendee.auth,
-      body: { coordinate: eventLocation, arrivalRadiusMeters: 500 }
+      body: { status: "arrived", coordinate: eventLocation, arrivalRadiusMeters: 500 }
     })
 
     let resp = await testAPI.attendeesList<200>({

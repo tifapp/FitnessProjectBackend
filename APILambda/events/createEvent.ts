@@ -1,21 +1,20 @@
 import { conn } from "TiFBackendUtils"
 import { MySQLExecutableDriver } from "TiFBackendUtils/MySQLDriver"
-import { resp } from "TiFShared/api/Transport"
-import { CreateEvent, EventID } from "TiFShared/domain-models/Event"
+import { resp } from "TiFShared/api"
+import { CreateEvent, EventEditLocation, EventID } from "TiFShared/domain-models/Event"
+import { LocationCoordinate2D } from "TiFShared/domain-models/LocationCoordinate2D"
 import { UserID } from "TiFShared/domain-models/User"
-import { promiseResult, success } from "TiFShared/lib/Result"
-import { Logger } from "TiFShared/logging"
+import { AwaitableResult } from "TiFShared/lib/Result"
+import { NamedLocation } from "TiFShared/lib/Types/NamedLocation"
 import { authenticatedEndpoint } from "../auth"
-import { ServerEnvironment } from "../env"
 import { addUserToAttendeeList } from "../utils/eventAttendance"
 
 export const createEventSQL = (
   conn: MySQLExecutableDriver,
   {
-    coordinates: { latitude, longitude },
     dateRange: { startDateTime, endDateTime },
     ...rest
-  }: CreateEvent,
+  }: Omit<CreateEvent, "location"> & LocationCoordinate2D,
   hostId: string
 ) => {
   return conn.executeResult(
@@ -44,8 +43,6 @@ export const createEventSQL = (
   `,
     {
       ...rest,
-      latitude,
-      longitude,
       startDateTime,
       endDateTime,
       hostId
@@ -53,32 +50,24 @@ export const createEventSQL = (
   )
 }
 
-export const createEventTransaction = (
+export const createEventTransaction = async (
   conn: MySQLExecutableDriver,
   body: CreateEvent,
   selfId: UserID,
-  environment: ServerEnvironment,
-  log: Logger
+  geocode: (locationEdit: EventEditLocation) => AwaitableResult<NamedLocation, never>
 ) => {
-  return conn
-    .transaction((tx) =>
-      createEventSQL(tx, body, selfId)
-        .passthroughSuccess(({ insertId }) =>
-          addUserToAttendeeList(conn, selfId, parseInt(insertId), "hosting")
-        )
-        .passthroughSuccess(() =>
-          promiseResult(
-            environment
-              .callGeocodingLambda(body.coordinates)
-              .then(() => success())
-              .catch((e) => {
-                log.error(e)
-                return success()
-              })
+  const result = await geocode(body.location)
+
+  return result.flatMapSuccess(({ coordinate }) =>
+    conn
+      .transaction((tx) =>
+        createEventSQL(tx, { ...body, ...coordinate }, selfId)
+          .passthroughSuccess(({ insertId }) =>
+            addUserToAttendeeList(conn, selfId, parseInt(insertId), "hosting")
           )
-        )
-    )
-    .mapSuccess(({ insertId }) => Number(insertId) as EventID)
+      )
+      .mapSuccess(({ insertId }) => Number(insertId) as EventID)
+  )
 }
 
 // ALLOW EXTRA MIDDLEWARE
@@ -88,8 +77,15 @@ export const createEventTransaction = (
  * @param environment see {@link ServerEnvironment}.
  */
 export const createEvent = authenticatedEndpoint<"createEvent">(
-  ({ environment, context: { selfId }, body, log }) =>
-    createEventTransaction(conn, body, selfId, environment, log)
-      .mapSuccess((id) => resp(201, { id }))
+  async ({ environment, context: { selfId }, body }) => {
+    const result = await createEventTransaction(
+      conn,
+      body,
+      selfId,
+      (locationEdit) => environment.callGeocodingLambda(locationEdit)
+    )
+
+    return result.mapSuccess((id) => resp(201, { id }))
       .unwrap()
+  }
 )

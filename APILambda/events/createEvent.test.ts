@@ -40,9 +40,12 @@ describe("CreateEvent tests", () => {
     const { eventIds } = await createEventFlow([
       {
         title: "test event",
-        coordinates: {
-          latitude: 36.98,
-          longitude: -122.06
+        location: {
+          type: "coordinate",
+          value: {
+            latitude: 36.98,
+            longitude: -122.06
+          }
         }
       }
     ])
@@ -75,9 +78,12 @@ describe("CreateEvent tests", () => {
     const { eventIds } = await createEventFlow([
       {
         title: "test event",
-        coordinates: {
-          latitude: 25,
-          longitude: 25
+        location: {
+          type: "coordinate",
+          value: {
+            latitude: 25,
+            longitude: 25
+          }
         }
       }
     ])
@@ -145,9 +151,12 @@ describe("CreateEvent tests", () => {
     const { eventIds } = await createEventFlow([
       {
         title: "test event",
-        coordinates: {
-          latitude: 43.839319,
-          longitude: 87.526148
+        location: {
+          type: "coordinate",
+          value: {
+            latitude: 43.839319,
+            longitude: 87.526148
+          }
         }
       }
     ])
@@ -182,9 +191,12 @@ describe("CreateEvent tests", () => {
       {
         title: "test event",
         // Coordinates for the timezone border of ['Asia/Shanghai', 'Asia/Urumqi']
-        coordinates: {
-          latitude: 43.839319,
-          longitude: 87.526148
+        location: {
+          type: "coordinate",
+          value: {
+            latitude: 43.839319,
+            longitude: 87.526148
+          }
         }
       }
     ])

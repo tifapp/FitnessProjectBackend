@@ -1,7 +1,6 @@
 import dayjs from "dayjs"
 import { conn } from "TiFBackendUtils"
 import { dateRange } from "TiFShared/domain-models/FixedDateRange"
-import { logger } from "TiFShared/logging"
 import { addLocationToDB } from "../../GeocodingLambda/utils"
 import { devTestEnv } from "../test/devIndex"
 import { testAPI } from "../test/testApp"
@@ -15,8 +14,8 @@ describe("_upcomingEvents tests", () => {
     await addLocationToDB(
       conn,
       {
-        latitude: testEventInput.coordinates.latitude,
-        longitude: testEventInput.coordinates.longitude,
+        latitude: testEventInput.location.value.latitude,
+        longitude: testEventInput.location.value.longitude,
         name: "Sample Location",
         city: "Sample Neighborhood",
         country: "Sample Country",
@@ -26,7 +25,6 @@ describe("_upcomingEvents tests", () => {
       "Sample/Timezone"
     )
   })
-  const log = logger("upcoming.events.tests")
   test("if no upcoming events, empty", async () => {
     const attendee = await createUserFlow()
     const resp = await testAPI.upcomingEvents<200>({
@@ -79,8 +77,7 @@ describe("_upcomingEvents tests", () => {
         )
       },
       user.id,
-      devTestEnv,
-      log
+      devTestEnv.callGeocodingLambda
     )
     const upcomingEventId = await createEventTransaction(
       conn,
@@ -92,8 +89,7 @@ describe("_upcomingEvents tests", () => {
         )
       },
       user.id,
-      devTestEnv,
-      log
+      devTestEnv.callGeocodingLambda
     ).unwrap()
     const resp = await testAPI.upcomingEvents<200>({
       auth: user.auth

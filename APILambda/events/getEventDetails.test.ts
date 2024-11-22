@@ -26,15 +26,15 @@ describe("getEventDetails", () => {
     const newUser = await createUserFlow()
 
     const eventTimeZone = getTimeZone({
-      latitude: testEventInput.coordinates.latitude,
-      longitude: testEventInput.coordinates.longitude
+      latitude: testEventInput.location.value.latitude,
+      longitude: testEventInput.location.value.longitude
     })
 
     addLocationToDB(
       conn,
       {
-        latitude: testEventInput.coordinates.latitude,
-        longitude: testEventInput.coordinates.longitude,
+        latitude: testEventInput.location.value.latitude,
+        longitude: testEventInput.location.value.longitude,
         name: "Sample Location",
         city: "Sample Neighborhood",
         country: "Sample Country",
@@ -85,7 +85,7 @@ describe("getEventDetails", () => {
           hasArrived: false
         })),
         location: {
-          coordinate: testEventInput.coordinates,
+          coordinate: testEventInput.location.value,
           placemark: {
             name: "Sample Location",
             city: "Sample Neighborhood",

@@ -8,7 +8,10 @@ describe("End/cancel event tests", () => {
     const { eventIds, host } = await createEventFlow(
       [
         {
-          coordinates: eventLocation
+          location: {
+            type: "coordinate",
+            value: eventLocation
+          }
         }
       ],
       0
@@ -27,7 +30,10 @@ describe("End/cancel event tests", () => {
     const { attendeesList, eventIds } = await createEventFlow(
       [
         {
-          coordinates: eventLocation
+          location: {
+            type: "coordinate",
+            value: eventLocation
+          }
         }
       ],
       1
@@ -50,7 +56,10 @@ describe("End/cancel event tests", () => {
     } = await createEventFlow(
       [
         {
-          coordinates: eventLocation
+          location: {
+            type: "coordinate",
+            value: eventLocation
+          }
         }
       ],
       1

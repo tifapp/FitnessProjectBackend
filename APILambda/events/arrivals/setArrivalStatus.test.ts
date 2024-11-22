@@ -13,7 +13,10 @@ describe("SetHasArrived tests", () => {
     } = await createEventFlow(
       [
         {
-          coordinates: eventLocation,
+          location: {
+            type: "coordinate",
+            value: eventLocation
+          },
           dateRange: upcomingEventDateRange
         }
       ],
@@ -21,9 +24,10 @@ describe("SetHasArrived tests", () => {
     )
 
     expect(
-      await testAPI.arriveAtRegion({
+      await testAPI.updateArrivalStatus({
         auth: attendee.auth,
         body: {
+          status: "arrived",
           coordinate: eventLocation,
           arrivalRadiusMeters: 500
         }
@@ -40,9 +44,11 @@ describe("SetHasArrived tests", () => {
     })
 
     expect(
-      await testAPI.departFromRegion({
+      await testAPI.updateArrivalStatus({
+
         auth: attendee.auth,
         body: {
+          status: "departed",
           coordinate: eventLocation,
           arrivalRadiusMeters: 500
         }
@@ -66,16 +72,20 @@ describe("SetHasArrived tests", () => {
     } = await createEventFlow(
       [
         {
-          coordinates: eventLocation,
+          location: {
+            type: "coordinate",
+            value: eventLocation
+          },
           dateRange: upcomingEventDateRange
         }
       ],
       1
     )
 
-    await testAPI.arriveAtRegion({
+    await testAPI.updateArrivalStatus({
       auth: attendee.auth,
       body: {
+        status: "arrived",
         coordinate: eventLocation,
         arrivalRadiusMeters: 500
       }
@@ -93,9 +103,10 @@ describe("SetHasArrived tests", () => {
       }
     })
 
-    await testAPI.departFromRegion({
+    await testAPI.updateArrivalStatus({
       auth: attendee.auth,
       body: {
+        status: "departed",
         coordinate: eventLocation,
         arrivalRadiusMeters: 500
       }

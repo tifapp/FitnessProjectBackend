@@ -1,7 +1,7 @@
 import dayjs from "dayjs"
 import { dateRange } from "TiFShared/domain-models/FixedDateRange"
 import { testAPI } from "../../test/testApp"
-import { testEventInput, upcomingEventDateRange } from "../../test/testEvents"
+import { testEventCoordinate, testEventInput, upcomingEventDateRange } from "../../test/testEvents"
 import { createEventFlow } from "../../test/userFlows/createEventFlow"
 import { createUserFlow } from "../../test/userFlows/createUserFlow"
 
@@ -18,8 +18,6 @@ describe("getUpcomingEvents tests", () => {
   })
 
   it("should return 200 with an array of events if the user has upcoming events", async () => {
-    const eventLocation = { latitude: 50, longitude: 50 }
-
     const {
       attendeesList,
       host,
@@ -27,25 +25,37 @@ describe("getUpcomingEvents tests", () => {
     } = await createEventFlow(
       [
         {
-          coordinates: eventLocation,
+          location: {
+            type: "coordinate",
+            value: testEventCoordinate
+          },
           dateRange: upcomingEventDateRange
         },
         {
-          coordinates: eventLocation,
+          location: {
+            type: "coordinate",
+            value: testEventCoordinate
+          },
           dateRange: dateRange(
             dayjs().subtract(12, "hour").toDate(),
             dayjs().add(1, "year").toDate()
           )
         },
         {
-          coordinates: {
-            latitude: 25,
-            longitude: 25
+          location: {
+            type: "coordinate",
+            value: {
+              latitude: 25,
+              longitude: 25
+            }
           },
           dateRange: upcomingEventDateRange
         },
         {
-          coordinates: eventLocation,
+          location: {
+            type: "coordinate",
+            value: testEventCoordinate
+          },
           dateRange: dateRange(
             dayjs().add(1, "month").toDate(),
             dayjs().add(1, "year").toDate()
@@ -60,15 +70,19 @@ describe("getUpcomingEvents tests", () => {
       auth: host.auth,
       body: {
         ...testEventInput,
-        coordinates: eventLocation,
+        location: {
+          type: "coordinate",
+          value: testEventCoordinate
+        },
         dateRange: upcomingEventDateRange!
       }
     })
 
-    await testAPI.arriveAtRegion({
+    await testAPI.updateArrivalStatus({
       auth: attendeesList[1].auth,
       body: {
-        coordinate: eventLocation,
+        status: "arrived",
+        coordinate: testEventCoordinate,
         arrivalRadiusMeters: 500
       }
     })
