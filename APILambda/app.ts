@@ -23,11 +23,9 @@ const env = envVars.ENVIRONMENT === "devTest"
 
 export const app = createApp()
 
-const middlewareMap = {
-  // test imports must be dynamic because they aren't built into the deployed server
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  devTest: [addTiFRouter],
-  live: [addEventToRequest, addBenchmarking, addTiFRouter]
+if (envVars.ENVIRONMENT !== "devTest") {
+  addEventToRequest(app)
+  addBenchmarking(app)
 }
 
-middlewareMap[envVars.ENVIRONMENT === "devTest" ? "devTest" : "live"].forEach(handler => handler(app, env))
+addTiFRouter(app, env)
