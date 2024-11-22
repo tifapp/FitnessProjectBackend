@@ -4,10 +4,11 @@ import "TiFShared/lib/Zod"
 
 import { LocationCoordinate2D } from "TiFShared/domain-models/LocationCoordinate2D"
 import { handler } from "../../GeocodingLambda/index"
-import { addTiFRouter, createApp } from "../app"
+import { addTiFRouter, createApp } from "../appMiddleware"
 import { ServerEnvironment } from "../env"
+import { localhostListener } from "./localhostListener"
 
-export const devTestEnv: ServerEnvironment = {
+const env: ServerEnvironment = {
   environment: "devTest",
   maxArrivals: 4,
   eventStartWindowInHours: 1,
@@ -15,5 +16,4 @@ export const devTestEnv: ServerEnvironment = {
     handler(location)
 }
 
-export const devApp = createApp()
-addTiFRouter(devApp, devTestEnv)
+export const devApp = createApp(env, addTiFRouter, localhostListener)

@@ -4,6 +4,9 @@ import {
   validateAPICall
 } from "TiFShared/api/APIValidation"
 import { envVars } from "./env"
+import { logger } from "TiFShared/logging"
+
+const log = logger("tif.backend.api.validation")
 
 export const validateAPIRouterCall = validateAPICall(
   (result) => {
@@ -17,5 +20,6 @@ export const validateAPIRouterCall = validateAPICall(
   },
   envVars.ENVIRONMENT === "prod"
     ? APIValidationOptions.Request
-    : APIValidationOptions.Request | APIValidationOptions.Response
+    : APIValidationOptions.Request | APIValidationOptions.Response,
+  log
 )

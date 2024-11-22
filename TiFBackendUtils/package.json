@@ -2,7 +2,6 @@
   "name": "TiFBackendUtils",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
   "dependencies": {
     "mysql2": "^3.9.7",
     "node-fetch": "^3.3.2"
