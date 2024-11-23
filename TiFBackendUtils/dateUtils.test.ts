@@ -1,4 +1,4 @@
-import dayjs from "dayjs"
+import { dayjs } from "TiFShared/lib/Dayjs"
 import {
   calcSecondsToStart,
   calcTodayOrTomorrow,

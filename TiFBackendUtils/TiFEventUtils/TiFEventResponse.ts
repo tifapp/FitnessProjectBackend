@@ -1,30 +1,27 @@
-import dayjs from "dayjs"
-import duration from "dayjs/plugin/duration"
 import { ColorString } from "TiFShared/domain-models/ColorString"
 import {
-    dateRange,
-    FixedDateRange
+  dateRange,
+  FixedDateRange
 } from "TiFShared/domain-models/FixedDateRange"
 import { Placemark } from "TiFShared/domain-models/Placemark"
 import {
-    UnblockedUserRelationsStatus,
-    UserHandle,
-    UserID
+  UnblockedUserRelationsStatus,
+  UserHandle,
+  UserID
 } from "TiFShared/domain-models/User"
+import { dayjs } from "TiFShared/lib/Dayjs"
 import {
-    calcSecondsToStart,
-    calcTodayOrTomorrow,
-    isDayAfter
+  calcSecondsToStart,
+  calcTodayOrTomorrow,
+  isDayAfter
 } from "../dateUtils"
 import {
-    DBevent,
-    DBeventAttendance,
-    DBTifEventView,
-    DBuserRelationships
+  DBevent,
+  DBeventAttendance,
+  DBTifEventView,
+  DBuserRelationships
 } from "../DBTypes"
 import { UserRelations, UserRelationsSchema } from "../TiFUserUtils"
-
-dayjs.extend(duration)
 
 // Get the total seconds in the duration
 export const SECONDS_IN_DAY = dayjs.duration(1, "day").asSeconds()
