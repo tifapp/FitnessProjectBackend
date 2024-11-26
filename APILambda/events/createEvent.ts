@@ -1,24 +1,21 @@
 import { conn } from "TiFBackendUtils"
 import { MySQLExecutableDriver } from "TiFBackendUtils/MySQLDriver"
-import { resp } from "TiFShared/api"
-import {
-  CreateEvent,
-  EventEdit,
-  EventEditLocation,
-  EventID
-} from "TiFShared/domain-models/Event"
-import { LocationCoordinate2D } from "TiFShared/domain-models/LocationCoordinate2D"
-import { UserID } from "TiFShared/domain-models/User"
-import { AwaitableResult, PromiseResult } from "TiFShared/lib/Result"
-import { NamedLocation } from "TiFShared/lib/Types/NamedLocation"
-import { authenticatedEndpoint } from "../auth"
-import { addUserToAttendeeList } from "../utils/eventAttendance"
 import {
   addAttendanceData,
-  DBTifEvent,
   getEventSQL,
   tifEventResponseFromDatabaseEvent
 } from "TiFBackendUtils/TiFEventUtils"
+import { resp } from "TiFShared/api"
+import {
+  EventEdit,
+  EventEditLocation
+} from "TiFShared/domain-models/Event"
+import { LocationCoordinate2D } from "TiFShared/domain-models/LocationCoordinate2D"
+import { UserID } from "TiFShared/domain-models/User"
+import { AwaitableResult } from "TiFShared/lib/Result"
+import { NamedLocation } from "TiFShared/lib/Types/NamedLocation"
+import { authenticatedEndpoint } from "../auth"
+import { addUserToAttendeeList } from "../utils/eventAttendance"
 
 export const createEventSQL = (
   conn: MySQLExecutableDriver,
@@ -67,7 +64,7 @@ export const createEventSQL = (
     .mapFailure((e) => e as never) // NB: Insert should always return the inserted value.
 }
 
-export const createEventTransaction = async (
+export const createEventTransaction = (
   conn: MySQLExecutableDriver,
   body: EventEdit,
   selfId: UserID,
@@ -75,7 +72,7 @@ export const createEventTransaction = async (
     locationEdit: EventEditLocation
   ) => AwaitableResult<NamedLocation, never>
 ) => {
-  return (await geocode(body.location)).flatMapSuccess(({ coordinate }) => {
+  return geocode(body.location).flatMapSuccess(({ coordinate }) => {
     return conn.transaction((tx) => {
       return createEventSQL(tx, { ...body, ...coordinate }, selfId)
         .passthroughSuccess((event) => {
@@ -95,12 +92,13 @@ export const createEventTransaction = async (
  */
 export const createEvent = authenticatedEndpoint<"createEvent">(
   async ({ environment, context: { selfId }, body }) => {
-    const result = await createEventTransaction(
+    return createEventTransaction(
       conn,
       body,
       selfId,
       (locationEdit) => environment.callGeocodingLambda(locationEdit)
     )
-    return result.mapSuccess((event) => resp(201, event)).unwrap()
+      .mapSuccess((event) => resp(201, event))
+      .unwrap()
   }
 )

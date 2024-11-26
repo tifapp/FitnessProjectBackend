@@ -4,7 +4,7 @@
 import { conn } from "TiFBackendUtils"
 import { exponentialFunctionBackoff } from "TiFBackendUtils/AWS"
 import { EventEditLocation } from "TiFShared/domain-models/Event"
-import { AwaitableResult, promiseResult, success } from "TiFShared/lib/Result"
+import { promiseResult, success } from "TiFShared/lib/Result"
 import { NamedLocation } from "TiFShared/lib/Types/NamedLocation"
 import {
   addLocationToDB,
@@ -18,7 +18,7 @@ import {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const handler: any = exponentialFunctionBackoff<
   EventEditLocation,
-  AwaitableResult<NamedLocation, never>
+  NamedLocation
 >((locationEdit: EventEditLocation) => {
   console.log("geocoding ", locationEdit)
 
@@ -57,4 +57,5 @@ export const handler: any = exponentialFunctionBackoff<
           ))
         })
     )
+    .unwrap()
 })

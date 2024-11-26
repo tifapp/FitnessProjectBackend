@@ -1,6 +1,6 @@
 import { EnvSchema } from "TiFBackendUtils/env"
 import { EventEditLocation } from "TiFShared/domain-models/Event"
-import { AwaitableResult } from "TiFShared/lib/Result"
+import { PromiseResult } from "TiFShared/lib/Result"
 import { NamedLocation } from "TiFShared/lib/Types/NamedLocation"
 
 export type SetArrivalStatusEnvironment = {
@@ -18,5 +18,5 @@ export type SetArrivalStatusEnvironment = {
 export type ServerEnvironment = SetArrivalStatusEnvironment & {
   environment: EnvSchema["ENVIRONMENT"]
   eventStartWindowInHours: number
-  callGeocodingLambda: (locationEdit: EventEditLocation) => AwaitableResult<NamedLocation, never>
+  callGeocodingLambda: (locationEdit: EventEditLocation) => PromiseResult<NamedLocation, never>
 }
