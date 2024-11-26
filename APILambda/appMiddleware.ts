@@ -1,4 +1,4 @@
-import express, { Application } from "express"
+import express, { Express } from "express"
 import { ServerEnvironment } from "./env"
 import { upcomingEventArrivalRegions } from "./events/arrivals/getUpcomingEvents"
 import { createEvent } from "./events/createEvent"
@@ -24,21 +24,26 @@ import { updateCurrentUserProfile } from "./user/updateUserProfile"
 import { arriveAtRegion } from "./events/arrivals/setArrivalStatus"
 import { departFromRegion } from "./events/arrivals/setDeparture"
 
+type AppMiddleware = ((app: Express, env: ServerEnvironment) => Express)
+
 /**
  * Creates an application instance.
  *
  * @param environment see {@link ServerEnvironment}
  * @returns a express js app instance
  */
-export const createApp = () => {
+export const createApp = (env: ServerEnvironment, ...middlewares: (AppMiddleware)[]) => {
   const app = express()
   app.use(express.json())
   app.use(express.urlencoded({ extended: true }))
+
+  middlewares.forEach(middleware => middleware(app, env))
+
   return app
 }
 
 // instead of here, should be aggregated in the jest suite
-export const addBenchmarking = (app: Application) => {
+export const addBenchmarking = (app: Express) => {
   app.use((req, res, next) => {
     const start = Date.now()
     const startMem = process.memoryUsage().heapUsed
@@ -55,12 +60,13 @@ export const addBenchmarking = (app: Application) => {
     })
     next()
   })
+  return app
 }
 
 export const addTiFRouter = (
-  app: Application,
-  environment: ServerEnvironment
-) =>
+  app: Express,
+  env: ServerEnvironment
+) => {
   app.use(
     "/",
     TiFRouter(
@@ -88,6 +94,8 @@ export const addTiFRouter = (
         unblockUser,
         registerForPushNotifications
       },
-      environment
+      env
     )
   )
+  return app
+}

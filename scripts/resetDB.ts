@@ -1,4 +1,4 @@
-import { resetDB } from "../TiFBackendUtils/MySQLDriver/test/dbHelpers"
+import { resetDB } from "../TiFBackendUtils/test/MySQLDriver/dbHelpers"
 
 if (process.argv.includes("--run")) {
   resetDB()
