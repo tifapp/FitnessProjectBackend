@@ -1,7 +1,8 @@
 import { conn } from "TiFBackendUtils"
 import { EventEditLocation } from "TiFShared/domain-models/Event"
 import { Placemark } from "TiFShared/domain-models/Placemark"
-import { resetDB } from "../TiFBackendUtils/MySQLDriver/test/dbHelpers"
+import { failure, success } from "TiFShared/lib/Result"
+import { resetDB } from "../TiFBackendUtils/test/MySQLDriver/dbHelpers"
 import { handler } from "./index"
 
 const testCoordinates: EventEditLocation = {

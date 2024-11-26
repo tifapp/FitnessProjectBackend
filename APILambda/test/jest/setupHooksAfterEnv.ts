@@ -1,6 +1,5 @@
 import { conn } from "TiFBackendUtils"
-import { resetDB } from "TiFBackendUtils/MySQLDriver/test/dbHelpers"
-import { addLocationToDB } from "../../../GeocodingLambda/utils"
+import { resetDB } from "TiFBackendUtils/test/MySQLDriver/dbHelpers"
 import { closeLocalhostServer } from "../localhostListener"
 import { testEventCoordinate } from "../testEvents"
 import { testUserCounter } from "../userFlows/createUserFlow"

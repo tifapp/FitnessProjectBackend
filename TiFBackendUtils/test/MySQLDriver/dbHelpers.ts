@@ -1,5 +1,5 @@
+import { createDatabaseConnection } from "../../MySQLDriver/dbConnection"
 import { envVars } from "../../env"
-import { createDatabaseConnection } from "../dbConnection"
 import { tableDefintionsByFamily } from "./tableDefinitions"
 
 const recreateDatabase = async () => {

@@ -1,11 +1,12 @@
-import {
-  EventBridge,
-  PutTargetsCommandOutput
-} from "@aws-sdk/client-eventbridge"
+import type { PutTargetsCommandOutput } from "@aws-sdk/client-eventbridge"
 import { InvocationType, Lambda } from "@aws-sdk/client-lambda"
 import { retryFunction } from "../Retryable/utils"
 import { mockInDevTest } from "../test/mock"
 import { AWSEnvVars } from "./env"
+const {
+  EventBridge
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+} = require("@aws-sdk/client-eventbridge")
 
 const eventbridge = new EventBridge({ apiVersion: "2023-04-20" })
 const lambda = new Lambda()
