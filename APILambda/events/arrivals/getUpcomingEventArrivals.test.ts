@@ -9,7 +9,7 @@ import {
 import { createEventFlow } from "../../test/userFlows/createEventFlow"
 import { createUserFlow } from "../../test/userFlows/createUserFlow"
 
-describe("getUpcomingEvents tests", () => {
+describe("getUpcomingEventArrivals tests", () => {
   it("should return 200 with an empty array if the user has no upcoming events", async () => {
     const attendee = await createUserFlow()
 

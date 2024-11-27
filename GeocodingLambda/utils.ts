@@ -6,9 +6,11 @@ import { find } from "geo-tz/dist/find-now"
 import { EventEditLocation } from "TiFShared/domain-models/Event"
 import { LocationCoordinate2D } from "TiFShared/domain-models/LocationCoordinate2D"
 import { Placemark } from "TiFShared/domain-models/Placemark"
+import { placemarkToFormattedAddress } from "TiFShared/lib/AddressFormatting"
 const {
   LocationClient,
-  SearchPlaceIndexForPositionCommand
+  SearchPlaceIndexForPositionCommand,
+  SearchPlaceIndexForTextCommand
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 } = require("@aws-sdk/client-location")
 

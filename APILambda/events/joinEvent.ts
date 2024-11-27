@@ -5,7 +5,7 @@ import { areCoordinatesEqual } from "TiFShared/domain-models/LocationCoordinate2
 import { failure, success } from "TiFShared/lib/Result"
 import { authenticatedEndpoint } from "../auth"
 import { addUserToAttendeeList } from "../utils/eventAttendance"
-import { upcomingEventArrivalRegionsSQL } from "./arrivals/getUpcomingEvents"
+import { upcomingEventArrivalRegionsSQL } from "./arrivals/getUpcomingEventArrivals"
 import { insertArrival } from "./arrivals/updateArrivalStatus"
 
 export const joinEvent = authenticatedEndpoint<"joinEvent">(

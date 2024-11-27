@@ -1,5 +1,7 @@
 import { conn } from "TiFBackendUtils"
 import { dateRange } from "TiFShared/domain-models/FixedDateRange"
+import { LocationCoordinate2D } from "TiFShared/domain-models/LocationCoordinate2D"
+import { dayjs } from "TiFShared/lib/Dayjs"
 import { handler as geocode } from "../../GeocodingLambda/index"
 import { addLocationToDB } from "../../GeocodingLambda/utils"
 import { testAPI } from "../test/testApp"
@@ -7,15 +9,16 @@ import { testEventInput } from "../test/testEvents"
 import { createEventFlow } from "../test/userFlows/createEventFlow"
 import { createUserFlow } from "../test/userFlows/createUserFlow"
 import { createEventTransaction } from "./createEvent"
-import { dayjs } from "TiFShared/lib/Dayjs"
+
+const testEventLocation = testEventInput.location.value as LocationCoordinate2D
 
 describe("_upcomingEvents tests", () => {
   beforeEach(async () => {
     await addLocationToDB(
       conn,
       {
-        latitude: testEventInput.location.value.latitude,
-        longitude: testEventInput.location.value.longitude,
+        latitude: testEventLocation.latitude,
+        longitude: testEventLocation.longitude,
         name: "Sample Location",
         city: "Sample Neighborhood",
         country: "Sample Country",

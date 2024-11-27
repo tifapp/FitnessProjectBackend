@@ -1,12 +1,12 @@
 import { conn } from "TiFBackendUtils"
 import { MySQLExecutableDriver } from "TiFBackendUtils/MySQLDriver"
 import { resp } from "TiFShared/api/Transport"
+import { EventRegion } from "TiFShared/domain-models/Event"
 import { LocationCoordinate2D } from "TiFShared/domain-models/LocationCoordinate2D"
+import { UserID } from "TiFShared/domain-models/User"
 import { failure, success } from "TiFShared/lib/Result"
 import { authenticatedEndpoint } from "../../auth"
-import { upcomingEventArrivalRegionsSQL } from "./getUpcomingEvents"
-import { UserID } from "TiFShared/domain-models/User"
-import { EventRegion } from "TiFShared/domain-models/Event"
+import { upcomingEventArrivalRegionsSQL } from "./getUpcomingEventArrivals"
 
 const deleteOldArrivals = (
   conn: MySQLExecutableDriver,

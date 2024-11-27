@@ -1,6 +1,6 @@
 import express, { Express } from "express"
 import { ServerEnvironment } from "./env"
-import { upcomingEventArrivalRegions } from "./events/arrivals/getUpcomingEvents"
+import { upcomingEventArrivalRegions } from "./events/arrivals/getUpcomingEventArrivals"
 import { updateArrivalStatus } from "./events/arrivals/updateArrivalStatus"
 import { createEvent } from "./events/createEvent"
 import { endEvent } from "./events/endEvent"
@@ -76,6 +76,7 @@ export const addTiFRouter = (
         joinEvent,
         leaveEvent,
         endEvent,
+        editEvent,
         upcomingEvents,
         updateArrivalStatus,
         upcomingEventArrivalRegions,
