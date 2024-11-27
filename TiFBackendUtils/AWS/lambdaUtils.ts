@@ -1,5 +1,6 @@
 import type { PutTargetsCommandOutput } from "@aws-sdk/client-eventbridge"
 import { InvocationType, Lambda } from "@aws-sdk/client-lambda"
+import { promiseResult, success } from "TiFShared/lib/Result"
 import { retryFunction } from "../Retryable/utils"
 import { mockInDevTest } from "../test/mock"
 import { AWSEnvVars } from "./env"
@@ -51,15 +52,21 @@ export const scheduleAWSLambda = async (
   return await eventbridge.putTargets(targetParams)
 }
 
-export const invokeAWSLambda = async (
+export const invokeAWSLambda = <T>(
   lambdaName: string,
   targetLambdaParams?: unknown
-) =>
-  lambda.invoke({
-    FunctionName: lambdaName,
-    InvocationType: InvocationType.RequestResponse,
-    Payload: JSON.stringify(targetLambdaParams)
-  })
+) => {
+  return promiseResult(
+    lambda.invoke({
+      FunctionName: lambdaName,
+      InvocationType: InvocationType.RequestResponse,
+      Payload: JSON.stringify(targetLambdaParams)
+    }).then(response => {
+      const payloadString = new TextDecoder("utf-8").decode(response.Payload)
+      return success(JSON.parse(payloadString) as T)
+    })
+  )
+}
 
 export const deleteEventBridgeRule = async (event: { id: string }) => {
   await eventbridge.deleteRule({

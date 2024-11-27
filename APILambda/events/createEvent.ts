@@ -1,14 +1,14 @@
 import { conn } from "TiFBackendUtils"
 import { MySQLExecutableDriver } from "TiFBackendUtils/MySQLDriver"
 import {
-  addAttendanceData,
-  getEventSQL,
-  tifEventResponseFromDatabaseEvent
+    addAttendanceData,
+    getEventSQL,
+    tifEventResponseFromDatabaseEvent
 } from "TiFBackendUtils/TiFEventUtils"
 import { resp } from "TiFShared/api"
 import {
-  EventEdit,
-  EventEditLocation
+    EventEdit,
+    EventEditLocation
 } from "TiFShared/domain-models/Event"
 import { LocationCoordinate2D } from "TiFShared/domain-models/LocationCoordinate2D"
 import { UserID } from "TiFShared/domain-models/User"
@@ -96,7 +96,7 @@ export const createEvent = authenticatedEndpoint<"createEvent">(
       conn,
       body,
       selfId,
-      (locationEdit) => environment.callGeocodingLambda(locationEdit)
+      (locationEdit) => environment.geocode(locationEdit)
     )
       .mapSuccess((event) => resp(201, event))
       .unwrap()

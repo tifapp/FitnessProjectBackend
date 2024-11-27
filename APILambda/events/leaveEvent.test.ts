@@ -1,12 +1,11 @@
 import dayjs from "dayjs"
-import { dateRange } from "TiFShared/domain-models/FixedDateRange"
+import { conn } from "TiFBackendUtils"
+import { handler as geocode } from "../../GeocodingLambda"
 import { testAPI } from "../test/testApp"
+import { testEventInput } from "../test/testEvents"
 import { createEventFlow } from "../test/userFlows/createEventFlow"
 import { createUserFlow } from "../test/userFlows/createUserFlow"
 import { createEventTransaction } from "./createEvent"
-import { conn } from "TiFBackendUtils"
-import { testEventInput } from "../test/testEvents"
-import { handler as geocode } from "../../GeocodingLambda"
 
 describe("Leave event tests", () => {
   const eventLocation = { latitude: 50, longitude: 50 }

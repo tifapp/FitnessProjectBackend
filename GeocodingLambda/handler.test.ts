@@ -1,7 +1,6 @@
 import { conn } from "TiFBackendUtils"
 import { EventEditLocation } from "TiFShared/domain-models/Event"
 import { Placemark } from "TiFShared/domain-models/Placemark"
-import { failure, success } from "TiFShared/lib/Result"
 import { resetDB } from "../TiFBackendUtils/test/MySQLDriver/dbHelpers"
 import { handler } from "./index"
 

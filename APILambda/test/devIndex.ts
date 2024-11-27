@@ -8,11 +8,11 @@ import { addTiFRouter, createApp } from "../appMiddleware"
 import { ServerEnvironment } from "../env"
 import { localhostListener } from "./localhostListener"
 
-const env: ServerEnvironment = {
+export const devEnv: ServerEnvironment = {
   environment: "devTest",
   maxArrivals: 4,
   eventStartWindowInHours: 1,
-  callGeocodingLambda: (location) => {
+  geocode: (location) => {
     return promiseResult(
       handler(
         location
@@ -23,4 +23,4 @@ const env: ServerEnvironment = {
   }
 }
 
-export const devApp = createApp(env, addTiFRouter, localhostListener)
+export const devApp = createApp(devEnv, addTiFRouter, localhostListener)

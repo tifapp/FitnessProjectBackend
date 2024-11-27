@@ -18,5 +18,5 @@ export type SetArrivalStatusEnvironment = {
 export type ServerEnvironment = SetArrivalStatusEnvironment & {
   environment: EnvSchema["ENVIRONMENT"]
   eventStartWindowInHours: number
-  callGeocodingLambda: (locationEdit: EventEditLocation) => PromiseResult<NamedLocation, never>
+  geocode: (locationEdit: EventEditLocation) => PromiseResult<NamedLocation, never>
 }

@@ -2,7 +2,6 @@ import { TiFAPIClient } from "TiFBackendUtils"
 import {
   CreateEvent,
   EventEdit,
-  EventEditSchema,
   EventID
 } from "TiFShared/domain-models/Event"
 import { testAPI } from "../testApp"
