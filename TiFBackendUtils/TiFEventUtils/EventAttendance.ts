@@ -7,7 +7,7 @@ import { promiseResult, success } from "TiFShared/lib/Result"
 import { DBeventAttendance, DBuser, DBuserArrivals } from "../DBTypes"
 import { MySQLExecutableDriver } from "../MySQLDriver"
 import { UserRelations, UserRelationsSchema } from "../TiFUserUtils"
-import { DBTifEvent } from "./TiFEventResponse"
+import { Attendee, DBTifEvent } from "./TiFEventResponse"
 
 export type DBUserAttendance = Pick<
   DBeventAttendance,
@@ -128,7 +128,7 @@ const addAttendance = (
       }
     ])
   )
-  attendees.forEach(({ attendee, eventId }) => {
+  attendees.forEach(({ attendee, eventId }: {attendee: Attendee, eventId: EventID}) => {
     const event = map.get(eventId)
     if (!event) return
     event.previewAttendees.push(attendee)

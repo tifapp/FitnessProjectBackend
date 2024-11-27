@@ -1,6 +1,6 @@
 import { DatabaseValueConvertible } from "TiFShared/lib/Database"
 
-type DatabaseValue = undefined | Date | boolean | number | string | DatabaseValueConvertible
+type DatabaseValue = undefined | Date | boolean | number | string | number[] | string[] | DatabaseValueConvertible
 
 export type SQLParams =
   | undefined
