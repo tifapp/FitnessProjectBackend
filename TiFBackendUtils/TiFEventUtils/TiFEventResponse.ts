@@ -2,25 +2,25 @@ import dayjs from "dayjs"
 import duration from "dayjs/plugin/duration"
 import { ColorString } from "TiFShared/domain-models/ColorString"
 import {
-    dateRange,
-    FixedDateRange
+  dateRange,
+  FixedDateRange
 } from "TiFShared/domain-models/FixedDateRange"
 import { Placemark } from "TiFShared/domain-models/Placemark"
 import {
-    UnblockedUserRelationsStatus,
-    UserHandle,
-    UserID
+  UnblockedUserRelationsStatus,
+  UserHandle,
+  UserID
 } from "TiFShared/domain-models/User"
 import {
-    calcSecondsToStart,
-    calcTodayOrTomorrow,
-    isDayAfter
+  calcSecondsToStart,
+  calcTodayOrTomorrow,
+  isDayAfter
 } from "../dateUtils"
 import {
-    DBevent,
-    DBeventAttendance,
-    DBTifEventView,
-    DBuserRelationships
+  DBevent,
+  DBeventAttendance,
+  DBTifEventView,
+  DBuserRelationships
 } from "../DBTypes"
 import { UserRelations, UserRelationsSchema } from "../TiFUserUtils"
 
@@ -93,6 +93,9 @@ export type TiFEvent = {
 export const tifEventResponseFromDatabaseEvent = (
   event: DBTifEvent
 ): TiFEvent => {
+  console.log("translating event")
+  console.log(event)
+
   return {
     id: event.id,
     title: event.title,

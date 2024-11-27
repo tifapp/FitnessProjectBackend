@@ -1,18 +1,18 @@
 import { conn } from "TiFBackendUtils"
 import { MySQLExecutableDriver } from "TiFBackendUtils/MySQLDriver"
 import {
-    addAttendanceData,
-    getEventSQL,
-    tifEventResponseFromDatabaseEvent
+  addAttendanceData,
+  getEventSQL,
+  tifEventResponseFromDatabaseEvent
 } from "TiFBackendUtils/TiFEventUtils"
 import { resp } from "TiFShared/api"
 import {
-    EventEdit,
-    EventEditLocation
+  EventEdit,
+  EventEditLocation
 } from "TiFShared/domain-models/Event"
 import { LocationCoordinate2D } from "TiFShared/domain-models/LocationCoordinate2D"
 import { UserID } from "TiFShared/domain-models/User"
-import { AwaitableResult } from "TiFShared/lib/Result"
+import { PromiseResult } from "TiFShared/lib/Result"
 import { NamedLocation } from "TiFShared/lib/Types/NamedLocation"
 import { authenticatedEndpoint } from "../auth"
 import { addUserToAttendeeList } from "../utils/eventAttendance"
@@ -70,7 +70,7 @@ export const createEventTransaction = (
   selfId: UserID,
   geocode: (
     locationEdit: EventEditLocation
-  ) => AwaitableResult<NamedLocation, never>
+  ) => PromiseResult<NamedLocation, never>
 ) => {
   return geocode(body.location).flatMapSuccess(({ coordinate }) => {
     return conn.transaction((tx) => {

@@ -1,13 +1,13 @@
-import { promiseResult, success } from "TiFShared/lib/Result"
-import { DBeventAttendance, DBuser, DBuserArrivals } from "../DBTypes"
-import { MySQLExecutableDriver } from "../MySQLDriver"
-import { DBTifEvent } from "./TiFEventResponse"
+import { EventAttendee, EventID } from "TiFShared/domain-models/Event"
 import {
   UnblockedUserRelationsStatus,
   UserID
 } from "TiFShared/domain-models/User"
-import { EventID, EventAttendee } from "TiFShared/domain-models/Event"
+import { promiseResult, success } from "TiFShared/lib/Result"
+import { DBeventAttendance, DBuser, DBuserArrivals } from "../DBTypes"
+import { MySQLExecutableDriver } from "../MySQLDriver"
 import { UserRelations, UserRelationsSchema } from "../TiFUserUtils"
+import { DBTifEvent } from "./TiFEventResponse"
 
 export type DBUserAttendance = Pick<
   DBeventAttendance,

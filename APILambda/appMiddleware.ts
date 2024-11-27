@@ -3,6 +3,7 @@ import { ServerEnvironment } from "./env"
 import { upcomingEventArrivalRegions } from "./events/arrivals/getUpcomingEventArrivals"
 import { updateArrivalStatus } from "./events/arrivals/updateArrivalStatus"
 import { createEvent } from "./events/createEvent"
+import { editEvent } from "./events/editEvent"
 import { endEvent } from "./events/endEvent"
 import { attendeesList } from "./events/getAttendees"
 import { eventDetails } from "./events/getEventDetails"
@@ -71,12 +72,12 @@ export const addTiFRouter = (
     "/",
     TiFRouter(
       {
+        editEvent,
         createEvent,
         eventDetails,
         joinEvent,
         leaveEvent,
         endEvent,
-        editEvent,
         upcomingEvents,
         updateArrivalStatus,
         upcomingEventArrivalRegions,

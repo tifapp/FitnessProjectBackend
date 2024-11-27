@@ -1,21 +1,16 @@
 import express from "express"
 import { IncomingHttpHeaders } from "http"
-import {
-  TiFAPIClient,
-  TiFAPISchema,
-  validateAPIRouterCall
-} from "TiFBackendUtils"
+import { TiFAPIClient, TiFAPISchema, validateAPIRouterCall } from "TiFBackendUtils"
 import {
   APIHandler,
   APIMiddleware,
-  APISchema,
-  GenericEndpointSchema
+  APISchema, GenericEndpointSchema
 } from "TiFShared/api/TransportTypes"
 import { UserID } from "TiFShared/domain-models/User"
 import { chainMiddleware, middlewareRunner } from "TiFShared/lib/Middleware"
 import { NonEmptyArray } from "TiFShared/lib/Types/HelperTypes"
 import { MatchFnCollection } from "TiFShared/lib/Types/MatchType"
-import { logger, Logger } from "TiFShared/logging"
+import { Logger, logger } from "TiFShared/logging"
 import { ServerEnvironment } from "./env"
 import { catchAPIErrors } from "./errorHandler"
 
