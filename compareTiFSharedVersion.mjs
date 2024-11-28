@@ -12,7 +12,13 @@ const getCurrentCommitHash = (repoPath) => {
 }
 
 const packageJson = JSON.parse(readFileSync(path.resolve("TiFBackendUtils/package.json"), "utf8"))
-const expectedCommitHash = packageJson.peerDependencies.TiFShared.split("#")[1]
+const TiFSharedVersion = packageJson.peerDependencies.TiFShared
+
+if (!TiFSharedVersion) {
+  console.error("TiFShared should be installed")
+}
+
+const expectedCommitHash = TiFSharedVersion.split("#")[1]
 
 const currentCommitHash = getCurrentCommitHash(path.resolve("TiFBackendUtils/node_modules/TiFShared"))
 
