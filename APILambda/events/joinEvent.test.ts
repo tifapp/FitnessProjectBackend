@@ -63,7 +63,7 @@ describe("Join the event by id tests", () => {
       body: {
         region: {
           arrivalRadiusMeters: 0,
-          coordinate: testEventInput.coordinates
+          coordinate: testEventInput.location.value
         }
       }
     })
@@ -109,7 +109,7 @@ describe("Join the event by id tests", () => {
         trackableRegions: [
           {
             eventIds: [eventId],
-            coordinate: testEventInput.coordinates,
+            coordinate: testEventInput.location.value,
             hasArrived: false,
             arrivalRadiusMeters: 500
           }
@@ -180,8 +180,8 @@ describe("Join the event by id tests", () => {
       {
         hostId: host.id,
         ...testEventInput,
-        latitude: testEventInput.coordinates.latitude,
-        longitude: testEventInput.coordinates.longitude,
+        latitude: testEventInput.location.value.latitude,
+        longitude: testEventInput.location.value.longitude,
         startDateTime: dayjs().subtract(24, "hour").toDate(),
         endDateTime: dayjs().subtract(12, "hour").toDate(),
         endedDateTime: dayjs().subtract(12, "hour").toDate()
@@ -229,7 +229,10 @@ describe("Join the event by id tests", () => {
     } = await createEventFlow(
       [
         {
-          coordinates: eventLocation
+          location: {
+            type: "coordinate",
+            value: eventLocation
+          }
         }
       ],
       1

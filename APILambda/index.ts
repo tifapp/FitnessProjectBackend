@@ -4,7 +4,8 @@ import "TiFShared/lib/Zod"
 import awsServerlessExpress from "@vendia/serverless-express"
 import { invokeAWSLambda } from "TiFBackendUtils/AWS"
 import { envVars } from "TiFBackendUtils/env"
-import { LocationCoordinate2D } from "TiFShared/domain-models/LocationCoordinate2D"
+import { EventEditLocation } from "TiFShared/domain-models/Event"
+import { NamedLocation } from "TiFShared/lib/Types/NamedLocation"
 import { addLogHandler, consoleLogHandler } from "TiFShared/logging"
 import { addBenchmarking, addTiFRouter, createApp } from "./appMiddleware"
 import { ServerEnvironment } from "./env"
@@ -16,12 +17,11 @@ const env: ServerEnvironment = {
   environment: envVars.ENVIRONMENT,
   eventStartWindowInHours: 1,
   maxArrivals: 100,
-  callGeocodingLambda: async (location: LocationCoordinate2D) => {
-    await invokeAWSLambda(
+  geocode: (location: EventEditLocation) =>
+    invokeAWSLambda<NamedLocation>(
       `geocodingPipeline:${envVars.ENVIRONMENT}`,
       location
     )
-  }
 }
 
 const app = createApp(env, addEventToRequest, addBenchmarking, addTiFRouter)

@@ -1,14 +1,14 @@
 import { conn } from "TiFBackendUtils"
 import { MySQLExecutableDriver } from "TiFBackendUtils/MySQLDriver"
 import { resp } from "TiFShared/api/Transport"
+import { EventRegion } from "TiFShared/domain-models/Event"
 import { LocationCoordinate2D } from "TiFShared/domain-models/LocationCoordinate2D"
+import { UserID } from "TiFShared/domain-models/User"
 import { failure, success } from "TiFShared/lib/Result"
 import { authenticatedEndpoint } from "../../auth"
-import { upcomingEventArrivalRegionsSQL } from "./getUpcomingEvents"
+import { upcomingEventArrivalRegionsSQL } from "./getUpcomingEventArrivals"
 
-// type ArrivalStatusEnum = "invalid" | "early" | "on-time" | "late" | "ended" // so far, unused
-
-export const deleteOldArrivals = (
+const deleteOldArrivals = (
   conn: MySQLExecutableDriver,
   userId: string,
   coordinate: LocationCoordinate2D
@@ -28,7 +28,7 @@ export const deleteOldArrivals = (
     { userId, latitude: coordinate.latitude, longitude: coordinate.longitude }
   )
 
-export const deleteMaxArrivals = (
+const deleteMaxArrivals = (
   conn: MySQLExecutableDriver,
   userId: string,
   arrivalsLimit: number
@@ -70,6 +70,22 @@ export const deleteMaxArrivals = (
     )
     .flatMapFailure(() => success())
 
+const deleteArrival = (
+  conn: MySQLExecutableDriver,
+  userId: UserID,
+  coordinate: LocationCoordinate2D
+) =>
+  conn.executeResult(
+    // TO DECIDE: if event length limit or limit in how far in advance event can be scheduled, then we can also delete outdated arrivals
+    `
+        DELETE FROM userArrivals
+        WHERE userId = :userId
+        AND latitude = :latitude
+        AND longitude = :longitude
+      `,
+    { userId, latitude: coordinate.latitude, longitude: coordinate.longitude }
+  )
+
 export const insertArrival = (
   conn: MySQLExecutableDriver,
   userId: string,
@@ -84,19 +100,33 @@ export const insertArrival = (
     { userId, latitude: coordinate.latitude, longitude: coordinate.longitude }
   )
 
-export const arriveAtRegion = authenticatedEndpoint<"arriveAtRegion">(
-  ({
-    context: { selfId },
-    environment: { maxArrivals },
-    body: { coordinate }
-  }) =>
-    conn
-      .transaction((tx) =>
-        deleteOldArrivals(tx, selfId, coordinate)
-          .passthroughSuccess(() => deleteMaxArrivals(tx, selfId, maxArrivals))
-          .passthroughSuccess(() => insertArrival(tx, selfId, coordinate))
-          .flatMapSuccess(() => upcomingEventArrivalRegionsSQL(conn, selfId))
+type EventRegionArrivalStatusUpdate = EventRegion & {
+  status?: "arrived" | "departed"
+}
+
+const updateArrivalStatusTransaction = (
+  conn: MySQLExecutableDriver,
+  selfId: UserID,
+  maxArrivals: number,
+  { coordinate, status }: EventRegionArrivalStatusUpdate
+) => {
+  return conn.transaction((tx) => {
+    if (status === "arrived") {
+      return deleteOldArrivals(tx, selfId, coordinate)
+        .passthroughSuccess(() => deleteMaxArrivals(tx, selfId, maxArrivals))
+        .passthroughSuccess(() => insertArrival(tx, selfId, coordinate))
+        .flatMapSuccess(() => upcomingEventArrivalRegionsSQL(conn, selfId))
+    } else {
+      return deleteArrival(tx, selfId, coordinate).flatMapSuccess(() =>
+        upcomingEventArrivalRegionsSQL(conn, selfId)
       )
+    }
+  })
+}
+
+export const updateArrivalStatus = authenticatedEndpoint<"updateArrivalStatus">(
+  ({ context: { selfId }, environment: { maxArrivals }, body }) =>
+    updateArrivalStatusTransaction(conn, selfId, maxArrivals, body)
       .mapSuccess((trackableRegions) => resp(200, { trackableRegions }))
       .unwrap()
 )

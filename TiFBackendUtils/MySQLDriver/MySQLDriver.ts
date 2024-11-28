@@ -56,7 +56,7 @@ class MySQLConnectionHandler {
   private connection?: mysql.Connection
   private isConnectionClosed: boolean = false
 
-  async useConnection() {
+  async useConnection () {
     if (this.isConnectionClosed) {
       throw new Error("Current connection instance was ended.")
     }
@@ -75,7 +75,7 @@ class MySQLConnectionHandler {
     return this.connection!
   }
 
-  async closeConnection() {
+  async closeConnection () {
     if (!this.isConnectionClosed) {
       const conn = await this.useConnection()
       conn.end()
@@ -87,7 +87,7 @@ class MySQLConnectionHandler {
 export class MySQLDriver {
   private connectionHandler = new MySQLConnectionHandler()
 
-  async closeConnection() {
+  async closeConnection () {
     await this.connectionHandler.closeConnection()
   }
 
@@ -106,7 +106,7 @@ export class MySQLDriver {
    * console.log(results[0].id) // ✅ Typesafe
    * ```
    */
-  private async execute(query: string, args?: SQLParams): Promise<DBExecution> {
+  async execute (query: string, args?: SQLParams): Promise<DBExecution> {
     // Use this.conn to execute the query and return the result rows
     // This will be the only function to directly use the database library's execute method.
     const conn = await this.connectionHandler.useConnection()
@@ -136,10 +136,7 @@ export class MySQLDriver {
    * ```
    */
 
-  private async query<Value>(
-    query: string,
-    args?: SQLParams
-  ): Promise<Value[]> {
+  async query<Value> (query: string, args?: SQLParams): Promise<Value[]> {
     const conn = await this.connectionHandler.useConnection()
     const [rows, fields] = await conn.query(query, paramifyArgs(args))
     if (Array.isArray(rows) && Array.isArray(fields)) {
@@ -152,7 +149,7 @@ export class MySQLDriver {
   /**
    * Runs the given SQL query and returns a success result containing the insertId of the query.
    */
-  executeResult(query: string, args?: SQLParams) {
+  executeResult (query: string, args?: SQLParams) {
     return promiseResult(
       this.execute(query, args).then((executeResult) => success(executeResult))
     )
@@ -161,7 +158,7 @@ export class MySQLDriver {
   /**
    * Runs the given SQL query and returns a success result containing the result of the query.
    */
-  queryResult<Value>(query: string, args?: SQLParams) {
+  queryResult<Value> (query: string, args?: SQLParams) {
     return promiseResult(
       this.query<Value>(query, args).then((result) => success(result))
     )
@@ -170,10 +167,8 @@ export class MySQLDriver {
   /**
    * Performs an idempotent transaction and returns the result of the transaction wrapped in a {@link PromiseResult}.
    */
-  transaction<SuccessValue, ErrorValue>(
-    query: (
-      tx: Omit<MySQLDriver, "query" | "execute">
-    ) => AwaitableResult<SuccessValue, ErrorValue>
+  transaction<SuccessValue, ErrorValue> (
+    query: (tx: MySQLDriver) => AwaitableResult<SuccessValue, ErrorValue>
   ) {
     return promiseResult(
       (async () => {
@@ -206,7 +201,7 @@ export class MySQLDriver {
    * console.log(result?.id) // ✅ Typesafe
    * ```
    */
-  queryFirstResult<Value>(query: string, args?: SQLParams) {
+  queryFirstResult<Value> (query: string, args?: SQLParams) {
     return promiseResult(
       this.query<Value>(query, args).then((results) =>
         results[0] ? success(results[0]) : failure("no-results" as const)
@@ -220,7 +215,7 @@ export class MySQLDriver {
    * You should not query specific data with this method, instead use a `"SELECT TRUE"`
    * if you need to perform a select.
    */
-  queryHasResults(query: string, args?: SQLParams) {
+  queryHasResults (query: string, args?: SQLParams) {
     return promiseResult(
       this.query(query, args).then((results) => {
         const hasResults = results.length > 0

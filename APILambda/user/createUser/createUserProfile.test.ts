@@ -1,5 +1,5 @@
-import { jwtBody } from "TiFShared/lib/JWT"
 import { testAPI } from "../../test/testApp"
+import { jwtBody } from "TiFShared/lib/JWT"
 
 describe("Create User Profile tests", () => {
   it("should 400 when creating a user with an empty name", async () => {

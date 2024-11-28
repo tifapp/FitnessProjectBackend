@@ -1,9 +1,9 @@
-import { retryFunction } from "./utils"
+import { immediateRetryFunction } from "./utils"
 
 describe("retryFunction", () => {
   test("Should not retry if function succeeds", async () => {
     const successfulFunction = jest.fn().mockResolvedValue("success")
-    const retriedFunction = retryFunction(successfulFunction, 3)
+    const retriedFunction = immediateRetryFunction(successfulFunction, 3)
 
     const result = await retriedFunction(undefined)
 
@@ -14,25 +14,24 @@ describe("retryFunction", () => {
   test("Should retry up to maxRetries times if function fails", async () => {
     const failingFunction = jest.fn().mockRejectedValue(new Error("failure"))
 
-    const mockRetryFn = jest
+    const retriedFunction = immediateRetryFunction(failingFunction, 3)
+
+    await expect(retriedFunction(undefined)).rejects.toThrow("Failed after 3 attempts")
+
+    expect(failingFunction).toHaveBeenCalledTimes(3)
+  })
+
+  test("Should succeed on a retry if the function eventually succeeds", async () => {
+    const failingThenSucceedingFunction = jest
       .fn()
-      .mockImplementation(async (asyncFn, event, retriesLeft) => {
-        if (retriesLeft <= 0) {
-          throw new Error("failure")
-        }
-        return retryFunction(asyncFn, retriesLeft - 1, mockRetryFn)(event)
-      })
+      .mockRejectedValueOnce(new Error("failure"))
+      .mockResolvedValue("success")
 
-    const retriedFunction = retryFunction(failingFunction, 2, mockRetryFn)
+    const retriedFunction = immediateRetryFunction(failingThenSucceedingFunction, 3)
 
-    try {
-      await retriedFunction(undefined)
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (e: any) {
-      expect(failingFunction).toHaveBeenCalledTimes(3)
-      expect(e.message).toBe("failure")
-    }
+    const result = await retriedFunction(undefined)
+
+    expect(failingThenSucceedingFunction).toHaveBeenCalledTimes(2)
+    expect(result).toBe("success")
   })
 })

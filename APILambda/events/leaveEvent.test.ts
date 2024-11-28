@@ -1,8 +1,11 @@
 import dayjs from "dayjs"
-import { dateRange } from "TiFShared/domain-models/FixedDateRange"
+import { conn } from "TiFBackendUtils"
+import { devEnv } from "../test/devIndex"
 import { testAPI } from "../test/testApp"
+import { testEventInput } from "../test/testEvents"
 import { createEventFlow } from "../test/userFlows/createEventFlow"
 import { createUserFlow } from "../test/userFlows/createUserFlow"
+import { createEventTransaction } from "./createEvent"
 
 describe("Leave event tests", () => {
   const eventLocation = { latitude: 50, longitude: 50 }
@@ -14,7 +17,10 @@ describe("Leave event tests", () => {
     } = await createEventFlow(
       [
         {
-          coordinates: eventLocation
+          location: {
+            type: "coordinate",
+            value: eventLocation
+          }
         }
       ],
       1
@@ -37,7 +43,10 @@ describe("Leave event tests", () => {
     } = await createEventFlow(
       [
         {
-          coordinates: eventLocation
+          location: {
+            type: "coordinate",
+            value: eventLocation
+          }
         }
       ],
       1
@@ -57,7 +66,17 @@ describe("Leave event tests", () => {
     const {
       attendeesList,
       eventIds: [eventId]
-    } = await createEventFlow([{ coordinates: eventLocation }], 1)
+    } = await createEventFlow(
+      [
+        {
+          location: {
+            type: "coordinate",
+            value: eventLocation
+          }
+        }
+      ],
+      1
+    )
 
     await testAPI.leaveEvent({
       auth: attendeesList[1].auth,
@@ -92,7 +111,17 @@ describe("Leave event tests", () => {
       eventIds: [eventId],
       host,
       attendeesList: [, attendee]
-    } = await createEventFlow([{ coordinates: eventLocation }], 1)
+    } = await createEventFlow(
+      [
+        {
+          location: {
+            type: "coordinate",
+            value: eventLocation
+          }
+        }
+      ],
+      1
+    )
 
     await testAPI.endEvent({ auth: host.auth, params: { eventId } })
     const resp = await testAPI.leaveEvent({
@@ -107,26 +136,23 @@ describe("Leave event tests", () => {
   })
 
   it("should return 403 if user leaves an event that ended", async () => {
-    const {
-      eventIds: [eventId],
-      host,
-      attendeesList: [, attendee]
-    } = await createEventFlow(
-      [
+    const user = await createUserFlow()
+    const { id: eventId } = (
+      await createEventTransaction(
+        conn,
         {
-          ...eventLocation,
-          dateRange: dateRange(
-            dayjs().subtract(1, "year").toDate(),
-            dayjs().add(12, "hour").toDate()
-          )
-        }
-      ],
-      1
-    )
+          ...testEventInput,
+          startDateTime: dayjs().subtract(1, "year").toDate(),
+          duration: 3600
+        },
+        user.id,
+        devEnv.geocode
+      )
+    ).unwrap()
 
-    await testAPI.endEvent({ auth: host.auth, params: { eventId } })
+    await testAPI.endEvent({ auth: user.auth, params: { eventId } })
     const resp = await testAPI.leaveEvent({
-      auth: attendee.auth,
+      auth: user.auth,
       params: { eventId }
     })
 

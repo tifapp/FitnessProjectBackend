@@ -1,4 +1,5 @@
 import { conn } from "TiFBackendUtils"
+import { LocationCoordinate2D } from "TiFShared/domain-models/LocationCoordinate2D"
 import { TestUser } from "../global"
 import { userToUserRequest } from "../test/shortcuts"
 import { testAPI } from "../test/testApp"
@@ -28,7 +29,17 @@ const createTestAttendees = async (numOfAttendees: number = 1) => {
     host,
     attendeesList,
     eventIds: [eventId]
-  } = await createEventFlow([{ coordinates: eventLocation }], numOfAttendees)
+  } = await createEventFlow(
+    [
+      {
+        location: {
+          type: "coordinate",
+          value: eventLocation
+        }
+      }
+    ],
+    numOfAttendees
+  )
 
   return {
     attendeesList,
@@ -99,13 +110,19 @@ describe("getAttendeesList endpoint", () => {
     const currentUser = await createUserFlow()
 
     // We must use createEventSQL directly because createEventFlow() makes an event with the host in the attendees list.
-    const {
-      value: { insertId }
-    } = await createEventSQL(conn, testEventInput, currentUser.id)
+    const { value: event } = await createEventSQL(
+      conn,
+      {
+        ...testEventInput,
+        latitude: (testEventInput.location.value as LocationCoordinate2D).latitude,
+        longitude: (testEventInput.location.value as LocationCoordinate2D).longitude
+      },
+      currentUser.id
+    )
 
     const resp = await testAPI.attendeesList<200>({
       auth: currentUser.auth,
-      params: { eventId: Number(insertId) },
+      params: { eventId: event.id },
       query: { limit }
     })
 
@@ -221,7 +238,6 @@ describe("getAttendeesList endpoint", () => {
       params: { eventId },
       query: { limit, nextPageCursor: middlePageCursorResp ?? undefined }
     })
-
     ;(resp.data.nextPageCursor as unknown) = decodeAttendeesListCursor(
       resp.data.nextPageCursor ?? undefined
     )
@@ -257,7 +273,6 @@ describe("getAttendeesList endpoint", () => {
       params: { eventId },
       query: { limit, nextPageCursor: nextPageCursorResp ?? undefined }
     })
-
     ;(resp.data.nextPageCursor as unknown) = decodeAttendeesListCursor(
       resp.data.nextPageCursor ?? undefined
     )
@@ -297,7 +312,6 @@ describe("getAttendeesList endpoint", () => {
       params: { eventId },
       query: { limit, nextPageCursor: nextPageCursorResp ?? undefined }
     })
-
     ;(resp.data.nextPageCursor as unknown) = decodeAttendeesListCursor(
       resp.data.nextPageCursor ?? undefined
     )
@@ -317,9 +331,13 @@ describe("getAttendeesList endpoint", () => {
 
     const [, attendee] = attendeesList
 
-    await testAPI.arriveAtRegion({
+    await testAPI.updateArrivalStatus({
       auth: attendee.auth,
-      body: { coordinate: eventLocation, arrivalRadiusMeters: 500 }
+      body: {
+        coordinate: eventLocation,
+        arrivalRadiusMeters: 500,
+        status: "arrived"
+      }
     })
 
     let resp = await testAPI.attendeesList<200>({
@@ -360,7 +378,6 @@ describe("getAttendeesList endpoint", () => {
       params: { eventId },
       query: { limit, nextPageCursor: nextPageCursorResp ?? undefined }
     })
-
     ;(resp.data.nextPageCursor as unknown) = decodeAttendeesListCursor(
       resp.data.nextPageCursor ?? undefined
     )

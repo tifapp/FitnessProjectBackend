@@ -1,30 +1,24 @@
-export const retryFunction = <T, U>(
+export type Retryable = <T, U>(asyncFn: (event: T) => Promise<U>, maxRetries: number) => ((event: T) => Promise<U>)
+
+export const immediateRetryFunction: Retryable = <T, U>(
   asyncFn: (event: T) => Promise<U>,
-  maxRetries: number = 3,
-  retryFn: (
-    asyncFn: (event: T) => Promise<U>,
-    event: T,
-    retriesLeft: number
-  ) => Promise<U> = async (asyncFn, event, retriesLeft) => {
-    for (let attempt = 1; attempt <= retriesLeft; attempt++) {
+  maxRetries: number = 3
+): ((event: T) => Promise<U>) => {
+  return async (event: T): Promise<U> => {
+    let attempt = 0
+
+    while (attempt < maxRetries) {
+      attempt++
       try {
         return await asyncFn(event)
-      } catch (e) {
-        console.error(`Attempt ${attempt} failed:`, e)
-        if (attempt === retriesLeft) {
-          throw new Error(`Failed after ${retriesLeft} attempts`)
+      } catch (error) {
+        console.error(`Attempt ${attempt} failed:`, error)
+        if (attempt >= maxRetries) {
+          throw new Error(`Failed after ${maxRetries} attempts`)
         }
       }
     }
-    throw new Error(`Exhausted all retries without success`)
-  }
-): ((event: T) => Promise<U>) => {
-  return async (event: T): Promise<U> => {
-    try {
-      return await asyncFn(event)
-    } catch (e) {
-      console.error(e)
-      return retryFn(asyncFn, event, maxRetries)
-    }
+
+    throw new Error("Exhausted all retries without success")
   }
 }

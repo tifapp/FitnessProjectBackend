@@ -1,15 +1,16 @@
 import express, { Express } from "express"
 import { ServerEnvironment } from "./env"
-import { upcomingEventArrivalRegions } from "./events/arrivals/getUpcomingEvents"
-import { arriveAtRegion } from "./events/arrivals/setArrivalStatus"
-import { departFromRegion } from "./events/arrivals/setDeparture"
+import { upcomingEventArrivalRegions } from "./events/arrivals/getUpcomingEventArrivals"
+import { updateArrivalStatus } from "./events/arrivals/updateArrivalStatus"
 import { createEvent } from "./events/createEvent"
+import { editEvent } from "./events/editEvent"
 import { endEvent } from "./events/endEvent"
 import { attendeesList } from "./events/getAttendees"
 import { eventDetails } from "./events/getEventDetails"
 import { exploreEvents } from "./events/getEventsByRegion"
 import { joinEvent } from "./events/joinEvent"
 import { leaveEvent } from "./events/leaveEvent"
+import { upcomingEvents } from "./events/upcomingEvents"
 import { TiFRouter } from "./router"
 import { autocompleteUsers } from "./user/autocompleteUsers"
 import { blockUser } from "./user/blockUser"
@@ -71,13 +72,14 @@ export const addTiFRouter = (
     "/",
     TiFRouter(
       {
+        editEvent,
         createEvent,
         eventDetails,
         joinEvent,
         leaveEvent,
         endEvent,
-        arriveAtRegion,
-        departFromRegion,
+        upcomingEvents,
+        updateArrivalStatus,
         upcomingEventArrivalRegions,
         attendeesList,
         exploreEvents,

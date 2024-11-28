@@ -8,6 +8,12 @@ export const testUserCounter = { currentUserIndex: 0 }
 
 export type RegisteredTestUser = TestUser & { handle: UserHandle }
 
+export const userDetails = (user: RegisteredTestUser) => ({
+  id: user.id,
+  handle: user.handle,
+  name: user.name
+})
+
 // database is reset for each test so we need to create a new auth for each test
 export const createUserFlow = async (): Promise<RegisteredTestUser> => {
   if (testUserCounter.currentUserIndex >= global.users.length) {
@@ -21,6 +27,5 @@ export const createUserFlow = async (): Promise<RegisteredTestUser> => {
   })
 
   testUserCounter.currentUserIndex = testUserCounter.currentUserIndex + 1
-
   return { ...resp.data, auth: `Bearer ${resp.data.token}` }
 }

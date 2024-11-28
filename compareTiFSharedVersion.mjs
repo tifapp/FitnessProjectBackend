@@ -12,14 +12,20 @@ const getCurrentCommitHash = (repoPath) => {
 }
 
 const packageJson = JSON.parse(readFileSync(path.resolve("TiFBackendUtils/package.json"), "utf8"))
-const expectedCommitHash = packageJson.peerDependencies.TiFShared.split("#")[1]
+const TiFSharedVersion = packageJson.peerDependencies.TiFShared
 
-const currentCommitHash = getCurrentCommitHash(path.resolve("TiFBackendUtils/node_modules/TiFShared"))
-
-if (currentCommitHash !== expectedCommitHash) {
-  console.error(
-    `Linked TiFShared package does not match the expected version; may not work as expected:\nExpected: ${expectedCommitHash}\nFound: ${currentCommitHash}`
-  )
+if (!TiFSharedVersion) {
+  console.error("TiFShared should be installed")
 } else {
-  console.log(`Linked TiFShared package matches the expected version: ${currentCommitHash}`)
+  const expectedCommitHash = TiFSharedVersion.split("#")[1]
+
+  const currentCommitHash = getCurrentCommitHash(path.resolve("TiFBackendUtils/node_modules/TiFShared"))
+
+  if (currentCommitHash !== expectedCommitHash) {
+    console.error(
+      `Linked TiFShared package does not match the expected version; may not work as expected:\nExpected: ${expectedCommitHash}\nFound: ${currentCommitHash}`
+    )
+  } else {
+    console.log(`Linked TiFShared package matches the expected version: ${currentCommitHash}`)
+  }
 }

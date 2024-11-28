@@ -1,11 +1,13 @@
 import { DatabaseValueConvertible } from "TiFShared/lib/Database"
 
+type DatabaseValue = undefined | Date | boolean | number | string | number[] | string[] | DatabaseValueConvertible
+
 export type SQLParams =
   | undefined
-  | Record<string, number | string | DatabaseValueConvertible>
+  | Record<string, DatabaseValue>
   | (number | string)[]
 
-const paramify = (value: number | string | DatabaseValueConvertible) =>
+const paramify = (value: DatabaseValue) =>
   value == null
     ? null
     : typeof value === "object" && "toDatabaseValue" in value
