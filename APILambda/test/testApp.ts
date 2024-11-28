@@ -28,7 +28,7 @@ const testClient = TiFAPIClientCreator<TestAppExtension>(
       .query(query)
 
     if (auth) {
-      req = req.set("authorization", auth)
+      req = req.set("Authorization", auth)
     }
 
     const { status, body: data } = await req.send(body)

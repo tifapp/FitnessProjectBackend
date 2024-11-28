@@ -23,8 +23,8 @@ const TokenSchema = z
   .passthrough()
 
 const authenticate: APIMiddleware<RouterParams> = async (input, next) => {
-  const authorization = input.headers.authorization
-  if (!authorization) return resp(401, { error: "invalid-headers" })
+  const authorization = input.headers.Authorization
+  if (!authorization || Array.isArray(authorization)) return resp(401, { error: "invalid-headers" })
   const splits = authorization.split(" ")
   if (splits.length !== 2) return resp(401, { error: "invalid-headers" })
   const body = await TokenSchema.safeParseAsync(
