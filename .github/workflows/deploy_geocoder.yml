@@ -21,7 +21,7 @@ jobs:
           node-version: '18'
 
       - name: Download Artifact
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           name: geocoding-lambda
       
@@ -50,6 +50,7 @@ jobs:
               DATABASE_NAME=${{ inputs.stage }},\
               DATABASE_PORT=${{ secrets.DATABASE_PORT }},\
               CA_PEM=${{ secrets.CA_PEM }},\
+              AWS_ACCOUNT_ID=${{ secrets.AWS_ACCOUNT_ID }},\
               DATABASE_USERNAME=$DB_USERNAME,\
               DATABASE_PASSWORD=$DB_PASSWORD\
             }"
@@ -68,7 +69,7 @@ jobs:
                   exit 1
               else
                   echo "Update in progress. Waiting..."
-                  sleep 10
+                  sleep 5
               fi
           done
           if [[ "${{ inputs.stage }}" == "prod" ]] || [[ "${{ inputs.stage }}" == "staging" ]]; then

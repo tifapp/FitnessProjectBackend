@@ -1,29 +1,29 @@
+import "TiFBackendUtils"
+import "TiFShared/lib/Zod"
+
 import awsServerlessExpress from "@vendia/serverless-express"
-import {
-  LocationCoordinate2D,
-  invokeAWSLambda
-} from "TiFBackendUtils"
-import { addBenchmarking, addRoutes, createApp } from "./app.js"
-import { addCognitoTokenVerification } from "./auth.js"
-import { ServerEnvironment, envVars } from "./env.js"
-import { addErrorReporting } from "./errorReporting.js"
-import { addEventToRequest } from "./serverlessMiddleware.js"
-import { setProfileCreatedAttribute } from "./user/createUser/setCognitoAttribute.js"
+import { invokeAWSLambda } from "TiFBackendUtils/AWS"
+import { envVars } from "TiFBackendUtils/env"
+import { EventEditLocation } from "TiFShared/domain-models/Event"
+import { NamedLocation } from "TiFShared/lib/Types/NamedLocation"
+import { addLogHandler, consoleLogHandler } from "TiFShared/logging"
+import { addBenchmarking, addTiFRouter, createApp } from "./appMiddleware"
+import { ServerEnvironment } from "./env"
+import { addEventToRequest } from "./serverlessMiddleware"
+
+addLogHandler(consoleLogHandler())
 
 const env: ServerEnvironment = {
   environment: envVars.ENVIRONMENT,
   eventStartWindowInHours: 1,
   maxArrivals: 100,
-  setProfileCreatedAttribute,
-  callGeocodingLambda: (location: LocationCoordinate2D) =>
-    invokeAWSLambda(`geocodingPipeline:${envVars.ENVIRONMENT}`, location)
+  geocode: (location: EventEditLocation) =>
+    invokeAWSLambda<NamedLocation>(
+      `geocodingPipeline:${envVars.ENVIRONMENT}`,
+      location
+    )
 }
 
-const app = createApp()
-addEventToRequest(app)
-addBenchmarking(app)
-addCognitoTokenVerification(app) // TODO: only apply to specific routes
-addRoutes(app, env)
-addErrorReporting(app)
+const app = createApp(env, addEventToRequest, addBenchmarking, addTiFRouter)
 
 export const handler = awsServerlessExpress({ app })

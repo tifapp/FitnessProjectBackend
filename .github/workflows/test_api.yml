@@ -6,17 +6,18 @@ on:
     branches:
       - development
 
-concurrency: 
-  group: ${{ github.workflow }}
-  cancel-in-progress: false
-
 jobs:
+  build:
+    uses: ./.github/workflows/build_api.yml
+    secrets: inherit
+
   test:
+    needs: build
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 5
     concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}-${{ github.run_attempt }}
-      cancel-in-progress: false
+      group: testAPI-${{ github.head_ref }}
+      cancel-in-progress: true
 
     services:
       mysql:
@@ -45,6 +46,9 @@ jobs:
       ABLY_KEY: ${{ secrets.ABLY_KEY }}
       COGNITO_USER_POOL_ID: ${{ secrets.COGNITO_USER_POOL_ID }}
       AWS_LAMBDA_FUNCTION_NAME: lambdaSQLRoute
+      API_ENDPOINT: ${{ secrets.API_ENDPOINT }}
+      API_LAMBDA_ID: ${{ secrets.API_LAMBDA_ID }}
+      JWT_SECRET: ${{ secrets.JWT_SECRET }}
 
     steps:
       - name: Checkout code
@@ -64,39 +68,36 @@ jobs:
           npm ci
         env:
           CI: true
-          
-      - name: Initialize DB
-        run: |
-          npm run resetDB
-
-      - name: Update entities
-        run: |
-          npm run dbtots
       
-      - name: Validate openapi specs
+      - name: Sync DB with Typescript
         run: |
-          cd APILambda
-          npx lint-openapi specs.json
+          cp TiFBackendUtils/DBTypes.ts OriginalDBTypes.ts
+          npm run dbtots
+          if ! diff TiFBackendUtils/DBTypes.ts OriginalDBTypes.ts; then
+            echo "DBTypes.ts is not up to date. Please re-run 'npm run dbtots' and commit the updated version to this branch."
+            exit 1
+          fi
 
       - name: Run tests
         run: |
           cd APILambda
           export NODE_OPTIONS="--max_old_space_size=4096"
           npm run test:ci
-
-  build:
-    needs: test
-    uses: ./.github/workflows/build_api.yml
-    secrets: inherit
   
   deploy_for_staging_tests:
-    needs: build
+    concurrency: 
+      group: APIstagingTest
+      cancel-in-progress: false
+    needs: test
     uses: ./.github/workflows/deploy_api.yml
     secrets: inherit
     with:
       stage: "stagingTest"
   
   test_on_staging:
+    concurrency: 
+      group: APIstagingTest
+      cancel-in-progress: false
     runs-on: ubuntu-latest
     timeout-minutes: 15
     needs: deploy_for_staging_tests
@@ -117,6 +118,7 @@ jobs:
       COGNITO_CLIENT_APP_ID: ${{ secrets.COGNITO_CLIENT_APP_ID }}
       COGNITO_USER_POOL_ID: ${{ secrets.COGNITO_USER_POOL_ID }}
       SLACK_APP_ID: ${{ secrets.SLACK_APP_ID }}
+      JWT_SECRET: ${{ secrets.JWT_SECRET }}
     
     steps:
     - name: Checkout code
@@ -140,14 +142,9 @@ jobs:
       env:
         CI: true
 
-    - name: Wait for AWS Deployment
-      run: |
-        sleep 15
-
     - name: Run staging tests with authenticated Cognito users
       # TODO: Reduce memory required
-      # TODO: Allow "createUser" tests after we get company email so we can have unlimited test users
       run: |
         cd APILambda
         export NODE_OPTIONS="--max_old_space_size=4096"
-        API_ENDPOINT=https://623qsegfb9.execute-api.us-west-2.amazonaws.com/stagingTest ENVIRONMENT=stagingTest npm run test:ci -- --testPathIgnorePatterns=createUserProfile\\.test\\.ts
+        API_ENDPOINT=${{ secrets.API_ENDPOINT }}/stagingTest ENVIRONMENT=stagingTest npm run test:ci

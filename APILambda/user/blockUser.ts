@@ -1,38 +1,33 @@
-import { MySQLExecutableDriver, conn, userWithIdExists } from "TiFBackendUtils"
-import { z } from "zod"
-import { userNotFoundResponse } from "../shared/Responses.js"
-import { ValidatedRouter } from "../validation.js"
+import { conn } from "TiFBackendUtils"
+import { MySQLExecutableDriver } from "TiFBackendUtils/MySQLDriver"
+import {
+  UserRelationshipPair,
+  userWithIdExists
+} from "TiFBackendUtils/TiFUserUtils"
+import { resp } from "TiFShared/api/Transport"
+import { authenticatedEndpoint } from "../auth"
+import { isCurrentUser } from "../utils/isCurrentUserMiddleware"
+import { userNotFoundBody } from "../utils/Responses"
 
-const BlockUserRequestSchema = z.object({
-  userId: z.string().uuid()
-})
+export const blockUser = authenticatedEndpoint<"blockUser">(
+  ({ context: { selfId: fromUserId }, params: { userId: toUserId } }) =>
+    conn
+      .transaction((tx) => blockUserSQL(tx, { fromUserId, toUserId }))
+      .mapSuccess(() => resp(204))
+      .mapFailure(() => resp(404, userNotFoundBody(toUserId)))
+      .unwrap(),
+  isCurrentUser
+)
 
-export const createBlockUserRouter = (router: ValidatedRouter) => {
-  router.patchWithValidation(
-    "/block/:userId",
-    { pathParamsSchema: BlockUserRequestSchema },
-    async (req, res) => {
-      return conn
-        .transaction((tx) => {
-          return blockUser(tx, res.locals.selfId, req.params.userId)
-        })
-        .mapSuccess(() => res.status(204).send())
-        .mapFailure(() => userNotFoundResponse(res, req.params.userId))
-    }
-  )
-}
-
-const blockUser = (
+const blockUserSQL = (
   conn: MySQLExecutableDriver,
-  fromUserId: string,
-  toUserId: string
+  { fromUserId, toUserId }: UserRelationshipPair
 ) => {
   return userWithIdExists(conn, toUserId)
-    .withFailure("user-not-found" as const)
     .flatMapSuccess(() => {
       return conn.executeResult(
         `
-      INSERT INTO userRelations (fromUserId, toUserId, status)
+      INSERT INTO userRelationships (fromUserId, toUserId, status)
       VALUES (:fromUserId, :toUserId, 'blocked')
       ON DUPLICATE KEY UPDATE
         status = 'blocked'
@@ -43,7 +38,7 @@ const blockUser = (
     .flatMapSuccess(() => {
       return conn.executeResult(
         `
-      DELETE FROM userRelations
+      DELETE FROM userRelationships
       WHERE fromUserId = :toUserId AND toUserId = :fromUserId AND status != 'blocked';
       `,
         { fromUserId, toUserId }

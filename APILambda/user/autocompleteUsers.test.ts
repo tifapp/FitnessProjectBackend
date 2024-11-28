@@ -1,28 +1,40 @@
-import { callAutocompleteUsers, callUpdateUserHandle } from "../test/apiCallers/users.js"
-import { createUserFlow } from "../test/userFlows/users.js"
+import { testAPI } from "../test/testApp"
+import { createUserFlow } from "../test/userFlows/createUserFlow"
 
 describe("AutocompleteUsers tests", () => {
   test("autocomplete endpoint basic request", async () => {
-    const { token: user1Token, name: user1Name, userId: user1Id } = await createUserFlow()
-    await callUpdateUserHandle(user1Token, "BitchellDickle")
+    const newUser = await createUserFlow()
+    await testAPI.updateCurrentUserProfile({
+      auth: newUser.auth,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      body: { handle: "BitchellDickle" as any }
+    })
 
-    const { name: user2Name, userId: user2Id, token: user2Token } = await createUserFlow()
-    await callUpdateUserHandle(user2Token, "BigChungus")
+    const searchedUser = await createUserFlow()
+    await testAPI.updateCurrentUserProfile({
+      auth: searchedUser.auth,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      body: { handle: "BigChungus" as any }
+    })
 
-    const resp = await callAutocompleteUsers(user1Token, "bi", 50)
+    const resp = await testAPI.autocompleteUsers({
+      auth: newUser.auth,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      query: { handle: "bi" as any, limit: 50 }
+    })
 
     expect(resp).toMatchObject({
       status: 200,
-      body: {
+      data: {
         users: [
           {
-            id: user2Id,
-            name: user2Name,
+            id: searchedUser.id,
+            name: searchedUser.name,
             handle: "BigChungus"
           },
           {
-            id: user1Id,
-            name: user1Name,
+            id: newUser.id,
+            name: newUser.name,
             handle: "BitchellDickle"
           }
         ]
@@ -31,20 +43,32 @@ describe("AutocompleteUsers tests", () => {
   })
 
   it("should only query up to the limit", async () => {
-    const { token: user1Token } = await createUserFlow()
-    await callUpdateUserHandle(user1Token, "BitchellDickle")
+    const newUser = await createUserFlow()
+    await testAPI.updateCurrentUserProfile({
+      auth: newUser.auth,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      body: { handle: "BitchellDickle" as any }
+    })
 
-    const { token: user2Token } = await createUserFlow()
-    await callUpdateUserHandle(user2Token, "BigChungus")
+    const searchedUser = await createUserFlow()
+    await testAPI.updateCurrentUserProfile({
+      auth: searchedUser.auth,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      body: { handle: "BigChungus" as any }
+    })
 
-    const resp = await callAutocompleteUsers(user1Token, "bi", 1)
+    const resp = await testAPI.autocompleteUsers({
+      auth: newUser.auth,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      query: { handle: "bi" as any, limit: 1 }
+    })
 
     expect(resp).toMatchObject({
       status: 200,
-      body: {
+      data: {
         users: expect.arrayContaining([expect.anything()])
       }
     })
-    expect(resp.body.users).toHaveLength(1)
+    expect(resp.data.users).toHaveLength(1)
   })
 })

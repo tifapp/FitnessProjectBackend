@@ -1,52 +1,58 @@
-import {
-  callBlockUser,
-  callGetUser
-} from "../test/apiCallers/users.js"
-import { createUserFlow } from "../test/userFlows/users.js"
+import { blockedUserResponse, userToUserRequest } from "../test/shortcuts"
+import { testAPI } from "../test/testApp"
+import { createUserFlow } from "../test/userFlows/createUserFlow"
 
 describe("GetUser tests", () => {
   // it("should 401 on non existing user", async () => {
   //   const userId = randomUUID()
-  //   const resp = await callGetUser(global.defaultUser.auth, userId)
+  //   const resp = await testAPI.getUser(global.defaultUser.auth, userId)
 
   //   expect(resp).toMatchObject({
   //     status: 401,
-  //     body: { error: "user-does-not-exist" }
+  //     data: { error: "user-does-not-exist" }
   //   })
   // })
 
-  it("should retrieve a user that exists", async () => {
-    const { token: searchingUserToken } = await createUserFlow()
+  it("should retrieve self", async () => {
+    const newUser = await createUserFlow()
 
-    const { userId: searchedUserId, name: searchedUserName, handle: searchedUserHandle } = await createUserFlow()
-    const resp = await callGetUser(searchingUserToken, searchedUserId)
-
-    expect(resp).toMatchObject({
+    await expect(
+      testAPI.getUser(userToUserRequest(newUser, newUser))
+    ).resolves.toMatchObject({
       status: 200,
-      body: expect.objectContaining({
-        id: searchedUserId,
-        name: searchedUserName,
-        handle: searchedUserHandle
+      data: expect.objectContaining({
+        id: newUser.id,
+        name: newUser.name,
+        handle: newUser.handle,
+        relationStatus: "current-user"
       })
     })
   })
-})
 
-describe("Get blocked user's profile name only", () => {
-  it("should return blocked user's profile name and fromThemToYou status of blocked", async () => {
-    const { token, userId, name, handle } = await createUserFlow()
-    const { token: blockedToken, userId: blockedUserId } = await createUserFlow()
+  it("should retrieve a user that exists", async () => {
+    const newUser = await createUserFlow()
+    const searchedUser = await createUserFlow()
 
-    await callBlockUser(token, blockedUserId)
-    const resp = await callGetUser(blockedToken, userId)
-
-    expect(resp).toMatchObject({
-      status: 403,
-      body: {
-        name,
-        handle,
-        relations: { fromThemToYou: "blocked" }
-      }
+    await expect(
+      testAPI.getUser(userToUserRequest(newUser, searchedUser))
+    ).resolves.toMatchObject({
+      status: 200,
+      data: expect.objectContaining({
+        id: searchedUser.id,
+        name: searchedUser.name,
+        handle: searchedUser.handle,
+        relationStatus: "not-friends"
+      })
     })
+  })
+
+  it("should return error if you've been blocked", async () => {
+    const newUser = await createUserFlow()
+    const blockedUser = await createUserFlow()
+
+    await testAPI.blockUser(userToUserRequest(newUser, blockedUser))
+    const resp = await testAPI.getUser(userToUserRequest(blockedUser, newUser))
+
+    expect(resp).toMatchObject(blockedUserResponse(newUser.id))
   })
 })

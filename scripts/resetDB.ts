@@ -1,7 +1,5 @@
-import { resetDB } from "../TiFBackendUtils/MySQLDriver/test/utils.ts";
-import { conn } from "../TiFBackendUtils/index.ts";
+import { resetDB } from "../TiFBackendUtils/test/MySQLDriver/dbHelpers"
 
-if (process.argv.includes('--run')) {
-    await resetDB()
-    conn.closeConnection()
+if (process.argv.includes("--run")) {
+  resetDB()
 }

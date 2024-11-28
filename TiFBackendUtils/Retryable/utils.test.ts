@@ -1,41 +1,37 @@
-import { exponentialFunctionBackoff } from "./utils.js"
+import { immediateRetryFunction } from "./utils"
 
-describe("exponentialFunctionBackoff", () => {
-  test("Should not retry if lambda function succeeds", async () => {
-    const successfulLambdaFunction = jest.fn().mockResolvedValue("success")
-    const result = await exponentialFunctionBackoff(
-      successfulLambdaFunction,
-      3
-    )({ retries: 0 })
-    expect(successfulLambdaFunction).toHaveBeenCalledTimes(1)
+describe("retryFunction", () => {
+  test("Should not retry if function succeeds", async () => {
+    const successfulFunction = jest.fn().mockResolvedValue("success")
+    const retriedFunction = immediateRetryFunction(successfulFunction, 3)
+
+    const result = await retriedFunction(undefined)
+
+    expect(successfulFunction).toHaveBeenCalledTimes(1)
     expect(result).toBe("success")
   })
 
-  test("Should retry up to maxRetries times if lambda function fails", async () => {
-    const failingLambdaFunction = jest
+  test("Should retry up to maxRetries times if function fails", async () => {
+    const failingFunction = jest.fn().mockRejectedValue(new Error("failure"))
+
+    const retriedFunction = immediateRetryFunction(failingFunction, 3)
+
+    await expect(retriedFunction(undefined)).rejects.toThrow("Failed after 3 attempts")
+
+    expect(failingFunction).toHaveBeenCalledTimes(3)
+  })
+
+  test("Should succeed on a retry if the function eventually succeeds", async () => {
+    const failingThenSucceedingFunction = jest
       .fn()
-      .mockRejectedValue(new Error("failure"))
+      .mockRejectedValueOnce(new Error("failure"))
+      .mockResolvedValue("success")
 
-    let wrappedFunction: (event: unknown) => Promise<unknown> = async () => {} // Placeholder for the wrapped function
+    const retriedFunction = immediateRetryFunction(failingThenSucceedingFunction, 3)
 
-    const mockScheduleLambda = jest
-      .fn()
-      .mockImplementation((eventTime, event) => {
-        return wrappedFunction(event)
-      })
+    const result = await retriedFunction(undefined)
 
-    wrappedFunction = exponentialFunctionBackoff(
-      failingLambdaFunction,
-      2,
-      mockScheduleLambda
-    )
-
-    try {
-      await wrappedFunction({ retries: 0 })
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (e: any) {
-      expect(failingLambdaFunction).toHaveBeenCalledTimes(3)
-      expect(e.message).toBe("failure")
-    }
+    expect(failingThenSucceedingFunction).toHaveBeenCalledTimes(2)
+    expect(result).toBe("success")
   })
 })

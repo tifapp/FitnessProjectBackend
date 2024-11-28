@@ -1,6 +1,5 @@
-import { callDeleteSelf } from "../test/apiCallers/users.js"
-import { withEmptyResponseBody } from "../test/assertions.js"
-import { createUserFlow } from "../test/userFlows/users.js"
+import { testAPI } from "../test/testApp"
+import { createUserFlow } from "../test/userFlows/createUserFlow"
 
 describe("DeleteSelf tests", () => {
   // it("should 401 on non existing user", async () => {
@@ -13,12 +12,12 @@ describe("DeleteSelf tests", () => {
   // })
 
   it("should give a 204 when you sucessfully delete the user", async () => {
-    const { token } = await createUserFlow()
-    const resp = await callDeleteSelf(token)
+    const newUser = await createUserFlow()
+    const resp = await testAPI.removeAccount({ auth: newUser.auth })
 
-    expect(withEmptyResponseBody(resp)).toMatchObject({
+    expect(resp).toEqual({
       status: 204,
-      body: ""
+      data: {}
     })
   })
 })

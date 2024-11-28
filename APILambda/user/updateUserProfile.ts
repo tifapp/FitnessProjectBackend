@@ -1,64 +1,43 @@
-import { DBuser, NullablePartial, MySQLExecutableDriver, UserHandle, conn, success, userWithHandleDoesNotExist } from "TiFBackendUtils"
-import { z } from "zod"
-import { ServerEnvironment } from "../env.js"
-import { ValidatedRouter } from "../validation.js"
+import { conn } from "TiFBackendUtils"
+import { DBuser } from "TiFBackendUtils/DBTypes"
+import { MySQLExecutableDriver } from "TiFBackendUtils/MySQLDriver"
+import { userWithHandleDoesNotExist } from "TiFBackendUtils/TiFUserUtils"
+import { UpdateCurrentUserProfileRequest } from "TiFShared/api/models/User"
+import { resp } from "TiFShared/api/Transport"
+import { success } from "TiFShared/lib/Result"
+import { authenticatedEndpoint } from "../auth"
 
-const UpdateUserRequestSchema = z.object({
-  name: z.string().optional(),
-  bio: z.string().max(250).optional(),
-  handle: UserHandle.schema.optional().transform(handle => handle?.rawValue)
-})
-
-type UpdateUserRequest = z.infer<typeof UpdateUserRequestSchema>
-
-type EditableProfileFields = Pick<DBuser, "bio" | "handle" | "name">
-
-/**
- * Creates routes related to user operations.
- *
- * @param environment see {@link ServerEnvironment}.
- * @returns a router for user related operations.
- */
-export const updateUserProfileRouter = (
-  environment: ServerEnvironment,
-  router: ValidatedRouter
-) => {
-  /**
-   * updates the current user's profile
-   */
-  router.patchWithValidation(
-    "/self",
-    { bodySchema: UpdateUserRequestSchema },
-    (req, res) =>
+export const updateCurrentUserProfile =
+  authenticatedEndpoint<"updateCurrentUserProfile">(
+    ({ context: { selfId }, body }) =>
       conn
-        .transaction((tx) => updateProfileTransaction(tx, res.locals.selfId, req.body))
-        .mapFailure((error) => res.status(400).json({ error }))
-        .mapSuccess(() => res.status(204).send())
+        .transaction((tx) => updateProfileTransaction(tx, selfId, body))
+        .mapFailure((error) => resp(400, { error }) as never)
+        .mapSuccess(() => resp(204))
+        .unwrap()
   )
-
-  return router
-}
 
 const updateProfileTransaction = (
   conn: MySQLExecutableDriver,
   userId: string,
-  updatedProfile: UpdateUserRequest
+  updatedProfile: UpdateCurrentUserProfileRequest
 ) =>
-  (updatedProfile.handle ? userWithHandleDoesNotExist(conn, updatedProfile.handle) : success())
-    .flatMapSuccess(() => updateProfile(conn, userId, updatedProfile))
+  (updatedProfile.handle
+    ? userWithHandleDoesNotExist(conn, updatedProfile.handle)
+    : success()
+  ).flatMapSuccess(() => updateProfileSQL(conn, userId, updatedProfile))
 
-const updateProfile = (
+const updateProfileSQL = (
   conn: MySQLExecutableDriver,
   userId: string,
-  { handle = null, name = null, bio = null }: NullablePartial<EditableProfileFields>
+  { handle, name, bio }: Partial<Pick<DBuser, "bio" | "handle" | "name">>
 ) =>
-  conn
-    .executeResult(
-      `UPDATE user 
-      SET 
+  conn.executeResult(
+    `UPDATE user
+      SET
       name = COALESCE(:name, name),
-      bio = COALESCE(:bio, bio), 
+      bio = COALESCE(:bio, bio),
       handle = COALESCE(:handle, handle)
       WHERE id = :userId`,
-      { handle, name, bio, userId }
-    )
+    { handle, name, bio, userId }
+  )

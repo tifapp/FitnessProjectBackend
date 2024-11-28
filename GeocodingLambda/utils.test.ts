@@ -1,7 +1,7 @@
 import { Place } from "@aws-sdk/client-location"
-import { SearchForPositionResultToPlacemark } from "./utils.js"
+import { AddressSearchResultToFlattenedLocation } from "./utils"
 
-describe("SearchForPositionResultToPlacemark", () => {
+describe("AddressSearchResultToFlattenedLocation", () => {
   test("Should convert a Place object to a Placemark correctly", () => {
     const coordinate = { latitude: 12.34, longitude: 56.78 }
     const place = {
@@ -16,7 +16,7 @@ describe("SearchForPositionResultToPlacemark", () => {
       UnitNumber: "5678"
     } as Place
 
-    expect(SearchForPositionResultToPlacemark(coordinate, place)).toEqual({
+    expect(AddressSearchResultToFlattenedLocation(coordinate, place)).toEqual({
       latitude: 12.34,
       longitude: 56.78,
       name: "Sample Location",
@@ -34,7 +34,7 @@ describe("SearchForPositionResultToPlacemark", () => {
     const coordinate = { latitude: 12.34, longitude: 56.78 }
     const place = {} as Place
 
-    expect(SearchForPositionResultToPlacemark(coordinate, place)).toEqual({
+    expect(AddressSearchResultToFlattenedLocation(coordinate, place)).toEqual({
       latitude: 12.34,
       longitude: 56.78,
       name: undefined,
@@ -51,9 +51,9 @@ describe("SearchForPositionResultToPlacemark", () => {
       Municipality: "Sample City"
     } as Place
 
-    expect(SearchForPositionResultToPlacemark(coordinate, place).city).toEqual(
-      "Sample City"
-    )
+    expect(
+      AddressSearchResultToFlattenedLocation(coordinate, place).city
+    ).toEqual("Sample City")
   })
 
   test("Should use SubRegion when Neighborhood and Municipality are missing", () => {
@@ -62,9 +62,9 @@ describe("SearchForPositionResultToPlacemark", () => {
       SubRegion: "Sample SubRegion"
     } as Place
 
-    expect(SearchForPositionResultToPlacemark(coordinate, place).city).toEqual(
-      "Sample SubRegion"
-    )
+    expect(
+      AddressSearchResultToFlattenedLocation(coordinate, place).city
+    ).toEqual("Sample SubRegion")
   })
 
   test("Should use Region when Country is missing", () => {
@@ -73,8 +73,8 @@ describe("SearchForPositionResultToPlacemark", () => {
       Region: "Sample Region"
     } as Place
 
-    expect(SearchForPositionResultToPlacemark(coordinate, place).country).toEqual(
-      undefined
-    )
+    expect(
+      AddressSearchResultToFlattenedLocation(coordinate, place).country
+    ).toEqual(undefined)
   })
 })

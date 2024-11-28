@@ -1,11 +1,10 @@
-export * from "./AWS/index.js"
-export * from "./MySQLDriver/index.js"
-export * from "./Retryable/utils.js"
-export * from "./TiFUserUtils/index.js"
-export * from "./TifEventUtils.js"
-export * from "./UserHandle.js"
-export * from "./entities.js"
-export * from "./location.js"
-export * from "./result.js"
-export * from "./types/index.js"
+import "TiFShared"
 
+import { MySQLDriver, MySQLExecutableDriver } from "./MySQLDriver"
+
+// Avoids prototype extension conflict from TiFShared in local tests. TODO: Find a way to remove it and get the tests working in ci
+export { TiFAPIClient, TiFAPIClientCreator, TiFAPISchema } from "TiFShared/api"
+export { validateAPIRouterCall } from "./apiValidation"
+
+// WARNING: During tests, connection must be closed after importing, otherwise it causes open handles errors.
+export const conn: MySQLExecutableDriver = new MySQLDriver()

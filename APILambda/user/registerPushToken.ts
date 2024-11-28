@@ -1,49 +1,34 @@
-import { MySQLExecutableDriver, conn, failure, success } from "TiFBackendUtils"
-import { z } from "zod"
-import { ValidatedRouter } from "../validation.js"
+import { conn } from "TiFBackendUtils"
+import { MySQLExecutableDriver } from "TiFBackendUtils/MySQLDriver"
+import { DevicePlatform } from "TiFShared/api/models/User"
+import { resp } from "TiFShared/api/Transport"
+import { failure, success } from "TiFShared/lib/Result"
+import { authenticatedEndpoint } from "../auth"
 
-const PushTokenPlatformNameSchema = z.union([
-  z.literal("apple"),
-  z.literal("android")
-])
-
-export type PushTokenPlatformName = z.infer<typeof PushTokenPlatformNameSchema>
-
-const RegisterPushTokenRequestSchema = z.object({
-  pushToken: z.string().nonempty(),
-  platformName: PushTokenPlatformNameSchema
-})
-
-/**
- * Adds the push notification registration endpoint.
- */
-export const createRegisterPushTokenRouter = (router: ValidatedRouter) => {
-  router.postWithValidation(
-    "/notifications/push/register",
-    { bodySchema: RegisterPushTokenRequestSchema },
-    async (req, res) => {
-      return tryInsertPushToken(conn, {
-        ...req.body,
-        userId: res.locals.selfId
+export const registerForPushNotifications =
+  authenticatedEndpoint<"registerForPushNotifications">(
+    ({ body, context: { selfId: userId } }) =>
+      tryInsertPushToken(conn, {
+        ...body,
+        userId
       })
-        .mapSuccess((status) => res.status(201).send({ status }))
-        .mapFailure((error) => res.status(400).send({ error }))
-    }
+        .mapSuccess((status) => resp(201, { status }))
+        .mapFailure((error) => resp(400, { error }))
+        .unwrap()
   )
-}
 
 const tryInsertPushToken = (
   conn: MySQLExecutableDriver,
   insertRequest: {
     userId: string
     pushToken: string
-    platformName: PushTokenPlatformName
+    platformName: DevicePlatform
   }
 ) => {
   return conn
     .executeResult(
       `
-      INSERT IGNORE INTO pushTokens (userId, pushToken, platformName) 
+      INSERT IGNORE INTO pushTokens (userId, pushToken, platformName)
       VALUES (:userId, :pushToken, :platformName)
       `,
       insertRequest

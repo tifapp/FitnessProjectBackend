@@ -1,27 +1,31 @@
 {
-  "name": "sharedBackendResources",
-  "type": "module",
+  "name": "geocodinglambda",
   "version": "1.0.0",
-  "description": "",
+  "description": "Geocodes event addresses",
   "main": "index.js",
   "dependencies": {
     "@aws-sdk/client-location": "^3.515.0",
+    "@fragaria/address-formatter": "^5.3.0",
+    "dayjs": "^1.11.10",
     "dotenv": "^16.3.1",
     "geo-tz": "^8.0.1",
-    "TiFBackendUtils": "file:../TiFBackendUtils"
+    "TiFBackendUtils": "file:../TiFBackendUtils",
+    "TiFShared": "github:tifapp/TiFShared#e0445304b365d4c5a38c156fc7b4f1f7136273ee",
+    "zod": "^3.22.4"
   },
   "scripts": {
     "pr": "cd .. && npm run pr",
-    "build": "npx tsc",
+    "build": "npx tsc --traceResolution --strict false",
     "test": "jest",
     "test:ci": "jest --ci --detectOpenHandles --forceExit --runInBand",
     "postinstall": "node removeUnusedTimezones.cjs"
   },
   "devDependencies": {
+    "@swc/core": "^1.4.2",
+    "@swc/jest": "^0.2.36",
     "@types/jest": "^29.5.2",
     "@types/node": "^20.3.0",
     "jest": "^29.0.0",
-    "ts-jest": "^29.1.1",
-    "typescript": "^4.9.5"
+    "typescript": "^5.4.2"
   }
 }

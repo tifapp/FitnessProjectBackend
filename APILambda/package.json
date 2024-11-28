@@ -1,42 +1,36 @@
 {
-  "type": "module",
-  "exports": {
-    "./user": "./user",
-    "./other": "./src/other/index.js"
-  },
-  "name": "backend",
+  "name": "apilambda",
   "version": "1.0.0",
-  "description": "",
+  "description": "Serves the endpoints for TiF app",
   "main": "index.js",
   "scripts": {
     "pr": "cd .. && npm run pr",
-    "genapispecs": "ts-node --esm ./genapispecs.mjs && npx lint-openapi specs.json",
-    "build": "npx tsc",
-    "start": "node dist/index.js",
-    "dev": "concurrently \"npx tsc --watch\" \"nodemon -q dist/index.js\"",
-    "test": "jest --detectOpenHandles --runInBand",
-    "test:ci": "jest --ci --detectOpenHandles --forceExit --runInBand"
+    "build": "npx tsc --traceResolution --strict false",
+    "test": "cd .. && node compareTiFSharedVersion.mjs && cd APILambda && npx ts-node node_modules/jest/bin/jest --detectOpenHandles --runInBand",
+    "test:ci": "npx ts-node node_modules/.bin/jest --ci --detectOpenHandles --forceExit --runInBand",
+    "start": "npx tsx test/devIndex.ts"
   },
-  "files": [
-    "dist"
-  ],
   "keywords": [],
-  "author": "",
+  "author": "TiF",
   "license": "ISC",
   "dependencies": {
     "@aws-sdk/client-cognito-identity-provider": "^3.515.0",
     "@vendia/serverless-express": "^4.10.3",
     "ably": "^1.2.42",
+    "dayjs": "^1.11.10",
     "dotenv": "^16.0.3",
     "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.2",
+    "linkify-it": "^5.0.0",
     "TiFBackendUtils": "file:../TiFBackendUtils",
+    "uuid": "^11.0.2",
+    "TiFShared": "github:tifapp/TiFShared#e0445304b365d4c5a38c156fc7b4f1f7136273ee",
     "zod": "^3.22.4"
   },
   "devDependencies": {
-    "@asteasolutions/zod-to-openapi": "^6.4.0",
+    "@aws-sdk/client-cloudwatch-logs": "^3.637.0",
     "@aws-sdk/credential-providers": "^3.515.0",
     "@faker-js/faker": "^7.6.0",
-    "@ibm-cloud/openapi-ruleset": "^1.15.3",
     "@swc/core": "^1.4.2",
     "@swc/jest": "^0.2.36",
     "@types/aws-lambda": "^8.10.115",
@@ -48,15 +42,13 @@
     "@types/supertest": "^2.0.12",
     "concurrently": "^8.0.1",
     "dayjs": "^1.11.10",
-    "ibm-openapi-validator": "^1.16.3",
+    "expect-type": "^0.18.0",
     "jest": "^29.7.0",
     "jest-watch-suspend": "^1.1.2",
     "jest-watch-typeahead": "^2.2.2",
-    "expect-type": "^0.18.0",
-    "jsonwebtoken": "^9.0.2",
     "nodemon": "^2.0.22",
     "supertest": "^5.0.0",
     "ts-node": "^10.9.1",
-    "typescript": "^4.9.5"
+    "typescript": "^5.4.2"
   }
 }

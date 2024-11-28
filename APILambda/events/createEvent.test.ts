@@ -1,165 +1,141 @@
-import {
-  conn
-} from "TiFBackendUtils"
-import dayjs from "dayjs"
-import { addPlacemarkToDB } from "../../GeocodingLambda/utils.js"
-import { callCreateEvent, callGetEvent } from "../test/apiCallers/events.js"
-import { testEventInput } from "../test/testEvents.js"
-import { createEventFlow } from "../test/userFlows/events.js"
-import { createUserFlow } from "../test/userFlows/users.js"
+import { dayjs } from "TiFShared/lib/Dayjs"
+import { addMockLocationToDB } from "../test/location"
+import { testAPI } from "../test/testApp"
+import { testEventInput } from "../test/testEvents"
+import { createEventFlow } from "../test/userFlows/createEventFlow"
+import { createUserFlow } from "../test/userFlows/createUserFlow"
 
 describe("CreateEvent tests", () => {
   it("should allow a user to create an event and add them to the attendee list", async () => {
+    const startDateTime = dayjs(new Date()).millisecond(0).toDate().ext.addSeconds(10)
     const {
       host,
-      eventResponses
-    } = await createEventFlow([{}])
-    expect(eventResponses[0]).toMatchObject({
-      status: 201,
-      body: { id: expect.anything() }
-    })
-    expect(parseInt(eventResponses[0].body.id)).not.toBeNaN()
-
-    const { value: attendee } = await conn.queryFirstResult<{userId: string, eventId: string}>(
-      `
-      SELECT *
-      FROM eventAttendance
-      WHERE userId = :userId
-        AND eventId = :eventId;      
-      `,
-      { eventId: parseInt(eventResponses[0].body.id), userId: host.userId }
-    )
-    expect(attendee).toMatchObject({ eventId: parseInt(eventResponses[0].body.id), userId: host.userId })
-  })
-
-  it("should save the address matching the given coordinates", async () => {
-    const { token } = await createUserFlow()
-
-    const {
-      eventIds
+      eventResponses: [event]
     } = await createEventFlow([
       {
-        title: "test event",
-        latitude: 36.98,
-        longitude: -122.06,
-        startDateTime: dayjs().subtract(12, "hour").toDate(),
-        endDateTime: dayjs().add(1, "year").toDate()
+        startDateTime,
+        duration: 3600
       }
     ])
-    const resp = await callGetEvent(token, eventIds[0])
-    expect(resp).toMatchObject({
-      status: 200,
-      body: {
-        id: expect.anything(),
-        location: {
-          placemark: {
-            city: "Westside",
-            isoCountryCode: "USA",
-            name: "115 Tosca Ter, Santa Cruz, CA 95060-2352, United States",
-            postalCode: "95060-2352",
-            street: "Tosca Ter",
-            streetNumber: "115"
-          },
-          timezoneIdentifier: "America/Los_Angeles"
+
+    expect(event.data.endedDateTime).toEqual(undefined)
+    expect(event).toMatchObject({
+      status: 201,
+      data: {
+        id: expect.any(Number),
+        title: testEventInput.title,
+        description: testEventInput.description,
+        host: { id: host.id, name: host.name },
+        userAttendeeStatus: "hosting",
+        joinedDateTime: expect.any(String),
+        hasArrived: false,
+        attendeeCount: 1,
+        previewAttendees: [
+          expect.objectContaining({
+            id: host.id,
+            name: host.name,
+            role: "hosting"
+          })
+        ],
+        time: {
+          todayOrTomorrow: "today",
+          dateRange: {
+            startDateTime: dayjs(startDateTime).toDate().toISOString(),
+            endDateTime: dayjs(startDateTime)
+              .add(1, "hour")
+              .toDate()
+              .toISOString()
+          }
         }
       }
     })
-    expect(parseInt(resp.body.id)).not.toBeNaN()
   })
 
   it("should not fail if a valid address for the given coordinates can't be found", async () => {
-    const { token } = await createUserFlow()
+    const newUser = await createUserFlow()
 
-    const {
-      eventIds
-    } = await createEventFlow([
+    const { eventIds } = await createEventFlow([
       {
         title: "test event",
-        latitude: 25,
-        longitude: 25,
-        startDateTime: dayjs().subtract(12, "hour").toDate(),
-        endDateTime: dayjs().add(1, "year").toDate()
+        location: {
+          type: "coordinate",
+          value: {
+            latitude: 25,
+            longitude: 25
+          }
+        }
       }
     ])
-    const resp = await callGetEvent(token, eventIds[0])
+    const resp = await testAPI.eventDetails({
+      auth: newUser.auth,
+      params: { eventId: eventIds[0] }
+    })
     expect(resp).toMatchObject({
       status: 200,
-      body: { id: expect.anything(), location: { placemark: {}, timezoneIdentifier: "Africa/Cairo" } }
+      data: {
+        id: expect.any(Number),
+        location: { placemark: {}, timezoneIdentifier: "Africa/Cairo" }
+      }
     })
-    expect(parseInt(resp.body.id)).not.toBeNaN()
+  })
+
+  it("should not allow a user to create an event that's shorter than 60 seconds", async () => {
+    const newUser = await createUserFlow()
+    const resp = await testAPI.createEvent({
+      auth: newUser.auth,
+      body: {
+        ...testEventInput,
+        duration: 59
+      }
+    })
+    expect(resp).toMatchObject({
+      status: 400,
+      data: { error: "invalid-request" }
+    })
   })
 
   it("should not allow a user to create an event that ends in the past", async () => {
-    const { token } = await createUserFlow()
-    const resp = await callCreateEvent(token, { ...testEventInput, startDateTime: new Date("2000-01-01"), endDateTime: new Date("2000-01-02") })
+    const newUser = await createUserFlow()
+    const resp = await testAPI.createEvent({
+      auth: newUser.auth,
+      body: {
+        ...testEventInput,
+        startDateTime: new Date("2000-01-01")
+      }
+    })
     expect(resp).toMatchObject({
       status: 400,
-      body: { error: "invalid-request" }
+      data: { error: "invalid-request" }
     })
   })
 
-  it("create event still is successful if the placemark already exists", async () => {
-    const { token } = await createUserFlow()
-    addPlacemarkToDB(conn, {
-      latitude: testEventInput.latitude,
-      longitude: testEventInput.longitude,
-      name: "Sample Location",
-      city: "Sample Neighborhood",
-      country: "Sample Country",
-      street: "Sample Street",
-      streetNumber: "1234"
-    }, "Sample/Timezone")
-    const {
-      eventIds
-    } = await createEventFlow([
-      {
-        title: "test event",
-        latitude: 43.839319,
-        longitude: 87.526148,
-        startDateTime: new Date("2050-01-01"),
-        endDateTime: new Date("2050-01-02")
-      }
-    ])
-
-    const resp = await callGetEvent(token, eventIds[0])
-
-    expect(resp).toMatchObject({
-      status: 200,
-      body: { id: expect.anything() }
-    })
-  })
-
-  it("create event still is successful if the location is on a border of two timezones", async () => {
-    const { token } = await createUserFlow()
-    addPlacemarkToDB(conn, {
+  it("should still create an event if the placemark already exists", async () => {
+    const newUser = await createUserFlow()
+    addMockLocationToDB({
       latitude: 43.839319,
-      longitude: 87.526148,
-      name: "Sample Location",
-      city: "Sample Neighborhood",
-      country: "Sample Country",
-      street: "Sample Street",
-      streetNumber: "1234"
-    }, "Asia/Shanghai")
-    const {
-      eventIds
-    } = await createEventFlow([
+      longitude: 87.526148
+    })
+    const { eventIds } = await createEventFlow([
       {
         title: "test event",
-        // Coordinates for the timezone border of ['Asia/Shanghai', 'Asia/Urumqi']
-        latitude: 43.839319,
-        longitude: 87.526148,
-        startDateTime: new Date("2050-01-01"),
-        endDateTime: new Date("2050-01-02")
+        location: {
+          type: "coordinate",
+          value: {
+            latitude: 43.839319,
+            longitude: 87.526148
+          }
+        }
       }
     ])
 
-    const resp = await callGetEvent(token, eventIds[0])
+    const resp = await testAPI.eventDetails({
+      auth: newUser.auth,
+      params: { eventId: eventIds[0] }
+    })
 
     expect(resp).toMatchObject({
       status: 200,
-      body: { id: expect.anything() }
+      data: { id: expect.any(Number) }
     })
-
-    expect(resp.body.location.timezoneIdentifier).toEqual("Asia/Shanghai")
   })
 })

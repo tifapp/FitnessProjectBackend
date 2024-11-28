@@ -1,48 +1,29 @@
-import { DBuser, MySQLExecutableDriver, UserHandle, conn } from "TiFBackendUtils"
-import { z } from "zod"
-import { ServerEnvironment } from "../env.js"
-import { ValidatedRouter, withValidatedRequest } from "../validation.js"
+import { conn } from "TiFBackendUtils"
+import { DBuser } from "TiFBackendUtils/DBTypes"
+import { MySQLExecutableDriver } from "TiFBackendUtils/MySQLDriver"
+import { resp } from "TiFShared/api/Transport"
+import { UserHandle } from "TiFShared/domain-models/User"
+import { authenticatedEndpoint } from "../auth"
 
-const AutocompleteUsersRequestSchema = z.object({
-  query: z.object({
-    handle: UserHandle.schema,
-    limit: z
-      .string()
-      .transform((arg) => parseInt(arg))
-      .refine((arg) => arg >= 1 && arg <= 50)
-  })
-})
+export const autocompleteUsers = authenticatedEndpoint<"autocompleteUsers">(
+  ({ query: { handle, limit } }) =>
+    autocompleteUsersSQL(conn, handle, limit)
+      .mapSuccess((users) => resp(200, { users }))
+      .unwrap()
+)
 
-/**
- * Adds an endpoint to the router that returns a list of users to autocomplete given their handle.
- */
-export const autocompleteUsersRouter = (
-  env: ServerEnvironment,
-  router: ValidatedRouter
-) => {
-  router.get(
-    "/autocomplete",
-    withValidatedRequest(AutocompleteUsersRequestSchema, (req, res) =>
-      autocompleteUsers(
-        conn,
-        req.query.handle,
-        req.query.limit
-      ).mapSuccess(users => res.status(200).json({ users }))
-    )
-  )
-}
-
-const autocompleteUsers = (
+const autocompleteUsersSQL = (
   conn: MySQLExecutableDriver,
-  baseHandle: UserHandle,
+  handle: UserHandle,
   limit: number
-) => conn.queryResult<Pick<DBuser, "id" | "name" | "handle">>(
-  `
-    SELECT id, name, handle 
-    FROM user u 
-    WHERE LOWER(u.handle) LIKE CONCAT(LOWER(:handle), '%') 
+) =>
+  conn.queryResult<Pick<DBuser, "id" | "name" | "handle">>(
+    `
+    SELECT id, name, handle
+    FROM user u
+    WHERE LOWER(u.handle) LIKE CONCAT(LOWER(:handle), '%')
     ORDER BY u.handle ASC, u.createdDateTime ASC
     LIMIT :limit
     `,
-  { handle: baseHandle.rawValue, limit }
-)
+    { handle, limit }
+  )

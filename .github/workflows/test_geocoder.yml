@@ -5,15 +5,19 @@ on:
     types: [opened, synchronize]
     branches:
       - development
-
-concurrency: 
-  group: ${{ github.workflow }}
-  cancel-in-progress: false
   
 jobs:
+  build:
+    uses: ./.github/workflows/build_geocoder.yml
+    secrets: inherit
+
   test:
+    needs: build
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 5
+    concurrency:
+      group: testGeocoder-${{ github.head_ref }}
+      cancel-in-progress: true
     
     services:
       mysql:
@@ -38,6 +42,7 @@ jobs:
       AWS_REGION: ${{ secrets.AWS_REGION }}
       AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
       AWS_LAMBDA_FUNCTION_NAME: geocodingPipeline
+      JWT_SECRET: ${{ secrets.JWT_SECRET }}
 
     steps:
       - name: Checkout code
@@ -66,13 +71,11 @@ jobs:
           cd GeocodingLambda
           npm run test:ci
   
-  build:
-    needs: test
-    uses: ./.github/workflows/build_geocoder.yml
-    secrets: inherit
-  
   deploy:
-    needs: build
+    concurrency: 
+      group: stagingTest
+      cancel-in-progress: false
+    needs: test
     uses: ./.github/workflows/deploy_geocoder.yml
     secrets: inherit
     with:

@@ -1,17 +1,11 @@
 import { conn } from "TiFBackendUtils"
-import { ServerEnvironment } from "../../env.js"
-import { ValidatedRouter } from "../../validation.js"
-import { queryUserSettings } from "./userSettingsQuery.js"
+import { resp } from "TiFShared/api/Transport"
+import { authenticatedEndpoint } from "../../auth"
+import { queryUserSettings } from "./userSettingsQuery"
 
-export const getUserSettingsRouter = (
-  environment: ServerEnvironment,
-  router: ValidatedRouter
-) => {
-  /**
-   * gets the current user's settings info
-   */
-  router.getWithValidation("/self/settings", {}, (_, res) =>
-    queryUserSettings(conn, res.locals.selfId)
-      .mapSuccess(settings => res.status(200).json(settings).send())
-  )
-}
+export const userSettings = authenticatedEndpoint<"userSettings">(
+  ({ context: { selfId } }) =>
+    queryUserSettings(conn, selfId)
+      .mapSuccess((settings) => resp(200, settings))
+      .unwrap()
+)

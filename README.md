@@ -1,4 +1,4 @@
-## [View Database Schema](schema.md) ##
+## [View Database Schema](schema.md)
 
 Todo: Add aws section
 Todo: Add section for testing locally
@@ -43,17 +43,13 @@ For example, if you're adding a new "products" route, you might add a SQL statem
 ```typescript
 // getNewProduct.ts or SQL.ts in 'products' folder
 import { MySQLExecutableDriver, conn, failure, success } from "TiFBackendUtils"
-import { ServerEnvironment } from "../env.js"
-import { ValidatedRouter } from "../validation.js"
+import { ServerEnvironment } from "../env"
+import { ValidatedRouter } from "../validation"
 
-const getNewProduct = (
-  conn: MySQLExecutableDriver,
-  productId: string,
-) => {
-  return conn.queryResults(
-    `SELECT * FROM products WHERE id = :productId`,
-    { productId }
-  )
+const getNewProduct = (conn: MySQLExecutableDriver, productId: string) => {
+  return conn.queryResults(`SELECT * FROM products WHERE id = :productId`, {
+    productId
+  })
 }
 ```
 
@@ -76,8 +72,8 @@ For example, if you're working on the "products" route, and you have a SQL state
 ```typescript
 // getNewProduct.ts in 'products' folder
 import { MySQLExecutableDriver, conn, failure, success } from "TiFBackendUtils"
-import { ServerEnvironment } from "../env.js"
-import { ValidatedRouter } from "../validation.js"
+import { ServerEnvironment } from "../env"
+import { ValidatedRouter } from "../validation"
 
 const getNewProductTransaction = (conn: MySQLExecutableDriver, id: string) =>
   conn.transaction((tx) =>
@@ -88,7 +84,7 @@ const getNewProductTransaction = (conn: MySQLExecutableDriver, id: string) =>
       .flatMapFailure((error) => {
         return failure(error)
       })
-  );
+  )
 ```
 
 This transaction uses the getNewProduct SQL statement to retrieve data from the database, and handles any potential errors to maintain the stability of the backend API.
@@ -99,7 +95,6 @@ Routes determine the way your API responds to the client at specific URI endpoin
 
 Each route is defined in a specific file within its corresponding data type folder. This allows for better code organization and maintainability.
 
-
 To add a new route, follow these steps:
 
 1. Navigate to the relevant data type folder, e.g., `user`, `product`, etc.
@@ -109,8 +104,6 @@ To add a new route, follow these steps:
 3. Define your route in the newly created file, specifying the necessary logic and functionality. This route should return an HTTP status code signifying success and the query result for successful transactions. If the transaction results in an error, the route should return an "error" status code and an error message.
 
 4. Update `app.ts` file to include reference to your newly created route from `<your_data_type>.ts` file.
-
-5. Ensure `specs.json` file is updated upon committing.
 
 ```plaintext
 APILambda
@@ -125,8 +118,8 @@ For example, if you're adding a "products" route to get a product by its ID, you
 ```typescript
 // getNewProduct.ts in 'products' folder
 import { MySQLExecutableDriver, conn, failure, success } from "TiFBackendUtils"
-import { ServerEnvironment } from "../env.js"
-import { ValidatedRouter } from "../validation.js"
+import { ServerEnvironment } from "../env"
+import { ValidatedRouter } from "../validation"
 
 export const getNewProductRouter = (
   environment: ServerEnvironment,
@@ -153,7 +146,7 @@ The directory structure for your tests would be:
 ```plaintext
 APILambda
 └── <your_data_type_folder> (e.g., users, products, etc.)
-    ├── <your_data_type>.ts 
+    ├── <your_data_type>.ts
     ├── <your_data_type>.test.ts (This is where you write your tests)
     └── SQL.ts
 
@@ -188,6 +181,10 @@ describe("GET /new-product/:id", () => {
 ```
 
 These tests make HTTP requests to the new "products" route and assert that the response is as expected. The first test is for a successful transaction with a valid ID, while the second test is for an error scenario where an invalid ID is provided.
+
+### Open Handles Warnings
+
+You'll see these at the end of a test suite if a promise has not resolved by the time the tests finish. Usually these are caused by not closing the db connection at the end of tests, or forgetting to await DB operations like conn.executeResult() or conn.queryResult().
 
 #### Staging Tests
 

@@ -1,8 +1,15 @@
-import { EventBridge } from "@aws-sdk/client-eventbridge"
-import { InvocationType, Lambda } from "@aws-sdk/client-lambda"
-import dotenv from "dotenv"
-
-dotenv.config()
+import type { InvokeCommandOutput } from "@aws-sdk/client-lambda"
+import { PromiseResult, promiseResult, success } from "TiFShared/lib/Result"
+import { AWSEnvVars } from "./env"
+const {
+  Lambda,
+  InvocationType
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+} = require("@aws-sdk/client-lambda")
+const {
+  EventBridge
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+} = require("@aws-sdk/client-eventbridge")
 
 const eventbridge = new EventBridge({ apiVersion: "2023-04-20" })
 const lambda = new Lambda()
@@ -18,9 +25,9 @@ const createCronExpressions = (dateString: string) => {
   return `cron(${minute} ${hour} ${dayOfMonth} ${month} ? ${year})`
 }
 
-const functionName = process.env.AWS_LAMBDA_FUNCTION_NAME
-const region = process.env.AWS_REGION
-const accountId = process.env.AWS_ACCOUNT_ID
+const functionName = AWSEnvVars.AWS_LAMBDA_FUNCTION_NAME
+const region = AWSEnvVars.AWS_REGION
+const accountId = AWSEnvVars.AWS_ACCOUNT_ID
 const lambdaArn = `arn:aws:lambda:${region}:${accountId}:function:${functionName}`
 
 export const scheduleAWSLambda = async (
@@ -29,11 +36,11 @@ export const scheduleAWSLambda = async (
 ) => {
   const cronExpression = createCronExpressions(dateString)
   const ruleName = `${functionName}_${dateString}`.replace(/[: ]/g, "_")
-  const ruleParams = {
+  await eventbridge.putRule({
     Name: ruleName,
-    ScheduleExpression: cronExpression
-  }
-  await eventbridge.putRule(ruleParams)
+    ScheduleExpression: cronExpression,
+    EventBusName: functionName
+  })
   const targetParams = {
     Rule: ruleName,
     Targets: [
@@ -47,11 +54,25 @@ export const scheduleAWSLambda = async (
   return await eventbridge.putTargets(targetParams)
 }
 
-export const invokeAWSLambda = async (
+export const invokeAWSLambda = <T>(
   lambdaName: string,
   targetLambdaParams?: unknown
-) => lambda.invoke({
-  FunctionName: lambdaName,
-  InvocationType: InvocationType.RequestResponse,
-  Payload: JSON.stringify(targetLambdaParams)
-})
+): PromiseResult<T, never> => {
+  return promiseResult(
+    lambda.invoke({
+      FunctionName: lambdaName,
+      InvocationType: InvocationType.RequestResponse,
+      Payload: JSON.stringify(targetLambdaParams)
+    }).then((response: InvokeCommandOutput) => {
+      const payloadString = new TextDecoder("utf-8").decode(response.Payload)
+      return success(JSON.parse(payloadString))
+    })
+  )
+}
+
+export const deleteEventBridgeRule = async (event: { id: string }) => {
+  await eventbridge.deleteRule({
+    Name: event.id,
+    EventBusName: functionName
+  })
+}

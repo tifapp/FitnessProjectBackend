@@ -1,9 +1,8 @@
 {
   "compilerOptions": {
-    "module": "esnext",
-    "target": "es2020",
+    "module": "commonjs",
+    "target": "ESNext",
     "strict": true,
-    "declaration": true,
     "outDir": "dist",
     "removeComments": true,
     "allowJs": true,
@@ -11,6 +10,10 @@
     "esModuleInterop": true,
     "resolveJsonModule": true
   },
+  "preserveSymlinks": true,
+  "include": [
+    "**/*.ts"
+  ],
   "exclude": [
     "**/*.test.ts",
     "**/*.spec.ts",

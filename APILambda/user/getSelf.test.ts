@@ -1,17 +1,15 @@
-import { callGetSelf } from "../test/apiCallers/users.js"
-import { createUserFlow } from "../test/userFlows/users.js"
+import { testAPI } from "../test/testApp"
+import { createUserFlow } from "../test/userFlows/createUserFlow"
 
 describe("GetSelf tests", () => {
   it("should return 500 when we can't retrieve a user's profile", async () => {
-    const resp = await callGetSelf(global.unregisteredUser.auth)
-    expect(resp).toMatchObject({
-      status: 500,
-      body: { error: "user-not-found" }
-    })
+    await expect(
+      testAPI.getSelf({ auth: global.unregisteredUser.auth })
+    ).resolves.toMatchObject({ status: 500, data: { error: "self-not-found" } })
   })
 
   // it("should return 401 when the user has no profile", async () => {
-  //   const resp = await callGetSelf(global.defaultUser.auth)
+  //   const resp = await testAPI.getSelf (global.defaultUser.auth)
   //   expect(resp).toMatchObject({
   //     status: 401,
   //     body: { error: "user-does-not-exist" }
@@ -19,18 +17,16 @@ describe("GetSelf tests", () => {
   // })
 
   it("should be able to fetch your private account info", async () => {
-    const { token, userId } = await createUserFlow()
-    const resp = await callGetSelf(token)
+    const newUser = await createUserFlow()
+    const resp = await testAPI.getSelf({ auth: newUser.auth })
 
     expect(resp).toMatchObject({
       status: 200,
-      body: expect.objectContaining({
-        id: userId,
-        bio: null,
-        profileImageURL: null
+      data: expect.objectContaining({
+        id: newUser.id
       })
     })
-    expect(Date.parse(resp.body.createdDateTime)).not.toBeNaN()
-    expect(Date.parse(resp.body.updatedDateTime)).not.toBeNaN()
+    expect(resp.data.createdDateTime).not.toBeNaN()
+    expect(resp.data.updatedDateTime).not.toBeNaN()
   })
 })

@@ -1,129 +1,104 @@
+import { conn } from "TiFBackendUtils"
+import { MySQLExecutableDriver } from "TiFBackendUtils/MySQLDriver"
 import {
-  MySQLExecutableDriver,
-  conn,
-  success
-} from "TiFBackendUtils"
-import { z } from "zod"
-import { ServerEnvironment } from "../env.js"
-import { ValidatedRouter } from "../validation.js"
-import { addUserToAttendeeList } from "./joinEventById.js"
+  addAttendanceData,
+  getEventSQL,
+  tifEventResponseFromDatabaseEvent
+} from "TiFBackendUtils/TiFEventUtils"
+import { resp } from "TiFShared/api"
+import {
+  EventEdit,
+  EventEditLocation
+} from "TiFShared/domain-models/Event"
+import { LocationCoordinate2D } from "TiFShared/domain-models/LocationCoordinate2D"
+import { UserID } from "TiFShared/domain-models/User"
+import { PromiseResult } from "TiFShared/lib/Result"
+import { NamedLocation } from "TiFShared/lib/Types/NamedLocation"
+import { authenticatedEndpoint } from "../auth"
+import { addUserToAttendeeList } from "../utils/eventAttendance"
 
-const CreateEventSchema = z
-  .object({
-    description: z.string().max(500),
-    startDateTime: z.string().datetime(),
-    endDateTime: z
-      .string()
-      .datetime()
-      .refine(
-        (date) => {
-          return new Date(date) > new Date()
-        },
-        {
-          message: "endDateTime must be in the future"
-          // TODO: add minimum duration check
-        }
-      ),
-    color: z.string(), // TODO: Use ColorString from shared package
-    title: z.string().max(50),
-    shouldHideAfterStartDate: z.boolean(),
-    isChatEnabled: z.boolean(),
-    latitude: z.number().min(-90).max(90),
-    longitude: z.number().min(-180).max(180)
-  })
-  .transform((res) => ({
-    ...res,
-    startDateTime: new Date(res.startDateTime),
-    endDateTime: new Date(res.endDateTime)
-  }))
-
-export type CreateEventInput = z.infer<typeof CreateEventSchema>
-
-export const createEvent = (
+export const createEventSQL = (
   conn: MySQLExecutableDriver,
-  input: CreateEventInput,
-  hostId: string
+  eventEdit: Omit<EventEdit, "location"> & LocationCoordinate2D,
+  hostId: UserID
 ) => {
-  return conn.executeResult(
-    `
+  return conn
+    .executeResult(
+      `
   INSERT INTO event (
     hostId,
-    title, 
-    description, 
-    startDateTime, 
-    endDateTime, 
-    color, 
-    shouldHideAfterStartDate, 
-    isChatEnabled, 
-    latitude, 
+    title,
+    description,
+    startDateTime,
+    endDateTime,
+    shouldHideAfterStartDate,
+    isChatEnabled,
+    latitude,
     longitude
   ) VALUES (
     :hostId,
-    :title, 
-    :description, 
-    :startDateTime, 
-    :endDateTime, 
-    :color, 
-    :shouldHideAfterStartDate, 
-    :isChatEnabled, 
-    :latitude, 
+    :title,
+    :description,
+    :startDateTime,
+    :endDateTime,
+    :shouldHideAfterStartDate,
+    FALSE,
+    :latitude,
     :longitude
   )
   `,
-    {
-      ...input,
-      hostId
-    }
-  )
+      {
+        hostId,
+        title: eventEdit.title,
+        description: eventEdit.description,
+        shouldHideAfterStartDate: eventEdit.shouldHideAfterStartDate,
+        startDateTime: eventEdit.startDateTime,
+        endDateTime: eventEdit.startDateTime.ext.addSeconds(eventEdit.duration),
+        latitude: eventEdit.latitude,
+        longitude: eventEdit.longitude
+      }
+    )
+    .flatMapSuccess(({ insertId }) => {
+      return getEventSQL(conn, parseInt(insertId), hostId)
+    })
+    .mapFailure((e) => e as never) // NB: Insert should always return the inserted value.
 }
 
+export const createEventTransaction = (
+  conn: MySQLExecutableDriver,
+  body: EventEdit,
+  selfId: UserID,
+  geocode: (
+    locationEdit: EventEditLocation
+  ) => PromiseResult<NamedLocation, never>
+) => {
+  return geocode(body.location).flatMapSuccess(({ coordinate }) => {
+    return conn.transaction((tx) => {
+      return createEventSQL(tx, { ...body, ...coordinate }, selfId)
+        .passthroughSuccess((event) => {
+          return addUserToAttendeeList(conn, selfId, event.id, "hosting")
+        })
+        .flatMapSuccess((event) => addAttendanceData(tx, [event], selfId))
+        .mapSuccess(([event]) => tifEventResponseFromDatabaseEvent(event))
+    })
+  })
+}
+
+// ALLOW EXTRA MIDDLEWARE
 /**
  * Creates routes related to event operations.
  *
  * @param environment see {@link ServerEnvironment}.
  */
-export const createEventRouter = (
-  { callGeocodingLambda }: ServerEnvironment,
-  router: ValidatedRouter
-) => {
-  /**
-   * Create an event
-   */
-  router.postWithValidation(
-    "/",
-    { bodySchema: CreateEventSchema },
-    (req, res) => {
-      return conn
-        .transaction((tx) =>
-          createEvent(tx, req.body, res.locals.selfId)
-            .flatMapSuccess(({ insertId }) =>
-              addUserToAttendeeList(
-                tx,
-                res.locals.selfId,
-                parseInt(insertId),
-                "hosting"
-              ).flatMapSuccess(async () => {
-                try {
-                  const resp = await callGeocodingLambda({
-                    longitude:
-                    req.body.longitude,
-                    latitude:
-                    req.body.latitude
-                  })
-                  console.debug(JSON.stringify(resp, null, 4))
-                } catch (e) {
-                  console.error("Could not create placemark for ", req.body)
-                  console.error(e)
-                } finally {
-                  // eslint-disable-next-line no-unsafe-finally
-                  return success()
-                }
-              }
-              ).mapSuccess(() => ({ insertId }))
-            )
-        )
-        .mapFailure((error) => res.status(500).json({ error }))
-        .mapSuccess(({ insertId }) => res.status(201).json({ id: insertId }))
-    }
-  )
-}
+export const createEvent = authenticatedEndpoint<"createEvent">(
+  async ({ environment, context: { selfId }, body }) => {
+    return createEventTransaction(
+      conn,
+      body,
+      selfId,
+      (locationEdit) => environment.geocode(locationEdit)
+    )
+      .mapSuccess((event) => resp(201, event))
+      .unwrap()
+  }
+)
