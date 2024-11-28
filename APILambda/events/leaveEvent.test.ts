@@ -1,6 +1,6 @@
 import dayjs from "dayjs"
 import { conn } from "TiFBackendUtils"
-import { handler as geocode } from "../../GeocodingLambda"
+import { devEnv } from "../test/devIndex"
 import { testAPI } from "../test/testApp"
 import { testEventInput } from "../test/testEvents"
 import { createEventFlow } from "../test/userFlows/createEventFlow"
@@ -146,7 +146,7 @@ describe("Leave event tests", () => {
           duration: 3600
         },
         user.id,
-        geocode
+        devEnv.geocode
       )
     ).unwrap()
 

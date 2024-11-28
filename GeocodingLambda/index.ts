@@ -2,24 +2,26 @@
  * @type {import('@types/aws-lambda').APIGatewayProxyHandler}
  */
 import { conn } from "TiFBackendUtils"
-import { exponentialFunctionBackoff } from "TiFBackendUtils/AWS"
 import { EventEditLocation } from "TiFShared/domain-models/Event"
+import { LocationCoordinate2D } from "TiFShared/domain-models/LocationCoordinate2D"
+import { Placemark } from "TiFShared/domain-models/Placemark"
 import { promiseResult, success } from "TiFShared/lib/Result"
-import { NamedLocation } from "TiFShared/lib/Types/NamedLocation"
 import {
   addLocationToDB,
   checkExistingPlacemarkInDB,
+  FlattenedLocation,
   getTimeZone,
-  SearchClosestAddressToCoordinates,
-  SearchCoordinatesForAddress
+  SearchClosestAddressToCoordinatesAWS,
+  SearchCoordinatesForAddressAWS
 } from "./utils"
 
 // TODO: Fix handler type, fix util dependencies
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const handler: any = exponentialFunctionBackoff<
-  EventEditLocation,
-  NamedLocation
->((locationEdit: EventEditLocation) => {
+export const handler = (
+  locationEdit: EventEditLocation,
+  geocode: (coords: LocationCoordinate2D) => Promise<FlattenedLocation> = SearchClosestAddressToCoordinatesAWS,
+  reverseGeocode: (placemark: Placemark) => Promise<LocationCoordinate2D> = SearchCoordinatesForAddressAWS
+) => {
   console.log("geocoding ", locationEdit)
 
   return checkExistingPlacemarkInDB(conn, locationEdit)
@@ -27,10 +29,10 @@ export const handler: any = exponentialFunctionBackoff<
       (
         locationEdit.type === "coordinate"
           ? promiseResult(
-            SearchClosestAddressToCoordinates(locationEdit.value).then((locationInfo) => success(locationInfo))
+            geocode(locationEdit.value).then((locationInfo) => success(locationInfo))
           )
           : promiseResult(
-            SearchCoordinatesForAddress(locationEdit.value).then((coordinates) => success({ ...coordinates, ...locationEdit.value }))
+            reverseGeocode(locationEdit.value).then((coordinates) => success({ ...coordinates, ...locationEdit.value }))
           )
       )
         .flatMapSuccess((dbLocation) => {
@@ -58,4 +60,4 @@ export const handler: any = exponentialFunctionBackoff<
         })
     )
     .unwrap()
-})
+}

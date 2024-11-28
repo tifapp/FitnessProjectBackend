@@ -1,4 +1,5 @@
 import { conn } from "TiFBackendUtils"
+import { LocationCoordinate2D } from "TiFShared/domain-models/LocationCoordinate2D"
 import { randomInt } from "crypto"
 import { addLocationToDB, getTimeZone } from "../../GeocodingLambda/utils"
 import { userToUserRequest } from "../test/shortcuts"
@@ -6,6 +7,8 @@ import { testAPI } from "../test/testApp"
 import { testEventInput } from "../test/testEvents"
 import { createEventFlow } from "../test/userFlows/createEventFlow"
 import { createUserFlow, userDetails } from "../test/userFlows/createUserFlow"
+
+const testEventLocation = testEventInput.location.value as LocationCoordinate2D
 
 describe("getEventDetails", () => {
   it("should return 404 if the event doesnt exist", async () => {
@@ -26,15 +29,15 @@ describe("getEventDetails", () => {
     const newUser = await createUserFlow()
 
     const eventTimeZone = getTimeZone({
-      latitude: testEventInput.location.value.latitude,
-      longitude: testEventInput.location.value.longitude
+      latitude: testEventLocation.latitude,
+      longitude: testEventLocation.longitude
     })
 
     await addLocationToDB(
       conn,
       {
-        latitude: testEventInput.location.value.latitude,
-        longitude: testEventInput.location.value.longitude,
+        latitude: testEventLocation.latitude,
+        longitude: testEventLocation.longitude,
         name: "Sample Location",
         city: "Sample Neighborhood",
         country: "Sample Country",
@@ -86,7 +89,7 @@ describe("getEventDetails", () => {
           hasArrived: false
         })),
         location: {
-          coordinate: testEventInput.location.value,
+          coordinate: testEventLocation,
           placemark: {
             name: "Sample Location",
             city: "Sample Neighborhood",

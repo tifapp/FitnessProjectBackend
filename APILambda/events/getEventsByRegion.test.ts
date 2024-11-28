@@ -3,8 +3,8 @@ import { dateRange } from "TiFShared/domain-models/FixedDateRange"
 import { LocationCoordinate2D } from "TiFShared/domain-models/LocationCoordinate2D"
 import { dayjs } from "TiFShared/lib/Dayjs"
 import { sleep } from "TiFShared/lib/DelayData"
-import { addLocationToDB } from "../../GeocodingLambda/utils"
 import { devEnv } from "../test/devIndex"
+import { addMockLocationToDB } from "../test/location"
 import { userToUserRequest } from "../test/shortcuts"
 import { testAPI } from "../test/testApp"
 import { testEventInput } from "../test/testEvents"
@@ -15,19 +15,7 @@ import { createEventTransaction } from "./createEvent"
 const testLocation = testEventInput.location.value as LocationCoordinate2D
 
 const createEvents = async () => {
-  await addLocationToDB(
-    conn,
-    {
-      latitude: testLocation.latitude,
-      longitude: testLocation.longitude,
-      name: "Sample Location",
-      city: "Sample Neighborhood",
-      country: "Sample Country",
-      street: "Sample Street",
-      streetNumber: "1234"
-    },
-    "Sample/Timezone"
-  )
+  await addMockLocationToDB(testLocation)
 
   const {
     attendeesList: [, attendee],

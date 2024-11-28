@@ -43,7 +43,7 @@ export const AddressSearchResultToFlattenedLocation = (
   }
 }
 
-export const SearchCoordinatesForAddress = async (placemark: Placemark) => {
+export const SearchCoordinatesForAddressAWS = async (placemark: Placemark) => {
   const address = placemarkToFormattedAddress(placemark)
 
   if (!address) {
@@ -68,20 +68,20 @@ export const SearchCoordinatesForAddress = async (placemark: Placemark) => {
   }
 }
 
-export const SearchClosestAddressToCoordinates = async (
-  location: LocationCoordinate2D
+export const SearchClosestAddressToCoordinatesAWS = async (
+  coords: LocationCoordinate2D
 ) => {
   const response = await locationClient.send(
     new SearchPlaceIndexForPositionCommand({
       IndexName: "placeIndexed3975f4-dev", // environment variable?
-      Position: [location.longitude, location.latitude],
+      Position: [coords.longitude, coords.latitude],
       MaxResults: 1,
       Language: "en-US"
     })
   )
 
   return AddressSearchResultToFlattenedLocation(
-    location,
+    coords,
     response.Results?.[0]?.Place
   )
 }

@@ -8,7 +8,7 @@ import { dateRange } from "TiFShared/domain-models/FixedDateRange"
 import { dayjs } from "TiFShared/lib/Dayjs"
 
 // Coords in the US mainland
-const mockLocationCoordinate2D = () => ({
+export const mockLocationCoordinate2D = () => ({
   latitude: parseFloat(faker.address.latitude(49.3, 24.4)),
   longitude: parseFloat(faker.address.longitude(-66.9, -125))
 })

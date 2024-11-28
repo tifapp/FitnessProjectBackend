@@ -2,8 +2,8 @@ import { conn } from "TiFBackendUtils"
 import { dateRange } from "TiFShared/domain-models/FixedDateRange"
 import { LocationCoordinate2D } from "TiFShared/domain-models/LocationCoordinate2D"
 import { dayjs } from "TiFShared/lib/Dayjs"
-import { handler as geocode } from "../../GeocodingLambda/index"
-import { addLocationToDB } from "../../GeocodingLambda/utils"
+import { devEnv } from "../test/devIndex"
+import { addMockLocationToDB } from "../test/location"
 import { testAPI } from "../test/testApp"
 import { testEventInput } from "../test/testEvents"
 import { createEventFlow } from "../test/userFlows/createEventFlow"
@@ -12,22 +12,10 @@ import { createEventTransaction } from "./createEvent"
 
 const testEventLocation = testEventInput.location.value as LocationCoordinate2D
 
-describe("_upcomingEvents tests", () => {
-  beforeEach(async () => {
-    await addLocationToDB(
-      conn,
-      {
-        latitude: testEventLocation.latitude,
-        longitude: testEventLocation.longitude,
-        name: "Sample Location",
-        city: "Sample Neighborhood",
-        country: "Sample Country",
-        street: "Sample Street",
-        streetNumber: "1234"
-      },
-      "Sample/Timezone"
-    )
-  })
+describe("upcomingEvents tests", () => {
+  beforeEach(() =>
+    addMockLocationToDB(testEventLocation)
+  )
   test("if no upcoming events, empty", async () => {
     const attendee = await createUserFlow()
     const resp = await testAPI.upcomingEvents<200>({
@@ -78,7 +66,7 @@ describe("_upcomingEvents tests", () => {
         duration: dayjs.duration(15, "minutes").asSeconds()
       },
       user.id,
-      geocode
+      devEnv.geocode
     )
     const { id: upcomingEventId } = (
       await createEventTransaction(
@@ -89,7 +77,7 @@ describe("_upcomingEvents tests", () => {
           duration: dayjs.duration(15, "minutes").asSeconds()
         },
         user.id,
-        geocode
+        devEnv.geocode
       )
     ).unwrap()
     const resp = await testAPI.upcomingEvents<200>({
