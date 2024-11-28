@@ -14,7 +14,6 @@
   "author": "TiF",
   "license": "ISC",
   "dependencies": {
-    "@aws-sdk/client-cognito-identity-provider": "^3.515.0",
     "@vendia/serverless-express": "^4.10.3",
     "ably": "^1.2.42",
     "dayjs": "^1.11.10",
@@ -28,6 +27,7 @@
     "zod": "^3.22.4"
   },
   "devDependencies": {
+    "@aws-sdk/client-cognito-identity-provider": "^3.515.0",
     "@aws-sdk/client-cloudwatch-logs": "^3.637.0",
     "@aws-sdk/credential-providers": "^3.515.0",
     "@faker-js/faker": "^7.6.0",

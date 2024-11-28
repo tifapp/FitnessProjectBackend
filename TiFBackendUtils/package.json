@@ -3,8 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "dependencies": {
-    "mysql2": "^3.9.7",
-    "node-fetch": "^3.3.2"
+    "mysql2": "^3.9.7"
   },
   "peerDependencies": {
     "@aws-sdk/client-eventbridge": "^3.515.0",
@@ -28,7 +27,6 @@
     "@types/jest": "^29.5.3",
     "@types/linkify-it": "^3.0.5",
     "@types/node": "^20.3.0",
-    "@types/node-fetch": "^2.6.6",
     "jest": "^29.0.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.4.2"
