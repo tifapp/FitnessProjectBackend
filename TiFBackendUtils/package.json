@@ -11,7 +11,7 @@
     "dayjs": "^1.11.10",
     "dotenv": "^16.3.1",
     "linkify-it": "^5.0.0",
-    "TiFShared": "github:tifapp/TiFShared#e0445304b365d4c5a38c156fc7b4f1f7136273ee",
+    "TiFShared": "github:tifapp/TiFShared#ae5cd19143c31e380edaca2b04fc64f1dc6dd7b8",
     "zod": "^3.22.4"
   },
   "scripts": {
