@@ -1,4 +1,5 @@
 import { conn } from "TiFBackendUtils"
+import { LocationCoordinate2D } from "TiFShared/domain-models/LocationCoordinate2D"
 import { TestUser } from "../global"
 import { userToUserRequest } from "../test/shortcuts"
 import { testAPI } from "../test/testApp"
@@ -113,8 +114,8 @@ describe("getAttendeesList endpoint", () => {
       conn,
       {
         ...testEventInput,
-        latitude: testEventInput.location.value.latitude,
-        longitude: testEventInput.location.value.longitude
+        latitude: (testEventInput.location.value as LocationCoordinate2D).latitude,
+        longitude: (testEventInput.location.value as LocationCoordinate2D).longitude
       },
       currentUser.id
     )

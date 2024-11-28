@@ -1,4 +1,3 @@
-import { addLogHandler, consoleLogHandler } from "TiFShared/logging"
 import { TestUser, TestUserInput } from "../../global"
 import { createMockAuthToken } from "../createMockUsers"
 
@@ -18,6 +17,5 @@ const setGlobalVariables = async ({
 
 export default async (): Promise<void> => {
   process.env.TZ = "UTC"
-  addLogHandler(consoleLogHandler())
   await setGlobalVariables({ createUser: createMockAuthToken, maxUsers: 15 })
 }

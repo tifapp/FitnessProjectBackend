@@ -1,6 +1,11 @@
-import { InvocationType, Lambda } from "@aws-sdk/client-lambda"
-import { promiseResult, success } from "TiFShared/lib/Result"
+import type { InvokeCommandOutput } from "@aws-sdk/client-lambda"
+import { PromiseResult, promiseResult, success } from "TiFShared/lib/Result"
 import { AWSEnvVars } from "./env"
+const {
+  Lambda,
+  InvocationType
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+} = require("@aws-sdk/client-lambda")
 const {
   EventBridge
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -52,15 +57,15 @@ export const scheduleAWSLambda = async (
 export const invokeAWSLambda = <T>(
   lambdaName: string,
   targetLambdaParams?: unknown
-) => {
+): PromiseResult<T, never> => {
   return promiseResult(
     lambda.invoke({
       FunctionName: lambdaName,
       InvocationType: InvocationType.RequestResponse,
       Payload: JSON.stringify(targetLambdaParams)
-    }).then(response => {
+    }).then((response: InvokeCommandOutput) => {
       const payloadString = new TextDecoder("utf-8").decode(response.Payload)
-      return success(JSON.parse(payloadString) as T)
+      return success(JSON.parse(payloadString))
     })
   )
 }

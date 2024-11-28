@@ -40,9 +40,10 @@ describe("CreateEvent tests", () => {
         time: {
           todayOrTomorrow: "today",
           dateRange: {
-            startDateTime: startDateTime.toISOString(),
+            startDateTime: dayjs(startDateTime).millisecond(0).toDate().toISOString(),
             endDateTime: dayjs(startDateTime)
               .add(1, "hour")
+              .millisecond(0)
               .toDate()
               .toISOString()
           }

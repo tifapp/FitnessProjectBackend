@@ -5,6 +5,7 @@ import awsServerlessExpress from "@vendia/serverless-express"
 import { invokeAWSLambda } from "TiFBackendUtils/AWS"
 import { envVars } from "TiFBackendUtils/env"
 import { EventEditLocation } from "TiFShared/domain-models/Event"
+import { NamedLocation } from "TiFShared/lib/Types/NamedLocation"
 import { addLogHandler, consoleLogHandler } from "TiFShared/logging"
 import { addBenchmarking, addTiFRouter, createApp } from "./appMiddleware"
 import { ServerEnvironment } from "./env"
@@ -17,7 +18,7 @@ const env: ServerEnvironment = {
   eventStartWindowInHours: 1,
   maxArrivals: 100,
   geocode: (location: EventEditLocation) =>
-    invokeAWSLambda(
+    invokeAWSLambda<NamedLocation>(
       `geocodingPipeline:${envVars.ENVIRONMENT}`,
       location
     )
