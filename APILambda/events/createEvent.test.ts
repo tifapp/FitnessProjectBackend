@@ -7,7 +7,7 @@ import { createUserFlow } from "../test/userFlows/createUserFlow"
 
 describe("CreateEvent tests", () => {
   it("should allow a user to create an event and add them to the attendee list", async () => {
-    const startDateTime = new Date().ext.addSeconds(10)
+    const startDateTime = dayjs(new Date()).millisecond(0).toDate().ext.addSeconds(10)
     const {
       host,
       eventResponses: [event]
@@ -40,10 +40,9 @@ describe("CreateEvent tests", () => {
         time: {
           todayOrTomorrow: "today",
           dateRange: {
-            startDateTime: dayjs(startDateTime).millisecond(0).toDate().toISOString(),
+            startDateTime: dayjs(startDateTime).toDate().toISOString(),
             endDateTime: dayjs(startDateTime)
               .add(1, "hour")
-              .millisecond(0)
               .toDate()
               .toISOString()
           }
