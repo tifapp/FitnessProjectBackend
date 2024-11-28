@@ -32,20 +32,17 @@ describe("Geocoding lambda tests", () => {
 
     expect(result).toMatchObject(
       {
-        status: "success",
-        value: {
-          coordinate: {
-            latitude: expect.closeTo(testCoordinates.value.latitude),
-            longitude: expect.closeTo(testCoordinates.value.longitude)
-          },
-          placemark: {
-            city: "Westside",
-            isoCountryCode: "USA",
-            name: "420 Hagar Dr, Santa Cruz, CA 95064, United States",
-            postalCode: "95064",
-            street: "Hagar Dr",
-            streetNumber: "420"
-          }
+        coordinate: {
+          latitude: expect.closeTo(testCoordinates.value.latitude),
+          longitude: expect.closeTo(testCoordinates.value.longitude)
+        },
+        placemark: {
+          city: "Westside",
+          isoCountryCode: "USA",
+          name: "420 Hagar Dr, Santa Cruz, CA 95064, United States",
+          postalCode: "95064",
+          street: "Hagar Dr",
+          streetNumber: "420"
         }
       }
     )
@@ -72,21 +69,18 @@ describe("Geocoding lambda tests", () => {
 
     expect(result).toMatchObject(
       {
-        status: "success",
-        value: {
-          coordinate: {
-            latitude: expect.closeTo(testCoordinates.value.latitude),
-            longitude: expect.closeTo(testCoordinates.value.longitude)
-          },
-          placemark: {
-            city: "Westside",
-            isoCountryCode: "USA",
-            name: "420 Hagar Dr, Santa Cruz, CA 95064, United States",
-            postalCode: "95064",
-            street: "Hagar Dr",
-            streetNumber: "420",
-            timezoneIdentifier: "America/Los_Angeles"
-          }
+        coordinate: {
+          latitude: expect.closeTo(testCoordinates.value.latitude),
+          longitude: expect.closeTo(testCoordinates.value.longitude)
+        },
+        placemark: {
+          city: "Westside",
+          isoCountryCode: "USA",
+          name: "420 Hagar Dr, Santa Cruz, CA 95064, United States",
+          postalCode: "95064",
+          street: "Hagar Dr",
+          streetNumber: "420",
+          timezoneIdentifier: "America/Los_Angeles"
         }
       }
     )
@@ -99,22 +93,19 @@ describe("Geocoding lambda tests", () => {
 
     expect(result).toMatchObject(
       {
-        status: "success",
-        value: {
-          coordinate: {
-            latitude: expect.closeTo(testCoordinates.value.latitude),
-            longitude: expect.closeTo(testCoordinates.value.longitude)
-          },
-          placemark: {
-            city: "Westside",
-            country: undefined,
-            isoCountryCode: "USA",
-            name: "420 Hagar Dr, Santa Cruz, CA 95064, United States",
-            postalCode: "95064",
-            region: "California",
-            street: "Hagar Dr",
-            streetNumber: "420"
-          }
+        coordinate: {
+          latitude: expect.closeTo(testCoordinates.value.latitude),
+          longitude: expect.closeTo(testCoordinates.value.longitude)
+        },
+        placemark: {
+          city: "Westside",
+          country: undefined,
+          isoCountryCode: "USA",
+          name: "420 Hagar Dr, Santa Cruz, CA 95064, United States",
+          postalCode: "95064",
+          region: "California",
+          street: "Hagar Dr",
+          streetNumber: "420"
         }
       }
     )
@@ -141,21 +132,18 @@ describe("Geocoding lambda tests", () => {
 
     expect(result).toMatchObject(
       {
-        status: "success",
-        value: {
-          coordinate: {
-            latitude: expect.closeTo(testCoordinates.value.latitude),
-            longitude: expect.closeTo(testCoordinates.value.longitude)
-          },
-          placemark: {
-            city: "Westside",
-            isoCountryCode: "USA",
-            name: "420 Hagar Dr, Santa Cruz, CA 95064, United States",
-            postalCode: "95064",
-            street: "Hagar Dr",
-            streetNumber: "420",
-            timezoneIdentifier: "America/Los_Angeles"
-          }
+        coordinate: {
+          latitude: expect.closeTo(testCoordinates.value.latitude),
+          longitude: expect.closeTo(testCoordinates.value.longitude)
+        },
+        placemark: {
+          city: "Westside",
+          isoCountryCode: "USA",
+          name: "420 Hagar Dr, Santa Cruz, CA 95064, United States",
+          postalCode: "95064",
+          street: "Hagar Dr",
+          streetNumber: "420",
+          timezoneIdentifier: "America/Los_Angeles"
         }
       }
     )
