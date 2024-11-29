@@ -36,9 +36,10 @@ describe("Leave event tests", () => {
     })
   })
 
-  it("should return 400 if host leaves own event and co-host does not exist", async () => {
+  it("should assign the host to be the earliest joining attendee when the host leaves", async () => {
     const {
       host,
+      attendeesList,
       eventIds: [eventId]
     } = await createEventFlow(
       [
@@ -49,17 +50,69 @@ describe("Leave event tests", () => {
           }
         }
       ],
-      1
+      2
     )
 
     const resp = await testAPI.leaveEvent({
       auth: host.auth,
       params: { eventId }
     })
-    expect(resp).toMatchObject({
-      status: 400,
-      data: { error: "co-host-not-found" }
+    expect(resp).toMatchObject({ status: 204 })
+
+    const event = await testAPI.eventDetails<200>({
+      auth: host.auth,
+      params: { eventId }
     })
+    expect(event.data.host.id).toEqual(attendeesList[1].id)
+    expect(event.data.previewAttendees[0].id).toEqual(attendeesList[1].id)
+    expect(event.data.previewAttendees[0].role).toEqual("hosting")
+  })
+
+  it("should delete the event when everyone leaves", async () => {
+    const {
+      host,
+      eventIds: [eventId],
+      attendeesList
+    } = await createEventFlow([{ coordinates: eventLocation }], 1)
+
+    console.log("Original host id", host.id)
+
+    await testAPI.leaveEvent({
+      auth: host.auth,
+      params: { eventId }
+    })
+    await testAPI.leaveEvent({
+      auth: attendeesList[1].auth,
+      params: { eventId }
+    })
+
+    const event = await testAPI.eventDetails({
+      auth: host.auth,
+      params: { eventId }
+    })
+    expect(event.status).toEqual(404)
+  })
+
+  it("should not delete the event when 2 users and 1 user leaves twice", async () => {
+    const {
+      host,
+      eventIds: [eventId]
+    } = await createEventFlow([{ coordinates: eventLocation }], 1)
+
+    await testAPI.leaveEvent({
+      auth: host.auth,
+      params: { eventId }
+    })
+    await testAPI.leaveEvent({
+      auth: host.auth,
+      params: { eventId }
+    })
+
+    const event = await testAPI.eventDetails({
+      auth: host.auth,
+      params: { eventId }
+    })
+    expect(event.status).toEqual(200)
   })
 
   it("should return 200 if user leaves event twice", async () => {
@@ -114,6 +167,8 @@ describe("Leave event tests", () => {
     } = await createEventFlow(
       [
         {
+          startDateTime: new Date().ext.addSeconds(1000),
+          duration: 1000,
           location: {
             type: "coordinate",
             value: eventLocation

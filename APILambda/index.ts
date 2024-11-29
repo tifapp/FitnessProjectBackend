@@ -1,29 +1,8 @@
-import "TiFBackendUtils"
-import "TiFShared/lib/Zod"
-
-import awsServerlessExpress from "@vendia/serverless-express"
-import { invokeAWSLambda } from "TiFBackendUtils/AWS"
-import { envVars } from "TiFBackendUtils/env"
-import { EventEditLocation } from "TiFShared/domain-models/Event"
-import { NamedLocation } from "TiFShared/lib/Types/NamedLocation"
-import { addLogHandler, consoleLogHandler } from "TiFShared/logging"
-import { addBenchmarking, addTiFRouter, createApp } from "./appMiddleware"
-import { ServerEnvironment } from "./env"
-import { addEventToRequest } from "./serverlessMiddleware"
-
-addLogHandler(consoleLogHandler())
-
-const env: ServerEnvironment = {
-  environment: envVars.ENVIRONMENT,
-  eventStartWindowInHours: 1,
-  maxArrivals: 100,
-  geocode: (location: EventEditLocation) =>
-    invokeAWSLambda<NamedLocation>(
-      `geocodingPipeline:${envVars.ENVIRONMENT}`,
-      location
-    )
+try {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { handler } = require("./app")
+  exports.handler = handler
+} catch (error) {
+  console.error("Module initialization error:", error.stack || error.message)
+  throw error
 }
-
-const app = createApp(env, addEventToRequest, addBenchmarking, addTiFRouter)
-
-export const handler = awsServerlessExpress({ app })

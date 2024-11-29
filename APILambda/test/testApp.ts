@@ -7,7 +7,7 @@ import { devApp } from "./devIndex"
 import { testEnvVars } from "./testEnv"
 
 const app =
-  envVars.environment === "stagingTest" ? testEnvVars.API_ENDPOINT : devApp
+  envVars.ENVIRONMENT === "devTest" ? devApp : testEnvVars.API_ENDPOINT
 
 type TestAppExtension =
   | { auth: string }
@@ -28,12 +28,12 @@ const testClient = TiFAPIClientCreator<TestAppExtension>(
       .query(query)
 
     if (auth) {
-      req = req.set("authorization", auth)
+      req = req.set("Authorization", auth)
     }
 
     const { status, body: data } = await req.send(body)
 
-    return { status, data }
+    return { status, data: data === "" ? {} : data }
   }
 )
 

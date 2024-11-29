@@ -19,9 +19,13 @@ import {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const handler = (
   locationEdit: EventEditLocation,
-  geocode: (coords: LocationCoordinate2D) => Promise<FlattenedLocation> = SearchClosestAddressToCoordinatesAWS,
-  reverseGeocode: (placemark: Placemark) => Promise<LocationCoordinate2D> = SearchCoordinatesForAddressAWS
+  geocodeHandler?: (coords: LocationCoordinate2D) => Promise<FlattenedLocation>,
+  reverseGeocodeHandler?: (placemark: Placemark) => Promise<LocationCoordinate2D>
 ) => {
+  // cannot pass functions in aws environment, so perform the parameterization inside
+  const geocode = typeof geocodeHandler === "function" ? geocodeHandler : SearchClosestAddressToCoordinatesAWS
+  const reverseGeocode = typeof reverseGeocodeHandler === "function" ? reverseGeocodeHandler : SearchCoordinatesForAddressAWS
+
   console.log("geocoding ", locationEdit)
 
   return checkExistingPlacemarkInDB(conn, locationEdit)

@@ -4,6 +4,8 @@ import { getEventSQL } from "TiFBackendUtils/TiFEventUtils"
 import { resp } from "TiFShared/api/Transport"
 import { failure, success } from "TiFShared/lib/Result"
 import { authenticatedEndpoint } from "../auth"
+import { EventID } from "TiFShared/domain-models/Event"
+import { UserID } from "TiFShared/domain-models/User"
 
 const removeUserFromAttendeeList = (
   conn: MySQLExecutableDriver,
@@ -16,6 +18,41 @@ const removeUserFromAttendeeList = (
     WHERE ea.userId = :userId AND ea.eventId = :eventId AND e.endedDateTime IS NULL`,
     { userId, eventId }
   )
+
+const changeHostToEarliestAttendee = (
+  conn: MySQLExecutableDriver,
+  eventId: EventID
+) => {
+  return conn
+    .queryFirstResult<{ userId: UserID }>(
+      `
+    SELECT ea.userId
+    FROM eventAttendance AS ea
+    WHERE ea.eventId = :eventId AND ea.role <> 'hosting'
+    ORDER BY ea.joinedDateTime ASC
+    LIMIT 1
+    `,
+      { eventId }
+    )
+    .passthroughSuccess(({ userId }) => {
+      return conn.executeResult(
+        "UPDATE event SET hostId = :userId WHERE id = :eventId",
+        { userId, eventId }
+      )
+    })
+    .passthroughSuccess(({ userId }) => {
+      return conn.executeResult(
+        "UPDATE eventAttendance SET role = 'hosting' WHERE eventId = :eventId AND userId = :userId",
+        { userId, eventId }
+      )
+    })
+}
+
+const deleteEvent = (conn: MySQLExecutableDriver, eventId: EventID) => {
+  return conn.executeResult("DELETE FROM event WHERE id = :eventId", {
+    eventId
+  })
+}
 
 /**
  * Leave an event given an event id.
@@ -44,11 +81,12 @@ export const leaveEvent = authenticatedEndpoint<"leaveEvent">(
                 )
               : success()
           )
-          .passthroughSuccess((event) =>
-            event.hostId === selfId
-              ? failure(resp(400, { error: "co-host-not-found" }))
-              : success()
-          )
+          .passthroughSuccess((event) => {
+            if (event.hostId !== selfId) return success()
+            return changeHostToEarliestAttendee(tx, eventId).flatMapFailure(
+              () => deleteEvent(tx, eventId)
+            )
+          })
           .flatMapSuccess(() => removeUserFromAttendeeList(tx, selfId, eventId))
           .mapSuccess(({ rowsAffected }) =>
             rowsAffected > 0
