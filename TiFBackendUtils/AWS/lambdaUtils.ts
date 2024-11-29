@@ -65,11 +65,13 @@ export const invokeAWSLambda = <T>(
       InvocationType: InvocationType.RequestResponse,
       Payload: JSON.stringify(targetLambdaParams)
     }).then((response: InvokeCommandOutput) => {
+      console.log(response)
       const payloadString = new TextDecoder("utf-8").decode(response.Payload)
+      console.log(payloadString)
       return success(JSON.parse(payloadString))
     }).catch((e: unknown) => {
       console.error(e)
-      success(defaultValue)
+      return success(defaultValue)
     })
   )
 }
