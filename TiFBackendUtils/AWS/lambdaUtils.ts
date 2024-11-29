@@ -56,7 +56,8 @@ export const scheduleAWSLambda = async (
 
 export const invokeAWSLambda = <T>(
   lambdaName: string,
-  targetLambdaParams?: unknown
+  targetLambdaParams?: unknown,
+  defaultValue?: T
 ): PromiseResult<T, never> => {
   return promiseResult(
     lambda.invoke({
@@ -64,8 +65,13 @@ export const invokeAWSLambda = <T>(
       InvocationType: InvocationType.RequestResponse,
       Payload: JSON.stringify(targetLambdaParams)
     }).then((response: InvokeCommandOutput) => {
+      console.log(response)
       const payloadString = new TextDecoder("utf-8").decode(response.Payload)
+      console.log(payloadString)
       return success(JSON.parse(payloadString))
+    }).catch((e: unknown) => {
+      console.error(e)
+      return success(defaultValue)
     })
   )
 }

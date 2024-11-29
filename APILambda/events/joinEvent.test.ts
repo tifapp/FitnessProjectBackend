@@ -1,4 +1,5 @@
 import { conn } from "TiFBackendUtils"
+import { LocationCoordinate2D } from "TiFShared/domain-models/LocationCoordinate2D"
 import { dayjs } from "TiFShared/lib/Dayjs"
 import { randomInt } from "crypto"
 import { userToUserRequest } from "../test/shortcuts"
@@ -63,7 +64,7 @@ describe("Join the event by id tests", () => {
       body: {
         region: {
           arrivalRadiusMeters: 0,
-          coordinate: testEventInput.location.value
+          coordinate: testEventInput.location.value as LocationCoordinate2D
         }
       }
     })
@@ -179,9 +180,9 @@ describe("Join the event by id tests", () => {
       `,
       {
         hostId: host.id,
-        ...testEventInput,
-        latitude: testEventInput.location.value.latitude,
-        longitude: testEventInput.location.value.longitude,
+        title: testEventInput.title,
+        latitude: (testEventInput.location.value as LocationCoordinate2D).latitude,
+        longitude: (testEventInput.location.value as LocationCoordinate2D).longitude,
         startDateTime: dayjs().subtract(24, "hour").toDate(),
         endDateTime: dayjs().subtract(12, "hour").toDate(),
         endedDateTime: dayjs().subtract(12, "hour").toDate()

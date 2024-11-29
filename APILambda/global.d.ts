@@ -12,6 +12,5 @@ export type TestUser = {
 /* eslint-disable no-var */
 declare global {
   var registerUser: (user?: TestUserInput) => Promise<TestUser>
-  var unregisteredUser: TestUser
   var users: TestUser[]
 }

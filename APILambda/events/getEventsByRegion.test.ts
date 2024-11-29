@@ -207,15 +207,14 @@ describe("exploreEvents endpoint tests", () => {
       createUserFlow()
     ])
 
-    await Promise.all(
-      users.map(async (u, index) => {
-        await sleep(index * 10)
-        return testAPI.joinEvent({
-          auth: u.auth,
-          params: { eventId: futureEventId }
-        })
+    // non-deterministic order on staging tests, so we need to add users in sequence
+    for (let i = 0; i < users.length; i++) {
+      await sleep(1000)
+      await testAPI.joinEvent({
+        auth: users[i].auth,
+        params: { eventId: futureEventId }
       })
-    )
+    }
 
     await testAPI.sendFriendRequest({
       auth: attendee.auth,
