@@ -33,7 +33,7 @@ const testClient = TiFAPIClientCreator<TestAppExtension>(
 
     const { status, body: data } = await req.send(body)
 
-    return { status, data }
+    return { status, data: data === "" ? {} : data }
   }
 )
 
