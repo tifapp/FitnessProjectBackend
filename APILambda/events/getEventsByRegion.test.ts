@@ -2,6 +2,7 @@ import { conn } from "TiFBackendUtils"
 import { dateRange } from "TiFShared/domain-models/FixedDateRange"
 import { LocationCoordinate2D } from "TiFShared/domain-models/LocationCoordinate2D"
 import { dayjs } from "TiFShared/lib/Dayjs"
+import { sleep } from "TiFShared/lib/DelayData"
 import { devEnv } from "../test/devIndex"
 import { addMockLocationToDB } from "../test/location"
 import { userToUserRequest } from "../test/shortcuts"
@@ -200,16 +201,6 @@ describe("exploreEvents endpoint tests", () => {
   it("should return all attendees for each event", async () => {
     const { attendee, futureEventId, host } = await createEvents()
 
-    const trrr = await testAPI.exploreEvents<200>({
-      auth: attendee.auth,
-      body: {
-        userLocation: testLocation,
-        radius: 50000
-      }
-    })
-    console.log("TEST EVENT RESPONSE AND ATTENDEES FOR BEGINNING ")
-    console.log(trrr.data.events[1].previewAttendees)
-
     const users = await Promise.all([
       createUserFlow(),
       createUserFlow(),
@@ -218,31 +209,12 @@ describe("exploreEvents endpoint tests", () => {
 
     // non-deterministic order on staging tests, so we need to add users in sequence
     for (let i = 0; i < users.length; i++) {
+      await sleep(1000)
       await testAPI.joinEvent({
         auth: users[i].auth,
         params: { eventId: futureEventId }
       })
-
-      const tr = await testAPI.exploreEvents<200>({
-        auth: attendee.auth,
-        body: {
-          userLocation: testLocation,
-          radius: 50000
-        }
-      })
-      console.log("TEST EVENT RESPONSE AND ATTENDEES FOR USER ", i)
-      console.log(tr.data.events[1].previewAttendees)
     }
-
-    const testResp = await testAPI.exploreEvents<200>({
-      auth: attendee.auth,
-      body: {
-        userLocation: testLocation,
-        radius: 50000
-      }
-    })
-    console.log("TEST EVENT RESPONSE AND ATTENDEES IS")
-    console.log(testResp.data.events[1].previewAttendees)
 
     await testAPI.sendFriendRequest({
       auth: attendee.auth,
