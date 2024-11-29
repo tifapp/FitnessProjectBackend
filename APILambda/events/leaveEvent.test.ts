@@ -114,6 +114,8 @@ describe("Leave event tests", () => {
     } = await createEventFlow(
       [
         {
+          startDateTime: new Date().ext.addSeconds(1000),
+          duration: 1000,
           location: {
             type: "coordinate",
             value: eventLocation
