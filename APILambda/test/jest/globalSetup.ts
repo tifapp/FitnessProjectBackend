@@ -9,9 +9,8 @@ const setGlobalVariables = async ({
   maxUsers: number
 }) => {
   global.registerUser = createUser
-  global.unregisteredUser = await createUser({ profileExists: true })
   global.users = await Promise.all(
-    Array.from({ length: maxUsers }, () => createUser({ profileExists: false }))
+    Array.from({ length: maxUsers }, () => createUser())
   )
 }
 

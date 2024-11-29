@@ -17,7 +17,7 @@ import {
 
 // TODO: Fix handler type, fix util dependencies
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const handler = async (
+export const handler = (
   locationEdit: EventEditLocation,
   geocodeHandler?: (coords: LocationCoordinate2D) => Promise<FlattenedLocation>,
   reverseGeocodeHandler?: (placemark: Placemark) => Promise<LocationCoordinate2D>
