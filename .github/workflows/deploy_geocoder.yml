@@ -51,6 +51,7 @@ jobs:
               DATABASE_PORT=${{ secrets.DATABASE_PORT }},\
               CA_PEM=${{ secrets.CA_PEM }},\
               AWS_ACCOUNT_ID=${{ secrets.AWS_ACCOUNT_ID }},\
+              JWT_SECRET=${{ secrets.JWT_SECRET }},\
               DATABASE_USERNAME=$DB_USERNAME,\
               DATABASE_PASSWORD=$DB_PASSWORD\
             }"

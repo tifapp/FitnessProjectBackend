@@ -20,7 +20,13 @@ const env: ServerEnvironment = {
   geocode: (location: EventEditLocation) =>
     invokeAWSLambda<NamedLocation>(
       `geocodingPipeline:${envVars.ENVIRONMENT}`,
-      location
+      location,
+      {
+        coordinate: { latitude: 0, longitude: 0 },
+        placemark: {
+          name: "Unknown Location"
+        }
+      }
     )
 }
 
