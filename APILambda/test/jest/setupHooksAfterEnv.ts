@@ -1,9 +1,12 @@
 import { conn } from "TiFBackendUtils"
-import { resetDB } from "TiFBackendUtils/MySQLDriver/test/dbHelpers"
+import { resetDB } from "TiFBackendUtils/test/MySQLDriver/dbHelpers"
 import { addLogHandler, consoleLogHandler } from "TiFShared/logging"
+import { closeLocalhostServer } from "../localhostListener"
 import { testUserCounter } from "../userFlows/createUserFlow"
 
-global.beforeAll(() => addLogHandler(consoleLogHandler()))
+global.beforeAll(() =>
+  addLogHandler(consoleLogHandler())
+)
 
 /*
  * Resets database before each test
@@ -13,6 +16,6 @@ global.beforeEach(async () => {
   await resetDB()
 })
 
-global.beforeAll(resetDB)
+global.afterEach(closeLocalhostServer)
 
 global.afterAll(() => conn.closeConnection())

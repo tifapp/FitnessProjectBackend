@@ -1,5 +1,4 @@
 import os from "os"
-import "TiFShared/lib/Array"
 
 /**
  * Returns a local private IPV4 Address string from the currently connected local network.
@@ -7,9 +6,10 @@ import "TiFShared/lib/Array"
 export const localPrivateIPV4Address = () => {
   const networkInterfaces = os.networkInterfaces()
   return Object.keys(networkInterfaces)
-    .ext.compactMap((key) => networkInterfaces[key])
+    .map((key) => networkInterfaces[key])
     .flat()
     .find((iface) => {
+      if (!iface) return false
       return (
         iface.family === "IPv4" && !iface.internal && isPrivate(iface.address)
       )

@@ -17,5 +17,5 @@ const setGlobalVariables = async ({
 
 export default async (): Promise<void> => {
   process.env.TZ = "UTC"
-  await setGlobalVariables({ createUser: createMockAuthToken, maxUsers: 5 })
+  await setGlobalVariables({ createUser: createMockAuthToken, maxUsers: 15 })
 }

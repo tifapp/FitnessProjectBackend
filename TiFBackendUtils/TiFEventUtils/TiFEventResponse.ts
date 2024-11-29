@@ -93,6 +93,9 @@ export type TiFEvent = {
 export const tifEventResponseFromDatabaseEvent = (
   event: DBTifEvent
 ): TiFEvent => {
+  console.log("translating event")
+  console.log(event)
+
   return {
     id: event.id,
     title: event.title,

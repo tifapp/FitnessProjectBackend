@@ -1,11 +1,15 @@
-import {
-  EventBridge,
-  PutTargetsCommandOutput
-} from "@aws-sdk/client-eventbridge"
-import { InvocationType, Lambda } from "@aws-sdk/client-lambda"
-import { retryFunction } from "../Retryable/utils"
-import { mockInDevTest } from "../test/mock"
+import type { InvokeCommandOutput } from "@aws-sdk/client-lambda"
+import { PromiseResult, promiseResult, success } from "TiFShared/lib/Result"
 import { AWSEnvVars } from "./env"
+const {
+  Lambda,
+  InvocationType
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+} = require("@aws-sdk/client-lambda")
+const {
+  EventBridge
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+} = require("@aws-sdk/client-eventbridge")
 
 const eventbridge = new EventBridge({ apiVersion: "2023-04-20" })
 const lambda = new Lambda()
@@ -50,15 +54,21 @@ export const scheduleAWSLambda = async (
   return await eventbridge.putTargets(targetParams)
 }
 
-export const invokeAWSLambda = async (
+export const invokeAWSLambda = <T>(
   lambdaName: string,
   targetLambdaParams?: unknown
-) =>
-  lambda.invoke({
-    FunctionName: lambdaName,
-    InvocationType: InvocationType.RequestResponse,
-    Payload: JSON.stringify(targetLambdaParams)
-  })
+): PromiseResult<T, never> => {
+  return promiseResult(
+    lambda.invoke({
+      FunctionName: lambdaName,
+      InvocationType: InvocationType.RequestResponse,
+      Payload: JSON.stringify(targetLambdaParams)
+    }).then((response: InvokeCommandOutput) => {
+      const payloadString = new TextDecoder("utf-8").decode(response.Payload)
+      return success(JSON.parse(payloadString))
+    })
+  )
+}
 
 export const deleteEventBridgeRule = async (event: { id: string }) => {
   await eventbridge.deleteRule({
@@ -66,41 +76,3 @@ export const deleteEventBridgeRule = async (event: { id: string }) => {
     EventBusName: functionName
   })
 }
-
-/**
- * Wraps a lambda function to add exponential backoff retry logic.
- *
- * @param {function} lambdaFunction The lambda function to wrap. This function should be asynchronous and throw an error if the operation it performs fails.
- * @param {number} maxRetries The maximum number of retries before the error is rethrown.
- * @returns {function} A new function that performs the same operation as the original function, but with exponential backoff retries.
- */
-export const exponentialFunctionBackoff = <T, U>(
-  asyncFn: (event: T) => Promise<PutTargetsCommandOutput | void | U>,
-  maxRetries: number = 3
-) =>
-  retryFunction(asyncFn, maxRetries, async (afn, event: T) => {
-    const parsedEvent = typeof event === "string" ? JSON.parse(event) : event
-    try {
-      await mockInDevTest(deleteEventBridgeRule)(parsedEvent)
-      return await afn(parsedEvent.detail)
-    } catch (e) {
-      console.error(e)
-      const retries = parsedEvent.detail.retries ?? 0
-      if (retries < maxRetries) {
-        const retryDelay = Math.pow(2, retries)
-        const retryDate = new Date()
-        retryDate.setHours(retryDate.getHours() + retryDelay)
-
-        const newEvent = {
-          ...parsedEvent,
-          detail: { ...parsedEvent.detail, retries: retries + 1 }
-        }
-        return mockInDevTest(scheduleAWSLambda)(
-          retryDate.toISOString(),
-          JSON.stringify(newEvent)
-        )
-      } else {
-        throw e
-      }
-    }
-  })

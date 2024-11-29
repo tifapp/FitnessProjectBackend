@@ -1,13 +1,13 @@
-import { promiseResult, success } from "TiFShared/lib/Result"
-import { DBeventAttendance, DBuser, DBuserArrivals } from "../DBTypes"
-import { MySQLExecutableDriver } from "../MySQLDriver"
-import { DBTifEvent } from "./TiFEventResponse"
+import { EventAttendee, EventID } from "TiFShared/domain-models/Event"
 import {
   UnblockedUserRelationsStatus,
   UserID
 } from "TiFShared/domain-models/User"
-import { EventID, EventAttendee } from "TiFShared/domain-models/Event"
+import { promiseResult, success } from "TiFShared/lib/Result"
+import { DBeventAttendance, DBuser, DBuserArrivals } from "../DBTypes"
+import { MySQLExecutableDriver } from "../MySQLDriver"
 import { UserRelations, UserRelationsSchema } from "../TiFUserUtils"
+import { Attendee, DBTifEvent } from "./TiFEventResponse"
 
 export type DBUserAttendance = Pick<
   DBeventAttendance,
@@ -128,7 +128,7 @@ const addAttendance = (
       }
     ])
   )
-  attendees.forEach(({ attendee, eventId }) => {
+  attendees.forEach(({ attendee, eventId }: {attendee: Attendee, eventId: EventID}) => {
     const event = map.get(eventId)
     if (!event) return
     event.previewAttendees.push(attendee)

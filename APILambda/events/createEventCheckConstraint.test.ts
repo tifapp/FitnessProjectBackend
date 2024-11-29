@@ -1,6 +1,6 @@
 import { conn } from "TiFBackendUtils"
 import { randomUUID } from "crypto"
-import { expectFailsCheckConstraint } from "../../TiFBackendUtils/MySQLDriver/test/dbHelpers"
+import { expectFailsCheckConstraint } from "../../TiFBackendUtils/test/MySQLDriver/dbHelpers"
 import { testEventInput } from "../test/testEvents"
 import { createEventSQL } from "./createEvent"
 

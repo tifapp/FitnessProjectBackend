@@ -1,28 +1,21 @@
 import { conn } from "TiFBackendUtils"
 import { dateRange } from "TiFShared/domain-models/FixedDateRange"
-import dayjs from "dayjs"
-import { addLocationToDB } from "../../GeocodingLambda/utils"
+import { LocationCoordinate2D } from "TiFShared/domain-models/LocationCoordinate2D"
+import { dayjs } from "TiFShared/lib/Dayjs"
+import { sleep } from "TiFShared/lib/DelayData"
+import { devEnv } from "../test/devIndex"
+import { addMockLocationToDB } from "../test/location"
 import { userToUserRequest } from "../test/shortcuts"
 import { testAPI } from "../test/testApp"
 import { testEventInput } from "../test/testEvents"
 import { createEventFlow } from "../test/userFlows/createEventFlow"
 import { createUserFlow, userDetails } from "../test/userFlows/createUserFlow"
-import { sleep } from "TiFShared/lib/DelayData"
+import { createEventTransaction } from "./createEvent"
+
+const testLocation = testEventInput.location.value as LocationCoordinate2D
 
 const createEvents = async () => {
-  await addLocationToDB(
-    conn,
-    {
-      latitude: testEventInput.coordinates.latitude,
-      longitude: testEventInput.coordinates.longitude,
-      name: "Sample Location",
-      city: "Sample Neighborhood",
-      country: "Sample Country",
-      street: "Sample Street",
-      streetNumber: "1234"
-    },
-    "Sample/Timezone"
-  )
+  await addMockLocationToDB(testLocation)
 
   const {
     attendeesList: [, attendee],
@@ -37,10 +30,7 @@ const createEvents = async () => {
         )
       },
       {
-        dateRange: dateRange(
-          dayjs().subtract(12, "hour").toDate(),
-          dayjs().add(1, "year").toDate()
-        )
+        dateRange: dateRange(dayjs().toDate(), dayjs().add(1, "year").toDate())
       }
     ],
     1
@@ -61,7 +51,7 @@ describe("exploreEvents endpoint tests", () => {
     const resp = await testAPI.exploreEvents<200>({
       auth: attendee.auth,
       body: {
-        userLocation: testEventInput.coordinates,
+        userLocation: testLocation,
         radius: 50000
       }
     })
@@ -79,7 +69,7 @@ describe("exploreEvents endpoint tests", () => {
     const resp = await testAPI.exploreEvents<200>({
       auth: attendee.auth,
       body: {
-        userLocation: testEventInput.coordinates,
+        userLocation: testLocation,
         radius: 50000
       }
     })
@@ -97,11 +87,11 @@ describe("exploreEvents endpoint tests", () => {
     const resp = await testAPI.exploreEvents<200>({
       auth: attendee.auth,
       body: {
-        userLocation: testEventInput.coordinates,
+        userLocation: testLocation,
         radius: 50000
       }
     })
-    expect(resp.data.events[0].userAttendeeStatus).toEqual("not-participating")
+    expect(resp.data.events[1].userAttendeeStatus).toEqual("not-participating")
   })
 
   it("should indicate that the user is hosting an event", async () => {
@@ -110,7 +100,7 @@ describe("exploreEvents endpoint tests", () => {
     const resp = await testAPI.exploreEvents<200>({
       auth: host.auth,
       body: {
-        userLocation: testEventInput.coordinates,
+        userLocation: testLocation,
         radius: 50000
       }
     })
@@ -127,8 +117,8 @@ describe("exploreEvents endpoint tests", () => {
       auth: attendee.auth,
       body: {
         userLocation: {
-          latitude: testEventInput.coordinates.latitude + 10,
-          longitude: testEventInput.coordinates.longitude + 10
+          latitude: testLocation.latitude + 10,
+          longitude: testLocation.longitude + 10
         },
         radius: 1
       }
@@ -145,7 +135,7 @@ describe("exploreEvents endpoint tests", () => {
     const events = await testAPI.exploreEvents<200>({
       auth: attendee.auth,
       body: {
-        userLocation: testEventInput.coordinates,
+        userLocation: testLocation,
         radius: 50000
       }
     })
@@ -160,7 +150,7 @@ describe("exploreEvents endpoint tests", () => {
     const events = await testAPI.exploreEvents<200>({
       auth: attendee.auth,
       body: {
-        userLocation: testEventInput.coordinates,
+        userLocation: testLocation,
         radius: 50000
       }
     })
@@ -179,11 +169,33 @@ describe("exploreEvents endpoint tests", () => {
     const events = await testAPI.exploreEvents<200>({
       auth: attendee.auth,
       body: {
-        userLocation: testEventInput.coordinates,
+        userLocation: testLocation,
         radius: 50000
       }
     })
     expect(events.data.events.map((e) => e.id)).toEqual([ongoingEventId])
+  })
+
+  it("should not return past events that have ended naturally", async () => {
+    const user = await createUserFlow()
+    await createEventTransaction(
+      conn,
+      {
+        ...testEventInput,
+        startDateTime: dayjs().subtract(30, "minute").toDate(),
+        duration: dayjs.duration(15, "minutes").asSeconds()
+      },
+      user.id,
+      devEnv.geocode
+    )
+    const events = await testAPI.exploreEvents<200>({
+      auth: user.auth,
+      body: {
+        userLocation: testLocation,
+        radius: 50000
+      }
+    })
+    expect(events.data.events.map((e) => e.id)).toEqual([])
   })
 
   it("should return all attendees for each event", async () => {
@@ -213,11 +225,11 @@ describe("exploreEvents endpoint tests", () => {
     const resp = await testAPI.exploreEvents<200>({
       auth: attendee.auth,
       body: {
-        userLocation: testEventInput.coordinates,
+        userLocation: testLocation,
         radius: 50000
       }
     })
-    const event = resp.data.events[0]
+    const event = resp.data.events[1]
     expect(
       event.previewAttendees.map((a) => ({
         id: a.id,

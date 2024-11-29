@@ -1,7 +1,7 @@
-/* eslint-disable @typescript-eslint/naming-convention */
-// Env variables
 import { EnvSchema } from "TiFBackendUtils/env"
-import { LocationCoordinate2D } from "TiFShared/domain-models/LocationCoordinate2D"
+import { EventEditLocation } from "TiFShared/domain-models/Event"
+import { PromiseResult } from "TiFShared/lib/Result"
+import { NamedLocation } from "TiFShared/lib/Types/NamedLocation"
 
 export type SetArrivalStatusEnvironment = {
   maxArrivals: number
@@ -18,5 +18,5 @@ export type SetArrivalStatusEnvironment = {
 export type ServerEnvironment = SetArrivalStatusEnvironment & {
   environment: EnvSchema["ENVIRONMENT"]
   eventStartWindowInHours: number
-  callGeocodingLambda: (location: LocationCoordinate2D) => Promise<void>
+  geocode: (locationEdit: EventEditLocation) => PromiseResult<NamedLocation, never>
 }

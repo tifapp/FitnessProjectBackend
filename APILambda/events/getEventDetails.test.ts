@@ -1,4 +1,5 @@
 import { conn } from "TiFBackendUtils"
+import { LocationCoordinate2D } from "TiFShared/domain-models/LocationCoordinate2D"
 import { randomInt } from "crypto"
 import { addLocationToDB, getTimeZone } from "../../GeocodingLambda/utils"
 import { userToUserRequest } from "../test/shortcuts"
@@ -6,6 +7,8 @@ import { testAPI } from "../test/testApp"
 import { testEventInput } from "../test/testEvents"
 import { createEventFlow } from "../test/userFlows/createEventFlow"
 import { createUserFlow, userDetails } from "../test/userFlows/createUserFlow"
+
+const testEventLocation = testEventInput.location.value as LocationCoordinate2D
 
 describe("getEventDetails", () => {
   it("should return 404 if the event doesnt exist", async () => {
@@ -26,15 +29,15 @@ describe("getEventDetails", () => {
     const newUser = await createUserFlow()
 
     const eventTimeZone = getTimeZone({
-      latitude: testEventInput.coordinates.latitude,
-      longitude: testEventInput.coordinates.longitude
+      latitude: testEventLocation.latitude,
+      longitude: testEventLocation.longitude
     })
 
-    addLocationToDB(
+    await addLocationToDB(
       conn,
       {
-        latitude: testEventInput.coordinates.latitude,
-        longitude: testEventInput.coordinates.longitude,
+        latitude: testEventLocation.latitude,
+        longitude: testEventLocation.longitude,
         name: "Sample Location",
         city: "Sample Neighborhood",
         country: "Sample Country",
@@ -71,9 +74,10 @@ describe("getEventDetails", () => {
         time: {
           secondsToStart: expect.any(Number),
           dateRange: {
-            startDateTime:
-              testEventInput.dateRange!.startDateTime.toISOString(),
-            endDateTime: testEventInput.dateRange!.endDateTime.toISOString()
+            startDateTime: testEventInput.startDateTime.toISOString(),
+            endDateTime: testEventInput.startDateTime.ext
+              .addSeconds(testEventInput.duration)
+              .toISOString()
           },
           todayOrTomorrow: "today"
         },
@@ -85,7 +89,7 @@ describe("getEventDetails", () => {
           hasArrived: false
         })),
         location: {
-          coordinate: testEventInput.coordinates,
+          coordinate: testEventLocation,
           placemark: {
             name: "Sample Location",
             city: "Sample Neighborhood",
@@ -106,7 +110,7 @@ describe("getEventDetails", () => {
         },
         settings: {
           shouldHideAfterStartDate: true,
-          isChatEnabled: true
+          isChatEnabled: false
         },
         updatedDateTime: expect.any(String),
         createdDateTime: expect.any(String),

@@ -1,15 +1,16 @@
-import express, { Application } from "express"
+import express, { Express } from "express"
 import { ServerEnvironment } from "./env"
-import { upcomingEventArrivalRegions } from "./events/arrivals/getUpcomingEvents"
-import { arriveAtRegion } from "./events/arrivals/setArrivalStatus"
-import { departFromRegion } from "./events/arrivals/setDeparture"
+import { upcomingEventArrivalRegions } from "./events/arrivals/getUpcomingEventArrivals"
+import { updateArrivalStatus } from "./events/arrivals/updateArrivalStatus"
 import { createEvent } from "./events/createEvent"
+import { editEvent } from "./events/editEvent"
 import { endEvent } from "./events/endEvent"
 import { attendeesList } from "./events/getAttendees"
 import { eventDetails } from "./events/getEventDetails"
 import { exploreEvents } from "./events/getEventsByRegion"
 import { joinEvent } from "./events/joinEvent"
 import { leaveEvent } from "./events/leaveEvent"
+import { upcomingEvents } from "./events/upcomingEvents"
 import { TiFRouter } from "./router"
 import { autocompleteUsers } from "./user/autocompleteUsers"
 import { blockUser } from "./user/blockUser"
@@ -24,21 +25,26 @@ import { saveUserSettings } from "./user/settings/updateUserSettings"
 import { unblockUser } from "./user/unblockUser"
 import { updateCurrentUserProfile } from "./user/updateUserProfile"
 
+type AppMiddleware = ((app: Express, env: ServerEnvironment) => Express)
+
 /**
  * Creates an application instance.
  *
  * @param environment see {@link ServerEnvironment}
  * @returns a express js app instance
  */
-export const createApp = () => {
+export const createApp = (env: ServerEnvironment, ...middlewares: (AppMiddleware)[]) => {
   const app = express()
   app.use(express.json())
   app.use(express.urlencoded({ extended: true }))
+
+  middlewares.forEach(middleware => middleware(app, env))
+
   return app
 }
 
 // instead of here, should be aggregated in the jest suite
-export const addBenchmarking = (app: Application) => {
+export const addBenchmarking = (app: Express) => {
   app.use((req, res, next) => {
     const start = Date.now()
     const startMem = process.memoryUsage().heapUsed
@@ -55,23 +61,25 @@ export const addBenchmarking = (app: Application) => {
     })
     next()
   })
+  return app
 }
 
 export const addTiFRouter = (
-  app: Application,
-  environment: ServerEnvironment
-) =>
+  app: Express,
+  env: ServerEnvironment
+) => {
   app.use(
     "/",
     TiFRouter(
       {
+        editEvent,
         createEvent,
         eventDetails,
         joinEvent,
         leaveEvent,
         endEvent,
-        arriveAtRegion,
-        departFromRegion,
+        upcomingEvents,
+        updateArrivalStatus,
         upcomingEventArrivalRegions,
         attendeesList,
         exploreEvents,
@@ -88,6 +96,8 @@ export const addTiFRouter = (
         unblockUser,
         registerForPushNotifications
       },
-      environment
+      env
     )
   )
+  return app
+}

@@ -1,41 +1,114 @@
 import { conn } from "TiFBackendUtils"
+import { EventEditLocation } from "TiFShared/domain-models/Event"
 import { Placemark } from "TiFShared/domain-models/Placemark"
-import { failure, success } from "TiFShared/lib/Result"
-import { resetDB } from "../TiFBackendUtils/MySQLDriver/test/dbHelpers"
+import { resetDB } from "../TiFBackendUtils/test/MySQLDriver/dbHelpers"
 import { handler } from "./index"
 
-const testLocation = {
-  latitude: 36.99813840222285,
-  longitude: -122.05564377465653
+const testCoordinates: EventEditLocation = {
+  type: "coordinate",
+  value: {
+    latitude: 36.99813840222285,
+    longitude: -122.05564377465653
+  }
 }
-const storedLocation = { latitude: 36.9981384, longitude: -122.0556438 } // SQL has limited precision
 
-const locationTableSQL = `
-CREATE TABLE IF NOT EXISTS location (
-name varchar(255),
-city varchar(255),
-country varchar(255),
-street varchar(255),
-streetNumber varchar(255),
-latitude decimal(10,7) NOT NULL,
-longitude decimal(10,7) NOT NULL,
-timezoneIdentifier varchar(255) NOT NULL,
-postalCode varchar(255),
-region varchar(255),
-isoCountryCode varchar(255),
-createdDateTime datetime NOT NULL DEFAULT current_timestamp(),
-PRIMARY KEY (latitude, longitude)
-)
-`
+const testPlacemark: EventEditLocation = {
+  type: "placemark",
+  value: {
+    city: "Westside",
+    isoCountryCode: "USA",
+    name: "420 Hagar Dr, Santa Cruz, CA 95064, United States",
+    postalCode: "95064",
+    street: "Hagar Dr",
+    streetNumber: "420"
+  }
+}
 
 describe("Geocoding lambda tests", () => {
-  it("Should insert a placemark with the proper address with the given lat/lon", async () => {
-    await conn.executeResult(locationTableSQL)
+  it("Should insert a placemark with the proper lat/lon with the given address", async () => {
     await resetDB()
 
-    const result = await handler(testLocation)
+    const result = await handler(testPlacemark)
 
-    expect(result).toMatchObject(success("placemark-successfully-inserted"))
+    expect(result).toMatchObject(
+      {
+        coordinate: {
+          latitude: expect.closeTo(testCoordinates.value.latitude),
+          longitude: expect.closeTo(testCoordinates.value.longitude)
+        },
+        placemark: {
+          city: "Westside",
+          isoCountryCode: "USA",
+          name: "420 Hagar Dr, Santa Cruz, CA 95064, United States",
+          postalCode: "95064",
+          street: "Hagar Dr",
+          streetNumber: "420"
+        }
+      }
+    )
+
+    const address = await conn.queryFirstResult<Placemark>(
+      "SELECT * FROM location WHERE name = :name",
+      { name: testPlacemark.value.name }
+    )
+    expect(address.value).toMatchObject({
+      city: "Westside",
+      isoCountryCode: "USA",
+      name: "420 Hagar Dr, Santa Cruz, CA 95064, United States",
+      postalCode: "95064",
+      street: "Hagar Dr",
+      streetNumber: "420",
+      timezoneIdentifier: "America/Los_Angeles",
+      latitude: expect.closeTo(testCoordinates.value.latitude),
+      longitude: expect.closeTo(testCoordinates.value.longitude)
+    })
+  })
+
+  it("Should return when a placemark with the given address already exists", async () => {
+    const result = await handler(testPlacemark)
+
+    expect(result).toMatchObject(
+      {
+        coordinate: {
+          latitude: expect.closeTo(testCoordinates.value.latitude),
+          longitude: expect.closeTo(testCoordinates.value.longitude)
+        },
+        placemark: {
+          city: "Westside",
+          isoCountryCode: "USA",
+          name: "420 Hagar Dr, Santa Cruz, CA 95064, United States",
+          postalCode: "95064",
+          street: "Hagar Dr",
+          streetNumber: "420",
+          timezoneIdentifier: "America/Los_Angeles"
+        }
+      }
+    )
+  })
+
+  it("Should insert a placemark with the proper address with the given lat/lon", async () => {
+    await resetDB()
+
+    const result = await handler(testCoordinates)
+
+    expect(result).toMatchObject(
+      {
+        coordinate: {
+          latitude: expect.closeTo(testCoordinates.value.latitude),
+          longitude: expect.closeTo(testCoordinates.value.longitude)
+        },
+        placemark: {
+          city: "Westside",
+          country: undefined,
+          isoCountryCode: "USA",
+          name: "420 Hagar Dr, Santa Cruz, CA 95064, United States",
+          postalCode: "95064",
+          region: "California",
+          street: "Hagar Dr",
+          streetNumber: "420"
+        }
+      }
+    )
 
     const address = await conn.queryFirstResult<Placemark>(
       "SELECT * FROM location WHERE latitude = :latitude AND longitude = :longitude",
@@ -49,14 +122,31 @@ describe("Geocoding lambda tests", () => {
       street: "Hagar Dr",
       streetNumber: "420",
       timezoneIdentifier: "America/Los_Angeles",
-      ...storedLocation
+      latitude: expect.closeTo(testCoordinates.value.latitude),
+      longitude: expect.closeTo(testCoordinates.value.longitude)
     })
   })
 
-  it("Should return when a placemark already exists", async () => {
-    const result = await handler(testLocation)
+  it("Should return when a placemark with the given coordinates already exist", async () => {
+    const result = await handler(testCoordinates)
 
-    expect(result).toMatchObject(failure("placemark-already-exists"))
+    expect(result).toMatchObject(
+      {
+        coordinate: {
+          latitude: expect.closeTo(testCoordinates.value.latitude),
+          longitude: expect.closeTo(testCoordinates.value.longitude)
+        },
+        placemark: {
+          city: "Westside",
+          isoCountryCode: "USA",
+          name: "420 Hagar Dr, Santa Cruz, CA 95064, United States",
+          postalCode: "95064",
+          street: "Hagar Dr",
+          streetNumber: "420",
+          timezoneIdentifier: "America/Los_Angeles"
+        }
+      }
+    )
   })
 
   afterAll(() => conn.closeConnection())

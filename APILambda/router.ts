@@ -1,22 +1,18 @@
 import express from "express"
-import {
-  TiFAPIClient,
-  TiFAPISchema,
-  validateAPIRouterCall
-} from "TiFBackendUtils"
+import { IncomingHttpHeaders } from "http"
+import { TiFAPIClient, TiFAPISchema, validateAPIRouterCall } from "TiFBackendUtils"
 import {
   APIHandler,
   APIMiddleware,
-  APISchema,
-  GenericEndpointSchema
+  APISchema, GenericEndpointSchema
 } from "TiFShared/api/TransportTypes"
+import { UserID } from "TiFShared/domain-models/User"
 import { chainMiddleware, middlewareRunner } from "TiFShared/lib/Middleware"
+import { NonEmptyArray } from "TiFShared/lib/Types/HelperTypes"
 import { MatchFnCollection } from "TiFShared/lib/Types/MatchType"
-import { logger, Logger } from "TiFShared/logging"
+import { Logger, logger } from "TiFShared/logging"
 import { ServerEnvironment } from "./env"
 import { catchAPIErrors } from "./errorHandler"
-import { IncomingHttpHeaders } from "http"
-import { UserID } from "TiFShared/domain-models/User"
 
 export type RequestContext = {
   selfId: UserID
@@ -43,7 +39,10 @@ export const endpoint = <Key extends keyof TiFAPIRouterExtension>(
   ...middlewares: APIMiddleware<RouterParams>[]
 ) => {
   if (middlewares.length === 0) return handle
-  return chainMiddleware(...middlewares, handle) as TiFAPIRouterExtension[Key]
+  return chainMiddleware(
+    ...(middlewares as NonEmptyArray<APIMiddleware<RouterParams>>),
+    handle as APIMiddleware<RouterParams>
+  ) as TiFAPIRouterExtension[Key]
 }
 
 // reason: express parses undefined inputs as empty objects
