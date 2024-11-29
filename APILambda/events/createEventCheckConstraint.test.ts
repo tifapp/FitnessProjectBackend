@@ -1,3 +1,5 @@
+import "TiFShared/lib/Zod"
+
 import { conn } from "TiFBackendUtils"
 import { LocationCoordinate2D } from "TiFShared/domain-models/LocationCoordinate2D"
 import { randomUUID } from "crypto"
