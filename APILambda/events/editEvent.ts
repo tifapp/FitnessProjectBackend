@@ -52,17 +52,6 @@ const editEventSQL = (
   )
 }
 
-// export const dbEditedEventTimes = (
-//   body: Partial<Pick<EventEdit, "startDateTime" | "duration">>,
-//   event: Pick<DBTifEvent, "startDateTime" | "endDateTime">
-// ) => {
-//   const startDateTime = body.startDateTime ?? event.startDateTime
-//   const duration = body.duration ?? event.endDateTime.ext.diff(event.startDateTime).seconds
-//   const endDateTime = startDateTime.ext.addSeconds(duration)
-
-//   return { startDateTime, endDateTime }
-// }
-
 export const editEventTransaction = (
   conn: MySQLExecutableDriver,
   body: EventEdit,
