@@ -5,6 +5,7 @@ import { resp } from "TiFShared/api/Transport"
 import { EventEdit, EventEditLocation, EventID } from "TiFShared/domain-models/Event"
 import { LocationCoordinate2D } from "TiFShared/domain-models/LocationCoordinate2D"
 import { UserID } from "TiFShared/domain-models/User"
+import { dayjs } from "TiFShared/lib/Dayjs"
 import { failure, PromiseResult, success } from "TiFShared/lib/Result"
 import { NamedLocation } from "TiFShared/lib/Types/NamedLocation"
 import { authenticatedEndpoint } from "../auth"
@@ -51,16 +52,16 @@ const editEventSQL = (
   )
 }
 
-export const dbEditedEventTimes = (
-  body: Partial<Pick<EventEdit, "startDateTime" | "duration">>,
-  event: Pick<DBTifEvent, "startDateTime" | "endDateTime">
-) => {
-  const startDateTime = body.startDateTime ?? event.startDateTime
-  const duration = body.duration ?? event.endDateTime.ext.diff(event.startDateTime).seconds
-  const endDateTime = startDateTime.ext.addSeconds(duration)
+// export const dbEditedEventTimes = (
+//   body: Partial<Pick<EventEdit, "startDateTime" | "duration">>,
+//   event: Pick<DBTifEvent, "startDateTime" | "endDateTime">
+// ) => {
+//   const startDateTime = body.startDateTime ?? event.startDateTime
+//   const duration = body.duration ?? event.endDateTime.ext.diff(event.startDateTime).seconds
+//   const endDateTime = startDateTime.ext.addSeconds(duration)
 
-  return { startDateTime, endDateTime }
-}
+//   return { startDateTime, endDateTime }
+// }
 
 export const editEventTransaction = (
   conn: MySQLExecutableDriver,
@@ -84,8 +85,8 @@ export const editEventTransaction = (
               : success()
           )
           .flatMapSuccess((event) => {
-            const { startDateTime, endDateTime } = dbEditedEventTimes(body, event)
-            const updatedEvent: DBEventEdit = { ...event, ...location?.coordinate, ...body, startDateTime, endDateTime }
+            const endDateTime = dayjs(body.startDateTime).add(body.duration, "seconds")
+            const updatedEvent: DBEventEdit = { ...event, ...location?.coordinate, ...body, endDateTime }
 
             return editEventSQL(tx, updatedEvent, eventId)
               .flatMapSuccess(() => addAttendanceData(tx, [updatedEvent], selfId))
