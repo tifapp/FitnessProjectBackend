@@ -5,6 +5,7 @@ import {
 } from "TiFBackendUtils/test/dateHelpers"
 import { EventEdit } from "TiFShared/domain-models/Event"
 import { dateRange } from "TiFShared/domain-models/FixedDateRange"
+import { LocationCoordinate2D } from "TiFShared/domain-models/LocationCoordinate2D"
 import { dayjs } from "TiFShared/lib/Dayjs"
 
 // Coords in the US mainland
@@ -28,6 +29,9 @@ const createTestEvent = (): EventEdit => ({
 export const testEventCoordinate = { latitude: 50, longitude: 50 }
 
 export const testEventInput = createTestEvent()
+
+export const testEventInputCoordinate = testEventInput.location
+  .value as LocationCoordinate2D
 
 // reason: milliseconds are not counted in the live database
 export const upcomingEventDateRange = dateRange(

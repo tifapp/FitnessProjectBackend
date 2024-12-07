@@ -1,10 +1,15 @@
 import express from "express"
 import { IncomingHttpHeaders } from "http"
-import { TiFAPIClient, TiFAPISchema, validateAPIRouterCall } from "TiFBackendUtils"
+import {
+  TiFAPIClient,
+  TiFAPISchema,
+  validateAPIRouterCall
+} from "TiFBackendUtils"
 import {
   APIHandler,
   APIMiddleware,
-  APISchema, GenericEndpointSchema
+  APISchema,
+  GenericEndpointSchema
 } from "TiFShared/api/TransportTypes"
 import { UserID } from "TiFShared/domain-models/User"
 import { chainMiddleware, middlewareRunner } from "TiFShared/lib/Middleware"
@@ -13,6 +18,7 @@ import { MatchFnCollection } from "TiFShared/lib/Types/MatchType"
 import { Logger, logger } from "TiFShared/logging"
 import { ServerEnvironment } from "./env"
 import { catchAPIErrors } from "./errorHandler"
+import { ZodObject } from "zod"
 
 export type RequestContext = {
   selfId: UserID
