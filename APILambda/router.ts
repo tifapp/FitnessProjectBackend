@@ -18,7 +18,6 @@ import { MatchFnCollection } from "TiFShared/lib/Types/MatchType"
 import { Logger, logger } from "TiFShared/logging"
 import { ServerEnvironment } from "./env"
 import { catchAPIErrors } from "./errorHandler"
-import { ZodObject } from "zod"
 
 export type RequestContext = {
   selfId: UserID
