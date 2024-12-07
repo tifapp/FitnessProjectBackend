@@ -8,6 +8,7 @@ import { addTiFRouter, createApp } from "../appMiddleware"
 import { ServerEnvironment } from "../env"
 import { mockLocationCoordinate2D } from "./testEvents"
 import { geocodeMock } from "./location"
+import { localhostListener } from "./localhostListener"
 
 export const devEnv: ServerEnvironment = {
   environment: "devTest",
@@ -24,4 +25,8 @@ export const devEnv: ServerEnvironment = {
   }
 }
 
-export const devApp = createApp(devEnv, addTiFRouter)
+const middlewares = [addTiFRouter]
+if (process.env.NODE_ENV !== "test") {
+  middlewares.push(localhostListener)
+}
+export const devApp = createApp(devEnv, ...middlewares)
