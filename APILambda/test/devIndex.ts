@@ -6,9 +6,9 @@ import { promiseResult, success } from "TiFShared/lib/Result"
 import { handler } from "../../GeocodingLambda/index"
 import { addTiFRouter, createApp } from "../appMiddleware"
 import { ServerEnvironment } from "../env"
-import { localhostListener } from "./localhostListener"
 import { mockLocationCoordinate2D } from "./testEvents"
 import { geocodeMock } from "./location"
+import { localhostListener } from "./localhostListener"
 
 export const devEnv: ServerEnvironment = {
   environment: "devTest",
@@ -16,15 +16,17 @@ export const devEnv: ServerEnvironment = {
   eventStartWindowInHours: 1,
   geocode: (location) => {
     return promiseResult(
-      handler(
-        location,
-        geocodeMock,
-        async () => mockLocationCoordinate2D()
-      ).then(response => {
+      handler(location, geocodeMock, async () =>
+        mockLocationCoordinate2D()
+      ).then((response) => {
         return success(response)
       })
     )
   }
 }
 
-export const devApp = createApp(devEnv, addTiFRouter, localhostListener)
+const middlewares = [addTiFRouter]
+if (process.env.NODE_ENV !== "test") {
+  middlewares.push(localhostListener)
+}
+export const devApp = createApp(devEnv, ...middlewares)

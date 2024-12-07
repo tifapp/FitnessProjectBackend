@@ -1,48 +1,41 @@
-export const USER_EVENT_SQL = `
-  SELECT TifEventView.*,
-  CASE WHEN TifEventView.hostId = :userId THEN 'current-user'
-  ELSE
-    CASE WHEN UserRelationOfHostToUser.status IS NULL THEN 'not-friends'
-    ELSE UserRelationOfHostToUser.status
-    END
-  END AS fromThemToYou,
-  CASE WHEN TifEventView.hostId = :userId THEN 'current-user'
-  ELSE
-    CASE WHEN UserRelationOfUserToHost.status IS NULL THEN 'not-friends'
-    ELSE UserRelationOfUserToHost.status
-    END
-  END AS fromYouToThem
-  FROM TifEventView
-  LEFT JOIN userRelationships UserRelationOfHostToUser
-    ON TifEventView.hostId = UserRelationOfHostToUser.fromUserId AND UserRelationOfHostToUser.toUserId = :userId
-  LEFT JOIN userRelationships UserRelationOfUserToHost
-    ON UserRelationOfUserToHost.fromUserId = :userId AND UserRelationOfUserToHost.toUserId = TifEventView.hostId
-    `
+export namespace UserEventSQL {
+  export const BASE = `
+    SELECT TifEventView.*,
+    CASE WHEN TifEventView.hostId = :userId THEN 'current-user'
+    ELSE
+      CASE WHEN UserRelationOfHostToUser.status IS NULL THEN 'not-friends'
+      ELSE UserRelationOfHostToUser.status
+      END
+    END AS fromThemToYou,
+    CASE WHEN TifEventView.hostId = :userId THEN 'current-user'
+    ELSE
+      CASE WHEN UserRelationOfUserToHost.status IS NULL THEN 'not-friends'
+      ELSE UserRelationOfUserToHost.status
+      END
+    END AS fromYouToThem
+    FROM TifEventView
+    LEFT JOIN userRelationships UserRelationOfHostToUser
+      ON TifEventView.hostId = UserRelationOfHostToUser.fromUserId AND UserRelationOfHostToUser.toUserId = :userId
+    LEFT JOIN userRelationships UserRelationOfUserToHost
+      ON UserRelationOfUserToHost.fromUserId = :userId AND UserRelationOfUserToHost.toUserId = TifEventView.hostId
+      `
+  export const ATTENDANCE_INNER_JOIN =
+    "INNER JOIN eventAttendance ea ON ea.userId = :attendingUserId"
 
-/**
- * Returns a SQL query that returns a list of events from a user's point of view.
- *
- * The user id is parameterized by the `:userId` paramater. Additionally, if the `geospatial`
- * filter is used, then the radius is parameterized by the `:radius` parameter.
- *
- * @param filter The filter to use for the query.
- * @returns
- */
-export const userEventsSQL = (filter?: "geospatial") => {
-  let where = `
+  const BASE_WHERE_CLAUSES = `
     TifEventView.endDateTime > NOW()
     AND TifEventView.endedDateTime IS NULL
     AND (UserRelationOfHostToUser.status IS NULL OR UserRelationOfHostToUser.status <> 'blocked')
     AND (UserRelationOfUserToHost.status IS NULL OR UserRelationOfUserToHost.status <> 'blocked')
     `
-  if (filter === "geospatial") {
-    where =
-      "ST_Distance_Sphere(POINT(:userLongitude, :userLatitude), POINT(TifEventView.longitude, TifEventView.latitude)) < :radius AND" +
-      where
-  }
-  return `
-  ${USER_EVENT_SQL}
-  WHERE ${where}
-  ORDER BY TifEventView.startDateTime
-  `
+  export const BASE_WHERE = `
+    WHERE
+      ${BASE_WHERE_CLAUSES}
+    `
+  export const GEOSPATIAL_WHERE = `
+    WHERE
+      ST_Distance_Sphere(POINT(:userLongitude, :userLatitude), POINT(TifEventView.longitude, TifEventView.latitude)) < :radius
+      AND ${BASE_WHERE_CLAUSES}
+    `
+  export const ORDER_BY_START_TIME = "ORDER BY TifEventView.startDateTime"
 }

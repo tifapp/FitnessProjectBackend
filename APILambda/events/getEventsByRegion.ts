@@ -2,9 +2,9 @@ import { conn } from "TiFBackendUtils"
 import { MySQLExecutableDriver } from "TiFBackendUtils/MySQLDriver"
 import {
   DBTifEvent,
+  UserEventSQL,
   addAttendanceData,
-  tifEventResponseFromDatabaseEvent,
-  userEventsSQL
+  tifEventResponseFromDatabaseEvent
 } from "TiFBackendUtils/TiFEventUtils"
 import { resp } from "TiFShared/api/Transport"
 import { LocationCoordinate2D } from "TiFShared/domain-models/LocationCoordinate2D"
@@ -21,11 +21,18 @@ export const getEventsByRegion = (
     radius: number
   }
 ) => {
-  return conn.queryResult<DBTifEvent>(userEventsSQL("geospatial"), {
-    userLatitude,
-    userLongitude,
-    ...rest
-  })
+  return conn.queryResult<DBTifEvent>(
+    `
+    ${UserEventSQL.BASE}
+    ${UserEventSQL.GEOSPATIAL_WHERE}
+    ${UserEventSQL.ORDER_BY_START_TIME}
+    `,
+    {
+      userLatitude,
+      userLongitude,
+      ...rest
+    }
+  )
 }
 
 export const exploreEvents = authenticatedEndpoint<"exploreEvents">(
