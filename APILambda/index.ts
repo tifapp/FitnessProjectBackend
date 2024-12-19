@@ -3,6 +3,6 @@ try {
   const { handler } = require("./app")
   exports.handler = handler
 } catch (error) {
-  console.error("Module initialization error:", error.stack || error.message)
+  console.error("Lambda error:", error.stack || error.message)
   throw error
 }
