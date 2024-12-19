@@ -1,192 +1,778 @@
 ## [View Database Schema](schema.md)
 
-Todo: Add aws section
-Todo: Add section for testing locally
-Todo: Add table of contents
+## Table of Contents
 
-# FitnessProject
+- [Introduction](#introduction)
+- [Getting Started](#getting-started)
+  - [Prerequisites](#prerequisites)
+  - [Setup](#setup)
+- [Project Structure](#project-structure)
+  - [Geocoding Lambda](#geocoding-lambda)
+  - [API Lambda](#api-lambda)
+- [Adding a New Endpoint](#adding-a-new-endpoint)
+  - [Step 1: Add Definition to API Schema](#step-1-add-definition-to-api-schema)
+  - [Step 2: Implement the Endpoint](#step-2-implement-the-endpoint)
+  - [Step 3: Add Endpoint to Router](#step-3-add-endpoint-to-router)
+  - [Step 4: Write Tests](#step-4-write-tests)
+  - [Step 5: Test the Endpoint Locally](#step-5-test-the-endpoint-locally)
+- [Database Setup](#database-setup)
+  - [MySQL Setup for macOS](#mysql-setup-for-macos)
+  - [MySQL Setup for Windows](#mysql-setup-for-windows)
+  - [Common Errors](#common-errors)
+- [Running the Project](#running-the-project)
+- [Testing](#testing)
+  - [Running Tests](#running-tests)
+  - [Debugging Tips](#debugging-tips)
+- [AWS Setup](#aws-setup)
+  - [Services Utilized](#services-utilized)
+  - [System Diagrams](#system-diagrams)
+  - [CI/CD](#cicd)
+  - [AWS Credentials](#aws-credentials)
+- [VSCode Setup](#vscode-setup)
+- [Contributing Guidelines](#contributing-guidelines)
+- [Troubleshooting](#troubleshooting)
+- [Useful Commands](#useful-commands)
+- [Additional Resources](#additional-resources)
+- [Key Concepts](#key-concepts)
+- [API Testing from the Command Line](#api-testing-from-the-command-line)
+  - [Obtaining an ID Token](#obtaining-an-id-token)
+  - [Making an API Request](#making-an-api-request)
 
-# Adding a New SQL Route to the Backend API
+---
 
-Our backend API is designed with a structured layered architecture to streamline data handling and facilitate testing. This guide will explain the process of adding a new SQL route to our backend API.
+## Introduction
 
-## Step 1: Create or Use an Existing Data Type Folder
+The FitnessProject Backend is a Node.js application that provides a RESTful API for our fitness platform. It handles user authentication, event management, geocoding, and other core functionalities. The backend is built using Express.js and connects to a MySQL database, leveraging AWS services such as Lambda and API Gateway.
 
-The main API is found in the `APILambda` folder. This folder contains different subfolders for each type of data (e.g., `users`, `events`). If you're introducing a new data type that does not yet have a corresponding folder, create a new one.
+This guide will walk you through setting up the project on your local machine, understanding the codebase, and contributing to the development by adding new endpoints.
+
+---
+
+## Getting Started
+
+### Prerequisites
+
+Ensure you have the following installed:
+
+- **Node.js** (v14.x or later)
+- **npm** (v6.x or later)
+- **MySQL** (v5.7 or later)
+- **AWS CLI** (optional, for AWS interactions)
+
+### Setup
+
+1. **Clone the Repository**
+
+   ```bash
+   git clone https://github.com/yourusername/FitnessProjectBackend.git
+   cd FitnessProjectBackend
+   ```
+  
+2. **Install TiFShared**
+
+TiFShared is a required dependency of all subprojects and requires a symlink to test properly.
+Please see installation instructions [here](https://github.com/tifapp/TiFShared?tab=readme-ov-file#local-development-setup) and ensure the package is properly linked before continuing.
+
+3. **Install Dependencies**
+
+Performing an `npm install` from the root folder installs dependencies for all subprojects.
+
+   ```bash
+   npm install
+   ```
+
+4. **Set Up the Database**
+
+Follow the [Database Setup](#database-setup) instructions for your operating system.
+
+5. **Configure Environment Variables**
+
+   - Create a `.env` file in the root directory.
+   - Ask a team member for the necessary environment variables.
+   - Add the variables to the `.env` file.
+
+6. **Test**
+
+   - Perform an `npm test` from the root folder before development, to ensure everything works as expected.
+
+---
+
+## Project Structure
+
+The project is organized into several directories:
 
 ```plaintext
-.
-└── APILambda
-    ├── users
-    ├── events
-    └── <new_data_type_folder>
+FitnessProjectBackend/
+├── APILambda/
+│   ├── events/
+│   ├── user/
+├── GeocodingLambda/
+├── TiFBackendUtils/
+├── package.json
+└── ...
 ```
 
-## Statements
+- **APILambda**: Contains the main API server, organized by resource (e.g., `user`, `events`).
+- **GeocodingLambda**: AWS Lambda function for geocoding services.
+- **TiFBackendUtils**: Shared utilities.
 
-In order to operate on the database you'll need to write SQL statements.
+### Geocoding Lambda
 
-Navigate to your specific data type folder, and locate the `<your_data_type>.ts` to add queries specific to that data type file or `SQL.ts` file for adding queries that will be used in multiple files.
+![Geocoding Lambda Diagram](https://github.com/tifapp/FitnessProjectBackend/assets/70039847/2366e521-0e75-4e13-ae56-8953c2d30840)
 
-```plaintext
-APILambda
-└── <your_data_type_folder> (e.g., users, products, etc.)
-    ├── <your_data_type>.ts (This is where you add your SQL statements)
-    ├── <your_data_type>.test.ts
-    └── SQL.ts (This is where you add your SQL statements to be used in multiple files)
-```
+- **Purpose**: The Geocoding Lambda function transforms location coordinates into human-readable addresses, or vice versa, and stores them in the database.
 
-In this file, write your SQL statements for the new route. This SQL statement should return the desired query result for your route.
+### API Lambda
 
-For example, if you're adding a new "products" route, you might add a SQL statement like the following in the `getNewProduct.ts` or `SQL.ts` file under the `products` folder:
+![API Lambda Diagram](https://github.com/tifapp/FitnessProjectBackend/assets/70039847/8ce31b28-3c75-466d-9fe5-ea274d118336)
+
+- **Purpose**: The API Lambda is directly accessible by the end-user and is used to access data or perform operations required by the app, such as reading and modifying user data and event data.
+
+---
+
+## Adding a New Endpoint
+
+To add a new endpoint to the backend API, follow these steps:
+
+### Step 1: Add Definition to API Schema
+
+The first step is to add a definition for the new endpoint to the API schema. Follow the instructions in the [TiFShared README](https://github.com/tifapp/TiFShared/blob/main/README.md#api) to define the endpoint, keeping in mind the required inputs and outputs.
+
+**Tips**:
+
+- **Consult the Frontend Team**: Ensure the data structure aligns with frontend requirements.
+- **Define Request and Response Types**: Thoughtfully consider the schemas for input and output types. See recommended practices [1](https://restfulapi.net/resource-naming/) [2] (https://swagger.io/resources/articles/best-practices-in-api-design/)
+
+### Step 2: Implement the Endpoint
+
+After defining the endpoint in the API schema, you can start implementing it.
+
+- **Create a New File**: Place your endpoint code in the appropriate data type folder (e.g., `user`, `events`).
+- **Use `endpoint()` or `authenticatedEndpoint()`**: These functions help validate input and output types.
+
+**Example**:
 
 ```typescript
-// getNewProduct.ts or SQL.ts in 'products' folder
-import { MySQLExecutableDriver, conn, failure, success } from "TiFBackendUtils"
-import { ServerEnvironment } from "../env"
-import { ValidatedRouter } from "../validation"
+// user/createUser.ts
+import { endpoint } from "TiFBackendUtils";
+import { conn } from "../db";
+import { generateUniqueHandle, checkValidName } from "./utils";
+import { DBuser } from "../types";
+import { uuidV7 } from "uuidv7";
+import jwt from "jsonwebtoken";
+import { envVars } from "../env";
+import { resp } from "../utils";
 
-const getNewProduct = (conn: MySQLExecutableDriver, productId: string) => {
-  return conn.queryResults(`SELECT * FROM products WHERE id = :productId`, {
-    productId
-  })
+export const createCurrentUserProfile = endpoint<"createCurrentUserProfile">(
+  async ({ body: { name } }) =>
+    checkValidName(name)
+      .flatMapSuccess(() => generateUniqueHandle(name))
+      .flatMapSuccess((handle) => insertUser(conn, { handle, name }))
+      .mapFailure((error) =>
+        error === "invalid-name"
+          ? (resp(400, { error }) as never)
+          : (resp(500, { error }) as never)
+      )
+      .mapSuccess((result) =>
+        resp(201, {
+          ...result,
+          token: jwt.sign(
+            { ...result, handle: result.handle.rawValue },
+            envVars.JWT_SECRET
+          )
+        })
+      )
+      .unwrap()
+);
+
+const insertUser = (
+  conn: MySQLExecutableDriver,
+  userDetails: Pick<DBuser, "handle" | "name">
+) => {
+  const id = uuidV7();
+  return conn
+    .executeResult(
+      "INSERT INTO user (id, name, handle) VALUES (:id, :name, :handle)",
+      { id, ...userDetails }
+    )
+    .withSuccess({ id, ...userDetails });
+};
+```
+
+**Notes**:
+
+- **Organization**: For complex endpoints, we recommend splitting up layers of logic (ex. the top level function handles http response code mapping, an inner function handles database queries, etc.) Shorter, focused functions are much easier to test and debug.
+- **Use `endpoint()`**: For endpoints that don't require authentication.
+- **Use `authenticatedEndpoint()`**: For endpoints that require authentication.
+  - **Type Validation**: These functions ensure your input and output types match the API schema.
+- **Error Handling**: Use `resp(statusCode, responseBody)` to construct HTTP responses.
+- **`never` Type**: Applied to return values that shouldn't typically occur, aiding in type safety.
+
+### Step 3: Add Endpoint to Router
+
+After implementing your endpoint, add it to the `TiFRouter` in `appMiddleware.ts`.
+
+**Example**:
+
+```typescript
+// appMiddleware.ts
+import { TiFRouter } from "TiFBackendUtils";
+import { createCurrentUserProfile } from "./user/createUser";
+
+export const addTiFRouter = (app: Express, env: ServerEnvironment) => {
+  app.use(
+    "/",
+    TiFRouter(
+      {
+        // ... other endpoints ...
+        createCurrentUserProfile,
+        // ... other endpoints ...
+      },
+      env
+    )
+  );
+  return app;
+};
+```
+
+If common functionality is found between endpoints, you can extract it to a separate API middleware function like so:
+
+```typescript
+export const isCurrentUser: APIMiddleware<RouterParams> = async (
+  input,
+  next
+) => {
+  if (!input.params!.userId || input.context.selfId === input.params!.userId) {
+    return resp(400, { error: "current-user" }) as never
+  } else {
+    return next(input)
+  }
 }
 ```
 
-## Transactions
-
-Transactions ensure the integrity of the database by treating a set of SQL operations as a single unit. The transactions will use the SQL statements to perform atomic operations on the database and return a "success" or "error" result to the route.
-
-Your transaction function will be placed in the `getNewProduct.ts` file within your specific data type folder. The transaction should return a "success" status and the query result upon successful execution. If there's an error during the transaction, it should return an "error" status and a descriptive error message.
-
-```plaintext
-APILambda
-└── <your_data_type_folder> (e.g., users, products, etc.)
-    ├── <your_data_type>.ts (This is where you add your transactions)
-    ├── <your_data_type>.test.ts
-    └── SQL.ts
-```
-
-For example, if you're working on the "products" route, and you have a SQL statement to retrieve a product by ID, your transaction in the `getNewProduct.ts` file might look like this:
+And apply that to the current endpoint you're developing like so:
 
 ```typescript
-// getNewProduct.ts in 'products' folder
-import { MySQLExecutableDriver, conn, failure, success } from "TiFBackendUtils"
-import { ServerEnvironment } from "../env"
-import { ValidatedRouter } from "../validation"
-
-const getNewProductTransaction = (conn: MySQLExecutableDriver, id: string) =>
-  conn.transaction((tx) =>
-    getNewProduct(tx, id)
-      .flatMapSuccess((result) => {
-        return success(result)
-      })
-      .flatMapFailure((error) => {
-        return failure(error)
-      })
-  )
+export const blockUser = authenticatedEndpoint<"blockUser">(
+  ({ context: { selfId: fromUserId }, params: { userId: toUserId } }) =>
+    conn
+      .transaction((tx) => blockUserSQL(tx, { fromUserId, toUserId }))
+      .mapSuccess(() => resp(204))
+      .mapFailure(() => resp(404, userNotFoundBody(toUserId)))
+      .unwrap(),
+  isCurrentUser //Middleware is applied here
+)
 ```
 
-This transaction uses the getNewProduct SQL statement to retrieve data from the database, and handles any potential errors to maintain the stability of the backend API.
+This applies the middleware function before the endpoint function executes.
 
-## Routes
+### Step 4: Write Tests
 
-Routes determine the way your API responds to the client at specific URI endpoints. Routes are composed of transactions and will consume the "success" or "error" results from transactions and convert them into proper HTTP status codes for the client.
+Write tests for your endpoint using Jest and the `testAPI` helper functions.
 
-Each route is defined in a specific file within its corresponding data type folder. This allows for better code organization and maintainability.
-
-To add a new route, follow these steps:
-
-1. Navigate to the relevant data type folder, e.g., `user`, `product`, etc.
-
-2. Create a new file for your route, `<your_data_type>.ts`, inside the data type folder.
-
-3. Define your route in the newly created file, specifying the necessary logic and functionality. This route should return an HTTP status code signifying success and the query result for successful transactions. If the transaction results in an error, the route should return an "error" status code and an error message.
-
-4. Update `app.ts` file to include reference to your newly created route from `<your_data_type>.ts` file.
-
-```plaintext
-APILambda
-└── <your_data_type_folder> (e.g., users, products, etc.)
-    ├── <your_data_type>.ts (This is where you define your route)
-    ├── <your_data_type>.test.ts
-    └── SQL.ts
-```
-
-For example, if you're adding a "products" route to get a product by its ID, your route in the `getNewProduct.ts` file might look like this:
+**Example**:
 
 ```typescript
-// getNewProduct.ts in 'products' folder
-import { MySQLExecutableDriver, conn, failure, success } from "TiFBackendUtils"
-import { ServerEnvironment } from "../env"
-import { ValidatedRouter } from "../validation"
+// user/createUser.test.ts
+import { testAPI } from "../test/helpers";
+import { createUserFlow } from "../test/flows";
 
-export const getNewProductRouter = (
-  environment: ServerEnvironment,
-  router: ValidatedRouter
-) => {
-  /**
-   * get new product by id
-   */
-  router.getWithValidation("/new-product/:id", {}, (req, res) =>
-    getNewProductTransaction(conn, req.params.id)
-      .mapSuccess((result) => res.status(200).json(result))
-      .mapFailure((error) => res.status(404).json({ error }))
-  )
+describe("Create User Tests", () => {
+  it("should create a new user", async () => {
+    const name = "John Doe";
+    const response = await testAPI.createCurrentUserProfile({ name });
+    expect(response).toMatchObject({
+      status: 201,
+      data: expect.objectContaining({
+        id: expect.any(String),
+        name: "John Doe",
+        handle: expect.any(String),
+        token: expect.any(String),
+      }),
+    });
+  });
+
+  it("should return error for invalid name", async () => {
+    const name = ""; // Invalid name
+    const response = await testAPI.createCurrentUserProfile<400>({ name });
+    expect(response).toMatchObject({
+      status: 400,
+      data: { error: "invalid-name" },
+    });
+  });
+});
 ```
 
-This route listens to GET requests at the /new-product/:id endpoint, calls the getNewProductTransaction function, and returns the appropriate HTTP status code and data based on the transaction's result.
+**Notes**:
 
-## Tests
+- **Use `testAPI` Helper**: Simplifies making API calls in tests. Pass a status code type param to assume a specific status code response for a given test.
+- **Cover Different Scenarios**: Test both successful cases and error conditions.
+- **Test Location**: Place tests in the same directory as the endpoint file.
 
-Tests are critical to ensure the integrity and stability of your SQL route. Tests should be written for every new route or modification to an existing route. Tests are located in the same directory where you create your route in the data type directory. Your tests should cover both successful transactions and potential error conditions.
+### Step 5: Test the Endpoint Locally
 
-The directory structure for your tests would be:
+You can test the endpoint directly via localhost.
 
-```plaintext
-APILambda
-└── <your_data_type_folder> (e.g., users, products, etc.)
-    ├── <your_data_type>.ts
-    ├── <your_data_type>.test.ts (This is where you write your tests)
-    └── SQL.ts
+- **Start the Server**:
 
+  ```bash
+  npm run start
+  ```
+
+- **Use API Clients**: Tools like `curl`, `Postman`, or `Insomnia` can be used.
+
+**Example**:
+
+```bash
+curl -X POST \
+  -H "Content-Type: application/json" \
+  -d '{"name":"John Doe"}' \
+  http://localhost:3000/user
 ```
 
-For example, if you're testing the "products" route you've added, the tests could be written in a file named `getNewProduct.test.ts` in the "products" folder. The file might contain tests similar to the following:
+---
 
-```typescript
-// getNewProduct.test.ts in 'products' folder
-import request from "supertest"
-import app from "<path_to_your_express_app>"
+## Database Setup
 
-describe("GET /new-product/:id", () => {
-  it("returns data for a valid id", async () => {
-    const id = 1 // assuming 1 is a valid ID
-    const res = await request(app).get(`/new-product/${id}`)
+### MySQL Setup for macOS
 
-    expect(res.statusCode).toEqual(200)
-    expect(res.body).toHaveProperty("id")
-    expect(res.body.id).toEqual(id)
-    // ...other expectations...
-  })
+**Part 1: Install Homebrew**
 
-  it("returns an error for an invalid id", async () => {
-    const id = 9999 // assuming 9999 is an invalid ID
-    const res = await request(app).get(`/new-product/${id}`)
+1. **Install Homebrew**
 
-    expect(res.statusCode).toEqual(500)
-    // ...other expectations...
-  })
-})
+   Open Terminal and run:
+
+   ```bash
+   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+   ```
+
+**Part 2: Install MySQL**
+
+1. **Update Homebrew**
+
+   ```bash
+   brew update
+   ```
+
+2. **Install MySQL**
+
+   ```bash
+   brew install mysql
+   ```
+
+**Part 3: Secure the Installation**
+
+1. **Run the Security Script**
+
+   ```bash
+   mysql_secure_installation
+   ```
+
+   - Set a root password
+   - Remove anonymous users
+   - Disallow root login remotely
+   - Remove test databases
+   - Reload privilege tables
+
+**Part 4: Start the MySQL Server**
+
+1. **Start MySQL**
+
+   ```bash
+   brew services start mysql
+   ```
+
+2. **Connect to MySQL**
+
+   ```bash
+   mysql -u root -p
+   ```
+
+### MySQL Setup for Windows
+
+**Note**: These instructions use Chocolatey to install MySQL. We recommended Chocolatey on Windows as it automatically handles installation of MySQL dependencies.
+
+**Part 1: Install Chocolatey**
+
+1. **Open an Administrative Command Prompt**
+
+   - Press `Win + R`, type `cmd`, and press `Ctrl + Shift + Enter`.
+
+2. **Install Chocolatey**
+
+   ```powershell
+   Set-ExecutionPolicy Bypass -Scope Process -Force; `
+     [System.Net.ServicePointManager]::SecurityProtocol = `
+     [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; `
+     iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
+   ```
+
+**Part 2: Install MySQL**
+
+1. **Install MySQL**
+
+   ```bash
+   choco install mysql
+   ```
+
+**Part 3: Start MySQL Server**
+
+1. **Start MySQL Service**
+
+   ```bash
+   net start MySQL
+   ```
+
+2. **Connect to MySQL**
+
+   ```bash
+   mysql -u root -p
+   ```
+
+### Common Errors
+
+**Access Denied Error**
+
+If you encounter:
+
+```
+ERROR 1045 (28000): Access denied for user 'ODBC'@'localhost' (using password: NO)
 ```
 
-These tests make HTTP requests to the new "products" route and assert that the response is as expected. The first test is for a successful transaction with a valid ID, while the second test is for an error scenario where an invalid ID is provided.
+Log in using:
 
-### Open Handles Warnings
+```bash
+mysql -u your_username -p
+```
 
-You'll see these at the end of a test suite if a promise has not resolved by the time the tests finish. Usually these are caused by not closing the db connection at the end of tests, or forgetting to await DB operations like conn.executeResult() or conn.queryResult().
+**MySQL Service Not Starting**
 
-#### Staging Tests
+Error Message:
 
-Currently npm run test:staging-unix only works on unix devices.
-For windows, copy the associated command and replace COGNITO_USER and COGNITO_PASSWORD with your desired login info.
+```
+Windows could not start the MySQL service on Local Computer. Error 1067: The process terminated unexpectedly.
+```
+
+**Troubleshooting Steps**:
+
+1. **Check the MySQL Error Log**
+
+   - Locate the `my.ini` file (usually in `C:\Program Files\MySQL\MySQL Server X.X`).
+   - Find the `log-error` entry to locate the error log file.
+   - Open the error log file to identify issues.
+
+2. **Verify MySQL Data Directory**
+
+   - Ensure the `datadir` path in `my.ini` exists and has proper permissions.
+
+3. **Re-initialize MySQL**
+
+   - Stop MySQL Server:
+
+     ```bash
+     net stop MySQL
+     ```
+
+   - Clear the Data Directory:
+
+     - Delete all files and folders within the `datadir` directory.
+
+   - Re-run Initialization:
+
+     ```bash
+     mysqld --initialize
+     net start MySQL
+     ```
+
+---
+
+## Running the Project
+
+To start the server locally:
+
+```bash
+npm run start
+```
+
+The server will run on the port specified in your `.env` file.
+
+---
+
+## Testing
+
+### Running Tests
+
+To execute all tests:
+
+```bash
+npm test
+```
+
+### Debugging Tips
+
+- **TypeScript Errors**
+
+  - Ensure `TiFShared` is properly linked to avoid type mismatches.
+  - Temporarily remove the `endpoint()` wrapper function to debug complex type errors.
+  - Ensure your IDE is pointing to the correct `TiFShared` directory.
+  - Use `any` types temporarily to isolate type errors during debugging.
+
+- **Unhandled Promises**
+
+  - Always `await` asynchronous operations to prevent open handles.
+
+---
+
+## AWS Setup
+
+Our backend uses AWS services, including Lambda functions and a MySQL database.
+
+### Services Utilized
+
+- **AWS Lambda**
+- **AWS API Gateway**
+
+### System Diagrams
+
+Refer to the system diagrams for an overview of our architecture:
+
+- **System Diagram**: [System Diagram - Google Drawings](https://docs.google.com/drawings/d/1zmWL7nTBsMtI-OAbfV9H0BQAGnlKgQ2S1o2ls-6jS6g)
+- **Database Integration**: [Database Integration](https://docs.google.com/drawings/d/1NNd8BWqINceuRJAokFN_STy1oqjJm84EJvGI5QLQhaQ)
+
+### CI/CD
+
+We utilize Continuous Integration and Continuous Deployment (CI/CD) practices to streamline development.
+
+- **Continuous Integration (CI)**:
+
+  - **Build Process**: Tools like GitHub Actions package our Lambda code with dependencies.
+  - **Unit Tests**: Automated tests run to ensure new changes don't break existing functionality.
+
+- **Continuous Deployment (CD)**:
+
+  - After successful tests, code is automatically deployed to AWS Lambda.
+  - **Deployment Tools**: We use GitHub Actions for automating deployments from our repositories.
+
+CI and CD must pass before a pull request can be merged into `development`.
+
+### AWS Credentials
+
+- Obtain AWS access keys from a team member if configuring or testing AWS services.
+- Configure your AWS CLI with these credentials.
+
+**Note**: Ensure new Lambda aliases have the correct permissions. New Lambda aliases start without any policy statements.
+
+---
+
+## VSCode Setup
+
+For consistency, use Visual Studio Code with the following extensions:
+
+- **Prettier - Code Formatter**
+- **ESLint**
+- **GitLens**
+- **Git History**
+
+Add the following to your VSCode `settings.json`:
+
+```json
+{
+  "editor.tabSize": 2,
+  "editor.indentSize": "tabSize",
+  "diffEditor.renderSideBySide": false,
+  "editor.codeActionsOnSave": {
+    "source.fixAll": true,
+    "source.fixAll.eslint": true,
+    "source.organizeImports": true,
+    "source.addMissingImports": true
+  },
+  "javascript.updateImportsOnFileMove.enabled": "always",
+  "typescript.updateImportsOnFileMove.enabled": "always",
+  "[json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  }
+}
+```
+
+- **Prettier**: Automatically formats your code to ensure consistent style.
+
+---
+
+## Contributing Guidelines
+
+We follow a structured process for contributions:
+
+1. **Branching**
+
+   - Create a new branch from `development`.
+   - Include the ticket ID in the branch name if applicable.
+
+2. **Making Changes**
+
+   - Follow coding standards and conventions.
+   - Write clear commit messages.
+
+3. **Pull Requests**
+
+   - Open a PR against the `development` branch.
+   - Use the provided PR template: [Pull Request Template](https://github.com/tifapp/FitnessProjectBackend/blob/main/.github/pull_request_template.md)
+   - Include the Trello ticket URL or ID in the description.
+   - Explain **why** before **what** in your PR description.
+   - If the PR doesn't cover an explicit ticket, include `TASK_UNTRACKED` in the description (use sparingly).
+
+4. **Code Reviews**
+
+   - PRs are reviewed during team meetings.
+   - Be prepared to discuss and adjust your code.
+
+---
+
+## Troubleshooting
+
+If you encounter issues, please reach out on Slack. For configuration issues, contribute to the [WTF Issues Document](https://github.com/tifapp/TiFShared/wiki/WTF-Issues) with details and steps taken to resolve the problem.
+
+- **TypeScript and SQL Mismatches**
+
+  - Ensure your TypeScript types align with your SQL queries.
+  - Be cautious as SQL does not always match TypeScript types.
+
+- **Linking Issues**
+
+  - Confirm that `TiFShared` is correctly linked to prevent type errors.
+
+- **Open Handles Warnings**
+
+  - Close all database connections in tests.
+  - Await all promises in your code.
+
+**Common Errors**:
+
+- **Access Denied Error**: Ensure you're using the correct username and password when logging into MySQL.
+- **MySQL Service Not Starting**: Check the error logs, verify the data directory, and re-initialize if necessary.
+
+---
+
+## Useful Commands
+
+- **Install Dependencies**
+
+  ```bash
+  npm install
+  ```
+
+- **Run the Server**
+
+  ```bash
+  npm run start
+  ```
+
+- **Run Tests**
+
+  ```bash
+  npm test
+  ```
+
+- **Create a Pull Request**
+
+  ```bash
+  npm run pr
+  ```
+
+  > Creates a PR and attaches the Trello card description (requires ticket ID in branch name or as an argument).
+
+- **Reset the Database**
+
+  ```bash
+  npm run resetDB
+  ```
+
+---
+
+## Additional Resources
+
+- **Frontend Repository**
+
+  - [FitnessProject Frontend](https://github.com/tifapp/FitnessProject/tree/development)
+
+- **GitHub Wiki**
+
+  - [TiFShared Wiki](https://github.com/tifapp/TiFShared/wiki)
+
+- **Frontend Architecture**
+
+  - [Frontend Architecture Documentation](https://github.com/tifapp/TiFShared/wiki/Frontend-Architecture)
+
+---
+
+## Key Concepts
+
+- **Monad Functions**
+
+  - `flatMapSuccess` / `flatMapFailure`: Transform results and possibly change success/failure state.
+  - `mapSuccess` / `mapFailure`: Transform the value but keep the same state.
+  - `withSuccess` / `withFailure`: Replace the value while keeping the state.
+
+- **Testing Tips**
+
+  - Assert on the whole response when possible.
+  - Use temporary `any` types to isolate type errors during debugging.
+
+---
+
+## API Testing from the Command Line
+
+You can test API endpoints using `curl` from the command line. Our API supports different stages:
+
+- **stagingTest**: In sync with the most recent pull request (unstable).
+- **staging**: In sync with the `development` branch.
+- **prod**: In sync with the `main` branch.
+
+Replace `[STAGE]` in the API endpoint with one of these stages depending on which environment you want to test.
+
+### Obtaining an ID Token
+
+We are no longer using Cognito for authentication tokens. Instead, you can obtain an ID token by creating a user profile via the API.
+
+**Example**:
+
+```bash
+# Create User Profile and Obtain ID Token
+curl -X POST \
+  -H "Content-Type: application/json" \
+  -d '{"name":"John Doe"}' \
+  https://[API_ENDPOINT]/[STAGE]/user
+```
+
+The response will include an `id` and a `token`. The `token` is your ID token to be used in subsequent API requests.
+
+### Making an API Request
+
+Once you have the ID token, you can make authenticated requests to the API.
+
+```bash
+curl -X GET \
+  -H "Authorization: Bearer YOUR_ID_TOKEN" \
+  https://[API_ENDPOINT]/[STAGE]/[PATH]
+```
+
+**Example**:
+
+```bash
+# Assume YOUR_ID_TOKEN is the token received from the previous step
+curl -X GET \
+  -H "Authorization: Bearer YOUR_ID_TOKEN" \
+  https://[API_ENDPOINT]/prod/user/self
+```
+
+**Note**:
+
+- Replace `[STAGE]` with `stagingTest`, `staging`, or `prod` depending on the environment.
+- Replace `[PATH]` with the specific API endpoint path you wish to access.
+- Ensure that the `Authorization` header is set correctly with the token received.
+
+**Important**: New Lambda aliases start without any policy statements. Ensure they have the necessary permissions to be accessed.
+
+---
