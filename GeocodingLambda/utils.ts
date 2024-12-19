@@ -6,7 +6,7 @@ import { find } from "geo-tz/dist/find-now"
 import { EventEditLocation } from "TiFShared/domain-models/Event"
 import { LocationCoordinate2D } from "TiFShared/domain-models/LocationCoordinate2D"
 import { Placemark } from "TiFShared/domain-models/Placemark"
-import { placemarkToFormattedAddress } from "TiFShared/lib/AddressFormatting"
+import { placemarkToAbbreviatedAddress, placemarkToFormattedAddress } from "TiFShared/lib/AddressFormatting"
 const {
   LocationClient,
   SearchPlaceIndexForPositionCommand,
@@ -44,27 +44,33 @@ export const AddressSearchResultToFlattenedLocation = (
 }
 
 export const SearchCoordinatesForAddressAWS = async (placemark: Placemark) => {
-  const address = placemarkToFormattedAddress(placemark)
+  console.debug("geocoding address")
+  console.debug(placemark)
+
+  const address = placemarkToFormattedAddress(placemark) ?? placemark.name ?? placemarkToAbbreviatedAddress(placemark)
+
+  console.debug(address)
 
   if (!address) {
-    throw new Error("Could not parse given placemark into address")
-  }
-
-  const response = await locationClient.send(
-    new SearchPlaceIndexForTextCommand({
-      IndexName: "placeIndexed3975f4-dev",
-      Text: address,
-      MaxResults: 1,
-      Language: "en-US"
-    })
-  )
-
-  const place = response.Results?.[0]?.Place
-  if (place && place.Geometry?.Point) {
-    const [longitude, latitude] = place.Geometry.Point
-    return { latitude, longitude }
+    console.error("Could not format address for given placemark", placemark)
+    return { latitude: -90, longitude: 0 }
   } else {
-    throw new Error("No coordinates found for the given address.")
+    const response = await locationClient.send(
+      new SearchPlaceIndexForTextCommand({
+        IndexName: "placeIndexed3975f4-dev",
+        Text: address,
+        MaxResults: 1,
+        Language: "en-US"
+      })
+    )
+
+    const place = response.Results?.[0]?.Place
+    if (place && place.Geometry?.Point) {
+      const [longitude, latitude] = place.Geometry.Point
+      return { latitude, longitude }
+    } else {
+      throw new Error("No coordinates found for the given address.")
+    }
   }
 }
 
@@ -133,6 +139,7 @@ export const checkExistingPlacemarkInDB = (
           }
         )
   )
+    .observe(result => console.warn("resulkt ios", result))
     .mapSuccess(({ latitude, longitude, ...placemark }) => (
       {
         coordinate: { latitude, longitude },
@@ -159,8 +166,8 @@ export const addLocationToDB = (
 ) =>
   conn.executeResult(
     `
-      INSERT INTO location (name, city, country, street, streetNumber, postalCode, latitude, longitude, timezoneIdentifier, isoCountryCode)
-      VALUES (:name, :city, :country, :street, :streetNumber, :postalCode, :latitude, :longitude, :timezoneIdentifier, :isoCountryCode)
+      INSERT INTO location (name, region, city, country, street, streetNumber, postalCode, latitude, longitude, timezoneIdentifier, isoCountryCode)
+      VALUES (:name, :region, :city, :country, :street, :streetNumber, :postalCode, :latitude, :longitude, :timezoneIdentifier, :isoCountryCode)
     `,
     {
       timezoneIdentifier,
