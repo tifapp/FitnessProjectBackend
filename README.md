@@ -6,18 +6,15 @@
 - [Getting Started](#getting-started)
   - [Prerequisites](#prerequisites)
   - [Setup](#setup)
-  - [Environment Variables](#environment-variables)
 - [Project Structure](#project-structure)
   - [Geocoding Lambda](#geocoding-lambda)
   - [API Lambda](#api-lambda)
 - [Adding a New Endpoint](#adding-a-new-endpoint)
-  - [Rules for Creating an Endpoint](#rules-for-creating-an-endpoint)
-  - [Step 1: Create or Use a Data Type Folder](#step-1-create-or-use-a-data-type-folder)
-  - [Step 2: Write SQL Statements](#step-2-write-sql-statements)
-  - [Step 3: Create Transactions](#step-3-create-transactions)
-  - [Step 4: Define the Route](#step-4-define-the-route)
-  - [Step 5: Write Tests](#step-5-write-tests)
-  - [Step 6: Update the Application](#step-6-update-the-application)
+  - [Step 1: Add Definition to API Schema](#step-1-add-definition-to-api-schema)
+  - [Step 2: Implement the Endpoint](#step-2-implement-the-endpoint)
+  - [Step 3: Add Endpoint to Router](#step-3-add-endpoint-to-router)
+  - [Step 4: Write Tests](#step-4-write-tests)
+  - [Step 5: Test the Endpoint Locally](#step-5-test-the-endpoint-locally)
 - [Database Setup](#database-setup)
   - [MySQL Setup for macOS](#mysql-setup-for-macos)
   - [MySQL Setup for Windows](#mysql-setup-for-windows)
@@ -29,12 +26,17 @@
 - [AWS Setup](#aws-setup)
   - [Services Utilized](#services-utilized)
   - [System Diagrams](#system-diagrams)
-  - [CI/CD](#ci-cd)
+  - [CI/CD](#cicd)
+  - [AWS Credentials](#aws-credentials)
 - [VSCode Setup](#vscode-setup)
 - [Contributing Guidelines](#contributing-guidelines)
 - [Troubleshooting](#troubleshooting)
 - [Useful Commands](#useful-commands)
 - [Additional Resources](#additional-resources)
+- [Key Concepts](#key-concepts)
+- [API Testing from the Command Line](#api-testing-from-the-command-line)
+  - [Obtaining an ID Token](#obtaining-an-id-token)
+  - [Making an API Request](#making-an-api-request)
 
 ---
 
@@ -199,6 +201,7 @@ const insertUser = (
 
 **Notes**:
 
+- **Organization**: For complex endpoints, we recommend splitting up layers of logic (ex. the top level function handles http response code mapping, an inner function handles database queries, etc.) Shorter, focused functions are much easier to test and debug.
 - **Use `endpoint()`**: For endpoints that don't require authentication.
 - **Use `authenticatedEndpoint()`**: For endpoints that require authentication.
   - **Type Validation**: These functions ensure your input and output types match the API schema.
