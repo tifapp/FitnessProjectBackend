@@ -11,7 +11,7 @@ const {
   LocationClient,
   SearchPlaceIndexForPositionCommand,
   SearchPlaceIndexForTextCommand
-// eslint-disable-next-line @typescript-eslint/no-var-requires
+// eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 } = require("@aws-sdk/client-location")
 
 const locationClient = new LocationClient({ region: AWSEnvVars.AWS_REGION })
@@ -163,8 +163,10 @@ export const addLocationToDB = (
     isoCountryCode
   }: FlattenedLocation,
   timezoneIdentifier: string
-) =>
-  conn.executeResult(
+) => {
+  console.log("adding a location to the db: ", latitude, longitude)
+
+  return conn.executeResult(
     `
       INSERT INTO location (name, region, city, country, street, streetNumber, postalCode, latitude, longitude, timezoneIdentifier, isoCountryCode)
       VALUES (:name, :region, :city, :country, :street, :streetNumber, :postalCode, :latitude, :longitude, :timezoneIdentifier, :isoCountryCode)
@@ -183,6 +185,7 @@ export const addLocationToDB = (
       isoCountryCode
     }
   )
+}
 
 export const getTimeZone = (coordinate: {
   latitude: number

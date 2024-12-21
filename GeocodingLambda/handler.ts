@@ -30,7 +30,7 @@ export const handler = (
 
   return checkExistingPlacemarkInDB(conn, locationEdit)
     .observe(result => console.log("checking cached data ", result))
-    .observeSuccess(result => console.log("checking cached data ", result))
+    .observeSuccess(result => console.log("checking cached data s ", result))
     .flatMapFailure(() =>
       (
         locationEdit.type === "coordinate"
@@ -65,5 +65,6 @@ export const handler = (
           ))
         })
     )
+    .observe(result => console.log("geocoder returns result ", result))
     .unwrap()
 }
