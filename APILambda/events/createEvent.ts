@@ -22,6 +22,8 @@ export const createEventSQL = (
   eventEdit: Omit<EventEdit, "location"> & LocationCoordinate2D,
   hostId: UserID
 ) => {
+  console.log("adding an event to the db: ", eventEdit)
+
   return conn
     .executeResult(
       `
