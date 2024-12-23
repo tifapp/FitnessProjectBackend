@@ -8,12 +8,14 @@ import { LocationCoordinate2D } from "TiFShared/domain-models/LocationCoordinate
 import { Placemark } from "TiFShared/domain-models/Placemark"
 import { placemarkToAbbreviatedAddress, placemarkToFormattedAddress } from "TiFShared/lib/AddressFormatting"
 import { success } from "TiFShared/lib/Result"
+import { logger } from "TiFShared/logging"
 const {
   LocationClient,
   SearchPlaceIndexForPositionCommand,
   SearchPlaceIndexForTextCommand
-// eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 } = require("@aws-sdk/client-location")
+
+const log = logger("tif.backend.geocoder")
 
 const locationClient = new LocationClient({ region: AWSEnvVars.AWS_REGION })
 
@@ -45,15 +47,11 @@ export const AddressSearchResultToFlattenedLocation = (
 }
 
 export const SearchCoordinatesForAddressAWS = async (placemark: Placemark) => {
-  console.debug("geocoding address")
-  console.debug(placemark)
-
   const address = placemarkToFormattedAddress(placemark) ?? placemark.name ?? placemarkToAbbreviatedAddress(placemark)
 
-  console.debug(address)
+  log.debug("finding coordinates for address: ", { address })
 
   if (!address) {
-    console.error("Could not format address for given placemark", placemark)
     return { latitude: -90, longitude: 0 }
   } else {
     const response = await locationClient.send(
@@ -97,9 +95,6 @@ export const checkExistingPlacemarkInDB = (
   conn: MySQLExecutableDriver,
   locationEdit: EventEditLocation
 ) => {
-  console.log("checking existing placemark")
-  console.log(locationEdit)
-
   return (
     locationEdit.type === "coordinate"
       ? conn
@@ -140,7 +135,6 @@ export const checkExistingPlacemarkInDB = (
           }
         )
   )
-    .observe(result => console.warn("resulkt ios", result))
     .mapSuccess(({ latitude, longitude, ...placemark }) => (
       {
         coordinate: { latitude, longitude },
@@ -165,8 +159,6 @@ export const addLocationToDB = (
   }: FlattenedLocation,
   timezoneIdentifier: string
 ) => {
-  console.log("adding a location to the db: ", latitude, longitude)
-
   try {
     return conn.executeResult(
       `
@@ -189,7 +181,7 @@ export const addLocationToDB = (
     )
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (e: any) {
-    console.error(e)
+    log.error("Could not insert location into cache: ", { error: e })
     if (!(e.message.includes("Duplicate entry"))) {
       throw e
     }

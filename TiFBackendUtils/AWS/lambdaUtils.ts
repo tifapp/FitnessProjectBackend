@@ -1,22 +1,19 @@
 import type { InvokeCommandOutput } from "@aws-sdk/client-lambda"
 import { PromiseResult, promiseResult, success } from "TiFShared/lib/Result"
+import { logger } from "TiFShared/logging"
 import { AWSEnvVars } from "./env"
 const {
   CloudWatchLogs
-// eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 } = require("@aws-sdk/client-cloudwatch-logs")
 const {
   fromEnv
-// eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 } = require("@aws-sdk/credential-providers")
 const {
   Lambda,
   InvocationType
-// eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 } = require("@aws-sdk/client-lambda")
 const {
   EventBridge
-// eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 } = require("@aws-sdk/client-eventbridge")
 
 const eventbridge = new EventBridge({ apiVersion: "2023-04-20" })
@@ -62,6 +59,8 @@ export const scheduleAWSLambda = async (
   return await eventbridge.putTargets(targetParams)
 }
 
+const log = logger("tif.backend.AWS")
+
 export const invokeAWSLambda = <T>(
   lambdaName: string,
   targetLambdaParams?: unknown,
@@ -73,12 +72,12 @@ export const invokeAWSLambda = <T>(
       InvocationType: InvocationType.RequestResponse,
       Payload: JSON.stringify(targetLambdaParams)
     }).then((response: InvokeCommandOutput) => {
-      console.log(response)
       const payloadString = new TextDecoder("utf-8").decode(response.Payload)
-      console.log(payloadString)
+      log.debug(payloadString)
       return success(JSON.parse(payloadString))
-    }).catch((e: unknown) => {
-      console.error(e)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    }).catch((e: any) => {
+      log.error(e)
       return success(defaultValue)
     })
   )
@@ -95,13 +94,6 @@ const cloudwatchlogs = new CloudWatchLogs({
   credentials: fromEnv()
 })
 
-/**
- * Logs the last few messages for a given AWS Lambda function name.
- *
- * @param awsLambdaFunctionName - The name of the AWS Lambda function.
- * @param environment - The current environment, used to control logging.
- * @param logLimit - The number of log events to fetch (default is 20).
- */
 export const logRecentLambdaMessages = async (
   awsLambdaFunctionName: string,
   logLimit = 20
@@ -118,7 +110,7 @@ export const logRecentLambdaMessages = async (
 
     const logStreamName = logStreamsResponse.logStreams?.[0]?.logStreamName
     if (!logStreamName) {
-      console.log("No log stream found.")
+      log.info("No log stream found.")
       return
     }
 
@@ -137,11 +129,11 @@ export const logRecentLambdaMessages = async (
     })
 
     if (logs && logs.length > 0) {
-      console.log(`*****Recent logs from AWS Lambda:*****\n${logs.join("\n")}`)
+      log.trace(`*****Recent logs from AWS Lambda:*****\n${logs.join("\n")}`)
     } else {
-      console.log("No log events found.")
+      log.info("No log events found.")
     }
   } catch (error) {
-    console.error("Error fetching logs:", error)
+    log.error("Error fetching logs:", { error })
   }
 }

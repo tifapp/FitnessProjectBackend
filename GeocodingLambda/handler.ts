@@ -6,6 +6,7 @@ import { EventEditLocation } from "TiFShared/domain-models/Event"
 import { LocationCoordinate2D } from "TiFShared/domain-models/LocationCoordinate2D"
 import { Placemark } from "TiFShared/domain-models/Placemark"
 import { promiseResult, success } from "TiFShared/lib/Result"
+import { logger } from "TiFShared/logging"
 import {
   addLocationToDB,
   checkExistingPlacemarkInDB,
@@ -15,6 +16,8 @@ import {
   SearchCoordinatesForAddressAWS
 } from "./utils"
 
+const log = logger("tif.backend.geocoder")
+
 // TODO: Fix handler type, fix util dependencies
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const handler = (
@@ -22,15 +25,15 @@ export const handler = (
   reverseGeocodeHandler?: (coords: LocationCoordinate2D) => Promise<FlattenedLocation>,
   forwardGeocodeHandler?: (placemark: Placemark) => Promise<LocationCoordinate2D>
 ) => {
+  log.info("Geocoding request: ", { locationEdit })
+
   // NB: cannot pass functions in aws environment, so perform the parameterization inside
   const reverseGeocode = typeof reverseGeocodeHandler === "function" ? reverseGeocodeHandler : SearchClosestAddressToCoordinatesAWS
   const forwardGeocode = typeof forwardGeocodeHandler === "function" ? forwardGeocodeHandler : SearchCoordinatesForAddressAWS
 
-  console.log("geocoding ", locationEdit)
-
   return checkExistingPlacemarkInDB(conn, locationEdit)
-    .observe(result => console.log("checking cached data ", result))
-    .observeSuccess(result => console.log("checking cached data s ", result))
+    .observeSuccess(cachedLocation => log.debug("Matching location found in cache: ", { cachedLocation }))
+    .observeFailure(() => log.debug("Location not found in cache"))
     .flatMapFailure(() =>
       (
         locationEdit.type === "coordinate"
@@ -52,7 +55,8 @@ export const handler = (
               `Could not find timezone for ${JSON.stringify(dbLocation)}.`
             )
           }
-          console.log("attempting to add location", locationEdit)
+
+          log.debug("caching geocoded location: ", { dbLocation })
 
           return addLocationToDB(conn, dbLocation, timezoneIdentifier).withSuccess((
             {
@@ -65,6 +69,5 @@ export const handler = (
           ))
         })
     )
-    .observe(result => console.log("geocoder returns result ", result))
     .unwrap()
 }

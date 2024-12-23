@@ -1,5 +1,4 @@
 try {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
   const { handler } = require("./app")
   exports.handler = handler
 } catch (error) {
