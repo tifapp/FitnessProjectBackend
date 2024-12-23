@@ -7,11 +7,12 @@ import { EventEditLocation } from "TiFShared/domain-models/Event"
 import { LocationCoordinate2D } from "TiFShared/domain-models/LocationCoordinate2D"
 import { Placemark } from "TiFShared/domain-models/Placemark"
 import { placemarkToAbbreviatedAddress, placemarkToFormattedAddress } from "TiFShared/lib/AddressFormatting"
+import { success } from "TiFShared/lib/Result"
 const {
   LocationClient,
   SearchPlaceIndexForPositionCommand,
   SearchPlaceIndexForTextCommand
-// eslint-disable-next-line @typescript-eslint/no-var-requires
+// eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 } = require("@aws-sdk/client-location")
 
 const locationClient = new LocationClient({ region: AWSEnvVars.AWS_REGION })
@@ -163,26 +164,38 @@ export const addLocationToDB = (
     isoCountryCode
   }: FlattenedLocation,
   timezoneIdentifier: string
-) =>
-  conn.executeResult(
-    `
-      INSERT INTO location (name, region, city, country, street, streetNumber, postalCode, latitude, longitude, timezoneIdentifier, isoCountryCode)
-      VALUES (:name, :region, :city, :country, :street, :streetNumber, :postalCode, :latitude, :longitude, :timezoneIdentifier, :isoCountryCode)
-    `,
-    {
-      timezoneIdentifier,
-      latitude,
-      longitude,
-      name,
-      city,
-      country,
-      street,
-      streetNumber,
-      postalCode,
-      region,
-      isoCountryCode
+) => {
+  console.log("adding a location to the db: ", latitude, longitude)
+
+  try {
+    return conn.executeResult(
+      `
+        INSERT IGNORE INTO location (name, region, city, country, street, streetNumber, postalCode, latitude, longitude, timezoneIdentifier, isoCountryCode)
+        VALUES (:name, :region, :city, :country, :street, :streetNumber, :postalCode, :latitude, :longitude, :timezoneIdentifier, :isoCountryCode)
+      `,
+      {
+        timezoneIdentifier,
+        latitude,
+        longitude,
+        name,
+        city,
+        country,
+        street,
+        streetNumber,
+        postalCode,
+        region,
+        isoCountryCode
+      }
+    )
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (e: any) {
+    console.error(e)
+    if (!(e.message.includes("Duplicate entry"))) {
+      throw e
     }
-  )
+    return success()
+  }
+}
 
 export const getTimeZone = (coordinate: {
   latitude: number

@@ -220,7 +220,7 @@ describe("Geocoding lambda tests", () => {
       }
     )
 
-    it("Should use default coordinates given an unknown address", async () => {
+    it("Should use default address given unknown coordinates", async () => {
       const result = await handler(unknownAddressTestLocation.coordinate)
 
       expect(result).toMatchObject({
@@ -241,6 +241,19 @@ describe("Geocoding lambda tests", () => {
         streetNumber: undefined
       })
     })
+  })
+
+  it("should allow multiple identical geocoding requests", async () => {
+    const [result1, result2, result3] =
+      await Promise.all([
+        handler(unknownAddressTestLocation.coordinate),
+        handler(unknownAddressTestLocation.coordinate),
+        handler(unknownAddressTestLocation.coordinate)
+      ])
+
+    expect(result1).toMatchObject(result2)
+    expect(result3).toMatchObject(result2)
+    expect(result1).toMatchObject(result3)
   })
 
   afterAll(() => conn.closeConnection())
