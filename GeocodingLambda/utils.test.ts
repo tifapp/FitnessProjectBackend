@@ -2,7 +2,7 @@ import { Place } from "@aws-sdk/client-location"
 import { AddressSearchResultToFlattenedLocation } from "./utils"
 
 describe("AddressSearchResultToFlattenedLocation", () => {
-  test("Should convert a Place object to a Placemark correctly", () => {
+  it("Should convert a Place object to a Placemark correctly", () => {
     const coordinate = { latitude: 12.34, longitude: 56.78 }
     const place = {
       Label: "Sample Location",
@@ -30,7 +30,7 @@ describe("AddressSearchResultToFlattenedLocation", () => {
     })
   })
 
-  test("Should use fallback values for missing Place properties", () => {
+  it("Should use fallback values for missing Place properties", () => {
     const coordinate = { latitude: 12.34, longitude: 56.78 }
     const place = {} as Place
 
@@ -45,7 +45,7 @@ describe("AddressSearchResultToFlattenedLocation", () => {
     })
   })
 
-  test("Should use Municipality when Neighborhood is missing", () => {
+  it("Should use Municipality when Neighborhood is missing", () => {
     const coordinate = { latitude: 12.34, longitude: 56.78 }
     const place = {
       Municipality: "Sample City"
@@ -56,7 +56,7 @@ describe("AddressSearchResultToFlattenedLocation", () => {
     ).toEqual("Sample City")
   })
 
-  test("Should use SubRegion when Neighborhood and Municipality are missing", () => {
+  it("Should use SubRegion when Neighborhood and Municipality are missing", () => {
     const coordinate = { latitude: 12.34, longitude: 56.78 }
     const place = {
       SubRegion: "Sample SubRegion"
@@ -67,7 +67,7 @@ describe("AddressSearchResultToFlattenedLocation", () => {
     ).toEqual("Sample SubRegion")
   })
 
-  test("Should use Region when Country is missing", () => {
+  it("Should use Region when Country is missing", () => {
     const coordinate = { latitude: 12.34, longitude: 56.78 }
     const place = {
       Region: "Sample Region"

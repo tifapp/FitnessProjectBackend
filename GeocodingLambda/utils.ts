@@ -6,13 +6,16 @@ import { find } from "geo-tz/dist/find-now"
 import { EventEditLocation } from "TiFShared/domain-models/Event"
 import { LocationCoordinate2D } from "TiFShared/domain-models/LocationCoordinate2D"
 import { Placemark } from "TiFShared/domain-models/Placemark"
-import { placemarkToFormattedAddress } from "TiFShared/lib/AddressFormatting"
+import { placemarkToAbbreviatedAddress, placemarkToFormattedAddress } from "TiFShared/lib/AddressFormatting"
+import { success } from "TiFShared/lib/Result"
+import { logger } from "TiFShared/logging"
 const {
   LocationClient,
   SearchPlaceIndexForPositionCommand,
   SearchPlaceIndexForTextCommand
-// eslint-disable-next-line @typescript-eslint/no-var-requires
 } = require("@aws-sdk/client-location")
+
+const log = logger("tif.backend.geocoder")
 
 const locationClient = new LocationClient({ region: AWSEnvVars.AWS_REGION })
 
@@ -44,27 +47,29 @@ export const AddressSearchResultToFlattenedLocation = (
 }
 
 export const SearchCoordinatesForAddressAWS = async (placemark: Placemark) => {
-  const address = placemarkToFormattedAddress(placemark)
+  const address = placemarkToFormattedAddress(placemark) ?? placemark.name ?? placemarkToAbbreviatedAddress(placemark)
+
+  log.debug("finding coordinates for address: ", { address })
 
   if (!address) {
-    throw new Error("Could not parse given placemark into address")
-  }
-
-  const response = await locationClient.send(
-    new SearchPlaceIndexForTextCommand({
-      IndexName: "placeIndexed3975f4-dev",
-      Text: address,
-      MaxResults: 1,
-      Language: "en-US"
-    })
-  )
-
-  const place = response.Results?.[0]?.Place
-  if (place && place.Geometry?.Point) {
-    const [longitude, latitude] = place.Geometry.Point
-    return { latitude, longitude }
+    return { latitude: -90, longitude: 0 }
   } else {
-    throw new Error("No coordinates found for the given address.")
+    const response = await locationClient.send(
+      new SearchPlaceIndexForTextCommand({
+        IndexName: "placeIndexed3975f4-dev",
+        Text: address,
+        MaxResults: 1,
+        Language: "en-US"
+      })
+    )
+
+    const place = response.Results?.[0]?.Place
+    if (place && place.Geometry?.Point) {
+      const [longitude, latitude] = place.Geometry.Point
+      return { latitude, longitude }
+    } else {
+      throw new Error("No coordinates found for the given address.")
+    }
   }
 }
 
@@ -90,9 +95,6 @@ export const checkExistingPlacemarkInDB = (
   conn: MySQLExecutableDriver,
   locationEdit: EventEditLocation
 ) => {
-  console.log("checking existing placemark")
-  console.log(locationEdit)
-
   return (
     locationEdit.type === "coordinate"
       ? conn
@@ -156,26 +158,36 @@ export const addLocationToDB = (
     isoCountryCode
   }: FlattenedLocation,
   timezoneIdentifier: string
-) =>
-  conn.executeResult(
-    `
-      INSERT INTO location (name, city, country, street, streetNumber, postalCode, latitude, longitude, timezoneIdentifier, isoCountryCode)
-      VALUES (:name, :city, :country, :street, :streetNumber, :postalCode, :latitude, :longitude, :timezoneIdentifier, :isoCountryCode)
-    `,
-    {
-      timezoneIdentifier,
-      latitude,
-      longitude,
-      name,
-      city,
-      country,
-      street,
-      streetNumber,
-      postalCode,
-      region,
-      isoCountryCode
+) => {
+  try {
+    return conn.executeResult(
+      `
+        INSERT IGNORE INTO location (name, region, city, country, street, streetNumber, postalCode, latitude, longitude, timezoneIdentifier, isoCountryCode)
+        VALUES (:name, :region, :city, :country, :street, :streetNumber, :postalCode, :latitude, :longitude, :timezoneIdentifier, :isoCountryCode)
+      `,
+      {
+        timezoneIdentifier,
+        latitude,
+        longitude,
+        name,
+        city,
+        country,
+        street,
+        streetNumber,
+        postalCode,
+        region,
+        isoCountryCode
+      }
+    )
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (e: any) {
+    log.error("Could not insert location into cache: ", { error: e })
+    if (!(e.message.includes("Duplicate entry"))) {
+      throw e
     }
-  )
+    return success()
+  }
+}
 
 export const getTimeZone = (coordinate: {
   latitude: number

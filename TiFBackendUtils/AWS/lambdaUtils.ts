@@ -1,14 +1,19 @@
 import type { InvokeCommandOutput } from "@aws-sdk/client-lambda"
 import { PromiseResult, promiseResult, success } from "TiFShared/lib/Result"
+import { logger } from "TiFShared/logging"
 import { AWSEnvVars } from "./env"
+const {
+  CloudWatchLogs
+} = require("@aws-sdk/client-cloudwatch-logs")
+const {
+  fromEnv
+} = require("@aws-sdk/credential-providers")
 const {
   Lambda,
   InvocationType
-// eslint-disable-next-line @typescript-eslint/no-var-requires
 } = require("@aws-sdk/client-lambda")
 const {
   EventBridge
-// eslint-disable-next-line @typescript-eslint/no-var-requires
 } = require("@aws-sdk/client-eventbridge")
 
 const eventbridge = new EventBridge({ apiVersion: "2023-04-20" })
@@ -54,6 +59,8 @@ export const scheduleAWSLambda = async (
   return await eventbridge.putTargets(targetParams)
 }
 
+const log = logger("tif.backend.AWS")
+
 export const invokeAWSLambda = <T>(
   lambdaName: string,
   targetLambdaParams?: unknown,
@@ -65,12 +72,12 @@ export const invokeAWSLambda = <T>(
       InvocationType: InvocationType.RequestResponse,
       Payload: JSON.stringify(targetLambdaParams)
     }).then((response: InvokeCommandOutput) => {
-      console.log(response)
       const payloadString = new TextDecoder("utf-8").decode(response.Payload)
-      console.log(payloadString)
+      log.debug(payloadString)
       return success(JSON.parse(payloadString))
-    }).catch((e: unknown) => {
-      console.error(e)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    }).catch((e: any) => {
+      log.error(e)
       return success(defaultValue)
     })
   )
@@ -81,4 +88,52 @@ export const deleteEventBridgeRule = async (event: { id: string }) => {
     Name: event.id,
     EventBusName: functionName
   })
+}
+
+const cloudwatchlogs = new CloudWatchLogs({
+  credentials: fromEnv()
+})
+
+export const logRecentLambdaMessages = async (
+  awsLambdaFunctionName: string,
+  logLimit = 20
+) => {
+  const logGroupName = `/aws/lambda/${awsLambdaFunctionName}`
+
+  try {
+    const logStreamsResponse = await cloudwatchlogs.describeLogStreams({
+      logGroupName,
+      orderBy: "LastEventTime",
+      descending: true,
+      limit: 1
+    })
+
+    const logStreamName = logStreamsResponse.logStreams?.[0]?.logStreamName
+    if (!logStreamName) {
+      log.info("No log stream found.")
+      return
+    }
+
+    const logEventsResponse = await cloudwatchlogs.getLogEvents({
+      logGroupName,
+      logStreamName,
+      limit: logLimit
+    })
+
+    const logs = logEventsResponse.events?.map(({ timestamp, message }: {timestamp: string, message: string}) => {
+      if (!timestamp || !message) {
+        return "Empty Log!"
+      } else {
+        return `${new Date(timestamp).toISOString()} ${message.trim()}`
+      }
+    })
+
+    if (logs && logs.length > 0) {
+      log.trace(`*****Recent logs from AWS Lambda:*****\n${logs.join("\n")}`)
+    } else {
+      log.info("No log events found.")
+    }
+  } catch (error) {
+    log.error("Error fetching logs:", { error })
+  }
 }

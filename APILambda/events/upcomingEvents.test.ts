@@ -1,30 +1,16 @@
 import { conn } from "TiFBackendUtils"
 import { dateRange } from "TiFShared/domain-models/FixedDateRange"
-import { addLocationToDB } from "../../GeocodingLambda/utils"
+import { dayjs } from "TiFShared/lib/Dayjs"
+import { devEnv } from "../test/devIndex"
 import { testAPI } from "../test/testApp"
-import { testEventInput, testEventInputCoordinate } from "../test/testEvents"
+import { testEventInput } from "../test/testEvents"
 import { createEventFlow } from "../test/userFlows/createEventFlow"
 import { createUserFlow } from "../test/userFlows/createUserFlow"
 import { createEventTransaction } from "./createEvent"
-import { dayjs } from "TiFShared/lib/Dayjs"
-import { randomUUID } from "crypto"
-import { devEnv } from "../test/devIndex"
 
-describe("_upcomingEvents tests", () => {
-  beforeEach(async () => {
-    await addLocationToDB(
-      conn,
-      {
-        ...testEventInputCoordinate,
-        name: "Sample Location",
-        city: "Sample Neighborhood",
-        country: "Sample Country",
-        street: "Sample Street",
-        streetNumber: "1234"
-      },
-      "Sample/Timezone"
-    )
-  })
+import { randomUUID } from "crypto"
+
+describe("upcomingEvents tests", () => {
   test("if no upcoming events, empty", async () => {
     const attendee = await createUserFlow()
     const resp = await testAPI.upcomingEvents<200>({
