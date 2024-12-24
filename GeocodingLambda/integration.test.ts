@@ -138,6 +138,14 @@ describe("Geocoding lambda tests", () => {
   const mockGeocoding = jest.fn()
   const mockReverseGeocoding = jest.fn()
 
+  mockGeocoding.mockImplementation(() => {
+    throw new Error("Error: Should not trigger")
+  })
+
+  mockReverseGeocoding.mockImplementation(() => {
+    throw new Error("Error: Should not trigger")
+  })
+
   beforeEach(async () => {
     await resetDB()
   })
@@ -246,9 +254,9 @@ describe("Geocoding lambda tests", () => {
   it("should allow multiple identical geocoding requests", async () => {
     const [result1, result2, result3] =
       await Promise.all([
-        handler(unknownAddressTestLocation.coordinate),
-        handler(unknownAddressTestLocation.coordinate),
-        handler(unknownAddressTestLocation.coordinate)
+        handler(testLocations[0].coordinate),
+        handler(testLocations[0].coordinate),
+        handler(testLocations[0].coordinate)
       ])
 
     expect(result1).toMatchObject(result2)
