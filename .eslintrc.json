@@ -33,6 +33,7 @@
   },
   "rules": {
     "@typescript-eslint/no-namespace": "off",
+    "@typescript-eslint/no-var-requires": "off",
     "no-restricted-imports": [
       "error",
       {
