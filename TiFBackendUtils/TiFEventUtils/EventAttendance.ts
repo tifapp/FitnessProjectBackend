@@ -128,12 +128,14 @@ const addAttendance = (
       }
     ])
   )
-  attendees.forEach(({ attendee, eventId }: {attendee: Attendee, eventId: EventID}) => {
-    const event = map.get(eventId)
-    if (!event) return
-    event.previewAttendees.push(attendee)
-    event.attendeeCount++
-  })
+  attendees.forEach(
+    ({ attendee, eventId }: { attendee: Attendee; eventId: EventID }) => {
+      const event = map.get(eventId)
+      if (!event) return
+      event.previewAttendees.push(attendee)
+      event.attendeeCount++
+    }
+  )
   userAttendances.forEach(({ eventId, ...attendance }) => {
     const event = map.get(eventId)
     if (!event) return

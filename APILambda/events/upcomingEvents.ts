@@ -4,33 +4,63 @@ import {
   addAttendanceData,
   DBTifEvent,
   tifEventResponseFromDatabaseEvent,
-  userEventsSQL
+  UserEventSQL
 } from "TiFBackendUtils/TiFEventUtils"
 import { resp } from "TiFShared/api"
 import { UserID } from "TiFShared/domain-models/User"
 import { authenticatedEndpoint } from "../auth"
+import { userRelations } from "TiFBackendUtils/TiFUserUtils"
+import { userNotFoundBody } from "../utils/Responses"
 
-export const getUpcomingEvents = (
+const getUpcomingEvents = (
   conn: MySQLExecutableDriver,
+  selfId: UserID,
   userId: UserID
-) => conn.queryResult<DBTifEvent>(userEventsSQL(), { userId })
+) => {
+  return conn.queryResult<DBTifEvent>(
+    `
+    ${UserEventSQL.BASE}
+    ${UserEventSQL.ATTENDANCE_INNER_JOIN}
+    ${UserEventSQL.BASE_WHERE}
+    ${UserEventSQL.ORDER_BY_START_TIME}
+    `,
+    {
+      userId: selfId,
+      attendingUserId: userId
+    }
+  )
+}
 
-const fetchUpcomingEvents = (conn: MySQLExecutableDriver, selfId: UserID) => {
+const fetchUpcomingEvents = (
+  conn: MySQLExecutableDriver,
+  selfId: UserID,
+  userId: UserID
+) => {
   return conn.transaction((tx) => {
-    return getUpcomingEvents(tx, selfId)
-      .flatMapSuccess((events) => addAttendanceData(tx, events, selfId))
-      .mapSuccess((events) => {
-        return events
-          .filter((e) => e.endDateTime.getTime() > Date.now())
-          .map(tifEventResponseFromDatabaseEvent)
-      })
+    return userRelations(tx, {
+      fromUserId: selfId,
+      toUserId: userId
+    }).flatMapSuccess(() => {
+      return getUpcomingEvents(tx, selfId, userId)
+        .flatMapSuccess((events) => addAttendanceData(tx, events, selfId))
+        .mapSuccess((events) => {
+          return events
+            .filter((e) => e.endDateTime.getTime() > Date.now())
+            .map(tifEventResponseFromDatabaseEvent)
+        })
+    })
   })
 }
 
 export const upcomingEvents = authenticatedEndpoint<"upcomingEvents">(
-  ({ context: { selfId: userId } }) => {
-    return fetchUpcomingEvents(conn, userId)
+  ({ context: { selfId }, query: { userId } }) => {
+    return fetchUpcomingEvents(conn, selfId, userId ?? selfId)
       .mapSuccess((events) => resp(200, { events }))
+      .mapFailure((error) => {
+        return error === "no-results"
+          ? resp(404, userNotFoundBody(userId))
+          : resp(403, { error, userId })
+      })
       .unwrap()
   }
 )

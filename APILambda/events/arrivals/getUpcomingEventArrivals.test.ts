@@ -1,6 +1,5 @@
 import dayjs from "dayjs"
 import { dateRange } from "TiFShared/domain-models/FixedDateRange"
-import { addMockLocationToDB } from "../../test/location"
 import { testAPI } from "../../test/testApp"
 import {
   testEventCoordinate,
@@ -23,8 +22,6 @@ describe("getUpcomingEventArrivals tests", () => {
   })
 
   it("should return 200 with an array of events if the user has upcoming events", async () => {
-    addMockLocationToDB(testEventCoordinate)
-
     const {
       attendeesList,
       host,
