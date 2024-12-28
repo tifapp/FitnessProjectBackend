@@ -26,6 +26,9 @@ export const handler = (
   forwardGeocodeHandler?: (placemark: Placemark) => Promise<LocationCoordinate2D>
 ) => {
   log.info("Geocoding request: ", { locationEdit })
+  console.log("geocode handlers")
+  console.log(reverseGeocodeHandler)
+  console.log(forwardGeocodeHandler)
 
   // NB: cannot pass functions in aws environment, so perform the parameterization inside
   const reverseGeocode = typeof reverseGeocodeHandler === "function" ? reverseGeocodeHandler : SearchClosestAddressToCoordinatesAWS
@@ -69,5 +72,4 @@ export const handler = (
           ))
         })
     )
-    .unwrap()
 }

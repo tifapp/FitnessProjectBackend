@@ -154,7 +154,7 @@ describe("Geocoding lambda tests", () => {
     it.each(testLocations)(
       "Should find the coordinates and save a placemark given the address of $name",
       async ({ placemark, coordinate }) => {
-        const result = await handler(placemark)
+        const result = (await handler(placemark)).unwrap()
 
         expect(result).toMatchObject({
           coordinate: {
@@ -166,7 +166,7 @@ describe("Geocoding lambda tests", () => {
           )
         })
 
-        const cachedResult = await handler(placemark, mockGeocoding, mockReverseGeocoding)
+        const cachedResult = (await handler(placemark, mockGeocoding, mockReverseGeocoding)).unwrap()
         expect(mockGeocoding).toHaveBeenCalledTimes(0)
         expect(mockReverseGeocoding).toHaveBeenCalledTimes(0)
 
@@ -183,7 +183,7 @@ describe("Geocoding lambda tests", () => {
     )
 
     it("Should use default coordinates given an unknown address", async () => {
-      const result = await handler(unknownAddressTestLocation.placemark)
+      const result = (await handler(unknownAddressTestLocation.placemark)).unwrap()
 
       expect(result).toMatchObject({
         coordinate: {
@@ -200,7 +200,7 @@ describe("Geocoding lambda tests", () => {
     it.each(testLocations)(
       "Should find the address and save a placemark given the coordinates of $name",
       async ({ coordinate, placemark }) => {
-        const result = await handler(coordinate)
+        const result = (await handler(coordinate)).unwrap()
 
         expect(result).toMatchObject({
           coordinate: {
@@ -212,7 +212,7 @@ describe("Geocoding lambda tests", () => {
           )
         })
 
-        const cachedResult = await handler(coordinate, mockGeocoding, mockReverseGeocoding)
+        const cachedResult = (await handler(coordinate, mockGeocoding, mockReverseGeocoding)).unwrap()
         expect(mockGeocoding).toHaveBeenCalledTimes(0)
         expect(mockReverseGeocoding).toHaveBeenCalledTimes(0)
 
@@ -229,7 +229,7 @@ describe("Geocoding lambda tests", () => {
     )
 
     it("Should use default address given unknown coordinates", async () => {
-      const result = await handler(unknownAddressTestLocation.coordinate)
+      const result = (await handler(unknownAddressTestLocation.coordinate)).unwrap()
 
       expect(result).toMatchObject({
         coordinate: {
