@@ -1,8 +1,16 @@
+import type { EventEditLocation } from "TiFShared/domain-models/Event"
+
 try {
   const { handler } = require("./handler")
-  exports.handler = handler
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-} catch (error: any) {
-  console.error("Lambda error:", error.stack || error.message)
+  exports.handler = async (params: EventEditLocation) => {
+    try {
+      return (await handler(params)).unwrap()
+    } catch (error: unknown) {
+      console.error("Execution error:", error)
+      throw error
+    }
+  }
+} catch (error) {
+  console.error("Import error:", error)
   throw error
 }

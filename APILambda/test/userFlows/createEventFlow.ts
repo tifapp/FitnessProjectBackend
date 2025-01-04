@@ -26,6 +26,10 @@ export const createEventFlow = async (
 
   const eventResponses = await Promise.all(
     eventInputs.map((details) => {
+      console.log("creating an event")
+      console.log(host.auth)
+      console.log(testEventEdit(details))
+
       return testAPI.createEvent({
         auth: host.auth,
         body: testEventEdit(details)
