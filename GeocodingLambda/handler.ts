@@ -6,7 +6,7 @@ import { EventEditLocation } from "TiFShared/domain-models/Event"
 import { LocationCoordinate2D } from "TiFShared/domain-models/LocationCoordinate2D"
 import { Placemark } from "TiFShared/domain-models/Placemark"
 import { promiseResult, success } from "TiFShared/lib/Result"
-import { logger } from "TiFShared/logging"
+import { addLogHandler, consoleLogHandler, logger } from "TiFShared/logging"
 import {
   addLocationToDB,
   checkExistingPlacemarkInDB,
@@ -15,6 +15,8 @@ import {
   SearchClosestAddressToCoordinatesAWS,
   SearchCoordinatesForAddressAWS
 } from "./utils"
+
+addLogHandler(consoleLogHandler())
 
 const log = logger("tif.backend.geocoder")
 
