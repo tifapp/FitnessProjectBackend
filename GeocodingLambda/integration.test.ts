@@ -9,28 +9,53 @@ interface TestLocation {
   placemark: Extract<EventEditLocation, { type?: "placemark" }>
 }
 
-export const testLocations: TestLocation[] = [
-  {
-    name: "Santa Cruz (West Coast US)",
-    coordinate: {
-      type: "coordinate",
-      value: {
-        latitude: 36.99813840222285,
-        longitude: -122.05564377465653
-      }
-    },
-    placemark: {
-      type: "placemark",
-      value: {
-        city: "Westside",
-        isoCountryCode: "USA",
-        name: "420 Hagar Dr, Santa Cruz, CA 95064, United States",
-        postalCode: "95064",
-        street: "Hagar Dr",
-        streetNumber: "420"
-      }
+const santaCruzLocation: TestLocation = {
+  name: "Santa Cruz (West Coast US)",
+  coordinate: {
+    type: "coordinate",
+    value: {
+      latitude: 36.99813840222285,
+      longitude: -122.05564377465653
     }
   },
+  placemark: {
+    type: "placemark",
+    value: {
+      city: "Westside",
+      isoCountryCode: "USA",
+      name: "420 Hagar Dr, Santa Cruz, CA 95064, United States",
+      postalCode: "95064",
+      street: "Hagar Dr",
+      streetNumber: "420"
+    }
+  }
+}
+
+const santaCruzLocation2: TestLocation = {
+  name: "Santa Cruz 2 (West Coast US)",
+  coordinate: {
+    type: "coordinate",
+    value: {
+      latitude: 36.9989943,
+      longitude: -122.0614698
+    }
+  },
+  placemark: {
+    type: "placemark",
+    value: {
+      city: "Westside",
+      isoCountryCode: "USA",
+      name: "Steinhart Way, Santa Cruz, CA 95064, United States",
+      postalCode: "95064",
+      street: "Steinhart Way",
+      region: "California"
+    }
+  }
+}
+
+export const testLocations: TestLocation[] = [
+  santaCruzLocation,
+  santaCruzLocation2,
   {
     name: "New York City (East Coast US)",
     coordinate: {
@@ -139,11 +164,11 @@ describe("Geocoding lambda tests", () => {
   const mockReverseGeocoding = jest.fn()
 
   mockGeocoding.mockImplementation(() => {
-    throw new Error("Error: Should not trigger")
+    throw new Error("Error: Could not find cached location. Triggering forward geocoding")
   })
 
   mockReverseGeocoding.mockImplementation(() => {
-    throw new Error("Error: Should not trigger")
+    throw new Error("Error: Could not find cached location. Triggering reverse geocoding")
   })
 
   beforeEach(async () => {
@@ -181,6 +206,20 @@ describe("Geocoding lambda tests", () => {
         })
       }
     )
+
+    it("Should allow multiple events with a similar address", async () => {
+      const result = (await handler(santaCruzLocation.placemark)).unwrap()
+
+      expect(result).toMatchObject({
+        placemark: santaCruzLocation.placemark.value
+      })
+
+      const result2 = (await handler(santaCruzLocation2.placemark)).unwrap()
+
+      expect(result2).toMatchObject({
+        placemark: santaCruzLocation2.placemark.value
+      })
+    })
 
     it("Should use default coordinates given an unknown address", async () => {
       const result = (await handler(unknownAddressTestLocation.placemark)).unwrap()
@@ -227,6 +266,26 @@ describe("Geocoding lambda tests", () => {
         })
       }
     )
+
+    it("Should allow multiple events with a similar coordinates", async () => {
+      const result = (await handler(santaCruzLocation.coordinate)).unwrap()
+
+      expect(result).toMatchObject({
+        coordinate: {
+          latitude: expect.closeTo(santaCruzLocation.coordinate.value.latitude),
+          longitude: expect.closeTo(santaCruzLocation.coordinate.value.longitude)
+        }
+      })
+
+      const result2 = (await handler(santaCruzLocation2.coordinate)).unwrap()
+
+      expect(result2).toMatchObject({
+        coordinate: {
+          latitude: expect.closeTo(santaCruzLocation2.coordinate.value.latitude),
+          longitude: expect.closeTo(santaCruzLocation2.coordinate.value.longitude)
+        }
+      })
+    })
 
     it("Should use default address given unknown coordinates", async () => {
       const result = (await handler(unknownAddressTestLocation.coordinate)).unwrap()
