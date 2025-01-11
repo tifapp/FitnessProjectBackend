@@ -114,10 +114,10 @@ export const testLocations: TestLocation[] = [
       value: {
         city: "Westminster",
         isoCountryCode: "GBR",
-        name: "Big Ben, Victoria Embankment, London, SW1A 2, United Kingdom",
-        postalCode: "SW1A 2",
+        name: "Big Ben (Elizabeth Tower), Parliament Square, London, SW1A 0AA, United Kingdom",
+        postalCode: "SW1A 0AA",
         region: "England",
-        street: "Victoria Embankment"
+        street: "Parliament Square"
       }
     }
   },
