@@ -1,3 +1,4 @@
+import { conn } from "TiFBackendUtils"
 import { dayjs } from "TiFShared/lib/Dayjs"
 import { handler } from "../../GeocodingLambda/handler"
 import { overrideDevEnv } from "../test/devIndex"
@@ -99,6 +100,16 @@ describe("CreateEvent tests", () => {
       }
     ])
 
+    const { value: locations } = await conn.queryResult("SELECT * FROM location;")
+
+    console.log("current locations are")
+    console.log(locations)
+
+    const { value } = await conn.queryResult("SELECT * FROM TifEventView;")
+
+    console.log("current events are")
+    console.log(value)
+
     expect(event).toMatchObject({
       status: 201,
       data: {
@@ -129,6 +140,17 @@ describe("CreateEvent tests", () => {
         }
       }
     ])
+
+    const { value: locations } = await conn.queryResult("SELECT * FROM location;")
+
+    console.log("current locations are")
+    console.log(locations)
+
+    const { value } = await conn.queryResult("SELECT * FROM TifEventView;")
+
+    console.log("current events are")
+    console.log(value)
+
     const resp = await testAPI.eventDetails({
       auth: newUser.auth,
       params: { eventId: eventIds[0] }
