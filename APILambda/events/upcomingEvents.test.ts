@@ -150,6 +150,52 @@ describe("upcomingEvents tests", () => {
     ])
   })
 
+  it("should not load events the user is not attending or hosting", async () => {
+    const nonAttendingUser = await createUserFlow()
+    await createEventFlow(
+      [
+        {
+          dateRange: dateRange(
+            dayjs().add(24, "hour").toDate(),
+            dayjs().add(25, "hour").toDate()
+          )
+        }
+      ],
+      10
+    )
+    const resp = await testAPI.upcomingEvents<200>({
+      auth: nonAttendingUser.auth,
+      query: { userId: nonAttendingUser.id }
+    })
+    expect(resp.data.events).toEqual([])
+  })
+
+  it("should not load events the user is not attending or hosting when they are at least in one event", async () => {
+    const nonAttendingUser = await createUserFlow()
+    const { eventIds: [eventId] } =
+    await createEventFlow(
+      [
+        {
+          dateRange: dateRange(
+            dayjs().add(24, "hour").toDate(),
+            dayjs().add(25, "hour").toDate()
+          )
+        }
+      ],
+      10
+    )
+    await testAPI.joinEvent<200>({
+      auth: nonAttendingUser.auth,
+      params: { eventId }
+    })
+
+    const resp = await testAPI.upcomingEvents<200>({
+      auth: nonAttendingUser.auth,
+      query: { userId: nonAttendingUser.id }
+    })
+    expect(resp.data.events.map((e) => e.id)).toEqual([eventId])
+  })
+
   it("should return user not found when user does not exists", async () => {
     const user = await createUserFlow()
     const resp = await testAPI.upcomingEvents<404>({
