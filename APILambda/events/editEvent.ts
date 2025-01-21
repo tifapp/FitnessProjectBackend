@@ -74,7 +74,7 @@ export const editEventTransaction = (
               : success()
           )
           .flatMapSuccess((event) => {
-            const endDateTime = dayjs(body.startDateTime).add(body.duration, "seconds")
+            const endDateTime = dayjs(body.startDateTime).add(body.duration, 'seconds').toDate()
             const updatedEvent: DBEventEdit = { ...event, ...location?.coordinate, ...body, endDateTime }
 
             return editEventSQL(tx, updatedEvent, eventId)
