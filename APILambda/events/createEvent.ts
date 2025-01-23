@@ -6,10 +6,7 @@ import {
   tifEventResponseFromDatabaseEvent
 } from "TiFBackendUtils/TiFEventUtils"
 import { resp } from "TiFShared/api"
-import {
-  EventEdit,
-  EventEditLocation
-} from "TiFShared/domain-models/Event"
+import { EventEdit, EventEditLocation } from "TiFShared/domain-models/Event"
 import { LocationCoordinate2D } from "TiFShared/domain-models/LocationCoordinate2D"
 import { UserID } from "TiFShared/domain-models/User"
 import { PromiseResult } from "TiFShared/lib/Result"
@@ -22,6 +19,7 @@ export const createEventSQL = (
   eventEdit: Omit<EventEdit, "location"> & LocationCoordinate2D,
   hostId: UserID
 ) => {
+  console.log("Edit", eventEdit)
   return conn
     .executeResult(
       `
@@ -92,11 +90,8 @@ export const createEventTransaction = (
  */
 export const createEvent = authenticatedEndpoint<"createEvent">(
   async ({ environment, context: { selfId }, body }) => {
-    return createEventTransaction(
-      conn,
-      body,
-      selfId,
-      (locationEdit) => environment.geocode(locationEdit)
+    return createEventTransaction(conn, body, selfId, (locationEdit) =>
+      environment.geocode(locationEdit)
     )
       .mapSuccess((event) => resp(201, event))
       .unwrap()

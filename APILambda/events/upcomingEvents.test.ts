@@ -54,6 +54,41 @@ describe("upcomingEvents tests", () => {
     expect(eventIds).toEqual([earliestEventId, middleEventId, latestEventId])
   })
 
+  it("should load events that are within the maximum seconds to start parameter", async () => {
+    const {
+      attendeesList: [, attendee],
+      eventIds: [earliestId, middleId]
+    } = await createEventFlow(
+      [
+        {
+          dateRange: dateRange(
+            dayjs().subtract(30, "minutes").toDate(),
+            dayjs().add(1, "hours").toDate()
+          )
+        },
+        {
+          dateRange: dateRange(
+            dayjs().add(1, "hours").toDate(),
+            dayjs().add(2, "hours").toDate()
+          )
+        },
+        {
+          dateRange: dateRange(
+            dayjs().add(3, "hours").toDate(),
+            dayjs().add(4, "hours").toDate()
+          )
+        }
+      ],
+      1
+    )
+    const resp = await testAPI.upcomingEvents<200>({
+      auth: attendee.auth,
+      query: { userId: attendee.id, maxSecondsToStart: 7200 }
+    })
+    const eventIds = resp.data.events.map((e) => e.id)
+    expect(eventIds).toEqual([earliestId, middleId])
+  })
+
   it("should remove past events from list", async () => {
     const user = await createUserFlow()
     await createEventTransaction(
@@ -172,8 +207,9 @@ describe("upcomingEvents tests", () => {
 
   it("should not load events the user is not attending or hosting when they are at least in one event", async () => {
     const nonAttendingUser = await createUserFlow()
-    const { eventIds: [eventId] } =
-    await createEventFlow(
+    const {
+      eventIds: [eventId]
+    } = await createEventFlow(
       [
         {
           dateRange: dateRange(
