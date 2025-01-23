@@ -69,7 +69,6 @@ const attendees = async (
     LEFT JOIN userRelationships AS ur
       ON (ur.fromUserId = u.id AND ur.toUserId = :userId) OR (ur.fromUserId = :userId AND ur.toUserId = u.id)
     WHERE e.id IN (:eventIds)
-      AND (ua.longitude = e.longitude AND ua.latitude = e.latitude OR ua.arrivedDateTime IS NULL)
     GROUP BY eventId, u.id, ua.arrivedDateTime
     ORDER BY ea.joinedDateTime ASC
   `,
