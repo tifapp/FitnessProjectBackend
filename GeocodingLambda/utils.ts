@@ -111,18 +111,18 @@ export const checkExistingPlacemarkInDB = (
       : conn
         .queryFirstResult<FlattenedLocation>(
           `
-        SELECT * 
-          FROM location
-          WHERE name = :name
-          OR city = :city
-          OR country = :country
-          OR street = :street
-          OR streetNumber = :streetNumber
-          OR postalCode = :postalCode
-          OR region = :region
-          OR isoCountryCode = :isoCountryCode
-          LIMIT 1
-        `,
+          SELECT * 
+            FROM location
+            WHERE COALESCE(name, '') = COALESCE(:name, '')
+              AND COALESCE(city, '') = COALESCE(:city, '')
+              AND COALESCE(country, '') = COALESCE(:country, '')
+              AND COALESCE(street, '') = COALESCE(:street, '')
+              AND COALESCE(streetNumber, '') = COALESCE(:streetNumber, '')
+              AND COALESCE(postalCode, '') = COALESCE(:postalCode, '')
+              AND COALESCE(region, '') = COALESCE(:region, '')
+              AND COALESCE(isoCountryCode, '') = COALESCE(:isoCountryCode, '')
+            LIMIT 1;
+          `,
           {
             name: locationEdit.value.name ?? undefined,
             city: locationEdit.value.city ?? undefined,

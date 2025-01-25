@@ -123,7 +123,7 @@ export const tifEventResponseFromDatabaseEvent = (
         isoCountryCode: event.isoCountryCode ?? undefined,
         city: event.city ?? undefined
       },
-      timezoneIdentifier: event.timezoneIdentifier ?? "",
+      timezoneIdentifier: event.timezoneIdentifier!, // should never have events without timezones
       arrivalRadiusMeters: ARRIVAL_RADIUS_IN_METERS,
       isInArrivalTrackingPeriod:
         calcSecondsToStart(event.startDateTime) < SECONDS_IN_DAY

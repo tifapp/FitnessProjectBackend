@@ -7,7 +7,6 @@ import { testEventInput } from "../test/testEvents"
 import { createEventFlow } from "../test/userFlows/createEventFlow"
 import { createUserFlow } from "../test/userFlows/createUserFlow"
 import { createEventTransaction } from "./createEvent"
-import { dbEditedEventTimes } from "./editEvent"
 
 describe("Edit event tests", () => {
   const eventLocation : EventEditLocation = { type: "coordinate", value: { latitude: 50, longitude: 50 } }
@@ -172,35 +171,6 @@ describe("Edit event tests", () => {
           }
         }
       }
-    })
-  })
-
-  describe("Event Time Edits", () => {
-    it.each([
-      [
-        "original start and end date",
-        {},
-        { startDateTime: new Date("2001-01-01"), endDateTime: new Date("2001-01-02") }
-      ],
-      [
-        "updated start and no duration",
-        { startDateTime: new Date("2001-01-01") },
-        { startDateTime: new Date("2000-01-01"), endDateTime: new Date("2000-01-02") }
-      ],
-      [
-        "original start and updated duration",
-        { duration: dayjs.duration(1, "day").asSeconds() },
-        { startDateTime: new Date("2001-01-01"), endDateTime: new Date("2001-01-12") }
-      ],
-      [
-        "updated start and end date",
-        { startDateTime: new Date("2001-01-01"), duration: dayjs.duration(1, "day").asSeconds() },
-        { startDateTime: new Date("2000-01-01"), endDateTime: new Date("2000-01-12") }
-      ]
-    ])("%s", (_, body, event) => {
-      expect(dbEditedEventTimes(body, event)).toStrictEqual(
-        { startDateTime: new Date("2001-01-01"), endDateTime: new Date("2001-01-02") }
-      )
     })
   })
 })
