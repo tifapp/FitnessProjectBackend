@@ -6,10 +6,10 @@ import {
   tifEventResponseFromDatabaseEvent,
   UserEventSQL
 } from "TiFBackendUtils/TiFEventUtils"
+import { userRelations } from "TiFBackendUtils/TiFUserUtils"
 import { resp } from "TiFShared/api"
 import { UserID } from "TiFShared/domain-models/User"
 import { authenticatedEndpoint } from "../auth"
-import { userRelations } from "TiFBackendUtils/TiFUserUtils"
 import { userNotFoundBody } from "../utils/Responses"
 
 const getUpcomingEvents = (
@@ -21,7 +21,7 @@ const getUpcomingEvents = (
     `
     ${UserEventSQL.BASE}
     ${UserEventSQL.ATTENDANCE_INNER_JOIN}
-    ${UserEventSQL.BASE_WHERE}
+    ${UserEventSQL.USER_ATTENDANCE_WHERE}
     ${UserEventSQL.ORDER_BY_START_TIME}
     `,
     {
