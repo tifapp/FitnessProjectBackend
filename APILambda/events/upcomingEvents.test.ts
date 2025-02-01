@@ -3,7 +3,7 @@ import { dateRange } from "TiFShared/domain-models/FixedDateRange"
 import { dayjs } from "TiFShared/lib/Dayjs"
 import { devEnv } from "../test/devIndex"
 import { testAPI } from "../test/testApp"
-import { testEventInput } from "../test/testEvents"
+import { mockLocationCoordinate2D, testEventInput } from "../test/testEvents"
 import { createEventFlow } from "../test/userFlows/createEventFlow"
 import { createUserFlow } from "../test/userFlows/createUserFlow"
 import { createEventTransaction } from "./createEvent"
@@ -214,5 +214,117 @@ describe("upcomingEvents tests", () => {
       query: { userId: user2.id }
     })
     expect(resp.status).toEqual(403)
+  })
+
+  it("user joins this event and arrives at a different event, the user shows up in both events", async () => {
+
+    const attendee = await createUserFlow()
+    const startDateTime = dayjs(new Date()).millisecond(0).toDate().ext.addSeconds(10)
+
+    const soccerLocation = mockLocationCoordinate2D()
+    const basketballLocation = mockLocationCoordinate2D()
+
+    const {
+      host: soccerHost,
+      eventResponses: [soccerEvent]
+    } = await createEventFlow([
+      {
+        title: "Soccer Game",
+        startDateTime,
+        duration: 3600,
+        location: {
+          type: "coordinate",
+          value: {
+            latitude: soccerLocation.latitude,
+            longitude: soccerLocation.longitude
+          }
+        }
+      }
+    ])
+
+    const {
+      host: basketballHost,
+      eventResponses: [basketballEvent]
+    } = await createEventFlow([
+      {
+        title: "Basketball Game",
+        startDateTime,
+        duration: 3600,
+        location: {
+          type: "coordinate",
+          value: {
+            latitude: basketballLocation.latitude,
+            longitude: basketballLocation.longitude
+          }
+        }
+      }
+    ])
+
+    await testAPI.joinEvent({
+      auth: attendee.auth,
+      params: { eventId: soccerEvent.data.id }
+    })
+
+    await testAPI.joinEvent({
+      auth: attendee.auth,
+      params: { eventId: basketballEvent.data.id }
+    })
+
+    await testAPI.updateArrivalStatus(
+      {
+        auth: attendee.auth,
+        body: {
+          status: "arrived",
+          coordinate: {
+            latitude: soccerLocation.latitude,
+            longitude: soccerLocation.longitude
+          },
+          arrivalRadiusMeters: 10
+        } 
+      }
+    )
+
+    const attendeeUpcomingEvents = await testAPI.upcomingEvents<200>({
+      auth: attendee.auth,
+      query: { userId: attendee.id }
+    })
+
+    expect(attendeeUpcomingEvents).toMatchObject({
+      status: 200,
+      data: {
+        events: [
+        {
+          id: soccerEvent.data.id,
+          previewAttendees: [
+          expect.objectContaining(
+          {
+            id: soccerHost.id,
+            role: "hosting"
+          }
+        ),
+          expect.objectContaining({
+            id: attendee.id,
+            role: "attending"
+          })
+        ]
+        },
+        {
+          id: basketballEvent.data.id,
+          previewAttendees: [
+          expect.objectContaining(
+          {
+            id: basketballHost.id,
+            role: "hosting"
+          }
+        ),
+          expect.objectContaining({
+            id: attendee.id,
+            role: "attending"
+          })
+        ]
+        }
+      ]
+      }
+    })
   })
 })
