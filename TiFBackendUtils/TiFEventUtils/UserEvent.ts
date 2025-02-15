@@ -1,6 +1,8 @@
 export namespace UserEventSQL {
   export const BASE = `
     SELECT TifEventView.*,
+    TIMESTAMPDIFF(SECOND, current_timestamp(), TifEventView.startDateTime) as tsDiff,
+    current_timestamp() as ts,
     CASE WHEN TifEventView.hostId = :userId THEN 'current-user'
     ELSE
       CASE WHEN UserRelationOfHostToUser.status IS NULL THEN 'not-friends'
@@ -32,6 +34,12 @@ export namespace UserEventSQL {
     WHERE
       ${BASE_WHERE_CLAUSES}
     `
+
+  export const MAX_SECONDS_TO_START_WHERE = `
+    ${BASE_WHERE}
+    AND TIMESTAMPDIFF(SECOND, :currentTimestamp, TifEventView.startDateTime) < :maxSecondsToStart
+    `
+
   export const GEOSPATIAL_WHERE = `
     WHERE
       ST_Distance_Sphere(POINT(:userLongitude, :userLatitude), POINT(TifEventView.longitude, TifEventView.latitude)) < :radius
