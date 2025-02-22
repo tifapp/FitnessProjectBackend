@@ -15,33 +15,42 @@ import { userNotFoundBody } from "../utils/Responses"
 const getUpcomingEvents = (
   conn: MySQLExecutableDriver,
   selfId: UserID,
-  userId: UserID
+  userId: UserID,
+  maxSecondsToStart: number | undefined
 ) => {
-  return conn.queryResult<DBTifEvent>(
-    `
-    ${UserEventSQL.BASE}
-    ${UserEventSQL.ATTENDANCE_INNER_JOIN}
-    ${UserEventSQL.USER_ATTENDANCE_WHERE}
-    ${UserEventSQL.ORDER_BY_START_TIME}
-    `,
-    {
-      userId: selfId,
-      attendingUserId: userId
-    }
-  )
+  const query = maxSecondsToStart
+    ? `
+  ${UserEventSQL.BASE}
+  ${UserEventSQL.ATTENDANCE_INNER_JOIN}
+  ${UserEventSQL.MAX_SECONDS_TO_START_WITH_USER_ATTENDANCE_WHERE}
+  ${UserEventSQL.ORDER_BY_START_TIME}
+  `
+    : `
+  ${UserEventSQL.BASE}
+  ${UserEventSQL.ATTENDANCE_INNER_JOIN}
+  ${UserEventSQL.USER_ATTENDANCE_WHERE}
+  ${UserEventSQL.ORDER_BY_START_TIME}
+  `
+  return conn.queryResult<DBTifEvent>(query, {
+    userId: selfId,
+    attendingUserId: userId,
+    currentTimestamp: new Date(), // TODO: - Handle timezone logic.
+    maxSecondsToStart
+  })
 }
 
 const fetchUpcomingEvents = (
   conn: MySQLExecutableDriver,
   selfId: UserID,
-  userId: UserID
+  userId: UserID,
+  maxSecondsToStart: number | undefined
 ) => {
   return conn.transaction((tx) => {
     return userRelations(tx, {
       fromUserId: selfId,
       toUserId: userId
     }).flatMapSuccess(() => {
-      return getUpcomingEvents(tx, selfId, userId)
+      return getUpcomingEvents(tx, selfId, userId, maxSecondsToStart)
         .flatMapSuccess((events) => addAttendanceData(tx, events, selfId))
         .mapSuccess((events) => {
           return events
@@ -53,8 +62,13 @@ const fetchUpcomingEvents = (
 }
 
 export const upcomingEvents = authenticatedEndpoint<"upcomingEvents">(
-  ({ context: { selfId }, query: { userId } }) => {
-    return fetchUpcomingEvents(conn, selfId, userId ?? selfId)
+  ({ context: { selfId }, query: { userId, maxSecondsToStart } }) => {
+    return fetchUpcomingEvents(
+      conn,
+      selfId,
+      userId ?? selfId,
+      maxSecondsToStart
+    )
       .mapSuccess((events) => resp(200, { events }))
       .mapFailure((error) => {
         return error === "no-results"

@@ -54,6 +54,62 @@ describe("upcomingEvents tests", () => {
     expect(eventIds).toEqual([earliestEventId, middleEventId, latestEventId])
   })
 
+  it("should load events that are within the maximum seconds to start parameter", async () => {
+    const {
+      attendeesList: [, attendee],
+      eventIds: [earliestId, middleId]
+    } = await createEventFlow(
+      [
+        {
+          dateRange: dateRange(
+            dayjs().subtract(30, "minutes").toDate(),
+            dayjs().add(1, "hours").toDate()
+          )
+        },
+        {
+          dateRange: dateRange(
+            dayjs().add(1, "hours").toDate(),
+            dayjs().add(2, "hours").toDate()
+          )
+        },
+        {
+          dateRange: dateRange(
+            dayjs().add(3, "hours").toDate(),
+            dayjs().add(4, "hours").toDate()
+          )
+        }
+      ],
+      1
+    )
+    const resp = await testAPI.upcomingEvents<200>({
+      auth: attendee.auth,
+      query: { userId: attendee.id, maxSecondsToStart: 7200 }
+    })
+    const eventIds = resp.data.events.map((e) => e.id)
+    expect(eventIds).toEqual([earliestId, middleId])
+  })
+
+  it("should not load events that are within the maximum seconds to start parameter when the user is not an attendee", async () => {
+    const nonAttendingUser = await createUserFlow()
+    await createEventFlow(
+      [
+        {
+          dateRange: dateRange(
+            dayjs().subtract(30, "minutes").toDate(),
+            dayjs().add(1, "hours").toDate()
+          )
+        }
+      ],
+      1
+    )
+    const resp = await testAPI.upcomingEvents<200>({
+      auth: nonAttendingUser.auth,
+      query: { userId: nonAttendingUser.id, maxSecondsToStart: 7200 }
+    })
+    const eventIds = resp.data.events.map((e) => e.id)
+    expect(eventIds).toEqual([])
+  })
+
   it("should remove past events from list", async () => {
     const user = await createUserFlow()
     await createEventTransaction(
@@ -171,9 +227,10 @@ describe("upcomingEvents tests", () => {
   })
 
   it("should not load events the user is not attending or hosting when they are at least in one event", async () => {
-    const attendingUser = await createUserFlow()
-    const { eventIds: [eventId] } =
-    await createEventFlow(
+    const nonAttendingUser = await createUserFlow()
+    const {
+      eventIds: [eventId]
+    } = await createEventFlow(
       [
         {
           dateRange: dateRange(
@@ -185,13 +242,13 @@ describe("upcomingEvents tests", () => {
       10
     )
     await testAPI.joinEvent<200>({
-      auth: attendingUser.auth,
+      auth: nonAttendingUser.auth,
       params: { eventId }
     })
 
     const resp = await testAPI.upcomingEvents<200>({
-      auth: attendingUser.auth,
-      query: { userId: attendingUser.id }
+      auth: nonAttendingUser.auth,
+      query: { userId: nonAttendingUser.id }
     })
     expect(resp.data.events.map((e) => e.id)).toEqual([eventId])
   })
@@ -246,9 +303,11 @@ describe("upcomingEvents tests", () => {
   })
 
   it("user joins this event and arrives at a different event, the user shows up in both events", async () => {
-
     const attendee = await createUserFlow()
-    const startDateTime = dayjs(new Date()).millisecond(0).toDate().ext.addSeconds(10)
+    const startDateTime = dayjs(new Date())
+      .millisecond(0)
+      .toDate()
+      .ext.addSeconds(10)
 
     const soccerLocation = mockLocationCoordinate2D()
     const basketballLocation = mockLocationCoordinate2D()
@@ -299,19 +358,17 @@ describe("upcomingEvents tests", () => {
       params: { eventId: basketballEvent.data.id }
     })
 
-    await testAPI.updateArrivalStatus(
-      {
-        auth: attendee.auth,
-        body: {
-          status: "arrived",
-          coordinate: {
-            latitude: soccerLocation.latitude,
-            longitude: soccerLocation.longitude
-          },
-          arrivalRadiusMeters: 10
-        } 
+    await testAPI.updateArrivalStatus({
+      auth: attendee.auth,
+      body: {
+        status: "arrived",
+        coordinate: {
+          latitude: soccerLocation.latitude,
+          longitude: soccerLocation.longitude
+        },
+        arrivalRadiusMeters: 10
       }
-    )
+    })
 
     const attendeeUpcomingEvents = await testAPI.upcomingEvents<200>({
       auth: attendee.auth,
@@ -322,37 +379,33 @@ describe("upcomingEvents tests", () => {
       status: 200,
       data: {
         events: [
-        {
-          id: soccerEvent.data.id,
-          previewAttendees: [
-          expect.objectContaining(
           {
-            id: soccerHost.id,
-            role: "hosting"
-          }
-        ),
-          expect.objectContaining({
-            id: attendee.id,
-            role: "attending"
-          })
-        ]
-        },
-        {
-          id: basketballEvent.data.id,
-          previewAttendees: [
-          expect.objectContaining(
+            id: soccerEvent.data.id,
+            previewAttendees: [
+              expect.objectContaining({
+                id: soccerHost.id,
+                role: "hosting"
+              }),
+              expect.objectContaining({
+                id: attendee.id,
+                role: "attending"
+              })
+            ]
+          },
           {
-            id: basketballHost.id,
-            role: "hosting"
+            id: basketballEvent.data.id,
+            previewAttendees: [
+              expect.objectContaining({
+                id: basketballHost.id,
+                role: "hosting"
+              }),
+              expect.objectContaining({
+                id: attendee.id,
+                role: "attending"
+              })
+            ]
           }
-        ),
-          expect.objectContaining({
-            id: attendee.id,
-            role: "attending"
-          })
         ]
-        }
-      ]
       }
     })
   })
