@@ -6,10 +6,10 @@ import {
   tifEventResponseFromDatabaseEvent,
   UserEventSQL
 } from "TiFBackendUtils/TiFEventUtils"
+import { userRelations } from "TiFBackendUtils/TiFUserUtils"
 import { resp } from "TiFShared/api"
 import { UserID } from "TiFShared/domain-models/User"
 import { authenticatedEndpoint } from "../auth"
-import { userRelations } from "TiFBackendUtils/TiFUserUtils"
 import { userNotFoundBody } from "../utils/Responses"
 
 const getUpcomingEvents = (

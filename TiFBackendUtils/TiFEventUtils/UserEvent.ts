@@ -22,7 +22,7 @@ export namespace UserEventSQL {
       ON UserRelationOfUserToHost.fromUserId = :userId AND UserRelationOfUserToHost.toUserId = TifEventView.hostId
       `
   export const ATTENDANCE_INNER_JOIN =
-    "INNER JOIN eventAttendance ea ON ea.userId = :attendingUserId"
+    "INNER JOIN eventAttendance ea ON ea.eventId = TifEventView.id"
 
   const BASE_WHERE_CLAUSES = `
     TifEventView.endDateTime > NOW()
@@ -34,11 +34,18 @@ export namespace UserEventSQL {
     WHERE
       ${BASE_WHERE_CLAUSES}
     `
-
+  
   export const MAX_SECONDS_TO_START_WHERE = `
     ${BASE_WHERE}
     AND TIMESTAMPDIFF(SECOND, :currentTimestamp, TifEventView.startDateTime) < :maxSecondsToStart
     `
+  
+  export const USER_ATTENDANCE_WHERE = `
+    WHERE
+    ${BASE_WHERE_CLAUSES}
+    AND ea.userId = :attendingUserId
+    AND ea.role IN ('hosting', 'attending')
+  `
 
   export const GEOSPATIAL_WHERE = `
     WHERE

@@ -186,7 +186,7 @@ describe("upcomingEvents tests", () => {
   })
 
   it("should not load events the user is not attending or hosting", async () => {
-    const nonAttendingUser = await createUserFlow()
+    const attendingUser = await createUserFlow()
     await createEventFlow(
       [
         {
@@ -199,8 +199,8 @@ describe("upcomingEvents tests", () => {
       10
     )
     const resp = await testAPI.upcomingEvents<200>({
-      auth: nonAttendingUser.auth,
-      query: { userId: nonAttendingUser.id }
+      auth: attendingUser.auth,
+      query: { userId: attendingUser.id }
     })
     expect(resp.data.events).toEqual([])
   })
@@ -221,15 +221,44 @@ describe("upcomingEvents tests", () => {
       10
     )
     await testAPI.joinEvent<200>({
-      auth: nonAttendingUser.auth,
+      auth: attendingUser.auth,
       params: { eventId }
     })
 
     const resp = await testAPI.upcomingEvents<200>({
-      auth: nonAttendingUser.auth,
-      query: { userId: nonAttendingUser.id }
+      auth: attendingUser.auth,
+      query: { userId: attendingUser.id }
     })
     expect(resp.data.events.map((e) => e.id)).toEqual([eventId])
+  })
+
+  it("should not load other users' events", async () => {
+    const attendingUser = await createUserFlow()
+    const otherUser = await createUserFlow()
+    const attendingEventTitle = "Whatever"
+    const otherUserTitle = "Event"
+
+    await testAPI.createEvent<201>({
+      auth: otherUser.auth,
+      body: {
+        ...testEventInput,
+        title: otherUserTitle,
+        duration: 159
+      }
+    })
+    await testAPI.createEvent<201>({
+      auth: attendingUser.auth,
+      body: {
+        ...testEventInput,
+        title: attendingEventTitle,
+        duration: 132
+      }
+    })
+    const resp = await testAPI.upcomingEvents<200>({
+      auth: attendingUser.auth,
+      query: { userId: attendingUser.id }
+    })
+    expect(resp.data.events.map((e) => e.title)).toEqual([attendingEventTitle])
   })
 
   it("should return user not found when user does not exists", async () => {
