@@ -22,13 +22,13 @@ const getUpcomingEvents = (
     ? `
   ${UserEventSQL.BASE}
   ${UserEventSQL.ATTENDANCE_INNER_JOIN}
-  ${UserEventSQL.MAX_SECONDS_TO_START_WHERE}
+  ${UserEventSQL.MAX_SECONDS_TO_START_WITH_USER_ATTENDANCE_WHERE}
   ${UserEventSQL.ORDER_BY_START_TIME}
   `
     : `
   ${UserEventSQL.BASE}
   ${UserEventSQL.ATTENDANCE_INNER_JOIN}
-  ${UserEventSQL.BASE_WHERE}
+  ${UserEventSQL.USER_ATTENDANCE_WHERE}
   ${UserEventSQL.ORDER_BY_START_TIME}
   `
   return conn.queryResult<DBTifEvent>(query, {

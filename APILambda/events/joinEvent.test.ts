@@ -4,7 +4,11 @@ import { dayjs } from "TiFShared/lib/Dayjs"
 import { randomInt } from "crypto"
 import { userToUserRequest } from "../test/shortcuts"
 import { testAPI } from "../test/testApp"
-import { testEventInput, upcomingEventDateRange } from "../test/testEvents"
+import {
+  testEventInput,
+  testEventInputCoordinate,
+  upcomingEventDateRange
+} from "../test/testEvents"
 import { createEventFlow } from "../test/userFlows/createEventFlow"
 import { createUserFlow } from "../test/userFlows/createUserFlow"
 
@@ -162,18 +166,18 @@ describe("Join the event by id tests", () => {
       `
       INSERT INTO event (
         hostId,
-        title, 
-        startDateTime, 
-        endDateTime, 
-        latitude, 
+        title,
+        startDateTime,
+        endDateTime,
+        latitude,
         longitude,
         endedDateTime
       ) VALUES (
         :hostId,
-        :title, 
-        :startDateTime, 
-        :endDateTime, 
-        :latitude, 
+        :title,
+        :startDateTime,
+        :endDateTime,
+        :latitude,
         :longitude,
         :endedDateTime
       )
@@ -181,8 +185,10 @@ describe("Join the event by id tests", () => {
       {
         hostId: host.id,
         title: testEventInput.title,
-        latitude: (testEventInput.location.value as LocationCoordinate2D).latitude,
-        longitude: (testEventInput.location.value as LocationCoordinate2D).longitude,
+        latitude: (testEventInput.location.value as LocationCoordinate2D)
+          .latitude,
+        longitude: (testEventInput.location.value as LocationCoordinate2D)
+          .longitude,
         startDateTime: dayjs().subtract(24, "hour").toDate(),
         endDateTime: dayjs().subtract(12, "hour").toDate(),
         endedDateTime: dayjs().subtract(12, "hour").toDate()
@@ -220,6 +226,41 @@ describe("Join the event by id tests", () => {
       status: 200,
       data: { id: eventId }
     })
+  })
+
+  it("should only count the attendee once when joining an event twice", async () => {
+    const {
+      eventIds: [eventId]
+    } = await createEventFlow([{}])
+    const attendee = await createUserFlow()
+    await testAPI.joinEvent({
+      auth: attendee.auth,
+      params: { eventId },
+      body: {
+        region: {
+          coordinate: testEventInputCoordinate,
+          arrivalRadiusMeters: 100
+        }
+      }
+    })
+    await testAPI.joinEvent({
+      auth: attendee.auth,
+      params: { eventId },
+      body: {
+        region: {
+          coordinate: testEventInputCoordinate,
+          arrivalRadiusMeters: 100
+        }
+      }
+    })
+
+    const resp = await testAPI.eventDetails<200>({
+      auth: attendee.auth,
+      params: { eventId }
+    })
+    console.log(resp.data)
+    expect(resp.data.attendeeCount).toEqual(2)
+    expect(new Set(resp.data.previewAttendees.map((a) => a.id)).size).toEqual(2)
   })
 
   it("should return 403 when the event was cancelled", async () => {
