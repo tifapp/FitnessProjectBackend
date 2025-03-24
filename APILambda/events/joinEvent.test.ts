@@ -299,7 +299,7 @@ describe("Join the event by id tests", () => {
       eventIds: [eventId]
     } = await createEventFlow(
       [{ location: { type: "coordinate", value: eventLocation } }],
-      1
+      0
     )
     await testAPI.updateArrivalStatus({
       auth: user.auth,
@@ -323,6 +323,6 @@ describe("Join the event by id tests", () => {
       auth: user.auth,
       params: { eventId }
     })
-    expect(resp.data.attendeeCount).toEqual(3)
+    expect(resp.data.attendeeCount).toEqual(2) // NB: Host + User
   })
 })
