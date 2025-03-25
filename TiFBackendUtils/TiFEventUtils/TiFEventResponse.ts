@@ -92,62 +92,57 @@ export type TiFEvent = {
 
 export const tifEventResponseFromDatabaseEvent = (
   event: DBTifEvent
-): TiFEvent => {
-  console.log("translating event")
-  console.log(event)
-
-  return {
-    id: event.id,
-    title: event.title,
-    description: event.description,
-    attendeeCount: event.attendeeCount,
-    color: event.color,
-    time: {
-      secondsToStart: calcSecondsToStart(event.startDateTime),
-      dateRange: dateRange(event.startDateTime, event.endDateTime)!,
-      todayOrTomorrow: calcTodayOrTomorrow(event.startDateTime)
+): TiFEvent => ({
+  id: event.id,
+  title: event.title,
+  description: event.description,
+  attendeeCount: event.attendeeCount,
+  color: event.color,
+  time: {
+    secondsToStart: calcSecondsToStart(event.startDateTime),
+    dateRange: dateRange(event.startDateTime, event.endDateTime)!,
+    todayOrTomorrow: calcTodayOrTomorrow(event.startDateTime)
+  },
+  previewAttendees: event.previewAttendees,
+  location: {
+    coordinate: {
+      latitude: event.latitude,
+      longitude: event.longitude
     },
-    previewAttendees: event.previewAttendees,
-    location: {
-      coordinate: {
-        latitude: event.latitude,
-        longitude: event.longitude
-      },
-      placemark: {
-        name: event.placemarkName ?? undefined,
-        country: event.country ?? undefined,
-        postalCode: event.postalCode ?? undefined,
-        street: event.street ?? undefined,
-        streetNumber: event.streetNumber ?? undefined,
-        region: event.region ?? undefined,
-        isoCountryCode: event.isoCountryCode ?? undefined,
-        city: event.city ?? undefined
-      },
-      timezoneIdentifier: event.timezoneIdentifier!, // should never have events without timezones
-      arrivalRadiusMeters: ARRIVAL_RADIUS_IN_METERS,
-      isInArrivalTrackingPeriod:
-        calcSecondsToStart(event.startDateTime) < SECONDS_IN_DAY
+    placemark: {
+      name: event.placemarkName ?? undefined,
+      country: event.country ?? undefined,
+      postalCode: event.postalCode ?? undefined,
+      street: event.street ?? undefined,
+      streetNumber: event.streetNumber ?? undefined,
+      region: event.region ?? undefined,
+      isoCountryCode: event.isoCountryCode ?? undefined,
+      city: event.city ?? undefined
     },
-    host: {
-      relationStatus: UserRelationsSchema.parse({
-        fromThemToYou: event.fromThemToYou,
-        fromYouToThem: event.fromYouToThem
-      }) as UnblockedUserRelationsStatus,
-      id: event.hostId,
-      name: event.hostName,
-      handle: event.hostHandle,
-      profileImageURL: undefined
-    },
-    settings: {
-      shouldHideAfterStartDate: event.shouldHideAfterStartDate,
-      isChatEnabled: event.isChatEnabled
-    },
-    userAttendeeStatus: event.userAttendeeStatus,
-    joinedDateTime: event.joinedDateTime,
-    isChatExpired: isDayAfter(event.endedDateTime),
-    hasArrived: event.hasArrived,
-    updatedDateTime: event.updatedDateTime,
-    createdDateTime: event.createdDateTime,
-    endedDateTime: event.endedDateTime
-  }
-}
+    timezoneIdentifier: event.timezoneIdentifier!, // should never have events without timezones
+    arrivalRadiusMeters: ARRIVAL_RADIUS_IN_METERS,
+    isInArrivalTrackingPeriod:
+      calcSecondsToStart(event.startDateTime) < SECONDS_IN_DAY
+  },
+  host: {
+    relationStatus: UserRelationsSchema.parse({
+      fromThemToYou: event.fromThemToYou,
+      fromYouToThem: event.fromYouToThem
+    }) as UnblockedUserRelationsStatus,
+    id: event.hostId,
+    name: event.hostName,
+    handle: event.hostHandle,
+    profileImageURL: undefined
+  },
+  settings: {
+    shouldHideAfterStartDate: event.shouldHideAfterStartDate,
+    isChatEnabled: event.isChatEnabled
+  },
+  userAttendeeStatus: event.userAttendeeStatus,
+  joinedDateTime: event.joinedDateTime,
+  isChatExpired: isDayAfter(event.endedDateTime),
+  hasArrived: event.hasArrived,
+  updatedDateTime: event.updatedDateTime,
+  createdDateTime: event.createdDateTime,
+  endedDateTime: event.endedDateTime
+})

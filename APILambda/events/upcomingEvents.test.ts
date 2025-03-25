@@ -320,13 +320,7 @@ describe("upcomingEvents tests", () => {
         title: "Soccer Game",
         startDateTime,
         duration: 3600,
-        location: {
-          type: "coordinate",
-          value: {
-            latitude: soccerLocation.latitude,
-            longitude: soccerLocation.longitude
-          }
-        }
+        location: { type: "coordinate", value: soccerLocation }
       }
     ])
 
@@ -338,13 +332,7 @@ describe("upcomingEvents tests", () => {
         title: "Basketball Game",
         startDateTime,
         duration: 3600,
-        location: {
-          type: "coordinate",
-          value: {
-            latitude: basketballLocation.latitude,
-            longitude: basketballLocation.longitude
-          }
-        }
+        location: { type: "coordinate", value: basketballLocation }
       }
     ])
 
@@ -362,11 +350,8 @@ describe("upcomingEvents tests", () => {
       auth: attendee.auth,
       body: {
         status: "arrived",
-        coordinate: {
-          latitude: soccerLocation.latitude,
-          longitude: soccerLocation.longitude
-        },
-        arrivalRadiusMeters: 10
+        coordinate: soccerLocation,
+        arrivalRadiusMeters: 100
       }
     })
 
@@ -382,14 +367,8 @@ describe("upcomingEvents tests", () => {
           {
             id: soccerEvent.data.id,
             previewAttendees: [
-              expect.objectContaining({
-                id: soccerHost.id,
-                role: "hosting"
-              }),
-              expect.objectContaining({
-                id: attendee.id,
-                role: "attending"
-              })
+              expect.objectContaining({ id: soccerHost.id, role: "hosting" }),
+              expect.objectContaining({ id: attendee.id, role: "attending" })
             ]
           },
           {
@@ -399,10 +378,7 @@ describe("upcomingEvents tests", () => {
                 id: basketballHost.id,
                 role: "hosting"
               }),
-              expect.objectContaining({
-                id: attendee.id,
-                role: "attending"
-              })
+              expect.objectContaining({ id: attendee.id, role: "attending" })
             ]
           }
         ]

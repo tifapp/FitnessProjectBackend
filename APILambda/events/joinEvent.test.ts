@@ -292,4 +292,37 @@ describe("Join the event by id tests", () => {
       data: { error: "event-was-cancelled" }
     })
   })
+
+  test("join event, only lists 1 attendance record for user after arriving at multiple locations", async () => {
+    const user = await createUserFlow()
+    const {
+      eventIds: [eventId]
+    } = await createEventFlow(
+      [{ location: { type: "coordinate", value: eventLocation } }],
+      0
+    )
+    await testAPI.updateArrivalStatus({
+      auth: user.auth,
+      body: {
+        status: "arrived",
+        coordinate: { latitude: -33.86882, longitude: 151.209296 },
+        arrivalRadiusMeters: 200
+      }
+    })
+    await testAPI.joinEvent<201>({
+      auth: user.auth,
+      params: { eventId },
+      body: {
+        region: {
+          coordinate: eventLocation,
+          arrivalRadiusMeters: 200
+        }
+      }
+    })
+    const resp = await testAPI.eventDetails<200>({
+      auth: user.auth,
+      params: { eventId }
+    })
+    expect(resp.data.attendeeCount).toEqual(2) // NB: Host + User
+  })
 })

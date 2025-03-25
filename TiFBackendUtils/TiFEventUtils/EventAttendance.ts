@@ -57,19 +57,29 @@ const attendees = async (
       u.name,
       u.handle,
       ea.joinedDateTime,
-      ua.arrivedDateTime,
+      (
+        SELECT ua.arrivedDateTime
+        FROM userArrivals AS ua
+        WHERE ua.userId = u.id
+          AND (
+            ST_Distance_Sphere(
+              POINT(ua.longitude, ua.latitude),
+              POINT(e.longitude, e.latitude)
+            ) < 100
+            OR ua.arrivedDateTime IS NULL
+          )
+        LIMIT 1
+      ) AS arrivedDateTime,
       ea.role,
       MAX(CASE WHEN ur.fromUserId = :userId THEN ur.status END) AS fromYouToThem,
-      MAX(CASE WHEN ur.toUserId = :userId THEN ur.status END) AS fromThemToYou,
-      CASE WHEN ua.arrivedDateTime IS NOT NULL THEN true ELSE false END AS hasArrived
+      MAX(CASE WHEN ur.toUserId = :userId THEN ur.status END) AS fromThemToYou
     FROM user AS u
     INNER JOIN eventAttendance AS ea ON u.id = ea.userId
     INNER JOIN event AS e ON ea.eventId = e.id
-    LEFT JOIN userArrivals AS ua ON ua.userId = u.id
     LEFT JOIN userRelationships AS ur
       ON (ur.fromUserId = u.id AND ur.toUserId = :userId) OR (ur.fromUserId = :userId AND ur.toUserId = u.id)
     WHERE e.id IN (:eventIds)
-    GROUP BY eventId, u.id, ua.arrivedDateTime
+    GROUP BY eventId, u.id
     ORDER BY ea.joinedDateTime ASC
   `,
     { eventIds, userId }
@@ -85,7 +95,7 @@ const attendees = async (
           profileImageURL: attendee.profileImageURL,
           handle: attendee.handle,
           arrivedDateTime: attendee.arrivedDateTime,
-          hasArrived: !!attendee.hasArrived,
+          hasArrived: !!attendee.arrivedDateTime,
           role: attendee.role,
           relationStatus: UserRelationsSchema.parse({
             fromYouToThem: attendee.fromYouToThem ?? "not-friends",
