@@ -15,7 +15,10 @@ describe("CreateEvent tests", () => {
       geocode: handler
     })
 
-    const startDateTime = dayjs(new Date()).millisecond(0).toDate().ext.addSeconds(10)
+    const startDateTime = dayjs(new Date())
+      .millisecond(0)
+      .toDate()
+      .ext.addSeconds(10)
     const {
       host,
       eventResponses: [event]
@@ -66,10 +69,10 @@ describe("CreateEvent tests", () => {
           placemark: {
             city: "Westside",
             isoCountryCode: "USA",
-            name: "420 Hagar Dr, Santa Cruz, CA 95064, United States",
+            name: "500 Steinhart Way, Santa Cruz, CA 95064, United States",
             postalCode: "95064",
-            street: "Hagar Dr",
-            streetNumber: "420"
+            street: "Steinhart Way",
+            streetNumber: "500"
           },
           timezoneIdentifier: "America/Los_Angeles"
         }
@@ -100,7 +103,9 @@ describe("CreateEvent tests", () => {
       }
     ])
 
-    const { value: locations } = await conn.queryResult("SELECT * FROM location;")
+    const { value: locations } = await conn.queryResult(
+      "SELECT * FROM location;"
+    )
 
     console.log("current locations are")
     console.log(locations)
@@ -141,7 +146,9 @@ describe("CreateEvent tests", () => {
       }
     ])
 
-    const { value: locations } = await conn.queryResult("SELECT * FROM location;")
+    const { value: locations } = await conn.queryResult(
+      "SELECT * FROM location;"
+    )
 
     console.log("current locations are")
     console.log(locations)
