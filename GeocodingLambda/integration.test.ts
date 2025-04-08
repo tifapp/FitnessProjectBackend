@@ -23,10 +23,10 @@ const santaCruzLocation: TestLocation = {
     value: {
       city: "Westside",
       isoCountryCode: "USA",
-      name: "420 Hagar Dr, Santa Cruz, CA 95064, United States",
+      name: "500 Steinhart Way, Santa Cruz, CA 95064, United States",
       postalCode: "95064",
-      street: "Hagar Dr",
-      streetNumber: "420"
+      street: "Steinhart Way",
+      streetNumber: "500"
     }
   }
 }
@@ -62,7 +62,7 @@ export const testLocations: TestLocation[] = [
       type: "coordinate",
       value: {
         latitude: 40.758896,
-        longitude: -73.985130
+        longitude: -73.98513
       }
     },
     placemark: {
@@ -114,7 +114,7 @@ export const testLocations: TestLocation[] = [
       value: {
         city: "Westminster",
         isoCountryCode: "GBR",
-        name: "Big Ben (Elizabeth Tower), Parliament Square, London, SW1A 0AA, United Kingdom",
+        name: "Big Ben, Parliament Square, London, SW1A 0AA, United Kingdom",
         postalCode: "SW1A 0AA",
         region: "England",
         street: "Parliament Square"
@@ -164,11 +164,15 @@ describe("Geocoding lambda tests", () => {
   const mockReverseGeocoding = jest.fn()
 
   mockGeocoding.mockImplementation(() => {
-    throw new Error("Error: Could not find cached location. Triggering forward geocoding")
+    throw new Error(
+      "Error: Could not find cached location. Triggering forward geocoding"
+    )
   })
 
   mockReverseGeocoding.mockImplementation(() => {
-    throw new Error("Error: Could not find cached location. Triggering reverse geocoding")
+    throw new Error(
+      "Error: Could not find cached location. Triggering reverse geocoding"
+    )
   })
 
   beforeEach(async () => {
@@ -186,12 +190,12 @@ describe("Geocoding lambda tests", () => {
             latitude: expect.closeTo(coordinate.value.latitude),
             longitude: expect.closeTo(coordinate.value.longitude)
           },
-          placemark: expect.objectContaining(
-            placemark.value
-          )
+          placemark: expect.objectContaining(placemark.value)
         })
 
-        const cachedResult = (await handler(placemark, mockGeocoding, mockReverseGeocoding)).unwrap()
+        const cachedResult = (
+          await handler(placemark, mockGeocoding, mockReverseGeocoding)
+        ).unwrap()
         expect(mockGeocoding).toHaveBeenCalledTimes(0)
         expect(mockReverseGeocoding).toHaveBeenCalledTimes(0)
 
@@ -200,9 +204,7 @@ describe("Geocoding lambda tests", () => {
             latitude: expect.closeTo(coordinate.value.latitude),
             longitude: expect.closeTo(coordinate.value.longitude)
           },
-          placemark: expect.objectContaining(
-            placemark.value
-          )
+          placemark: expect.objectContaining(placemark.value)
         })
       }
     )
@@ -222,7 +224,9 @@ describe("Geocoding lambda tests", () => {
     })
 
     it("Should use default coordinates given an unknown address", async () => {
-      const result = (await handler(unknownAddressTestLocation.placemark)).unwrap()
+      const result = (
+        await handler(unknownAddressTestLocation.placemark)
+      ).unwrap()
 
       expect(result).toMatchObject({
         coordinate: {
@@ -246,12 +250,12 @@ describe("Geocoding lambda tests", () => {
             latitude: expect.closeTo(coordinate.value.latitude),
             longitude: expect.closeTo(coordinate.value.longitude)
           },
-          placemark: expect.objectContaining(
-            placemark.value
-          )
+          placemark: expect.objectContaining(placemark.value)
         })
 
-        const cachedResult = (await handler(coordinate, mockGeocoding, mockReverseGeocoding)).unwrap()
+        const cachedResult = (
+          await handler(coordinate, mockGeocoding, mockReverseGeocoding)
+        ).unwrap()
         expect(mockGeocoding).toHaveBeenCalledTimes(0)
         expect(mockReverseGeocoding).toHaveBeenCalledTimes(0)
 
@@ -260,9 +264,7 @@ describe("Geocoding lambda tests", () => {
             latitude: expect.closeTo(coordinate.value.latitude),
             longitude: expect.closeTo(coordinate.value.longitude)
           },
-          placemark: expect.objectContaining(
-            placemark.value
-          )
+          placemark: expect.objectContaining(placemark.value)
         })
       }
     )
@@ -273,7 +275,9 @@ describe("Geocoding lambda tests", () => {
       expect(result).toMatchObject({
         coordinate: {
           latitude: expect.closeTo(santaCruzLocation.coordinate.value.latitude),
-          longitude: expect.closeTo(santaCruzLocation.coordinate.value.longitude)
+          longitude: expect.closeTo(
+            santaCruzLocation.coordinate.value.longitude
+          )
         }
       })
 
@@ -281,19 +285,29 @@ describe("Geocoding lambda tests", () => {
 
       expect(result2).toMatchObject({
         coordinate: {
-          latitude: expect.closeTo(santaCruzLocation2.coordinate.value.latitude),
-          longitude: expect.closeTo(santaCruzLocation2.coordinate.value.longitude)
+          latitude: expect.closeTo(
+            santaCruzLocation2.coordinate.value.latitude
+          ),
+          longitude: expect.closeTo(
+            santaCruzLocation2.coordinate.value.longitude
+          )
         }
       })
     })
 
     it("Should use default address given unknown coordinates", async () => {
-      const result = (await handler(unknownAddressTestLocation.coordinate)).unwrap()
+      const result = (
+        await handler(unknownAddressTestLocation.coordinate)
+      ).unwrap()
 
       expect(result).toMatchObject({
         coordinate: {
-          latitude: expect.closeTo(unknownAddressTestLocation.coordinate.value.latitude),
-          longitude: expect.closeTo(unknownAddressTestLocation.coordinate.value.longitude)
+          latitude: expect.closeTo(
+            unknownAddressTestLocation.coordinate.value.latitude
+          ),
+          longitude: expect.closeTo(
+            unknownAddressTestLocation.coordinate.value.longitude
+          )
         }
       })
 
@@ -311,12 +325,11 @@ describe("Geocoding lambda tests", () => {
   })
 
   it("should allow multiple identical geocoding requests", async () => {
-    const [result1, result2, result3] =
-      await Promise.all([
-        handler(testLocations[0].coordinate),
-        handler(testLocations[0].coordinate),
-        handler(testLocations[0].coordinate)
-      ])
+    const [result1, result2, result3] = await Promise.all([
+      handler(testLocations[0].coordinate),
+      handler(testLocations[0].coordinate),
+      handler(testLocations[0].coordinate)
+    ])
 
     expect(result1).toMatchObject(result2)
     expect(result3).toMatchObject(result2)

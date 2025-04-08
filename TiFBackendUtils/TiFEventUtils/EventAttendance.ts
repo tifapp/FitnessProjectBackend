@@ -43,6 +43,8 @@ type DBEventAttendee = DBeventAttendance &
 
 type AttendeeWithEventID = { eventId: EventID; attendee: EventAttendee }
 
+const ARRIVAL_MATCHING_RADIUS = 100
+
 const attendees = async (
   conn: MySQLExecutableDriver,
   userId: UserID,
@@ -57,29 +59,23 @@ const attendees = async (
       u.name,
       u.handle,
       ea.joinedDateTime,
-      (
-        SELECT ua.arrivedDateTime
-        FROM userArrivals AS ua
-        WHERE ua.userId = u.id
-          AND (
-            ST_Distance_Sphere(
-              POINT(ua.longitude, ua.latitude),
-              POINT(e.longitude, e.latitude)
-            ) < 100
-            OR ua.arrivedDateTime IS NULL
-          )
-        LIMIT 1
-      ) AS arrivedDateTime,
+      ua.arrivedDateTime,
       ea.role,
       MAX(CASE WHEN ur.fromUserId = :userId THEN ur.status END) AS fromYouToThem,
       MAX(CASE WHEN ur.toUserId = :userId THEN ur.status END) AS fromThemToYou
     FROM user AS u
     INNER JOIN eventAttendance AS ea ON u.id = ea.userId
     INNER JOIN event AS e ON ea.eventId = e.id
+    LEFT JOIN userArrivals AS ua
+      ON ua.userId = u.id
+        AND (
+          ST_Distance_Sphere(POINT(ua.longitude, ua.latitude), POINT(e.longitude, e.latitude)) < ${ARRIVAL_MATCHING_RADIUS}
+          OR ua.arrivedDateTime IS NULL
+        )
     LEFT JOIN userRelationships AS ur
       ON (ur.fromUserId = u.id AND ur.toUserId = :userId) OR (ur.fromUserId = :userId AND ur.toUserId = u.id)
     WHERE e.id IN (:eventIds)
-    GROUP BY eventId, u.id
+    GROUP BY eventId, u.id, ua.arrivedDateTime
     ORDER BY ea.joinedDateTime ASC
   `,
     { eventIds, userId }
