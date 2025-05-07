@@ -1,6 +1,9 @@
 import { conn } from "TiFBackendUtils"
-import { dateRange } from "TiFShared/domain-models/FixedDateRange"
-import { dayjs } from "TiFShared/lib/Dayjs"
+import {
+  dateRange,
+  FixedDateRange
+} from "TiFShared/domain-models/FixedDateRange"
+import { dayjs, now } from "TiFShared/lib/Dayjs"
 import { devEnv } from "../test/devIndex"
 import { testAPI } from "../test/testApp"
 import { mockLocationCoordinate2D, testEventInput } from "../test/testEvents"
@@ -9,6 +12,7 @@ import { createUserFlow } from "../test/userFlows/createUserFlow"
 import { createEventTransaction } from "./createEvent"
 
 import { randomUUID } from "crypto"
+import { base64URLEncode } from "TiFShared/lib/Base64URLCoding"
 
 describe("upcomingEvents tests", () => {
   test("if no upcoming events, empty", async () => {
@@ -166,6 +170,64 @@ describe("upcomingEvents tests", () => {
       query: { userId: user.id }
     })
     expect(resp.data.events).toEqual([])
+  })
+
+  it("should load events in the specified date range", async () => {
+    const current = now()
+    const { host, eventIds } = await createEventFlow(
+      [
+        {
+          dateRange: dateRange(
+            current.add(1, "hour").toDate(),
+            current.add(2, "hour").toDate()
+          )
+        },
+        {
+          dateRange: dateRange(
+            current.add(30, "minutes").toDate(),
+            current.add(1, "hour").add(45, "minutes").toDate()
+          )
+        },
+        {
+          dateRange: dateRange(
+            current.add(2, "hours").add(30, "minutes").toDate(),
+            current.add(3, "hours").toDate()
+          )
+        },
+        {
+          dateRange: dateRange(
+            current.toDate(),
+            current.add(4, "hours").toDate()
+          )
+        },
+        {
+          dateRange: dateRange(
+            current.toDate(),
+            current.add(30, "minutes").toDate()
+          )
+        }
+      ],
+      1
+    )
+    const dateRangeParam = base64URLEncode(
+      JSON.stringify({
+        startDateTime: current.add(1, "hour").toDate(),
+        endDateTime: current.add(2, "hour").toDate()
+      })
+    )
+    // TODO: - Make the testAPI only accept query parameter input types.
+    const resp = await testAPI.upcomingEvents<200>({
+      auth: host.auth,
+      query: {
+        userId: host.id,
+        dateRange: dateRangeParam as unknown as FixedDateRange
+      }
+    })
+    expect(resp.data.events.map((e) => e.id)).toEqual([
+      eventIds[3],
+      eventIds[1],
+      eventIds[0]
+    ])
   })
 
   it("should load upcoming events for the user with the specified id if a user id is specified", async () => {

@@ -47,6 +47,12 @@ export namespace UserEventSQL {
       AND TIMESTAMPDIFF(SECOND, :currentTimestamp, TifEventView.startDateTime) < :maxSecondsToStart
       `
 
+  export const DATE_RANGE_WITH_USER_ATTENDANCE_WHERE = `
+      ${USER_ATTENDANCE_WHERE}
+      AND TifEventView.startDateTime <= :endDateTime
+      AND TifEventView.endDateTime >= :startDateTime
+      `
+
   export const GEOSPATIAL_WHERE = `
     WHERE
       ST_Distance_Sphere(POINT(:userLongitude, :userLatitude), POINT(TifEventView.longitude, TifEventView.latitude)) < :radius

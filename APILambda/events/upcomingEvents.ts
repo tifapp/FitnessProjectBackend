@@ -11,47 +11,65 @@ import { resp } from "TiFShared/api"
 import { UserID } from "TiFShared/domain-models/User"
 import { authenticatedEndpoint } from "../auth"
 import { userNotFoundBody } from "../utils/Responses"
+import { FixedDateRange } from "TiFShared/domain-models/FixedDateRange"
+
+type UpcomingEventsQuery = {
+  userId: UserID
+  selfId: UserID
+  maxSecondsToStart?: number
+  dateRange?: FixedDateRange
+}
+
+const upcomingEventsSQL = (query: UpcomingEventsQuery) => {
+  if (query.maxSecondsToStart) {
+    return `
+    ${UserEventSQL.BASE}
+    ${UserEventSQL.ATTENDANCE_INNER_JOIN}
+    ${UserEventSQL.MAX_SECONDS_TO_START_WITH_USER_ATTENDANCE_WHERE}
+    ${UserEventSQL.ORDER_BY_START_TIME}
+    `
+  } else if (query.dateRange) {
+    return `
+    ${UserEventSQL.BASE}
+    ${UserEventSQL.ATTENDANCE_INNER_JOIN}
+    ${UserEventSQL.DATE_RANGE_WITH_USER_ATTENDANCE_WHERE}
+    ${UserEventSQL.ORDER_BY_START_TIME}
+    `
+  } else {
+    return `
+    ${UserEventSQL.BASE}
+    ${UserEventSQL.ATTENDANCE_INNER_JOIN}
+    ${UserEventSQL.USER_ATTENDANCE_WHERE}
+    ${UserEventSQL.ORDER_BY_START_TIME}
+    `
+  }
+}
 
 const getUpcomingEvents = (
   conn: MySQLExecutableDriver,
-  selfId: UserID,
-  userId: UserID,
-  maxSecondsToStart: number | undefined
+  query: UpcomingEventsQuery
 ) => {
-  const query = maxSecondsToStart
-    ? `
-  ${UserEventSQL.BASE}
-  ${UserEventSQL.ATTENDANCE_INNER_JOIN}
-  ${UserEventSQL.MAX_SECONDS_TO_START_WITH_USER_ATTENDANCE_WHERE}
-  ${UserEventSQL.ORDER_BY_START_TIME}
-  `
-    : `
-  ${UserEventSQL.BASE}
-  ${UserEventSQL.ATTENDANCE_INNER_JOIN}
-  ${UserEventSQL.USER_ATTENDANCE_WHERE}
-  ${UserEventSQL.ORDER_BY_START_TIME}
-  `
-  return conn.queryResult<DBTifEvent>(query, {
-    userId: selfId,
-    attendingUserId: userId,
+  return conn.queryResult<DBTifEvent>(upcomingEventsSQL(query), {
+    userId: query.selfId,
+    attendingUserId: query.userId,
     currentTimestamp: new Date(), // TODO: - Handle timezone logic.
-    maxSecondsToStart
+    maxSecondsToStart: query.maxSecondsToStart,
+    startDateTime: query.dateRange?.startDateTime,
+    endDateTime: query.dateRange?.endDateTime
   })
 }
 
 const fetchUpcomingEvents = (
   conn: MySQLExecutableDriver,
-  selfId: UserID,
-  userId: UserID,
-  maxSecondsToStart: number | undefined
+  query: UpcomingEventsQuery
 ) => {
   return conn.transaction((tx) => {
     return userRelations(tx, {
-      fromUserId: selfId,
-      toUserId: userId
+      fromUserId: query.selfId,
+      toUserId: query.userId
     }).flatMapSuccess(() => {
-      return getUpcomingEvents(tx, selfId, userId, maxSecondsToStart)
-        .flatMapSuccess((events) => addAttendanceData(tx, events, selfId))
+      return getUpcomingEvents(tx, query)
+        .flatMapSuccess((events) => addAttendanceData(tx, events, query.selfId))
         .mapSuccess((events) => {
           return events
             .filter((e) => e.endDateTime.getTime() > Date.now())
@@ -62,13 +80,17 @@ const fetchUpcomingEvents = (
 }
 
 export const upcomingEvents = authenticatedEndpoint<"upcomingEvents">(
-  ({ context: { selfId }, query: { userId, maxSecondsToStart } }) => {
-    return fetchUpcomingEvents(
-      conn,
+  ({
+    context: { selfId },
+    query: { userId, maxSecondsToStart, dateRange }
+  }) => {
+    const query = {
       selfId,
-      userId ?? selfId,
-      maxSecondsToStart
-    )
+      userId: userId ?? selfId,
+      maxSecondsToStart,
+      dateRange
+    }
+    return fetchUpcomingEvents(conn, query)
       .mapSuccess((events) => resp(200, { events }))
       .mapFailure((error) => {
         return error === "no-results"
