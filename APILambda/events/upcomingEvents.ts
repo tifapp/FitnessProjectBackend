@@ -39,7 +39,7 @@ const upcomingEventsSQL = (query: UpcomingEventsQuery) => {
     return `
     ${UserEventSQL.BASE}
     ${UserEventSQL.ATTENDANCE_INNER_JOIN}
-    ${UserEventSQL.USER_ATTENDANCE_WHERE}
+    ${UserEventSQL.USER_ATTENDANCE_WITH_NON_PAST_EVENTS_WHERE}
     ${UserEventSQL.ORDER_BY_START_TIME}
     `
   }
@@ -71,9 +71,7 @@ const fetchUpcomingEvents = (
       return getUpcomingEvents(tx, query)
         .flatMapSuccess((events) => addAttendanceData(tx, events, query.selfId))
         .mapSuccess((events) => {
-          return events
-            .filter((e) => e.endDateTime.getTime() > Date.now())
-            .map(tifEventResponseFromDatabaseEvent)
+          return events.map(tifEventResponseFromDatabaseEvent)
         })
     })
   })

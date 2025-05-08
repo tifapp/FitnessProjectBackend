@@ -230,6 +230,37 @@ describe("upcomingEvents tests", () => {
     ])
   })
 
+  it("should include past events when using the dateRange query parameter", async () => {
+    const current = now()
+    const user = await createUserFlow()
+    const event = await createEventTransaction(
+      conn,
+      {
+        ...testEventInput,
+        startDateTime: current.subtract(1, "day").subtract(2, "hours").toDate(),
+        duration: dayjs.duration(90, "minutes").asSeconds()
+      },
+      user.id,
+      devEnv.geocode
+    ).unwrap()
+
+    const dateRangeParam = base64URLEncode(
+      JSON.stringify({
+        startDateTime: current.subtract(1, "day").subtract(1, "hours").toDate(),
+        endDateTime: current.subtract(1, "day").add(1, "hour").toDate()
+      })
+    )
+    // TODO: - Make the testAPI only accept query parameter input types.
+    const resp = await testAPI.upcomingEvents<200>({
+      auth: user.auth,
+      query: {
+        userId: user.id,
+        dateRange: dateRangeParam as unknown as FixedDateRange
+      }
+    })
+    expect(resp.data.events.map((e) => e.id)).toEqual([event.id])
+  })
+
   it("should load upcoming events for the user with the specified id if a user id is specified", async () => {
     const user1 = await createUserFlow()
 
