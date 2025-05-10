@@ -10,7 +10,7 @@
     "dotenv": "^16.3.1",
     "geo-tz": "^8.0.1",
     "TiFBackendUtils": "file:../TiFBackendUtils",
-    "TiFShared": "github:tifapp/TiFShared#main",
+    "TiFShared": "github:tifapp/TiFShared#521772d9b69b5e64330ef3bbcbcdd8cd8879fc73",
     "zod": "^3.22.4"
   },
   "scripts": {
