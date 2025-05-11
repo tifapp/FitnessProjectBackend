@@ -29,8 +29,14 @@ type EventsTimelinePageQuery = {
 }
 
 const DIRECTION_SQL = {
-  forwards: { order: "ASC", where: UserEventSQL.TIMELINE_FORWARDS_WHERE },
-  backwards: { order: "DESC", where: UserEventSQL.TIMELINE_BACKWARDS_WHERE }
+  forwards: {
+    order: "ORDER BY TifEventView.startDateTime ASC, TifEventView.id",
+    where: UserEventSQL.TIMELINE_FORWARDS_WHERE
+  },
+  backwards: {
+    order: "ORDER BY TifEventView.startDateTime DESC, TifEventView.id",
+    where: UserEventSQL.TIMELINE_BACKWARDS_WHERE
+  }
 }
 
 type EventsDatabaseTimelinePage = {
@@ -48,7 +54,7 @@ const timelinePageEvents = async (
     ${UserEventSQL.BASE}
     ${UserEventSQL.ATTENDANCE_INNER_JOIN}
     ${directionSQL.where}
-    ${UserEventSQL.ORDER_BY_START_TIME} ${directionSQL.order}
+    ${directionSQL.order}
     LIMIT :limit
     OFFSET :offset
     `,
