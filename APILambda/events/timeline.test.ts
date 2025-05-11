@@ -121,19 +121,23 @@ describe("timeline tests", () => {
       current.add(1, "hour").toDate(),
       current.add(2, "hour").toDate()
     )
-    const { host, eventIds } = await createEventFlow(
-      [{ dateRange: range }, { dateRange: range }],
-      1
-    )
+    const {
+      host,
+      eventIds: [id1]
+    } = await createEventFlow([{ dateRange: range }], 1)
+    const {
+      eventIds: [id2]
+    } = await createEventFlow([{ dateRange: range }], 1)
+    await testAPI.joinEvent({ auth: host.auth, params: { eventId: id2 } })
 
     const resp = await expectFetchesNextIds({
-      ids: [eventIds[0]],
+      ids: [id1],
       user: host,
       isLastPage: false,
       direction: "forwards"
     })
     await expectFetchesNextIds({
-      ids: [eventIds[1]],
+      ids: [id2],
       user: host,
       token: resp.nextToken,
       isLastPage: true,
@@ -221,19 +225,23 @@ describe("timeline tests", () => {
       current.subtract(2, "hour").toDate(),
       current.subtract(1, "hour").toDate()
     )
-    const { host, eventIds } = await createEventFlow(
-      [{ dateRange: range }, { dateRange: range }],
-      1
-    )
+    const {
+      host,
+      eventIds: [id1]
+    } = await createEventFlow([{ dateRange: range }], 1)
+    const {
+      eventIds: [id2]
+    } = await createEventFlow([{ dateRange: range }], 1)
+    await testAPI.joinEvent({ auth: host.auth, params: { eventId: id2 } })
 
     const resp = await expectFetchesNextIds({
-      ids: [eventIds[0]],
+      ids: [id1],
       user: host,
       isLastPage: false,
       direction: "backwards"
     })
     await expectFetchesNextIds({
-      ids: [eventIds[1]],
+      ids: [id2],
       user: host,
       token: resp.nextToken,
       isLastPage: true,
