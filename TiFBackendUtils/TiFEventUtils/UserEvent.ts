@@ -68,6 +68,20 @@ export namespace UserEventSQL {
       AND TifEventView.endDateTime >= :startDateTime
       `
 
+  export const TIMELINE_FORWARDS_WHERE = `
+    WHERE
+      ${NOT_BLOCKED_CLAUSES}
+      AND ${USER_ATTENDANCE_WHERE_CLAUSES}
+      AND TifEventView.endDateTime >= :startDateTime
+      `
+
+  export const TIMELINE_BACKWARDS_WHERE = `
+    WHERE
+      ${NOT_BLOCKED_CLAUSES}
+      AND ${USER_ATTENDANCE_WHERE_CLAUSES}
+      AND TifEventView.endDateTime < :startDateTime
+      `
+
   export const GEOSPATIAL_WHERE = `
     WHERE
       ST_Distance_Sphere(POINT(:userLongitude, :userLatitude), POINT(TifEventView.longitude, TifEventView.latitude)) < :radius

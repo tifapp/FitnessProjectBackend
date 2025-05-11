@@ -21,7 +21,7 @@ describe("timeline tests", () => {
     })
     expect(resp.data).toMatchObject({
       events: [],
-      hasNextPage: false
+      hasNextPageInDirection: false
     })
   })
 
@@ -33,7 +33,7 @@ describe("timeline tests", () => {
     })
     expect(resp.data).toMatchObject({
       events: [],
-      hasPreviousPage: false
+      hasNextPageInDirection: false
     })
   })
 
@@ -88,31 +88,36 @@ describe("timeline tests", () => {
     let resp = await expectFetchesNextIds({
       ids: [eventIds[3]],
       user: host,
-      isLastPage: false
+      isLastPage: false,
+      direction: "forwards"
     })
     resp = await expectFetchesNextIds({
       ids: [eventIds[4]],
       user: host,
       token: resp.nextToken,
-      isLastPage: false
+      isLastPage: false,
+      direction: "forwards"
     })
     resp = await expectFetchesNextIds({
       ids: [eventIds[1]],
       user: host,
       token: resp.nextToken,
-      isLastPage: false
+      isLastPage: false,
+      direction: "forwards"
     })
     resp = await expectFetchesNextIds({
       ids: [eventIds[0]],
       user: host,
       token: resp.nextToken,
-      isLastPage: false
+      isLastPage: false,
+      direction: "forwards"
     })
     await expectFetchesNextIds({
       ids: [eventIds[2]],
       user: host,
       token: resp.nextToken,
-      isLastPage: true
+      isLastPage: true,
+      direction: "forwards"
     })
   })
 
@@ -130,13 +135,205 @@ describe("timeline tests", () => {
     const resp = await expectFetchesNextIds({
       ids: [eventIds[0]],
       user: host,
-      isLastPage: false
+      isLastPage: false,
+      direction: "forwards"
     })
     await expectFetchesNextIds({
       ids: [eventIds[1]],
       user: host,
       token: resp.nextToken,
-      isLastPage: true
+      isLastPage: true,
+      direction: "forwards"
+    })
+  })
+
+  it("should load events in the backwards direction with each request", async () => {
+    const current = now()
+    const { host, eventIds } = await createEventFlow(
+      [
+        {
+          dateRange: dateRange(
+            current.subtract(2, "hour").toDate(),
+            current.subtract(1, "hour").toDate()
+          )
+        },
+        {
+          dateRange: dateRange(
+            current.subtract(1, "hour").subtract(45, "minutes").toDate(),
+            current.subtract(30, "minutes").toDate()
+          )
+        },
+        {
+          dateRange: dateRange(
+            current.subtract(3, "hours").toDate(),
+            current.subtract(2, "hours").subtract(30, "minutes").toDate()
+          )
+        },
+        {
+          dateRange: dateRange(
+            current.subtract(4, "hours").toDate(),
+            current.toDate()
+          )
+        },
+        {
+          dateRange: dateRange(
+            current.subtract(30, "minutes").toDate(),
+            current.subtract(15, "minutes").toDate()
+          )
+        }
+      ],
+      1
+    )
+
+    let resp = await expectFetchesNextIds({
+      ids: [eventIds[4]],
+      user: host,
+      isLastPage: false,
+      direction: "backwards"
+    })
+    resp = await expectFetchesNextIds({
+      ids: [eventIds[1]],
+      user: host,
+      token: resp.nextToken,
+      isLastPage: false,
+      direction: "backwards"
+    })
+    resp = await expectFetchesNextIds({
+      ids: [eventIds[0]],
+      user: host,
+      token: resp.nextToken,
+      isLastPage: false,
+      direction: "backwards"
+    })
+    resp = await expectFetchesNextIds({
+      ids: [eventIds[2]],
+      user: host,
+      token: resp.nextToken,
+      isLastPage: false,
+      direction: "backwards"
+    })
+    await expectFetchesNextIds({
+      ids: [eventIds[3]],
+      user: host,
+      token: resp.nextToken,
+      isLastPage: true,
+      direction: "backwards"
+    })
+  })
+
+  it("should load move the timeline backwards when 2 events have the same date range", async () => {
+    const current = now()
+    const range = dateRange(
+      current.subtract(2, "hour").toDate(),
+      current.subtract(1, "hour").toDate()
+    )
+    const { host, eventIds } = await createEventFlow(
+      [{ dateRange: range }, { dateRange: range }],
+      1
+    )
+
+    const resp = await expectFetchesNextIds({
+      ids: [eventIds[0]],
+      user: host,
+      isLastPage: false,
+      direction: "backwards"
+    })
+    await expectFetchesNextIds({
+      ids: [eventIds[1]],
+      user: host,
+      token: resp.nextToken,
+      isLastPage: true,
+      direction: "backwards"
+    })
+  })
+
+  it("should load forwards then backwards", async () => {
+    const current = now()
+    const { host, eventIds } = await createEventFlow(
+      [
+        {
+          dateRange: dateRange(
+            current.subtract(2, "hour").toDate(),
+            current.subtract(1, "hour").toDate()
+          )
+        },
+        {
+          dateRange: dateRange(
+            current.subtract(3, "hour").toDate(),
+            current.subtract(2, "hour").toDate()
+          )
+        },
+        {
+          dateRange: dateRange(
+            current.add(2, "hour").toDate(),
+            current.add(3, "hour").toDate()
+          )
+        },
+        {
+          dateRange: dateRange(
+            current.add(4, "hour").toDate(),
+            current.add(5, "hour").toDate()
+          )
+        }
+      ],
+      1
+    )
+
+    let resp = await expectFetchesNextIds({
+      ids: [eventIds[2]],
+      user: host,
+      isLastPage: false,
+      direction: "forwards"
+    })
+    resp = await expectFetchesNextIds({
+      ids: [eventIds[0]],
+      user: host,
+      token: resp.nextToken,
+      isLastPage: false,
+      direction: "backwards"
+    })
+    resp = await expectFetchesNextIds({
+      ids: [eventIds[3]],
+      user: host,
+      token: resp.nextToken,
+      isLastPage: true,
+      direction: "forwards"
+    })
+    await expectFetchesNextIds({
+      ids: [eventIds[1]],
+      user: host,
+      token: resp.nextToken,
+      isLastPage: true,
+      direction: "backwards"
+    })
+  })
+
+  it("should not load the same event when fetching in each direction", async () => {
+    const current = now()
+    const { host, eventIds } = await createEventFlow(
+      [
+        {
+          dateRange: dateRange(
+            current.subtract(2, "hour").toDate(),
+            current.add(1, "hour").toDate()
+          )
+        }
+      ],
+      1
+    )
+
+    const resp = await expectFetchesNextIds({
+      ids: [eventIds[0]],
+      user: host,
+      isLastPage: true,
+      direction: "forwards"
+    })
+    await expectFetchesNextIds({
+      ids: [],
+      user: host,
+      token: resp.nextToken,
+      isLastPage: true,
+      direction: "backwards"
     })
   })
 
@@ -146,7 +343,7 @@ describe("timeline tests", () => {
     isLastPage: boolean
     token?: string
     limit?: number
-    direction?: EventsTimelineDirection
+    direction: EventsTimelineDirection
   }
 
   const expectFetchesNextIds = async ({
@@ -154,8 +351,8 @@ describe("timeline tests", () => {
     user,
     token,
     isLastPage,
-    limit = 1,
-    direction = "forwards"
+    direction,
+    limit = 1
   }: ExpectNextIdsRequest) => {
     const resp = await testAPI.timeline<200>({
       auth: user.auth,
@@ -166,7 +363,7 @@ describe("timeline tests", () => {
       }
     })
     expect(resp.data.events.map((e) => e.id)).toEqual(ids)
-    expect(resp.data.hasNextPage).toEqual(!isLastPage)
+    expect(resp.data.hasNextPageInDirection).toEqual(!isLastPage)
     return resp.data
   }
 })

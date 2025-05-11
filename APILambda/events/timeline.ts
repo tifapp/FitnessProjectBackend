@@ -12,7 +12,10 @@ import {
 import { MySQLExecutableDriver } from "TiFBackendUtils/MySQLDriver"
 import { PromiseResult } from "TiFShared/lib/Result"
 import { base64URLEncode } from "TiFShared/lib/Base64URLCoding"
-import { EventsTimelinePageToken } from "TiFShared/api/models/Event"
+import {
+  EventsTimelineDirection,
+  EventsTimelinePageToken
+} from "TiFShared/api/models/Event"
 
 type EventsTimelineQuery = {
   selfId: UserID
@@ -22,16 +25,22 @@ type EventsTimelineQuery = {
   offset: number
 }
 
+const DIRECTION_SQL = {
+  forwards: { order: "ASC", where: UserEventSQL.TIMELINE_FORWARDS_WHERE },
+  backwards: { order: "DESC", where: UserEventSQL.TIMELINE_BACKWARDS_WHERE }
+}
+
 const timelinePageEvents = (
   conn: MySQLExecutableDriver,
   query: EventsTimelineQuery
 ) => {
+  const directionSQL = DIRECTION_SQL[query.direction]
   return conn.queryResult<DBTifEvent>(
     `
     ${UserEventSQL.BASE}
     ${UserEventSQL.ATTENDANCE_INNER_JOIN}
-    ${UserEventSQL.TIMELINE_FORWARDS_WHERE}
-    ${UserEventSQL.ORDER_BY_START_TIME}
+    ${directionSQL.where}
+    ${UserEventSQL.ORDER_BY_START_TIME} ${directionSQL.order}
     LIMIT :limit
     OFFSET :offset
     `,
@@ -47,7 +56,7 @@ const timelinePageEvents = (
 
 type EventsTimelinePage = {
   events: TiFEvent[]
-  nextDate?: Date
+  hasNextPageInDirection: boolean
 }
 
 const timelinePage = (
@@ -57,16 +66,16 @@ const timelinePage = (
     return timelinePageEvents(tx, query)
       .mapSuccess((events) => {
         if (events.length < query.limit + 1) {
-          return { events, nextDate: undefined }
+          return { events, hasNextPageInDirection: false }
         }
         const last: DBTifEvent | undefined = events.pop()
-        return { events, nextDate: last?.startDateTime }
+        return { events, hasNextPageInDirection: !!last }
       })
-      .flatMapSuccess(({ events, nextDate }) => {
+      .flatMapSuccess(({ events, hasNextPageInDirection }) => {
         return addAttendanceData(tx, events, query.selfId).mapSuccess(
           (events) => ({
             events: events.map(tifEventResponseFromDatabaseEvent),
-            nextDate
+            hasNextPageInDirection
           })
         )
       })
@@ -75,32 +84,48 @@ const timelinePage = (
 
 const timelineResponse = (
   page: EventsTimelinePage,
-  query: EventsTimelineQuery
+  query: EventsTimelineQuery,
+  token?: EventsTimelinePageToken
 ) => {
   return {
     events: page.events,
     nextToken: base64URLEncode(
       JSON.stringify({
-        startDate: query.startDate,
-        forwardOffset: query.offset + page.events.length
+        startDate: token?.startDate ?? query.startDate,
+        forwardOffset:
+          query.direction === "forwards"
+            ? query.offset + page.events.length
+            : token?.forwardOffset,
+        backwardOffset:
+          query.direction === "backwards"
+            ? query.offset + page.events.length
+            : token?.backwardOffset
       })
     ),
-    hasNextPage: !!page.nextDate,
-    hasPreviousPage: false
+    hasNextPageInDirection: page.hasNextPageInDirection
   }
 }
 
+const timelineQuery = (
+  selfId: UserID,
+  direction: EventsTimelineDirection,
+  limit: number,
+  token?: EventsTimelinePageToken
+) => ({
+  selfId,
+  limit,
+  direction,
+  startDate: token?.startDate ?? new Date(),
+  offset:
+    (direction === "forwards" ? token?.forwardOffset : token?.backwardOffset) ??
+    0
+})
+
 export const timeline = authenticatedEndpoint<"timeline">(
   ({ context: { selfId }, query: { limit, direction, token } }) => {
-    const query = {
-      selfId,
-      limit,
-      direction,
-      startDate: token?.startDate ?? new Date(),
-      offset: token?.forwardOffset ?? 0
-    }
+    const query = timelineQuery(selfId, direction, limit, token)
     return timelinePage(query)
-      .mapSuccess((page) => resp(200, timelineResponse(page, query)))
+      .mapSuccess((page) => resp(200, timelineResponse(page, query, token)))
       .unwrap()
   }
 )
