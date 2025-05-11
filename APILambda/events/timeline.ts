@@ -30,11 +30,13 @@ type EventsTimelinePageQuery = {
 
 const DIRECTION_SQL = {
   forwards: {
-    order: "ORDER BY TifEventView.startDateTime ASC, TifEventView.id",
+    order:
+      "ORDER BY TifEventView.startDateTime ASC, TifEventView.createdDateTime",
     where: UserEventSQL.TIMELINE_FORWARDS_WHERE
   },
   backwards: {
-    order: "ORDER BY TifEventView.startDateTime DESC, TifEventView.id",
+    order:
+      "ORDER BY TifEventView.startDateTime DESC, TifEventView.createdDateTime",
     where: UserEventSQL.TIMELINE_BACKWARDS_WHERE
   }
 }
