@@ -5,19 +5,22 @@ import { conn } from "TiFBackendUtils"
 import {
   addAttendanceData,
   DBTifEvent,
-  TiFEvent,
   tifEventResponseFromDatabaseEvent,
   UserEventSQL
 } from "TiFBackendUtils/TiFEventUtils"
 import { MySQLExecutableDriver } from "TiFBackendUtils/MySQLDriver"
-import { PromiseResult } from "TiFShared/lib/Result"
+import { promiseResult, success } from "TiFShared/lib/Result"
 import { base64URLEncode } from "TiFShared/lib/Base64URLCoding"
 import {
   EventsTimelineDirection,
   EventsTimelinePageToken
 } from "TiFShared/api/models/Event"
 
-type EventsTimelineQuery = {
+const encodedNextToken = (token: EventsTimelinePageToken) => {
+  return base64URLEncode(JSON.stringify(token))
+}
+
+type EventsTimelinePageQuery = {
   selfId: UserID
   limit: number
   direction: "forwards" | "backwards"
@@ -30,12 +33,17 @@ const DIRECTION_SQL = {
   backwards: { order: "DESC", where: UserEventSQL.TIMELINE_BACKWARDS_WHERE }
 }
 
-const timelinePageEvents = (
+type EventsDatabaseTimelinePage = {
+  events: DBTifEvent[]
+  hasNextPageInDirection: boolean
+}
+
+const timelinePageEvents = async (
   conn: MySQLExecutableDriver,
-  query: EventsTimelineQuery
+  query: EventsTimelinePageQuery
 ) => {
   const directionSQL = DIRECTION_SQL[query.direction]
-  return conn.queryResult<DBTifEvent>(
+  const events = await conn.query<DBTifEvent>(
     `
     ${UserEventSQL.BASE}
     ${UserEventSQL.ATTENDANCE_INNER_JOIN}
@@ -52,58 +60,60 @@ const timelinePageEvents = (
       limit: query.limit + 1
     }
   )
+  if (events.length < query.limit + 1) {
+    return { events, hasNextPageInDirection: false }
+  }
+  const last: DBTifEvent | undefined = events.pop()
+  return { events, hasNextPageInDirection: !!last }
 }
 
-type EventsTimelinePage = {
-  events: TiFEvent[]
-  hasNextPageInDirection: boolean
-}
+const timelinePageResponse = (
+  { events, hasNextPageInDirection }: EventsDatabaseTimelinePage,
+  query: EventsTimelinePageQuery,
+  token: EventsTimelinePageToken
+) => ({
+  events: events.map(tifEventResponseFromDatabaseEvent),
+  nextToken: encodedNextToken({
+    ...token,
+    forwardOffset:
+      query.direction === "forwards"
+        ? query.offset + events.length
+        : token.forwardOffset,
+    backwardOffset:
+      query.direction === "backwards"
+        ? query.offset + events.length
+        : token.backwardOffset
+  }),
+  hasNextForwardPage:
+    query.direction === "forwards"
+      ? hasNextPageInDirection
+      : !!token.forwardOffset,
+  hasNextBackwardPage:
+    query.direction === "backwards"
+      ? hasNextPageInDirection
+      : !!token.backwardOffset
+})
 
 const timelinePage = (
-  query: EventsTimelineQuery
-): PromiseResult<EventsTimelinePage, never> => {
-  return conn.transaction((tx) => {
-    return timelinePageEvents(tx, query)
-      .mapSuccess((events) => {
-        if (events.length < query.limit + 1) {
-          return { events, hasNextPageInDirection: false }
-        }
-        const last: DBTifEvent | undefined = events.pop()
-        return { events, hasNextPageInDirection: !!last }
-      })
-      .flatMapSuccess(({ events, hasNextPageInDirection }) => {
-        return addAttendanceData(tx, events, query.selfId).mapSuccess(
-          (events) => ({
-            events: events.map(tifEventResponseFromDatabaseEvent),
-            hasNextPageInDirection
-          })
-        )
-      })
-  })
-}
-
-const timelineResponse = (
-  page: EventsTimelinePage,
-  query: EventsTimelineQuery,
-  token?: EventsTimelinePageToken
+  query: EventsTimelinePageQuery,
+  token: EventsTimelinePageToken
 ) => {
-  return {
-    events: page.events,
-    nextToken: base64URLEncode(
-      JSON.stringify({
-        startDate: token?.startDate ?? query.startDate,
-        forwardOffset:
-          query.direction === "forwards"
-            ? query.offset + page.events.length
-            : token?.forwardOffset,
-        backwardOffset:
-          query.direction === "backwards"
-            ? query.offset + page.events.length
-            : token?.backwardOffset
-      })
-    ),
-    hasNextPageInDirection: page.hasNextPageInDirection
-  }
+  return conn.transaction((tx) => {
+    const promise = timelinePageEvents(tx, query).then((p) => success(p))
+    return promiseResult(promise).flatMapSuccess(
+      ({ events, hasNextPageInDirection }) => {
+        return addAttendanceData(tx, events, query.selfId).mapSuccess(
+          (events) => {
+            return timelinePageResponse(
+              { events, hasNextPageInDirection },
+              query,
+              token
+            )
+          }
+        )
+      }
+    )
+  })
 }
 
 const timelineQuery = (
@@ -121,11 +131,74 @@ const timelineQuery = (
     0
 })
 
+type EventsFirstTimelinePageQuery = {
+  forwardQuery: EventsTimelinePageQuery
+  backwardQuery: EventsTimelinePageQuery
+}
+
+const databaseTimelinePage = (
+  result: PromiseSettledResult<EventsDatabaseTimelinePage>
+) => {
+  if (result.status === "rejected") {
+    return { events: [], hasNextPageInDirection: false }
+  }
+  return result.value
+}
+
+const firstTimelinePage = (query: EventsFirstTimelinePageQuery) => {
+  return conn.transaction((tx) => {
+    const promise = Promise.allSettled<EventsDatabaseTimelinePage>([
+      timelinePageEvents(tx, query.backwardQuery),
+      timelinePageEvents(tx, query.forwardQuery)
+    ]).then((r) => success(r.map(databaseTimelinePage)))
+    return promiseResult(promise).flatMapSuccess(([page1, page2]) => {
+      const events = [...page1.events, ...page2.events]
+      return addAttendanceData(
+        tx,
+        events,
+        query.forwardQuery.selfId
+      ).mapSuccess((events) => ({
+        events: events.map(tifEventResponseFromDatabaseEvent),
+        hasNextForwardPage: page2.hasNextPageInDirection,
+        hasNextBackwardPage: page1.hasNextPageInDirection,
+        nextToken: encodedNextToken({
+          startDate: query.forwardQuery.startDate,
+          forwardOffset: page2.hasNextPageInDirection
+            ? page2.events.length
+            : undefined,
+          backwardOffset: page1.hasNextPageInDirection
+            ? page1.events.length
+            : undefined
+        })
+      }))
+    })
+  })
+}
+
+const firstTimelinePageQuery = (
+  selfId: UserID,
+  direction: EventsTimelineDirection,
+  limit: number
+) => {
+  const backwardLimit =
+    direction === "forwards" ? Math.floor(limit / 2) : Math.ceil(limit / 2)
+  const forwardLimit =
+    direction === "backwards" ? Math.floor(limit / 2) : Math.ceil(limit / 2)
+  return {
+    forwardQuery: timelineQuery(selfId, "forwards", forwardLimit),
+    backwardQuery: timelineQuery(selfId, "backwards", backwardLimit)
+  }
+}
+
 export const timeline = authenticatedEndpoint<"timeline">(
   ({ context: { selfId }, query: { limit, direction, token } }) => {
-    const query = timelineQuery(selfId, direction, limit, token)
-    return timelinePage(query)
-      .mapSuccess((page) => resp(200, timelineResponse(page, query, token)))
+    if (!token) {
+      return firstTimelinePage(firstTimelinePageQuery(selfId, direction, limit))
+        .mapSuccess((page) => resp(200, page))
+        .unwrap()
+    }
+    return timelinePage(timelineQuery(selfId, direction, limit, token), token)
+      .mapSuccess((page) => resp(200, page))
       .unwrap()
   }
 )

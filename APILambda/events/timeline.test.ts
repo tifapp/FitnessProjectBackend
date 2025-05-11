@@ -19,10 +19,7 @@ describe("timeline tests", () => {
       auth: user.auth,
       query: { limit: 1, direction: "forwards" }
     })
-    expect(resp.data).toMatchObject({
-      events: [],
-      hasNextPageInDirection: false
-    })
+    expect(resp.data).toMatchObject({ events: [], hasNextForwardPage: false })
   })
 
   it("should return no events when event list empty when fetching backwards", async () => {
@@ -31,10 +28,7 @@ describe("timeline tests", () => {
       auth: user.auth,
       query: { limit: 1, direction: "backwards" }
     })
-    expect(resp.data).toMatchObject({
-      events: [],
-      hasNextPageInDirection: false
-    })
+    expect(resp.data).toMatchObject({ events: [], hasNextBackwardPage: false })
   })
 
   it("should not return events that the user is not attending", async () => {
@@ -71,7 +65,7 @@ describe("timeline tests", () => {
         },
         {
           dateRange: dateRange(
-            current.toDate(),
+            current.add(10, "minutes").toDate(),
             current.add(4, "hours").toDate()
           )
         },
@@ -280,31 +274,25 @@ describe("timeline tests", () => {
     )
 
     let resp = await expectFetchesNextIds({
-      ids: [eventIds[2]],
+      ids: [eventIds[0], eventIds[2]],
       user: host,
+      limit: 2,
       isLastPage: false,
       direction: "forwards"
     })
     resp = await expectFetchesNextIds({
-      ids: [eventIds[0]],
-      user: host,
-      token: resp.nextToken,
-      isLastPage: false,
-      direction: "backwards"
-    })
-    resp = await expectFetchesNextIds({
-      ids: [eventIds[3]],
-      user: host,
-      token: resp.nextToken,
-      isLastPage: true,
-      direction: "forwards"
-    })
-    await expectFetchesNextIds({
       ids: [eventIds[1]],
       user: host,
       token: resp.nextToken,
       isLastPage: true,
       direction: "backwards"
+    })
+    await expectFetchesNextIds({
+      ids: [eventIds[3]],
+      user: host,
+      token: resp.nextToken,
+      isLastPage: true,
+      direction: "forwards"
     })
   })
 
@@ -323,13 +311,13 @@ describe("timeline tests", () => {
     )
 
     const resp = await expectFetchesNextIds({
-      ids: [eventIds[0]],
+      ids: [],
       user: host,
       isLastPage: true,
       direction: "forwards"
     })
     await expectFetchesNextIds({
-      ids: [],
+      ids: [eventIds[0]],
       user: host,
       token: resp.nextToken,
       isLastPage: true,
@@ -363,7 +351,11 @@ describe("timeline tests", () => {
       }
     })
     expect(resp.data.events.map((e) => e.id)).toEqual(ids)
-    expect(resp.data.hasNextPageInDirection).toEqual(!isLastPage)
+    if (direction === "forwards") {
+      expect(resp.data.hasNextForwardPage).toEqual(!isLastPage)
+    } else {
+      expect(resp.data.hasNextBackwardPage).toEqual(!isLastPage)
+    }
     return resp.data
   }
 })
