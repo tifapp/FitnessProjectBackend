@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-var-requires */
 const glob = require("glob")
 const esbuild = require("esbuild")
 const packageJson = require("./package.json")

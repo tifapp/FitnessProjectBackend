@@ -24,8 +24,10 @@ const testClient = TiFAPIClientCreator<TestAppExtension>(
       httpRequest: { method, endpoint }
     }
   }) => {
-    let req = request(app)[method.toLowerCase()](urlString({ endpoint, params }))
-      .query(query)
+    const appRequest = request(app)
+    let req = appRequest[method.toLowerCase()](
+      urlString({ endpoint, params })
+    ).query(query)
 
     if (auth) {
       req = req.set("Authorization", auth)

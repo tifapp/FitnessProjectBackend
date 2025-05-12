@@ -1,7 +1,7 @@
 import { failure, success } from "TiFShared/lib/Result"
 import { MySQLExecutableDriver } from "../MySQLDriver"
 import { DBTifEvent } from "./TiFEventResponse"
-import { USER_EVENT_SQL } from "./UserEvent"
+import { UserEventSQL } from "./UserEvent"
 
 export const getEventSQL = (
   conn: MySQLExecutableDriver,
@@ -11,9 +11,9 @@ export const getEventSQL = (
   conn
     .queryFirstResult<DBTifEvent>(
       `
-      ${USER_EVENT_SQL}
+      ${UserEventSQL.BASE}
       WHERE TifEventView.id = :eventId;
-  `,
+      `,
       { eventId, userId }
     )
     .withFailure({ error: "event-not-found" as const })

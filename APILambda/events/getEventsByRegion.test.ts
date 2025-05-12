@@ -4,7 +4,6 @@ import { LocationCoordinate2D } from "TiFShared/domain-models/LocationCoordinate
 import { dayjs } from "TiFShared/lib/Dayjs"
 import { sleep } from "TiFShared/lib/DelayData"
 import { devEnv } from "../test/devIndex"
-import { addMockLocationToDB } from "../test/location"
 import { userToUserRequest } from "../test/shortcuts"
 import { testAPI } from "../test/testApp"
 import { testEventInput } from "../test/testEvents"
@@ -15,8 +14,6 @@ import { createEventTransaction } from "./createEvent"
 const testLocation = testEventInput.location.value as LocationCoordinate2D
 
 const createEvents = async () => {
-  await addMockLocationToDB(testLocation)
-
   const {
     attendeesList: [, attendee],
     host,

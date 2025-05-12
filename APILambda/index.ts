@@ -1,8 +1,14 @@
 try {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
   const { handler } = require("./app")
-  exports.handler = handler
+  exports.handler = async (...rest: unknown[]) => {
+    try {
+      return handler(...rest)
+    } catch (error: unknown) {
+      console.error("Execution error:", error)
+      throw error
+    }
+  }
 } catch (error) {
-  console.error("Module initialization error:", error.stack || error.message)
+  console.error("Import error:", error)
   throw error
 }

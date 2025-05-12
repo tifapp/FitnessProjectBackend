@@ -2,9 +2,9 @@ import { conn } from "TiFBackendUtils"
 import { MySQLExecutableDriver } from "TiFBackendUtils/MySQLDriver"
 import {
   DBTifEvent,
+  UserEventSQL,
   addAttendanceData,
-  tifEventResponseFromDatabaseEvent,
-  userEventsSQL
+  tifEventResponseFromDatabaseEvent
 } from "TiFBackendUtils/TiFEventUtils"
 import { resp } from "TiFShared/api/Transport"
 import { LocationCoordinate2D } from "TiFShared/domain-models/LocationCoordinate2D"
@@ -21,11 +21,19 @@ export const getEventsByRegion = (
     radius: number
   }
 ) => {
-  return conn.queryResult<DBTifEvent>(userEventsSQL("geospatial"), {
-    userLatitude,
-    userLongitude,
-    ...rest
-  })
+  return conn.queryResult<DBTifEvent>(
+    `
+    ${UserEventSQL.BASE}
+    ${UserEventSQL.GEOSPATIAL_WHERE}
+    ${UserEventSQL.ORDER_BY_START_TIME}
+    `,
+    {
+      userLatitude,
+      userLongitude,
+      currentTimestamp: new Date(), // TODO: - Handle timezone logic.
+      ...rest
+    }
+  )
 }
 
 export const exploreEvents = authenticatedEndpoint<"exploreEvents">(
@@ -38,12 +46,7 @@ export const exploreEvents = authenticatedEndpoint<"exploreEvents">(
           radius
         })
           .flatMapSuccess((events) => addAttendanceData(tx, events, userId))
-          .mapSuccess((events) => {
-            // TODO: Why doesn't filtering endDateTime work in SQL?
-            return events
-              .filter((e) => e.endDateTime.getTime() > Date.now())
-              .map(tifEventResponseFromDatabaseEvent)
-          })
+          .mapSuccess((events) => events.map(tifEventResponseFromDatabaseEvent))
           .mapSuccess((events) => resp(200, { events }))
       )
       .unwrap()

@@ -43,6 +43,8 @@ type DBEventAttendee = DBeventAttendance &
 
 type AttendeeWithEventID = { eventId: EventID; attendee: EventAttendee }
 
+const ARRIVAL_MATCHING_RADIUS = 100
+
 const attendees = async (
   conn: MySQLExecutableDriver,
   userId: UserID,
@@ -60,16 +62,19 @@ const attendees = async (
       ua.arrivedDateTime,
       ea.role,
       MAX(CASE WHEN ur.fromUserId = :userId THEN ur.status END) AS fromYouToThem,
-      MAX(CASE WHEN ur.toUserId = :userId THEN ur.status END) AS fromThemToYou,
-      CASE WHEN ua.arrivedDateTime IS NOT NULL THEN true ELSE false END AS hasArrived
+      MAX(CASE WHEN ur.toUserId = :userId THEN ur.status END) AS fromThemToYou
     FROM user AS u
     INNER JOIN eventAttendance AS ea ON u.id = ea.userId
     INNER JOIN event AS e ON ea.eventId = e.id
-    LEFT JOIN userArrivals AS ua ON ua.userId = u.id
+    LEFT JOIN userArrivals AS ua
+      ON ua.userId = u.id
+        AND (
+          ST_Distance_Sphere(POINT(ua.longitude, ua.latitude), POINT(e.longitude, e.latitude)) < ${ARRIVAL_MATCHING_RADIUS}
+          OR ua.arrivedDateTime IS NULL
+        )
     LEFT JOIN userRelationships AS ur
       ON (ur.fromUserId = u.id AND ur.toUserId = :userId) OR (ur.fromUserId = :userId AND ur.toUserId = u.id)
     WHERE e.id IN (:eventIds)
-      AND (ua.longitude = e.longitude AND ua.latitude = e.latitude OR ua.arrivedDateTime IS NULL)
     GROUP BY eventId, u.id, ua.arrivedDateTime
     ORDER BY ea.joinedDateTime ASC
   `,
@@ -86,7 +91,7 @@ const attendees = async (
           profileImageURL: attendee.profileImageURL,
           handle: attendee.handle,
           arrivedDateTime: attendee.arrivedDateTime,
-          hasArrived: !!attendee.hasArrived,
+          hasArrived: !!attendee.arrivedDateTime,
           role: attendee.role,
           relationStatus: UserRelationsSchema.parse({
             fromYouToThem: attendee.fromYouToThem ?? "not-friends",
@@ -128,12 +133,14 @@ const addAttendance = (
       }
     ])
   )
-  attendees.forEach(({ attendee, eventId }: {attendee: Attendee, eventId: EventID}) => {
-    const event = map.get(eventId)
-    if (!event) return
-    event.previewAttendees.push(attendee)
-    event.attendeeCount++
-  })
+  attendees.forEach(
+    ({ attendee, eventId }: { attendee: Attendee; eventId: EventID }) => {
+      const event = map.get(eventId)
+      if (!event) return
+      event.previewAttendees.push(attendee)
+      event.attendeeCount++
+    }
+  )
   userAttendances.forEach(({ eventId, ...attendance }) => {
     const event = map.get(eventId)
     if (!event) return

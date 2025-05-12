@@ -2,6 +2,7 @@ import { conn } from "TiFBackendUtils"
 import { resetDB } from "TiFBackendUtils/test/MySQLDriver/dbHelpers"
 import { addLogHandler, consoleLogHandler } from "TiFShared/logging"
 import { closeLocalhostServer } from "../localhostListener"
+import { restoreDevEnv } from "../devIndex"
 
 global.beforeAll(() =>
   addLogHandler(consoleLogHandler())
@@ -14,6 +15,9 @@ global.beforeEach(async () => {
   await resetDB()
 })
 
-global.afterEach(closeLocalhostServer)
+global.afterEach(() => {
+  restoreDevEnv()
+  return closeLocalhostServer()
+})
 
 global.afterAll(() => conn.closeConnection())

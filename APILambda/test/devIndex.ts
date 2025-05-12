@@ -2,29 +2,41 @@ import "TiFBackendUtils"
 import "TiFShared/lib/Zod"
 // Only used in local tests
 
-import { promiseResult, success } from "TiFShared/lib/Result"
-import { handler } from "../../GeocodingLambda/index"
+import { handler } from "../../GeocodingLambda/handler"
 import { addTiFRouter, createApp } from "../appMiddleware"
 import { ServerEnvironment } from "../env"
 import { localhostListener } from "./localhostListener"
-import { mockLocationCoordinate2D } from "./testEvents"
 import { geocodeMock } from "./location"
+import { mockLocationCoordinate2D } from "./testEvents"
 
 export const devEnv: ServerEnvironment = {
   environment: "devTest",
   maxArrivals: 4,
   eventStartWindowInHours: 1,
   geocode: (location) => {
-    return promiseResult(
-      handler(
-        location,
-        geocodeMock,
-        async () => mockLocationCoordinate2D()
-      ).then(response => {
-        return success(response)
-      })
-    )
+    return handler(location, geocodeMock, async () => mockLocationCoordinate2D())
   }
 }
 
-export const devApp = createApp(devEnv, addTiFRouter, localhostListener)
+let originalDevEnv: ServerEnvironment | null = null
+
+export const overrideDevEnv = (partialDevEnv: Partial<ServerEnvironment>) => {
+  if (!originalDevEnv) {
+    originalDevEnv = { ...devEnv }
+  }
+
+  Object.assign(devEnv, partialDevEnv)
+}
+
+export const restoreDevEnv = () => {
+  if (originalDevEnv) {
+    Object.assign(devEnv, originalDevEnv)
+    originalDevEnv = null
+  }
+}
+
+const middlewares = [addTiFRouter]
+if (process.env.NODE_ENV !== "test") {
+  middlewares.push(localhostListener)
+}
+export const devApp = createApp(devEnv, ...middlewares)

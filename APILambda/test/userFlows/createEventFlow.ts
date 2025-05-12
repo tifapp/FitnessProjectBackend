@@ -1,4 +1,5 @@
 import { TiFAPIClient } from "TiFBackendUtils"
+import { logRecentLambdaMessages } from "TiFBackendUtils/AWS"
 import {
   CreateEvent,
   EventEdit,
@@ -25,6 +26,10 @@ export const createEventFlow = async (
 
   const eventResponses = await Promise.all(
     eventInputs.map((details) => {
+      console.log("creating an event")
+      console.log(host.auth)
+      console.log(testEventEdit(details))
+
       return testAPI.createEvent({
         auth: host.auth,
         body: testEventEdit(details)
@@ -37,7 +42,8 @@ export const createEventFlow = async (
       return event.data.id
     } else {
       console.error(event)
-      throw new Error("invalid test event given")
+      logRecentLambdaMessages("geocodingPipeline")
+      throw new Error("could not create test event")
     }
   })
 

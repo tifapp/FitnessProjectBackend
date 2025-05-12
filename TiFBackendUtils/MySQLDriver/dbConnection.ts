@@ -1,7 +1,5 @@
 import type { ConnectionOptions } from "mysql2/promise"
 import { envVars } from "../env"
-
-// eslint-disable-next-line @typescript-eslint/no-var-requires
 const mysql = require("mysql2/promise")
 
 export const createDatabaseConnection = async (connectionConfig: Partial<ConnectionOptions> = {}) => {
