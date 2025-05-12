@@ -24,8 +24,9 @@ import { userSettings } from "./user/settings/getUserSettings"
 import { saveUserSettings } from "./user/settings/updateUserSettings"
 import { unblockUser } from "./user/unblockUser"
 import { updateCurrentUserProfile } from "./user/updateUserProfile"
+import { timeline } from "./events/timeline"
 
-type AppMiddleware = ((app: Express, env: ServerEnvironment) => Express)
+type AppMiddleware = (app: Express, env: ServerEnvironment) => Express
 
 /**
  * Creates an application instance.
@@ -33,12 +34,15 @@ type AppMiddleware = ((app: Express, env: ServerEnvironment) => Express)
  * @param environment see {@link ServerEnvironment}
  * @returns a express js app instance
  */
-export const createApp = (env: ServerEnvironment, ...middlewares: (AppMiddleware)[]) => {
+export const createApp = (
+  env: ServerEnvironment,
+  ...middlewares: AppMiddleware[]
+) => {
   const app = express()
   app.use(express.json())
   app.use(express.urlencoded({ extended: true }))
 
-  middlewares.forEach(middleware => middleware(app, env))
+  middlewares.forEach((middleware) => middleware(app, env))
 
   return app
 }
@@ -64,10 +68,7 @@ export const addBenchmarking = (app: Express) => {
   return app
 }
 
-export const addTiFRouter = (
-  app: Express,
-  env: ServerEnvironment
-) => {
+export const addTiFRouter = (app: Express, env: ServerEnvironment) => {
   app.use(
     "/",
     TiFRouter(
@@ -94,7 +95,8 @@ export const addTiFRouter = (
         sendFriendRequest,
         blockUser,
         unblockUser,
-        registerForPushNotifications
+        registerForPushNotifications,
+        timeline
       },
       env
     )

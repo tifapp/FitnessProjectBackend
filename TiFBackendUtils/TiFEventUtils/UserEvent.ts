@@ -24,33 +24,68 @@ export namespace UserEventSQL {
   export const ATTENDANCE_INNER_JOIN =
     "INNER JOIN eventAttendance ea ON ea.eventId = TifEventView.id"
 
-  const BASE_WHERE_CLAUSES = `
-    TifEventView.endDateTime > NOW()
-    AND TifEventView.endedDateTime IS NULL
-    AND (UserRelationOfHostToUser.status IS NULL OR UserRelationOfHostToUser.status <> 'blocked')
+  const NOT_BLOCKED_CLAUSES = `
+    (UserRelationOfHostToUser.status IS NULL OR UserRelationOfHostToUser.status <> 'blocked')
     AND (UserRelationOfUserToHost.status IS NULL OR UserRelationOfUserToHost.status <> 'blocked')
     `
-  export const BASE_WHERE = `
-    WHERE
-      ${BASE_WHERE_CLAUSES}
+
+  const BASE_WHERE_CLAUSES = `
+    TifEventView.endedDateTime IS NULL
+    AND ${NOT_BLOCKED_CLAUSES}
     `
 
-  export const USER_ATTENDANCE_WHERE = `
+  const BASE_WITH_NON_PAST_EVENTS_WHERE_CLAUSES = `
+    TifEventView.endDateTime > :currentTimestamp
+    AND ${BASE_WHERE_CLAUSES}
+    `
+
+  export const BASE_WITH_NON_PAST_EVENTS_WHERE = `
     WHERE
-    ${BASE_WHERE_CLAUSES}
-    AND ea.userId = :attendingUserId
+      ${BASE_WITH_NON_PAST_EVENTS_WHERE_CLAUSES}
+    `
+
+  const USER_ATTENDANCE_WHERE_CLAUSES = `
+    ea.userId = :attendingUserId
     AND ea.role IN ('hosting', 'attending')
+    `
+
+  export const USER_ATTENDANCE_WITH_NON_PAST_EVENTS_WHERE = `
+    WHERE
+    ${BASE_WITH_NON_PAST_EVENTS_WHERE_CLAUSES}
+    AND ${USER_ATTENDANCE_WHERE_CLAUSES}
   `
 
   export const MAX_SECONDS_TO_START_WITH_USER_ATTENDANCE_WHERE = `
-      ${USER_ATTENDANCE_WHERE}
+      ${USER_ATTENDANCE_WITH_NON_PAST_EVENTS_WHERE}
       AND TIMESTAMPDIFF(SECOND, :currentTimestamp, TifEventView.startDateTime) < :maxSecondsToStart
+      `
+
+  export const DATE_RANGE_WITH_USER_ATTENDANCE_WHERE = `
+    WHERE
+      ${NOT_BLOCKED_CLAUSES}
+      AND ${USER_ATTENDANCE_WHERE_CLAUSES}
+      AND TifEventView.startDateTime <= :endDateTime
+      AND TifEventView.endDateTime >= :startDateTime
+      `
+
+  export const TIMELINE_FORWARDS_WHERE = `
+    WHERE
+      ${NOT_BLOCKED_CLAUSES}
+      AND ${USER_ATTENDANCE_WHERE_CLAUSES}
+      AND TifEventView.startDateTime >= :startDateTime
+      `
+
+  export const TIMELINE_BACKWARDS_WHERE = `
+    WHERE
+      ${NOT_BLOCKED_CLAUSES}
+      AND ${USER_ATTENDANCE_WHERE_CLAUSES}
+      AND TifEventView.startDateTime < :startDateTime
       `
 
   export const GEOSPATIAL_WHERE = `
     WHERE
       ST_Distance_Sphere(POINT(:userLongitude, :userLatitude), POINT(TifEventView.longitude, TifEventView.latitude)) < :radius
-      AND ${BASE_WHERE_CLAUSES}
+      AND ${BASE_WITH_NON_PAST_EVENTS_WHERE_CLAUSES}
     `
   export const ORDER_BY_START_TIME = "ORDER BY TifEventView.startDateTime"
 }

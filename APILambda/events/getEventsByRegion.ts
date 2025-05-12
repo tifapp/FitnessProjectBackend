@@ -30,6 +30,7 @@ export const getEventsByRegion = (
     {
       userLatitude,
       userLongitude,
+      currentTimestamp: new Date(), // TODO: - Handle timezone logic.
       ...rest
     }
   )
@@ -45,12 +46,7 @@ export const exploreEvents = authenticatedEndpoint<"exploreEvents">(
           radius
         })
           .flatMapSuccess((events) => addAttendanceData(tx, events, userId))
-          .mapSuccess((events) => {
-            // TODO: Why doesn't filtering endDateTime work in SQL?
-            return events
-              .filter((e) => e.endDateTime.getTime() > Date.now())
-              .map(tifEventResponseFromDatabaseEvent)
-          })
+          .mapSuccess((events) => events.map(tifEventResponseFromDatabaseEvent))
           .mapSuccess((events) => resp(200, { events }))
       )
       .unwrap()
